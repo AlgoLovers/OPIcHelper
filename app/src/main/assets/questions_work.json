@@ -1,0 +1,17 @@
+[
+  {
+    "category": "WORK",
+    "question_en": "What is your job? Describe your main responsibilities.",
+    "question_ko": "당신의 직업은 무엇이며, 주요 업무에 대해 설명해 주세요."
+  },
+  {
+    "category": "WORK",
+    "question_en": "What do you like most about your work?",
+    "question_ko": "당신이 하는 일에서 가장 좋아하는 점은 무엇인가요?"
+  },
+  {
+    "category": "WORK",
+    "question_en": "Have you ever had a difficult situation at work? How did you handle it?",
+    "question_ko": "직장에서 어려운 상황을 겪은 적이 있나요? 어떻게 해결했나요?"
+  }
+] 

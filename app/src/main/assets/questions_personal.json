@@ -1,0 +1,17 @@
+[
+  {
+    "category": "PERSONAL",
+    "question_en": "Tell me about your hometown.",
+    "question_ko": "당신의 고향에 대해 이야기해 주세요."
+  },
+  {
+    "category": "PERSONAL",
+    "question_en": "Describe your daily routine.",
+    "question_ko": "당신의 일상적인 하루를 설명해 주세요."
+  },
+  {
+    "category": "PERSONAL",
+    "question_en": "What do you like to do in your free time?",
+    "question_ko": "여가 시간에 무엇을 하는 것을 좋아하나요?"
+  }
+] 

@@ -1,8 +1,6 @@
 package com.na982.opichelper.presentation.ui.screen
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -12,10 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.na982.opichelper.domain.entity.QuestionCategory
-import com.na982.opichelper.domain.entity.QuestionDifficulty
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.presentation.viewmodel.MainUiState
-import androidx.compose.foundation.lazy.LazyColumn
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -24,7 +20,12 @@ fun MainScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+    val categories = listOf(
+        QuestionCategory.PERSONAL,
+        QuestionCategory.TRAVEL,
+        QuestionCategory.WORK
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -38,48 +39,28 @@ fun MainScreen(
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 24.dp)
         )
-        
+
         // Category Selection
         Text(
             text = "카테고리 선택",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            QuestionCategory.values().forEach { category ->
+            categories.forEach { category ->
                 FilterChip(
-                    onClick = { viewModel.loadRandomQuestion(category = category) },
+                    onClick = { viewModel.selectCategory(category) },
                     label = { Text(category.name) },
-                    selected = false
+                    selected = uiState.currentCategory == category
                 )
             }
         }
-        
-        // Difficulty Selection
-        Text(
-            text = "난이도 선택",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 24.dp)
-        ) {
-            QuestionDifficulty.values().forEach { difficulty ->
-                FilterChip(
-                    onClick = { viewModel.loadRandomQuestion(difficulty = difficulty) },
-                    label = { Text(difficulty.name) },
-                    selected = false
-                )
-            }
-        }
-        
-        // Question Display
+
+        // Question & Answer Display
         when {
             uiState.isLoading -> {
                 CircularProgressIndicator(
@@ -102,17 +83,21 @@ fun MainScreen(
             }
             uiState.currentQuestion != null -> {
                 QuestionCard(
-                    question = uiState.currentQuestion!!,
-                    onNextQuestion = { viewModel.loadRandomQuestion() }
+                    question = uiState.currentQuestion!!
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                AnswerCard(
+                    answer = uiState.currentQuestion!!.sampleAnswer
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Button(
-            onClick = { viewModel.loadRandomQuestion() },
-            modifier = Modifier.fillMaxWidth()
+            onClick = { viewModel.nextQuestion() },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.currentCategory != null
         ) {
             Text("다음 질문")
         }
@@ -122,7 +107,6 @@ fun MainScreen(
 @Composable
 fun QuestionCard(
     question: com.na982.opichelper.domain.entity.Question,
-    onNextQuestion: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -137,38 +121,40 @@ fun QuestionCard(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            
             Text(
                 text = question.question,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
+                style = MaterialTheme.typography.bodyLarge
             )
-            
-            if (question.sampleAnswer.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "카테고리: ${question.category.name}",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+@Composable
+fun AnswerCard(
+    answer: String,
+    modifier: Modifier = Modifier
+) {
+    if (answer.isNotEmpty()) {
+        Card(
+            modifier = modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
                 Text(
                     text = "샘플 답변",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                
                 Text(
-                    text = question.sampleAnswer,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "카테고리: ${question.category.name}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = "난이도: ${question.difficulty.name}",
-                    style = MaterialTheme.typography.bodySmall
+                    text = answer,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }

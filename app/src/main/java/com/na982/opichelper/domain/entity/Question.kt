@@ -4,7 +4,6 @@ data class Question(
     val id: String = "",
     val question: String,
     val category: QuestionCategory,
-    val difficulty: QuestionDifficulty,
     val sampleAnswer: String = "",
     val keywords: List<String> = emptyList(),
     val isFavorite: Boolean = false
@@ -21,10 +20,4 @@ enum class QuestionCategory {
     ENVIRONMENT,
     SOCIAL_ISSUES,
     OTHER
-}
-
-enum class QuestionDifficulty {
-    EASY,
-    MEDIUM,
-    HARD
 } 
