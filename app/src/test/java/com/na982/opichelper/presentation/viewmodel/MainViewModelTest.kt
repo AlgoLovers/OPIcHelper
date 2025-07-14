@@ -2,8 +2,7 @@ package com.na982.opichelper.presentation.viewmodel
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
-import com.na982.opichelper.domain.entity.Question
-import com.na982.opichelper.domain.entity.QuestionCategory
+import com.na982.opichelper.domain.entity.QaItem
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -11,62 +10,84 @@ import org.mockito.Mockito
 import org.mockito.kotlin.whenever
 
 class MainViewModelTest {
-    private lateinit var viewModel: MainViewModel
-
-    @Before
-    fun setUp() {
-        // Mock data for testing
-        val questions = mapOf(
-            QuestionCategory.PERSONAL to listOf(
-                Question(id = "1", question = "Personal Q1", category = QuestionCategory.PERSONAL),
-                Question(id = "2", question = "Personal Q2", category = QuestionCategory.PERSONAL)
+    private val itemsByCategory = mapOf(
+        "personal" to listOf(
+            QaItem(
+                id = "1",
+                category = "personal",
+                questionEn = "Q1",
+                questionKo = "Q1K",
+                answerEn = "A1",
+                answerKo = "A1K"
+            )
+        ),
+        "travel" to listOf(
+            QaItem(
+                id = "2",
+                category = "travel",
+                questionEn = "Q2",
+                questionKo = "Q2K",
+                answerEn = "A2",
+                answerKo = "A2K"
             ),
-            QuestionCategory.TRAVEL to listOf(
-                Question(id = "3", question = "Travel Q1", category = QuestionCategory.TRAVEL),
-                Question(id = "4", question = "Travel Q2", category = QuestionCategory.TRAVEL)
-            ),
-            QuestionCategory.WORK to listOf(
-                Question(id = "5", question = "Work Q1", category = QuestionCategory.WORK),
-                Question(id = "6", question = "Work Q2", category = QuestionCategory.WORK)
+            QaItem(
+                id = "2b",
+                category = "travel",
+                questionEn = "Q2b",
+                questionKo = "Q2Kb",
+                answerEn = "A2b",
+                answerKo = "A2Kb"
+            )
+        ),
+        "work" to listOf(
+            QaItem(
+                id = "3",
+                category = "work",
+                questionEn = "Q3",
+                questionKo = "Q3K",
+                answerEn = "A3",
+                answerKo = "A3K"
             )
         )
-        viewModel = MainViewModel(questions)
-    }
+    )
 
     @Test
     fun `카테고리 선택 시 첫 번째 질문이 노출된다`() {
-        viewModel.selectCategory(QuestionCategory.PERSONAL)
-        val question = viewModel.uiState.value.currentQuestion
-        assertNotNull(question)
-        assertEquals(QuestionCategory.PERSONAL, question?.category)
+        val viewModel = MainViewModel(itemsByCategory)
+        viewModel.selectCategory("personal")
+        val qaItem = viewModel.uiState.value.currentQaItem
+        assertNotNull(qaItem)
+        assertEquals("personal", qaItem?.category)
     }
 
     @Test
-    fun `nextQuestion 호출 시 인덱스가 순차적으로 증가한다`() {
-        viewModel.selectCategory(QuestionCategory.TRAVEL)
-        val first = viewModel.uiState.value.currentQuestion
-        viewModel.nextQuestion()
-        val second = viewModel.uiState.value.currentQuestion
+    fun `nextQaItem 호출 시 인덱스가 순차적으로 증가한다`() {
+        val viewModel = MainViewModel(itemsByCategory)
+        viewModel.selectCategory("travel")
+        val first = viewModel.uiState.value.currentQaItem
+        viewModel.nextQaItem()
+        val second = viewModel.uiState.value.currentQaItem
         assertNotEquals(first, second)
     }
 
     @Test
     fun `질문이 없는 카테고리 선택 시 에러가 발생한다`() {
-        // 없는 카테고리(예: EDUCATION) 선택
-        viewModel.selectCategory(QuestionCategory.EDUCATION)
-        assertNull(viewModel.uiState.value.currentQuestion)
+        val viewModel = MainViewModel(itemsByCategory)
+        viewModel.selectCategory("education")
+        assertNull(viewModel.uiState.value.currentQaItem)
         assertNotNull(viewModel.uiState.value.error)
     }
 
     @Test
-    fun `nextQuestion 호출 시 마지막에서 처음으로 순환된다`() {
-        viewModel.selectCategory(QuestionCategory.WORK)
-        val first = viewModel.uiState.value.currentQuestion?.question
-        val questionCount = 2 // WORK 카테고리 질문 개수
-        repeat(questionCount) {
-            viewModel.nextQuestion()
+    fun `nextQaItem 호출 시 마지막에서 처음으로 순환된다`() {
+        val viewModel = MainViewModel(itemsByCategory)
+        viewModel.selectCategory("work")
+        val first = viewModel.uiState.value.currentQaItem?.questionEn
+        val itemCount = 1 // work 카테고리 아이템 개수
+        repeat(itemCount) {
+            viewModel.nextQaItem()
         }
-        val current = viewModel.uiState.value.currentQuestion?.question
+        val current = viewModel.uiState.value.currentQaItem?.questionEn
         assertEquals(first, current)
     }
-} 
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "category": "TRAVEL",
+    "question_en": "Describe a memorable trip you have taken.",
+    "question_ko": "기억에 남는 여행에 대해 이야기해 주세요.",
+    "answer_en": "Last year, I visited Paris. The Eiffel Tower and the food were unforgettable.",
+    "answer_ko": "작년에 파리를 방문했는데, 에펠탑과 음식이 정말 인상적이었습니다."
+  },
+  {
+    "id": "2",
+    "category": "TRAVEL",
+    "question_en": "What do you usually prepare before traveling?",
+    "question_ko": "여행을 떠나기 전에 보통 무엇을 준비하나요?",
+    "answer_en": "I usually prepare my passport, book hotels, and make a list of places to visit.",
+    "answer_ko": "저는 보통 여권을 준비하고, 호텔을 예약하며, 방문할 장소 목록을 만듭니다."
+  },
+  {
+    "id": "3",
+    "category": "TRAVEL",
+    "question_en": "Do you prefer traveling alone or with others? Why?",
+    "question_ko": "혼자 여행하는 것과 다른 사람과 함께 여행하는 것 중 무엇을 선호하나요? 그 이유는 무엇인가요?",
+    "answer_en": "I prefer traveling with friends because it is more fun and we can share experiences.",
+    "answer_ko": "저는 친구들과 함께 여행하는 것을 선호합니다. 더 재미있고 경험을 나눌 수 있기 때문입니다."
+  }
+] 

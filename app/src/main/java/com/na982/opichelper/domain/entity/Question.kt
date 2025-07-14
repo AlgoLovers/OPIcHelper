@@ -1,15 +1,5 @@
 package com.na982.opichelper.domain.entity
 
-data class Question(
-    val id: String = "",
-    val question: String,
-    val questionKo: String = "",
-    val category: QuestionCategory,
-    val sampleAnswer: String = "",
-    val keywords: List<String> = emptyList(),
-    val isFavorite: Boolean = false
-)
-
 enum class QuestionCategory {
     PERSONAL,
     WORK,
@@ -21,4 +11,16 @@ enum class QuestionCategory {
     ENVIRONMENT,
     SOCIAL_ISSUES,
     OTHER
-} 
+}
+
+// 질문/답변 쌍을 모두 포함하는 데이터 모델
+data class QaItem(
+    val id: String = "",
+    val category: String, // 카테고리명을 문자열로 관리
+    val questionEn: String,
+    val questionKo: String = "",
+    val answerEn: String = "",
+    val answerKo: String = "",
+    val keywords: List<String> = emptyList(),
+    val isFavorite: Boolean = false
+) 

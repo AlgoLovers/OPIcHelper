@@ -3,7 +3,7 @@ package com.na982.opichelper.presentation.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.entity.Question
+import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.QuestionCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,76 +12,82 @@ import kotlinx.coroutines.launch
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
+import android.content.Context
+
+data class MainUiState(
+    val currentQaItem: QaItem? = null,
+    val currentCategory: String? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val categories: List<String> = emptyList()
+)
 
 class MainViewModel : AndroidViewModel {
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
-    private val questionsByCategory: MutableMap<QuestionCategory, List<Question>>
-    private val questionIndexByCategory: MutableMap<QuestionCategory, Int> = mutableMapOf()
+    private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
+    private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
 
     // Primary constructor for test (inject data)
-    constructor(questionsByCategory: Map<QuestionCategory, List<Question>>) : super(Application()) {
-        this.questionsByCategory = questionsByCategory.toMutableMap()
-        for (category in questionsByCategory.keys) {
-            questionIndexByCategory[category] = 0
+    constructor(itemsByCategory: Map<String, List<QaItem>>) : super(Application()) {
+        this.itemsByCategory.putAll(itemsByCategory)
+        for (category in itemsByCategory.keys) {
+            itemIndexByCategory[category] = 0
         }
+        _uiState.value = _uiState.value.copy(categories = itemsByCategory.keys.toList())
     }
 
     // Secondary constructor for production (load from assets)
     constructor(application: Application) : this(mutableMapOf()) {
-        loadQuestionsFromAssets(application)
+        loadQaItemsFromAssets(application)
     }
 
-    private fun loadQuestionsFromAssets(application: Application) {
+    private fun loadQaItemsFromAssets(application: Application) {
         val context = application
         val gson = Gson()
-        val categories = listOf(
-            QuestionCategory.PERSONAL,
-            QuestionCategory.TRAVEL,
-            QuestionCategory.WORK
-        )
-        val fileNames = mapOf(
-            QuestionCategory.PERSONAL to "questions_personal.json",
-            QuestionCategory.TRAVEL to "questions_travel.json",
-            QuestionCategory.WORK to "questions_work.json"
-        )
-        for (category in categories) {
+        val assetFiles = context.assets.list("")?.filter { it.startsWith("qa_") && it.endsWith(".json") } ?: emptyList()
+        val categories = assetFiles.map { it.removePrefix("qa_").removeSuffix(".json") }
+        for ((i, fileName) in assetFiles.withIndex()) {
+            val category = categories[i]
             try {
-                val inputStream = context.assets.open(fileNames[category] ?: continue)
+                val inputStream = context.assets.open(fileName)
                 val reader = InputStreamReader(inputStream)
-                val type = object : TypeToken<List<QuestionAsset>>() {}.type
-                val assetQuestions: List<QuestionAsset> = gson.fromJson(reader, type)
-                val questions = assetQuestions.map {
-                    Question(
-                        question = it.question_en, // 영문
-                        questionKo = it.question_ko, // 한글 번역
+                val type = object : TypeToken<List<QaItemAsset>>() {}.type
+                val assetItems: List<QaItemAsset> = gson.fromJson(reader, type)
+                val items = assetItems.map {
+                    QaItem(
+                        id = it.id ?: "",
                         category = category,
-                        sampleAnswer = ""
+                        questionEn = it.question_en,
+                        questionKo = it.question_ko,
+                        answerEn = it.answer_en,
+                        answerKo = it.answer_ko
                     )
                 }
-                questionsByCategory[category] = questions
-                questionIndexByCategory[category] = 0
+                itemsByCategory[category] = items
+                itemIndexByCategory[category] = 0
             } catch (e: Exception) {
-                questionsByCategory[category] = emptyList()
-                questionIndexByCategory[category] = 0
+                itemsByCategory[category] = emptyList()
+                itemIndexByCategory[category] = 0
             }
         }
+        _uiState.value = _uiState.value.copy(categories = categories)
     }
 
-    fun selectCategory(category: QuestionCategory) {
-        val questions = questionsByCategory[category] ?: emptyList()
-        val index = questionIndexByCategory[category] ?: 0
-        if (questions.isNotEmpty()) {
+    fun selectCategory(category: String) {
+        val items = itemsByCategory[category] ?: emptyList()
+        val index = itemIndexByCategory[category] ?: 0
+        if (items.isNotEmpty()) {
             _uiState.value = _uiState.value.copy(
-                currentQuestion = questions[index],
+                currentQaItem = items[index],
                 currentCategory = category,
                 isLoading = false,
                 error = null
             )
         } else {
             _uiState.value = _uiState.value.copy(
-                currentQuestion = null,
+                currentQaItem = null,
                 currentCategory = category,
                 isLoading = false,
                 error = "해당 카테고리에 질문이 없습니다."
@@ -89,15 +95,15 @@ class MainViewModel : AndroidViewModel {
         }
     }
 
-    fun nextQuestion() {
+    fun nextQaItem() {
         val category = _uiState.value.currentCategory ?: return
-        val questions = questionsByCategory[category] ?: return
-        if (questions.isEmpty()) return
-        val currentIndex = questionIndexByCategory[category] ?: 0
-        val nextIndex = (currentIndex + 1) % questions.size
-        questionIndexByCategory[category] = nextIndex
+        val items = itemsByCategory[category] ?: return
+        if (items.isEmpty()) return
+        val currentIndex = itemIndexByCategory[category] ?: 0
+        val nextIndex = (currentIndex + 1) % items.size
+        itemIndexByCategory[category] = nextIndex
         _uiState.value = _uiState.value.copy(
-            currentQuestion = questions[nextIndex],
+            currentQaItem = items[nextIndex],
             isLoading = false,
             error = null
         )
@@ -107,16 +113,11 @@ class MainViewModel : AndroidViewModel {
         _uiState.value = _uiState.value.copy(error = null)
     }
 
-    data class QuestionAsset(
-        val category: String,
+    data class QaItemAsset(
+        val id: String? = null,
         val question_en: String,
-        val question_ko: String
+        val question_ko: String,
+        val answer_en: String,
+        val answer_ko: String
     )
-}
-
-data class MainUiState(
-    val currentQuestion: Question? = null,
-    val currentCategory: QuestionCategory? = null,
-    val isLoading: Boolean = false,
-    val error: String? = null
-) 
+} 

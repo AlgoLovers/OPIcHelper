@@ -77,8 +77,8 @@ dependencies {
     // implementation(libs.okhttp.logging)
     
     // Coroutines
-    implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.kotlinx.coroutines.core)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     
     testImplementation(libs.junit)
     testImplementation("org.mockito:mockito-core:5.2.0")
@@ -91,4 +91,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // MockK (mock 객체 생성)
+    testImplementation("io.mockk:mockk:1.13.8")
+    // 코루틴 테스트
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    // JUnit (이미 있을 수 있음)
+    testImplementation("junit:junit:4.13.2")
 }

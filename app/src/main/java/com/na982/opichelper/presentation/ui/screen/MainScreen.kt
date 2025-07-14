@@ -16,6 +16,7 @@ import com.na982.opichelper.presentation.viewmodel.MainUiState
 import androidx.compose.ui.platform.LocalContext
 import com.na982.opichelper.presentation.ui.component.rememberTtsPlayer
 import com.na982.opichelper.presentation.ui.component.FlipCard
+import com.na982.opichelper.domain.entity.QaItem
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -24,17 +25,15 @@ fun MainScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val categories = listOf(
-        QuestionCategory.PERSONAL,
-        QuestionCategory.TRAVEL,
-        QuestionCategory.WORK
-    )
+    val categories = uiState.categories
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .statusBarsPadding()
+            .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -58,7 +57,7 @@ fun MainScreen(
             categories.forEach { category ->
                 FilterChip(
                     onClick = { viewModel.selectCategory(category) },
-                    label = { Text(category.name) },
+                    label = { Text(category) },
                     selected = uiState.currentCategory == category
                 )
             }
@@ -85,32 +84,56 @@ fun MainScreen(
                     )
                 }
             }
-            uiState.currentQuestion != null -> {
+            uiState.currentQaItem != null -> {
                 val context = LocalContext.current
                 val ttsPlayer = rememberTtsPlayer(context)
                 QuestionCard(
-                    question = uiState.currentQuestion!!
+                    qaItem = uiState.currentQaItem!!
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
-                        ttsPlayer.speak(uiState.currentQuestion!!.question, rate = 0.8f)
+                        ttsPlayer.speak(uiState.currentQaItem!!.questionEn, rate = 0.8f)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("재생")
                 }
                 Spacer(modifier = Modifier.height(12.dp))
+                // 답변 카드 (플립, TTS)
                 AnswerCard(
-                    answer = uiState.currentQuestion!!.sampleAnswer
+                    answerEn = uiState.currentQaItem!!.answerEn,
+                    answerKo = uiState.currentQaItem!!.answerKo
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            ttsPlayer.speak(uiState.currentQaItem!!.answerEn, rate = 0.8f)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("전체 재생")
+                    }
+                    Button(
+                        onClick = {
+                            ttsPlayer.speakBySentence(uiState.currentQaItem!!.answerEn, repeatCount = 5, pauseRatio = 1.5f)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("문장별 따라하기")
+                    }
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { viewModel.nextQuestion() },
+            onClick = { viewModel.nextQaItem() },
             modifier = Modifier.fillMaxWidth(),
             enabled = uiState.currentCategory != null
         ) {
@@ -121,7 +144,7 @@ fun MainScreen(
 
 @Composable
 fun QuestionCard(
-    question: com.na982.opichelper.domain.entity.Question,
+    qaItem: QaItem,
     modifier: Modifier = Modifier
 ) {
     FlipCard(
@@ -140,11 +163,10 @@ fun QuestionCard(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
-                        text = question.question,
+                        text = qaItem.questionEn,
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    // 카테고리 텍스트 제거
                 }
             }
         },
@@ -162,7 +184,7 @@ fun QuestionCard(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
-                        text = question.questionKo,
+                        text = qaItem.questionKo,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -173,27 +195,53 @@ fun QuestionCard(
 
 @Composable
 fun AnswerCard(
-    answer: String,
+    answerEn: String,
+    answerKo: String,
     modifier: Modifier = Modifier
 ) {
-    if (answer.isNotEmpty()) {
-        Card(
-            modifier = modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "샘플 답변",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Text(
-                    text = answer,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+    if (answerEn.isNotEmpty() || answerKo.isNotEmpty()) {
+        FlipCard(
+            modifier = modifier,
+            frontContent = {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "샘플 답변",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = answerEn,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            backContent = {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "샘플 답변",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = answerKo,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
-        }
+        )
     }
 } 

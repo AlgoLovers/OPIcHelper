@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.repository
 
 import com.na982.opichelper.domain.entity.StudySession
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CompletableDeferred
 
 interface StudySessionRepository {
     suspend fun createSession(session: StudySession): String

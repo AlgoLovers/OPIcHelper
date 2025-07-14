@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "category": "PERSONAL",
+    "question_en": "Tell me about your hometown.",
+    "question_ko": "당신의 고향에 대해 이야기해 주세요.",
+    "answer_en": "I grew up in a small town called Springfield. It is quiet and surrounded by nature.",
+    "answer_ko": "저는 Springfield라는 작은 마을에서 자랐습니다. 그곳은 조용하고 자연으로 둘러싸여 있습니다."
+  },
+  {
+    "id": "2",
+    "category": "PERSONAL",
+    "question_en": "Describe your daily routine.",
+    "question_ko": "당신의 일상적인 하루를 설명해 주세요.",
+    "answer_en": "I usually wake up at 7am, have breakfast, and go to work. After work, I exercise and read books.",
+    "answer_ko": "저는 보통 오전 7시에 일어나 아침을 먹고 출근합니다. 퇴근 후에는 운동을 하고 책을 읽습니다."
+  },
+  {
+    "id": "3",
+    "category": "PERSONAL",
+    "question_en": "What do you like to do in your free time?",
+    "question_ko": "여가 시간에 무엇을 하는 것을 좋아하나요?",
+    "answer_en": "In my free time, I enjoy listening to music and meeting friends at cafes.",
+    "answer_ko": "여가 시간에는 음악을 듣거나 친구들과 카페에서 만나는 것을 즐깁니다."
+  }
+] 

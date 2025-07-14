@@ -21,29 +21,27 @@ class MainViewModelInstrumentedTest {
     }
 
     @Test
-    fun readPersonalCategoryQuestionsFromAssets() {
+    fun selectCategory_showsFirstQaItem() {
         viewModel.selectCategory(QuestionCategory.PERSONAL)
-        val question = viewModel.uiState.value.currentQuestion
-        assertNotNull(question)
-        assertEquals(QuestionCategory.PERSONAL, question?.category)
-        assertTrue(question?.question?.isNotEmpty() == true)
+        val qaItem = viewModel.uiState.value.currentQaItem
+        assertNotNull(qaItem)
+        assertEquals(QuestionCategory.PERSONAL, qaItem?.category)
     }
 
     @Test
-    fun readTravelCategoryQuestionsFromAssets() {
+    fun nextQaItem_incrementsIndex() {
         viewModel.selectCategory(QuestionCategory.TRAVEL)
-        val question = viewModel.uiState.value.currentQuestion
-        assertNotNull(question)
-        assertEquals(QuestionCategory.TRAVEL, question?.category)
-        assertTrue(question?.question?.isNotEmpty() == true)
+        val first = viewModel.uiState.value.currentQaItem
+        viewModel.nextQaItem()
+        val second = viewModel.uiState.value.currentQaItem
+        assertNotEquals(first, second)
     }
 
     @Test
-    fun readWorkCategoryQuestionsFromAssets() {
-        viewModel.selectCategory(QuestionCategory.WORK)
-        val question = viewModel.uiState.value.currentQuestion
-        assertNotNull(question)
-        assertEquals(QuestionCategory.WORK, question?.category)
-        assertTrue(question?.question?.isNotEmpty() == true)
+    fun selectCategory_withNoItems_showsError() {
+        // 없는 카테고리(예: EDUCATION) 선택
+        viewModel.selectCategory(QuestionCategory.EDUCATION)
+        assertNull(viewModel.uiState.value.currentQaItem)
+        assertNotNull(viewModel.uiState.value.error)
     }
 } 

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "category": "WORK",
+    "question_en": "What is your job? Describe your main responsibilities.",
+    "question_ko": "당신의 직업은 무엇이며, 주요 업무에 대해 설명해 주세요.",
+    "answer_en": "I am a software engineer. My main responsibilities are developing and maintaining applications.",
+    "answer_ko": "저는 소프트웨어 엔지니어입니다. 주요 업무는 애플리케이션 개발과 유지보수입니다."
+  },
+  {
+    "id": "2",
+    "category": "WORK",
+    "question_en": "What do you like most about your work?",
+    "question_ko": "당신이 하는 일에서 가장 좋아하는 점은 무엇인가요?",
+    "answer_en": "I like solving problems and learning new technologies.",
+    "answer_ko": "문제를 해결하고 새로운 기술을 배우는 것이 가장 좋습니다."
+  },
+  {
+    "id": "3",
+    "category": "WORK",
+    "question_en": "Have you ever had a difficult situation at work? How did you handle it?",
+    "question_ko": "직장에서 어려운 상황을 겪은 적이 있나요? 어떻게 해결했나요?",
+    "answer_en": "Yes, I once had a tight deadline. I managed my time efficiently and worked with my team to finish on time.",
+    "answer_ko": "네, 한 번은 촉박한 마감일이 있었는데, 시간을 효율적으로 관리하고 팀원들과 협력하여 제시간에 마쳤습니다."
+  }
+] 
