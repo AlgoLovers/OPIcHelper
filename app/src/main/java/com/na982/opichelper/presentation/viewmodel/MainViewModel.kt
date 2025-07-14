@@ -54,7 +54,8 @@ class MainViewModel : AndroidViewModel {
                 val assetQuestions: List<QuestionAsset> = gson.fromJson(reader, type)
                 val questions = assetQuestions.map {
                     Question(
-                        question = it.question_en, // 기본은 영문, 필요시 question_ko로 변경
+                        question = it.question_en, // 영문
+                        questionKo = it.question_ko, // 한글 번역
                         category = category,
                         sampleAnswer = ""
                     )

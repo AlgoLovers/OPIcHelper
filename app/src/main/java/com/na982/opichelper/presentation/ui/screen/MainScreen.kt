@@ -15,6 +15,7 @@ import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.presentation.viewmodel.MainUiState
 import androidx.compose.ui.platform.LocalContext
 import com.na982.opichelper.presentation.ui.component.rememberTtsPlayer
+import com.na982.opichelper.presentation.ui.component.FlipCard
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -123,29 +124,51 @@ fun QuestionCard(
     question: com.na982.opichelper.domain.entity.Question,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "질문",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = question.question,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "카테고리: ${question.category.name}",
-                style = MaterialTheme.typography.bodySmall
-            )
+    FlipCard(
+        modifier = modifier,
+        frontContent = {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "질문",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = question.question,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // 카테고리 텍스트 제거
+                }
+            }
+        },
+        backContent = {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "질문",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = question.questionKo,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
         }
-    }
+    )
 }
 
 @Composable

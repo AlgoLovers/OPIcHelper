@@ -3,6 +3,7 @@ package com.na982.opichelper.domain.entity
 data class Question(
     val id: String = "",
     val question: String,
+    val questionKo: String = "",
     val category: QuestionCategory,
     val sampleAnswer: String = "",
     val keywords: List<String> = emptyList(),
