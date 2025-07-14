@@ -1,5 +1,6 @@
 package com.na982.opichelper.presentation.ui.screen
 
+import android.app.Activity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import com.na982.opichelper.domain.entity.QuestionCategory
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.presentation.viewmodel.MainUiState
+import androidx.compose.ui.platform.LocalContext
+import com.na982.opichelper.presentation.ui.component.rememberTtsPlayer
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -82,9 +85,20 @@ fun MainScreen(
                 }
             }
             uiState.currentQuestion != null -> {
+                val context = LocalContext.current
+                val ttsPlayer = rememberTtsPlayer(context)
                 QuestionCard(
                     question = uiState.currentQuestion!!
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        ttsPlayer.speak(uiState.currentQuestion!!.question, rate = 0.8f)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("재생")
+                }
                 Spacer(modifier = Modifier.height(12.dp))
                 AnswerCard(
                     answer = uiState.currentQuestion!!.sampleAnswer
