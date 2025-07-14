@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# OPIcHeler
-=======
 # OPIC Helper
 
 OPIC 학습을 위한 Android 애플리케이션입니다. MVVM 아키텍처와 Jetpack Compose를 사용하여 개발되었습니다.
