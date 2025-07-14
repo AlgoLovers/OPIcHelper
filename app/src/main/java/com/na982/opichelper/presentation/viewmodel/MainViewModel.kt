@@ -13,19 +13,28 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+class MainViewModel : AndroidViewModel {
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
-    private val questionsByCategory: MutableMap<QuestionCategory, List<Question>> = mutableMapOf()
+    private val questionsByCategory: MutableMap<QuestionCategory, List<Question>>
     private val questionIndexByCategory: MutableMap<QuestionCategory, Int> = mutableMapOf()
 
-    init {
-        loadQuestionsFromAssets()
+    // Primary constructor for test (inject data)
+    constructor(questionsByCategory: Map<QuestionCategory, List<Question>>) : super(Application()) {
+        this.questionsByCategory = questionsByCategory.toMutableMap()
+        for (category in questionsByCategory.keys) {
+            questionIndexByCategory[category] = 0
+        }
     }
 
-    private fun loadQuestionsFromAssets() {
-        val context = getApplication<Application>()
+    // Secondary constructor for production (load from assets)
+    constructor(application: Application) : this(mutableMapOf()) {
+        loadQuestionsFromAssets(application)
+    }
+
+    private fun loadQuestionsFromAssets(application: Application) {
+        val context = application
         val gson = Gson()
         val categories = listOf(
             QuestionCategory.PERSONAL,
