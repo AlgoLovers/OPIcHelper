@@ -18,6 +18,10 @@ import com.na982.opichelper.presentation.ui.component.FlipCard
 import com.na982.opichelper.domain.entity.QaItem
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.geometry.Offset
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +36,7 @@ fun MainScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
             .statusBarsPadding()
@@ -40,8 +45,17 @@ fun MainScreen(
     ) {
         Text(
             text = "OPic Helper",
-            style = MaterialTheme.typography.headlineLarge,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                shadow = Shadow(
+                    color = Color.Black.copy(alpha = 0.4f),
+                    offset = Offset(2f, 2f),
+                    blurRadius = 4f
+                )
+            ),
             textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -49,6 +63,7 @@ fun MainScreen(
         Text(
             text = "카테고리 선택",
             style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -59,7 +74,7 @@ fun MainScreen(
             categories.forEach { category ->
                 FilterChip(
                     onClick = { viewModel.selectCategory(category) },
-                    label = { Text(category) },
+                    label = { Text(category, color = MaterialTheme.colorScheme.onBackground) },
                     selected = uiState.currentCategory == category
                 )
             }
@@ -138,7 +153,10 @@ fun MainScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { viewModel.nextQaItem() },
+            onClick = {
+                ttsPlayer.stop()
+                viewModel.nextQaItem()
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = uiState.currentCategory != null
         ) {
