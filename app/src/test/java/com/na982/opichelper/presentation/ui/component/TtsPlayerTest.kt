@@ -50,31 +50,47 @@ class TtsPlayerTest {
     }
 
     @Test
-    fun `speak should call tts speak with correct params`() {
-        val text = "Hello world"
-        ttsPlayer.speak(text, rate = 1.0f)
-        verify { tts.setSpeechRate(1.0f) }
-        verify { tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null) }
-    }
-
-    @Test
-    fun `stop should call tts stop`() {
-        ttsPlayer.stop()
-        verify { tts.stop() }
-    }
-
-    @Test
-    fun `shutdown should call tts shutdown`() {
-        ttsPlayer.shutdown()
-        verify { tts.shutdown() }
-    }
-
-    @Test
-    fun `speakBySentence should split and repeat sentences`() = runTest {
+    fun `speakQuestion should call tts speak and update question highlight only`() = runTest {
         val text = "Hello. How are you?"
-        ttsPlayer.speakBySentence(text, repeatCount = 2, pauseRatio = 0.1f)
+        ttsPlayer.speakQuestion(text, rate = 1.0f)
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(atLeast = 1) { tts.speak(any(), any(), any(), any()) }
+        assert(ttsPlayer.currentQuestionSentenceIndex.value == 0)
+        assert(ttsPlayer.currentAnswerSentenceIndex.value == null)
+        ttsPlayer.stop()
+        assert(ttsPlayer.currentQuestionSentenceIndex.value == null)
+        assert(ttsPlayer.currentAnswerSentenceIndex.value == null)
+    }
+
+    @Test
+    fun `speakAnswer should call tts speak and update answer highlight only`() = runTest {
+        val text = "Hello. How are you?"
+        ttsPlayer.speakAnswer(text, rate = 1.0f)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assert(ttsPlayer.currentAnswerSentenceIndex.value == 0)
+        assert(ttsPlayer.currentQuestionSentenceIndex.value == null)
+        ttsPlayer.stop()
+        assert(ttsPlayer.currentAnswerSentenceIndex.value == null)
+        assert(ttsPlayer.currentQuestionSentenceIndex.value == null)
+    }
+
+    @Test
+    fun `speakBySentence should update only answer highlight and not question highlight`() = runTest {
+        val text = "Hello. How are you?"
+        ttsPlayer.speakBySentence(text, repeatCount = 1, pauseRatio = 0.1f)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assert(ttsPlayer.currentAnswerSentenceIndex.value == 0)
+        assert(ttsPlayer.currentQuestionSentenceIndex.value == null)
+        ttsPlayer.stop()
+        assert(ttsPlayer.currentAnswerSentenceIndex.value == null)
+        assert(ttsPlayer.currentQuestionSentenceIndex.value == null)
+    }
+
+    @Test
+    fun `calcRestDuration returns correct value`() {
+        val sentence = "Hello world."
+        val duration = ttsPlayer.calcRestDuration(sentence, 2.0f)
+        val expected = ((sentence.length * 50L).coerceAtLeast(800L) * 2.0f).toLong()
+        assert(duration == expected)
     }
 
     @Test

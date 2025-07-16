@@ -14,14 +14,16 @@ import com.na982.opichelper.domain.entity.QuestionCategory
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.presentation.viewmodel.MainUiState
 import androidx.compose.ui.platform.LocalContext
-import com.na982.opichelper.presentation.ui.component.rememberTtsPlayer
 import com.na982.opichelper.presentation.ui.component.FlipCard
 import com.na982.opichelper.domain.entity.QaItem
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
+    ttsPlayer: com.na982.opichelper.presentation.ui.component.TtsPlayer,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -85,15 +87,17 @@ fun MainScreen(
                 }
             }
             uiState.currentQaItem != null -> {
-                val context = LocalContext.current
-                val ttsPlayer = rememberTtsPlayer(context)
+                val currentQuestionSentenceIndex by ttsPlayer.currentQuestionSentenceIndex.collectAsState()
+                val currentAnswerSentenceIndex by ttsPlayer.currentAnswerSentenceIndex.collectAsState()
+                // 질문 카드에 하이라이트 적용
                 QuestionCard(
-                    qaItem = uiState.currentQaItem!!
+                    qaItem = uiState.currentQaItem!!,
+                    currentSentenceIndex = currentQuestionSentenceIndex
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
-                        ttsPlayer.speak(uiState.currentQaItem!!.questionEn, rate = 0.8f)
+                        ttsPlayer.speakQuestion(uiState.currentQaItem!!.questionEn, rate = 0.8f)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -103,7 +107,8 @@ fun MainScreen(
                 // 답변 카드 (플립, TTS)
                 AnswerCard(
                     answerEn = uiState.currentQaItem!!.answerEn,
-                    answerKo = uiState.currentQaItem!!.answerKo
+                    answerKo = uiState.currentQaItem!!.answerKo,
+                    currentSentenceIndex = currentAnswerSentenceIndex
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
@@ -112,7 +117,7 @@ fun MainScreen(
                 ) {
                     Button(
                         onClick = {
-                            ttsPlayer.speak(uiState.currentQaItem!!.answerEn, rate = 0.8f)
+                            ttsPlayer.speakAnswer(uiState.currentQaItem!!.answerEn, rate = 0.8f)
                         },
                         modifier = Modifier.weight(1f)
                     ) {
@@ -145,6 +150,7 @@ fun MainScreen(
 @Composable
 fun QuestionCard(
     qaItem: QaItem,
+    currentSentenceIndex: Int? = null,
     modifier: Modifier = Modifier
 ) {
     FlipCard(
@@ -162,10 +168,16 @@ fun QuestionCard(
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    Text(
-                        text = qaItem.questionEn,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    // 질문도 문장별 하이라이트
+                    val sentences = qaItem.questionEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+                    sentences.forEachIndexed { idx, sentence ->
+                        Text(
+                            text = sentence,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (currentSentenceIndex == idx) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
@@ -197,6 +209,7 @@ fun QuestionCard(
 fun AnswerCard(
     answerEn: String,
     answerKo: String,
+    currentSentenceIndex: Int?,
     modifier: Modifier = Modifier
 ) {
     if (answerEn.isNotEmpty() || answerKo.isNotEmpty()) {
@@ -215,10 +228,15 @@ fun AnswerCard(
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        Text(
-                            text = answerEn,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        val sentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+                        sentences.forEachIndexed { idx, sentence ->
+                            Text(
+                                text = sentence,
+                                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, fontWeight = FontWeight.Normal),
+                                color = if (currentSentenceIndex == idx) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
                     }
                 }
             },
