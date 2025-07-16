@@ -46,30 +46,59 @@ class MainViewModel : AndroidViewModel {
     private fun loadQaItemsFromAssets(application: Application) {
         val context = application
         val gson = Gson()
-        val assetFiles = context.assets.list("")?.filter { it.startsWith("qa_") && it.endsWith(".json") } ?: emptyList()
-        val categories = assetFiles.map { it.removePrefix("qa_").removeSuffix(".json") }
-        for ((i, fileName) in assetFiles.withIndex()) {
-            val category = categories[i]
+        // Define the desired category order and display names
+        val categoryDisplayNames = listOf(
+            "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
+        )
+        // Map display names to asset file names (for 레스토랑, use restaurants asset)
+        val categoryAssetMap = mapOf(
+            "집" to "home",
+            "음악" to "music",
+            "집에서 보내는 휴가" to "home_vacation",
+            "영화" to "movie",
+            "레스토랑" to "restaurants",
+            "해변" to "beach",
+            "인터넷" to "internet",
+            "산업,커리어" to "industry_career",
+            "은행" to "bank",
+            "교통" to "transportation",
+            "패션" to "fashion",
+            "가족,친구" to "family_friends",
+            "가구" to "furniture",
+            "예약" to "reservation",
+            "명절" to "holiday"
+        )
+        val categories = categoryDisplayNames
+        for (displayName in categoryDisplayNames) {
+            val assetKey = categoryAssetMap[displayName] ?: displayName
+            val fileName = "qa_${assetKey}.json"
             try {
-                val inputStream = context.assets.open(fileName)
-                val reader = InputStreamReader(inputStream)
-                val type = object : TypeToken<List<QaItemAsset>>() {}.type
-                val assetItems: List<QaItemAsset> = gson.fromJson(reader, type)
-                val items = assetItems.map {
-                    QaItem(
-                        id = it.id ?: "",
-                        category = category,
-                        questionEn = it.question_en,
-                        questionKo = it.question_ko,
-                        answerEn = it.answer_en,
-                        answerKo = it.answer_ko
-                    )
+                val assetList = context.assets.list("")?.toList() ?: emptyList()
+                if (assetList.contains(fileName)) {
+                    val inputStream = context.assets.open(fileName)
+                    val reader = InputStreamReader(inputStream)
+                    val type = object : TypeToken<List<QaItemAsset>>() {}.type
+                    val assetItems: List<QaItemAsset> = gson.fromJson(reader, type)
+                    val items = assetItems.map {
+                        QaItem(
+                            id = it.id ?: "",
+                            category = displayName,
+                            questionEn = it.question_en,
+                            questionKo = it.question_ko,
+                            answerEn = it.answer_en,
+                            answerKo = it.answer_ko
+                        )
+                    }
+                    itemsByCategory[displayName] = items
+                    itemIndexByCategory[displayName] = 0
+                } else {
+                    // No asset file yet, initialize with empty list
+                    itemsByCategory[displayName] = emptyList()
+                    itemIndexByCategory[displayName] = 0
                 }
-                itemsByCategory[category] = items
-                itemIndexByCategory[category] = 0
             } catch (e: Exception) {
-                itemsByCategory[category] = emptyList()
-                itemIndexByCategory[category] = 0
+                itemsByCategory[displayName] = emptyList()
+                itemIndexByCategory[displayName] = 0
             }
         }
         _uiState.value = _uiState.value.copy(categories = categories)

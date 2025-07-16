@@ -67,16 +67,39 @@ fun MainScreen(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 16.dp)
+        var expanded by remember { mutableStateOf(false) }
+        val selectedCategory = uiState.currentCategory ?: "카테고리 선택"
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         ) {
-            categories.forEach { category ->
-                FilterChip(
-                    onClick = { viewModel.selectCategory(category) },
-                    label = { Text(category, color = MaterialTheme.colorScheme.onBackground) },
-                    selected = uiState.currentCategory == category
-                )
+            TextField(
+                value = selectedCategory,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("카테고리") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                colors = ExposedDropdownMenuDefaults.textFieldColors()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                categories.forEach { category ->
+                    DropdownMenuItem(
+                        text = { Text(category) },
+                        onClick = {
+                            viewModel.selectCategory(category)
+                            expanded = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
+                }
             }
         }
 
