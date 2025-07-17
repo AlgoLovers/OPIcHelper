@@ -13,6 +13,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
 import android.content.Context
+import android.content.SharedPreferences
 
 data class MainUiState(
     val currentQaItem: QaItem? = null,
@@ -29,6 +30,22 @@ class MainViewModel : AndroidViewModel {
     private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
     private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
 
+    private var prefs: SharedPreferences? = null
+    private val PREF_KEY_LAST_CATEGORY = "last_category"
+    private val PREF_KEY_LAST_INDEX = "last_index"
+
+    private val _questionHighlightIndex = MutableStateFlow<Int?>(null)
+    val questionHighlightIndex: StateFlow<Int?> = _questionHighlightIndex
+    private val _answerHighlightIndex = MutableStateFlow<Int?>(null)
+    val answerHighlightIndex: StateFlow<Int?> = _answerHighlightIndex
+
+    fun setQuestionHighlightIndex(index: Int?) {
+        _questionHighlightIndex.value = index
+    }
+    fun setAnswerHighlightIndex(index: Int?) {
+        _answerHighlightIndex.value = index
+    }
+
     // Primary constructor for test (inject data)
     constructor(itemsByCategory: Map<String, List<QaItem>>) : super(Application()) {
         this.itemsByCategory.putAll(itemsByCategory)
@@ -40,7 +57,9 @@ class MainViewModel : AndroidViewModel {
 
     // Secondary constructor for production (load from assets)
     constructor(application: Application) : this(mutableMapOf()) {
+        prefs = application.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
         loadQaItemsFromAssets(application)
+        restoreLastCategory()
     }
 
     private fun loadQaItemsFromAssets(application: Application) {
@@ -104,9 +123,36 @@ class MainViewModel : AndroidViewModel {
         _uiState.value = _uiState.value.copy(categories = categories)
     }
 
+    private fun restoreLastCategory() {
+        val lastCategory = prefs?.getString(PREF_KEY_LAST_CATEGORY, null)
+        val lastIndex = prefs?.getInt(PREF_KEY_LAST_INDEX, 0) ?: 0
+        if (lastCategory != null && itemsByCategory.containsKey(lastCategory)) {
+            val items = itemsByCategory[lastCategory] ?: emptyList()
+            val safeIndex = if (items.isNotEmpty()) lastIndex.coerceIn(0, items.size - 1) else 0
+            itemIndexByCategory[lastCategory] = safeIndex
+            if (items.isNotEmpty()) {
+                _uiState.value = _uiState.value.copy(
+                    currentQaItem = items[safeIndex],
+                    currentCategory = lastCategory,
+                    isLoading = false,
+                    error = null
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    currentQaItem = null,
+                    currentCategory = lastCategory,
+                    isLoading = false,
+                    error = "해당 카테고리에 질문이 없습니다."
+                )
+            }
+        }
+    }
+
     fun selectCategory(category: String) {
+        prefs?.edit()?.putString(PREF_KEY_LAST_CATEGORY, category)?.apply()
         val items = itemsByCategory[category] ?: emptyList()
         val index = itemIndexByCategory[category] ?: 0
+        prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, index)?.apply()
         if (items.isNotEmpty()) {
             _uiState.value = _uiState.value.copy(
                 currentQaItem = items[index],
@@ -131,6 +177,7 @@ class MainViewModel : AndroidViewModel {
         val currentIndex = itemIndexByCategory[category] ?: 0
         val nextIndex = (currentIndex + 1) % items.size
         itemIndexByCategory[category] = nextIndex
+        prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, nextIndex)?.apply()
         _uiState.value = _uiState.value.copy(
             currentQaItem = items[nextIndex],
             isLoading = false,
@@ -140,6 +187,10 @@ class MainViewModel : AndroidViewModel {
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun getItemsInCategory(category: String): List<QaItem> {
+        return itemsByCategory[category] ?: emptyList()
     }
 
     data class QaItemAsset(

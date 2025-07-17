@@ -54,8 +54,8 @@ fun MainScreen(
     // TtsService 바인딩 관련
     var ttsService by remember { mutableStateOf<TtsService?>(null) }
     // 하이라이트 인덱스 상태 관리
-    var questionHighlightIndex by remember { mutableStateOf<Int?>(null) }
-    var answerHighlightIndex by remember { mutableStateOf<Int?>(null) }
+    val questionHighlightIndex by viewModel.questionHighlightIndex.collectAsState()
+    val answerHighlightIndex by viewModel.answerHighlightIndex.collectAsState()
     // BroadcastReceiver 등록/해제 (전체 제거)
     // val appContext = context.applicationContext
     // DisposableEffect(Unit) { ... }
@@ -64,8 +64,17 @@ fun MainScreen(
             override fun onServiceConnected(name: android.content.ComponentName?, service: IBinder?) {
                 val binder = service as? TtsService.TtsBinder
                 ttsService = binder?.getService()
+                ttsService?.setHighlightCallback(object : TtsService.HighlightCallback {
+                    override fun onQuestionHighlight(index: Int?) {
+                        viewModel.setQuestionHighlightIndex(index)
+                    }
+                    override fun onAnswerHighlight(index: Int?) {
+                        viewModel.setAnswerHighlightIndex(index)
+                    }
+                })
             }
             override fun onServiceDisconnected(name: android.content.ComponentName?) {
+                ttsService?.setHighlightCallback(null)
                 ttsService = null
             }
         }
@@ -74,6 +83,7 @@ fun MainScreen(
         val intent = android.content.Intent(context, TtsService::class.java)
         context.bindService(intent, serviceConnection, android.content.Context.BIND_AUTO_CREATE)
         onDispose {
+            ttsService?.setHighlightCallback(null)
             context.unbindService(serviceConnection)
         }
     }
@@ -103,6 +113,19 @@ fun MainScreen(
             isRecording = false
         }
     }
+
+    // 현재 카테고리, 인덱스, 전체 개수 계산
+    val currentCategory = uiState.currentCategory
+    val currentQaItem = uiState.currentQaItem
+    val itemsInCategory = remember(currentCategory) {
+        if (currentCategory != null) viewModel.getItemsInCategory(currentCategory) else emptyList()
+    }
+    val currentIndex = remember(currentCategory to currentQaItem) {
+        if (currentCategory != null && currentQaItem != null) {
+            itemsInCategory.indexOfFirst { it.id == currentQaItem.id } + 1 // 1-based
+        } else 0
+    }
+    val totalCount = itemsInCategory.size
 
     Column(
         modifier = modifier
@@ -199,7 +222,9 @@ fun MainScreen(
                 // 질문 카드에 하이라이트 적용
                 QuestionCard(
                     qaItem = uiState.currentQaItem!!,
-                    currentSentenceIndex = questionHighlightIndex
+                    currentSentenceIndex = questionHighlightIndex,
+                    scriptIndex = currentIndex,
+                    scriptTotal = totalCount
                 )
                 Log.d("QuestionCard", "currentSentenceIndex=" + questionHighlightIndex)
                 Spacer(modifier = Modifier.height(8.dp))
@@ -209,6 +234,7 @@ fun MainScreen(
                 ) {
                     Button(
                         onClick = {
+                            viewModel.setAnswerHighlightIndex(null)
                             ttsService?.speakQuestion(uiState.currentQaItem!!.questionEn, rate = 0.8f)
                         },
                         modifier = Modifier.weight(1f)
@@ -254,8 +280,32 @@ fun MainScreen(
                 AnswerCard(
                     answerEn = uiState.currentQaItem!!.answerEn,
                     answerKo = uiState.currentQaItem!!.answerKo,
-                    currentSentenceIndex = answerHighlightIndex
+                    currentSentenceIndex = answerHighlightIndex,
+                    scriptIndex = currentIndex,
+                    scriptTotal = totalCount
                 )
+                if (!isRecording && sttText.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "내 답변 (음성 인식 결과)",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = sttText,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
                 Log.d("AnswerCard", "currentSentenceIndex=" + answerHighlightIndex)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
@@ -264,7 +314,8 @@ fun MainScreen(
                 ) {
                     Button(
                         onClick = {
-                            ttsService?.speak(uiState.currentQaItem!!.answerEn, rate = 0.8f)
+                            viewModel.setQuestionHighlightIndex(null)
+                            ttsService?.speakAnswer(uiState.currentQaItem!!.answerEn, rate = 0.8f)
                         },
                         modifier = Modifier.weight(1f)
                     ) {
@@ -272,6 +323,7 @@ fun MainScreen(
                     }
                     Button(
                         onClick = {
+                            viewModel.setQuestionHighlightIndex(null)
                             ttsService?.speakBySentence(uiState.currentQaItem!!.answerEn, repeatCount = 5, pauseRatio = 1.5f)
                         },
                         modifier = Modifier.weight(1f)
@@ -328,6 +380,8 @@ fun MainScreen(
 fun QuestionCard(
     qaItem: QaItem,
     currentSentenceIndex: Int? = null,
+    scriptIndex: Int = 0,
+    scriptTotal: Int = 0,
     modifier: Modifier = Modifier
 ) {
     Log.d("QuestionCard", "currentSentenceIndex=" + currentSentenceIndex)
@@ -341,11 +395,22 @@ fun QuestionCard(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = "질문",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "질문",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp).alignByBaseline()
+                        )
+                        if (scriptIndex > 0 && scriptTotal > 0) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "($scriptIndex/$scriptTotal)",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.alignByBaseline()
+                            )
+                        }
+                    }
                     val sentences = qaItem.questionEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
                     sentences.forEachIndexed { idx, sentence ->
                         val isHighlighted = currentSentenceIndex == idx
@@ -373,11 +438,22 @@ fun QuestionCard(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = "질문",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "질문",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp).alignByBaseline()
+                        )
+                        if (scriptIndex > 0 && scriptTotal > 0) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "($scriptIndex/$scriptTotal)",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.alignByBaseline()
+                            )
+                        }
+                    }
                     Text(
                         text = qaItem.questionKo,
                         style = MaterialTheme.typography.bodyLarge
@@ -393,6 +469,8 @@ fun AnswerCard(
     answerEn: String,
     answerKo: String,
     currentSentenceIndex: Int?,
+    scriptIndex: Int = 0,
+    scriptTotal: Int = 0,
     modifier: Modifier = Modifier
 ) {
     Log.d("AnswerCard", "currentSentenceIndex=" + currentSentenceIndex)
@@ -407,11 +485,22 @@ fun AnswerCard(
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
-                        Text(
-                            text = "샘플 답변",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "샘플 답변",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 8.dp).alignByBaseline()
+                            )
+                            if (scriptIndex > 0 && scriptTotal > 0) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "($scriptIndex/$scriptTotal)",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.alignByBaseline()
+                                )
+                            }
+                        }
                         val sentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
                         sentences.forEachIndexed { idx, sentence ->
                             val isHighlighted = currentSentenceIndex == idx
@@ -438,11 +527,22 @@ fun AnswerCard(
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
-                        Text(
-                            text = "샘플 답변",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "샘플 답변",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 8.dp).alignByBaseline()
+                            )
+                            if (scriptIndex > 0 && scriptTotal > 0) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "($scriptIndex/$scriptTotal)",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.alignByBaseline()
+                                )
+                            }
+                        }
                         Text(
                             text = answerKo,
                             style = MaterialTheme.typography.bodyMedium

@@ -34,6 +34,15 @@ class TtsService : Service(), TextToSpeech.OnInitListener {
     private var audioFocusRequest: AudioFocusRequest? = null
     private var noisyReceiverRegistered = false
 
+    interface HighlightCallback {
+        fun onQuestionHighlight(index: Int?)
+        fun onAnswerHighlight(index: Int?)
+    }
+    private var highlightCallback: HighlightCallback? = null
+    fun setHighlightCallback(callback: HighlightCallback?) {
+        highlightCallback = callback
+    }
+
     companion object {
         const val ACTION_TTS_HIGHLIGHT = "com.na982.opichelper.ACTION_TTS_HIGHLIGHT"
         const val EXTRA_HIGHLIGHT_INDEX = "highlight_index"
@@ -80,9 +89,10 @@ class TtsService : Service(), TextToSpeech.OnInitListener {
             registerNoisyReceiver()
             speakJob = CoroutineScope(Dispatchers.Main).launch {
                 val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-                for (sentence in sentences) {
+                for ((idx, sentence) in sentences.withIndex()) {
                     if (!isActive) return@launch
-                    // TODO: highlight callback to ViewModel/UI (mode, sentenceIdx)
+                    if (mode == "question") highlightCallback?.onQuestionHighlight(idx)
+                    if (mode == "answer") highlightCallback?.onAnswerHighlight(idx)
                     val utteranceId = "utt_${mode}_${System.currentTimeMillis()}"
                     tts?.setSpeechRate(rate)
                     val finished = CompletableDeferred<Unit>()
@@ -100,7 +110,8 @@ class TtsService : Service(), TextToSpeech.OnInitListener {
                     delay(400L)
                 }
                 tts?.setOnUtteranceProgressListener(null)
-                // TODO: highlight callback to ViewModel/UI (mode, -1)
+                if (mode == "question") highlightCallback?.onQuestionHighlight(null)
+                if (mode == "answer") highlightCallback?.onAnswerHighlight(null)
                 Log.d("TtsService", "speak finished: mode=$mode")
                 releaseWakeLock()
                 abandonAudioFocus()
@@ -128,10 +139,10 @@ class TtsService : Service(), TextToSpeech.OnInitListener {
             registerNoisyReceiver()
             speakJob = CoroutineScope(Dispatchers.Main).launch {
                 val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-                for (sentence in sentences) {
+                for ((sentenceIdx, sentence) in sentences.withIndex()) {
                     repeat(repeatCount) { i ->
                         if (!isActive) return@launch
-                        // TODO: highlight callback to ViewModel/UI ("answer", sentenceIdx)
+                        highlightCallback?.onAnswerHighlight(sentenceIdx)
                         val utteranceId = "utt_abs_${System.currentTimeMillis()}_${i}"
                         tts?.setSpeechRate(rate)
                         val finished = CompletableDeferred<Unit>()
@@ -150,7 +161,7 @@ class TtsService : Service(), TextToSpeech.OnInitListener {
                     }
                 }
                 tts?.setOnUtteranceProgressListener(null)
-                // TODO: highlight callback to ViewModel/UI ("answer", -1)
+                highlightCallback?.onAnswerHighlight(null)
                 Log.d("TtsService", "speakBySentence finished")
                 releaseWakeLock()
                 abandonAudioFocus()
