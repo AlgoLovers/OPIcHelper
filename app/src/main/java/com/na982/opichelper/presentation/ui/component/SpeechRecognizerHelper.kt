@@ -7,11 +7,15 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 
+interface RecognitionCallback {
+    fun onPartialResult(text: String)
+    fun onFinalResult(text: String)
+    fun onError(error: String)
+}
+
 class SpeechRecognizerHelper(
     private val context: Context,
-    private val onPartialResult: (String) -> Unit,
-    private val onFinalResult: (String) -> Unit,
-    private val onError: (String) -> Unit = {}
+    var recognitionCallback: RecognitionCallback? = null
 ) {
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
@@ -28,16 +32,16 @@ class SpeechRecognizerHelper(
                 override fun onEndOfSpeech() {}
                 override fun onError(error: Int) {
                     isListening = false
-                    onError(errorToMessage(error))
+                    recognitionCallback?.onError(errorToMessage(error))
                 }
                 override fun onResults(results: Bundle?) {
                     isListening = false
                     val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    onFinalResult(matches?.firstOrNull() ?: "")
+                    recognitionCallback?.onFinalResult(matches?.firstOrNull() ?: "")
                 }
                 override fun onPartialResults(partialResults: Bundle?) {
                     val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    onPartialResult(matches?.firstOrNull() ?: "")
+                    recognitionCallback?.onPartialResult(matches?.firstOrNull() ?: "")
                 }
                 override fun onEvent(eventType: Int, params: Bundle?) {}
             })

@@ -22,11 +22,11 @@ import android.os.PowerManager
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 
-class TtsService : Service(), TextToSpeech.OnInitListener {
+internal class TtsService : Service(), TextToSpeech.OnInitListener {
     private val binder = TtsBinder()
-    private var tts: TextToSpeech? = null
-    private var isReady = false
-    private var speakJob: Job? = null
+    internal var tts: TextToSpeech? = null
+    internal var isReady = false
+    internal var speakJob: Job? = null
     private val CHANNEL_ID = "TTS_FOREGROUND_CHANNEL"
     private val NOTIFICATION_ID = 1001
     private var wakeLock: PowerManager.WakeLock? = null
@@ -38,7 +38,7 @@ class TtsService : Service(), TextToSpeech.OnInitListener {
         fun onQuestionHighlight(index: Int?)
         fun onAnswerHighlight(index: Int?)
     }
-    private var highlightCallback: HighlightCallback? = null
+    internal var highlightCallback: HighlightCallback? = null
     fun setHighlightCallback(callback: HighlightCallback?) {
         highlightCallback = callback
     }

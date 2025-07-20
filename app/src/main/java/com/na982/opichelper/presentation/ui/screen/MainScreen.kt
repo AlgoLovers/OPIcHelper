@@ -38,6 +38,7 @@ import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
+import com.na982.opichelper.presentation.ui.component.RecognitionCallback
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -96,12 +97,13 @@ fun MainScreen(
     }
     // SpeechRecognizerHelper를 Compose에서 remember로 관리
     val speechHelper = remember {
-        SpeechRecognizerHelper(
-            context = context,
-            onPartialResult = { sttText = it },
-            onFinalResult = { sttText = it },
-            onError = { sttText = "음성 인식 오류: $it" }
-        )
+        SpeechRecognizerHelper(context).apply {
+            recognitionCallback = object : RecognitionCallback {
+                override fun onPartialResult(text: String) { sttText = text }
+                override fun onFinalResult(text: String) { sttText = text }
+                override fun onError(error: String) { sttText = "음성 인식 오류: $error" }
+            }
+        }
     }
 
     // 백버튼 시 녹음 종료
