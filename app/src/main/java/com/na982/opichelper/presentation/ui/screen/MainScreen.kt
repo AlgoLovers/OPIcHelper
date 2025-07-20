@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.geometry.Offset
-import com.na982.opichelper.presentation.ui.component.SpeechRecognizerHelper
 import androidx.activity.compose.BackHandler
 import android.media.MediaPlayer
 import android.Manifest
@@ -38,7 +37,8 @@ import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
-import com.na982.opichelper.presentation.ui.component.RecognitionCallback
+import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
+import com.na982.opichelper.domain.audio.TtsPlayer
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -49,11 +49,13 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
     val categories = uiState.categories
 
-    var isRecording by remember { mutableStateOf(false) }
-    var sttText by remember { mutableStateOf("") }
+    var isQuestionPlaying by remember { mutableStateOf(false) }
+    var isAnswerPlaying by remember { mutableStateOf(false) }
+    var isAnswerRepeatPlaying by remember { mutableStateOf(false) }
     val context = LocalContext.current
     // TtsService 바인딩 관련
     var ttsService by remember { mutableStateOf<TtsService?>(null) }
+    var ttsPlayer by remember { mutableStateOf<TtsPlayer?>(null) }
     // 하이라이트 인덱스 상태 관리
     val questionHighlightIndex by viewModel.questionHighlightIndex.collectAsState()
     val answerHighlightIndex by viewModel.answerHighlightIndex.collectAsState()
@@ -65,18 +67,31 @@ fun MainScreen(
             override fun onServiceConnected(name: android.content.ComponentName?, service: IBinder?) {
                 val binder = service as? TtsService.TtsBinder
                 ttsService = binder?.getService()
+                ttsPlayer = ttsService // TtsService는 TtsPlayer를 구현함
                 ttsService?.setHighlightCallback(object : TtsService.HighlightCallback {
                     override fun onQuestionHighlight(index: Int?) {
+                        Log.d("MainScreen", "Question highlight changed to: $index")
                         viewModel.setQuestionHighlightIndex(index)
+                        if (index == null) {
+                            // 질문 재생이 완료되면 상태 초기화
+                            isQuestionPlaying = false
+                        }
                     }
                     override fun onAnswerHighlight(index: Int?) {
+                        Log.d("MainScreen", "Answer highlight changed to: $index")
                         viewModel.setAnswerHighlightIndex(index)
+                        if (index == null) {
+                            // 답변 재생이 완료되면 상태 초기화
+                            isAnswerPlaying = false
+                            isAnswerRepeatPlaying = false
+                        }
                     }
                 })
             }
             override fun onServiceDisconnected(name: android.content.ComponentName?) {
                 ttsService?.setHighlightCallback(null)
                 ttsService = null
+                ttsPlayer = null
             }
         }
     }
@@ -88,32 +103,16 @@ fun MainScreen(
             context.unbindService(serviceConnection)
         }
     }
-    // AudioRecorderHelper, MediaPlayer, recordedFilePath 등 제거
-    // 권한 요청 런처는 STT에도 필요하므로 유지
+    // 권한 요청 런처 (녹음 파일 저장용)
     val recordAudioPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (!isGranted) {
-            Toast.makeText(context, "음성 인식 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-        }
-    }
-    // SpeechRecognizerHelper를 Compose에서 remember로 관리
-    val speechHelper = remember {
-        SpeechRecognizerHelper(context).apply {
-            recognitionCallback = object : RecognitionCallback {
-                override fun onPartialResult(text: String) { sttText = text }
-                override fun onFinalResult(text: String) { sttText = text }
-                override fun onError(error: String) { sttText = "음성 인식 오류: $error" }
-            }
+            Toast.makeText(context, "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // 백버튼 시 녹음 종료
-    BackHandler(enabled = isRecording) {
-        if (isRecording) {
-            speechHelper.stopListening()
-            // val file = audioRecorder.stopRecording() // 녹음 파일 저장 로직 제거
-            // recordedFilePath = file
-            isRecording = false
-        }
+    // 백버튼 시 녹음 종료 (녹음 상태는 RecordingButton에서 관리)
+    BackHandler(enabled = false) {
+        // 녹음 중지 로직은 RecordingButton에서 처리
     }
 
     // 현재 카테고리, 인덱스, 전체 개수 계산
@@ -124,82 +123,46 @@ fun MainScreen(
     }
     val currentIndex = remember(currentCategory to currentQaItem) {
         if (currentCategory != null && currentQaItem != null) {
-            itemsInCategory.indexOfFirst { it.id == currentQaItem.id } + 1 // 1-based
+            val index = itemsInCategory.indexOfFirst { it.id == currentQaItem.id }
+            if (index >= 0) index + 1 else 0 // 1-based
         } else 0
     }
     val totalCount = itemsInCategory.size
+    
+    Log.d("MainScreen", "Current index: $currentIndex/$totalCount, category: $currentCategory")
+
+    // 모든 재생 상태를 초기화하는 함수
+    fun resetAllPlayStates() {
+        Log.d("MainScreen", "Resetting all play states")
+        isQuestionPlaying = false
+        isAnswerPlaying = false
+        isAnswerRepeatPlaying = false
+        viewModel.setQuestionHighlightIndex(null)
+        viewModel.setAnswerHighlightIndex(null)
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
-            .verticalScroll(rememberScrollState())
             .statusBarsPadding()
-            .navigationBarsPadding(),
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "OPic Helper",
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-                shadow = Shadow(
-                    color = Color.Black.copy(alpha = 0.4f),
-                    offset = Offset(2f, 2f),
-                    blurRadius = 4f
-                )
-            ),
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
-
-        // Category Selection
-        Text(
-            text = "카테고리 선택",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        var expanded by remember { mutableStateOf(false) }
-        val selectedCategory = uiState.currentCategory ?: "카테고리 선택"
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        ) {
-            TextField(
-                value = selectedCategory,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("카테고리") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth(),
-                colors = ExposedDropdownMenuDefaults.textFieldColors()
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                categories.forEach { category ->
-                    DropdownMenuItem(
-                        text = { Text(category) },
-                        onClick = {
-                            viewModel.selectCategory(category)
-                            expanded = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                    )
-                }
+        // 앱 제목
+        AppTitle()
+        
+        // 카테고리 선택
+        CategorySelector(
+            selectedCategory = uiState.currentCategory ?: "",
+            onCategorySelected = { category ->
+                viewModel.selectCategory(category)
             }
-        }
+        )
 
-        // Question & Answer Display
+        // 질문과 답변 표시
         when {
             uiState.isLoading -> {
                 CircularProgressIndicator(
@@ -221,337 +184,154 @@ fun MainScreen(
                 }
             }
             uiState.currentQaItem != null -> {
-                // 질문 카드에 하이라이트 적용
+                // 질문 카드
                 QuestionCard(
-                    qaItem = uiState.currentQaItem!!,
-                    currentSentenceIndex = questionHighlightIndex,
-                    scriptIndex = currentIndex,
-                    scriptTotal = totalCount
+                    currentQuestion = uiState.currentQaItem!!.questionEn,
+                    currentQuestionKo = uiState.currentQaItem!!.questionKo,
+                    highlightIndex = questionHighlightIndex,
+                    currentIndex = currentIndex,
+                    totalCount = totalCount
                 )
-                Log.d("QuestionCard", "currentSentenceIndex=" + questionHighlightIndex)
-                Spacer(modifier = Modifier.height(8.dp))
+                
+                // 질문 카드 바로 아래 버튼들
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Button(
-                        onClick = {
-                            viewModel.setAnswerHighlightIndex(null)
-                            ttsService?.speakQuestion(uiState.currentQaItem!!.questionEn, rate = 0.8f)
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("질문재생")
-                    }
-                    Button(
-                        onClick = {
-                            val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-                            if (!hasPermission) {
-                                recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                Toast.makeText(context, "음성 인식 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-                                return@Button
-                            }
-                            if (!isRecording) {
-                                sttText = ""
-                                try {
-                                    speechHelper.startListening()
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "음성 인식 시작에 실패했습니다: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                                    return@Button
-                                }
+                    QuestionPlayButton(
+                        currentQuestion = uiState.currentQaItem!!.questionEn,
+                        ttsPlayer = ttsPlayer,
+                        onStateChange = { isPlaying ->
+                            Log.d("MainScreen", "Question play state changed to: $isPlaying")
+                            if (isPlaying) {
+                                // 질문 재생 시작 시 다른 모든 상태 초기화
+                                resetAllPlayStates()
+                                isQuestionPlaying = true
                             } else {
-                                speechHelper.stopListening()
+                                isQuestionPlaying = false
                             }
-                            isRecording = !isRecording
                         },
-                        modifier = Modifier.weight(1f),
-                        colors = if (isRecording) {
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.White
-                            )
-                        } else {
-                            ButtonDefaults.buttonColors()
-                        }
-                    ) {
-                        Text(if (isRecording) "녹음중지" else "녹음시작")
-                    }
+                        isPlaying = isQuestionPlaying,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    RecordingButton(
+                        context = context,
+                        onStartRecording = {
+                            Log.d("MainScreen", "Recording started")
+                            viewModel.startRecording()
+                        },
+                        onStopRecording = {
+                            Log.d("MainScreen", "Recording stopped")
+                            viewModel.stopRecording()
+                            Toast.makeText(context, "녹음을 중지합니다.", Toast.LENGTH_SHORT).show()
+                        },
+                        onPermissionRequest = {
+                            Log.d("MainScreen", "Requesting recording permission")
+                            recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                // 답변 카드에 하이라이트 적용
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 답변 카드
                 AnswerCard(
-                    answerEn = uiState.currentQaItem!!.answerEn,
-                    answerKo = uiState.currentQaItem!!.answerKo,
-                    currentSentenceIndex = answerHighlightIndex,
-                    scriptIndex = currentIndex,
-                    scriptTotal = totalCount
+                    currentAnswer = uiState.currentQaItem!!.answerEn,
+                    currentAnswerKo = uiState.currentQaItem!!.answerKo,
+                    highlightIndex = answerHighlightIndex
                 )
-                if (!isRecording && sttText.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "내 답변 (음성 인식 결과)",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = sttText,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-                }
-                Log.d("AnswerCard", "currentSentenceIndex=" + answerHighlightIndex)
-                Spacer(modifier = Modifier.height(8.dp))
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 답변 아래 버튼들
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Button(
-                        onClick = {
-                            viewModel.setQuestionHighlightIndex(null)
-                            ttsService?.speakAnswer(uiState.currentQaItem!!.answerEn, rate = 0.8f)
+                    AnswerPlayButton(
+                        currentAnswer = uiState.currentQaItem!!.answerEn,
+                        ttsPlayer = ttsPlayer,
+                        onStateChange = { isPlaying ->
+                            Log.d("MainScreen", "Answer play state changed to: $isPlaying")
+                            if (isPlaying) {
+                                // 답변 재생 시작 시 다른 모든 상태 초기화
+                                resetAllPlayStates()
+                                isAnswerPlaying = true
+                            } else {
+                                isAnswerPlaying = false
+                            }
+                        },
+                        isPlaying = isAnswerPlaying,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    AnswerRepeatPlayButton(
+                        currentAnswer = uiState.currentQaItem!!.answerEn,
+                        ttsPlayer = ttsPlayer,
+                        onStateChange = { isPlaying ->
+                            Log.d("MainScreen", "Answer repeat play state changed to: $isPlaying")
+                            if (isPlaying) {
+                                // 답변 반복 재생 시작 시 다른 모든 상태 초기화
+                                resetAllPlayStates()
+                                isAnswerRepeatPlaying = true
+                            } else {
+                                isAnswerRepeatPlaying = false
+                            }
+                        },
+                        isPlaying = isAnswerRepeatPlaying,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 네비게이션 버튼들
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PreviousQuestionButton(
+                        onPreviousQuestion = {
+                            Log.d("MainScreen", "Previous question button clicked")
+                            // TTS 중지
+                            ttsService?.stopTts()
+                            // 모든 상태 초기화
+                            resetAllPlayStates()
+                            // 이전 질문으로 이동
+                            viewModel.previousQaItem()
+                            Log.d("MainScreen", "Moved to previous question, all states reset")
                         },
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Text("전체 재생")
-                    }
-                    Button(
-                        onClick = {
-                            viewModel.setQuestionHighlightIndex(null)
-                            ttsService?.speakBySentence(uiState.currentQaItem!!.answerEn, repeatCount = 5, pauseRatio = 1.5f)
+                    )
+                    
+                    NextQuestionButton(
+                        onNextQuestion = {
+                            Log.d("MainScreen", "Next question button clicked")
+                            // TTS 중지
+                            ttsService?.stopTts()
+                            // 모든 상태 초기화
+                            resetAllPlayStates()
+                            // 다음 질문으로 이동
+                            viewModel.nextQaItem()
+                            Log.d("MainScreen", "Moved to next question, all states reset")
                         },
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Text("5회 반복")
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                ttsService?.stopTts()
-                if (isRecording) {
-                    speechHelper.stopListening()
-                    // val file = audioRecorder.stopRecording() // 녹음 파일 저장 로직 제거
-                    // recordedFilePath = file
-                    isRecording = false
-                }
-                // if (isPlaying) { // 녹음 파일 재생 버튼 제거
-                //     mediaPlayer.stop()
-                //     mediaPlayer.reset()
-                //     isPlaying = false
-                // }
-                viewModel.nextQaItem()
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = uiState.currentCategory != null
-        ) {
-            Text("다음 질문")
-        }
-    }
-    // SpeechRecognizerHelper/AudioRecorderHelper/MediaPlayer 리소스 해제 및 앱 종료/이동 시 녹음 종료
-    DisposableEffect(Unit) {
-        onDispose {
-            if (isRecording) {
-                speechHelper.stopListening()
-                // audioRecorder.stopRecording() // 녹음 파일 저장 로직 제거
-            }
-            // if (isPlaying) { // 녹음 파일 재생 버튼 제거
-            //     mediaPlayer.stop()
-            //     mediaPlayer.reset()
-            // }
-            speechHelper.destroy()
-            // audioRecorder.release() // 녹음 파일 저장 로직 제거
-            // mediaPlayer.release() // 녹음 파일 재생 버튼 제거
-        }
-    }
-}
-
-@Composable
-fun QuestionCard(
-    qaItem: QaItem,
-    currentSentenceIndex: Int? = null,
-    scriptIndex: Int = 0,
-    scriptTotal: Int = 0,
-    modifier: Modifier = Modifier
-) {
-    Log.d("QuestionCard", "currentSentenceIndex=" + currentSentenceIndex)
-    FlipCard(
-        modifier = modifier,
-        frontContent = {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "질문",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 8.dp).alignByBaseline()
-                        )
-                        if (scriptIndex > 0 && scriptTotal > 0) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "($scriptIndex/$scriptTotal)",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.alignByBaseline()
-                            )
-                        }
-                    }
-                    val sentences = qaItem.questionEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-                    sentences.forEachIndexed { idx, sentence ->
-                        val isHighlighted = currentSentenceIndex == idx
-                        Text(
-                            text = sentence,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = if (isHighlighted) 24.sp else 18.sp
-                            ),
-                            color = if (isHighlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier
-                                .padding(bottom = 4.dp)
-                                .then(if (isHighlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)) else Modifier)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-        },
-        backContent = {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "질문",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 8.dp).alignByBaseline()
-                        )
-                        if (scriptIndex > 0 && scriptTotal > 0) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "($scriptIndex/$scriptTotal)",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.alignByBaseline()
-                            )
-                        }
-                    }
-                    Text(
-                        text = qaItem.questionKo,
-                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
             }
         }
-    )
+
+
+    }
+    // 리소스 해제
+    DisposableEffect(Unit) {
+        onDispose {
+            Log.d("MainScreen", "Disposing MainScreen resources")
+            ttsService?.stopTts()
+        }
+    }
 }
 
-@Composable
-fun AnswerCard(
-    answerEn: String,
-    answerKo: String,
-    currentSentenceIndex: Int?,
-    scriptIndex: Int = 0,
-    scriptTotal: Int = 0,
-    modifier: Modifier = Modifier
-) {
-    Log.d("AnswerCard", "currentSentenceIndex=" + currentSentenceIndex)
-    if (answerEn.isNotEmpty() || answerKo.isNotEmpty()) {
-        FlipCard(
-            modifier = modifier,
-            frontContent = {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "샘플 답변",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(bottom = 8.dp).alignByBaseline()
-                            )
-                            if (scriptIndex > 0 && scriptTotal > 0) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "($scriptIndex/$scriptTotal)",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.alignByBaseline()
-                                )
-                            }
-                        }
-                        val sentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-                        sentences.forEachIndexed { idx, sentence ->
-                            val isHighlighted = currentSentenceIndex == idx
-                            Text(
-                                text = sentence,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = if (isHighlighted) 24.sp else 18.sp
-                                ),
-                                color = if (isHighlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .padding(bottom = 4.dp)
-                                    .then(if (isHighlighted) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)) else Modifier)
-                            )
-                        }
-                    }
-                }
-            },
-            backContent = {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "샘플 답변",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(bottom = 8.dp).alignByBaseline()
-                            )
-                            if (scriptIndex > 0 && scriptTotal > 0) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "($scriptIndex/$scriptTotal)",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.alignByBaseline()
-                                )
-                            }
-                        }
-                        Text(
-                            text = answerKo,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
-        )
-    }
-} 
+ 

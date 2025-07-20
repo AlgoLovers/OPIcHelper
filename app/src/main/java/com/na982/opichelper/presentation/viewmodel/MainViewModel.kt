@@ -14,6 +14,9 @@ import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
 import android.content.Context
 import android.content.SharedPreferences
+import com.na982.opichelper.data.audio.AudioRecorderImpl
+import com.na982.opichelper.domain.audio.AudioRecorder
+import android.util.Log
 
 data class MainUiState(
     val currentQaItem: QaItem? = null,
@@ -39,6 +42,9 @@ class MainViewModel : AndroidViewModel {
     private val _answerHighlightIndex = MutableStateFlow<Int?>(null)
     val answerHighlightIndex: StateFlow<Int?> = _answerHighlightIndex
 
+    private var audioRecorder: AudioRecorder? = null
+    private var currentRecordingFile: java.io.File? = null
+
     fun setQuestionHighlightIndex(index: Int?) {
         _questionHighlightIndex.value = index
     }
@@ -58,6 +64,7 @@ class MainViewModel : AndroidViewModel {
     // Secondary constructor for production (load from assets)
     constructor(application: Application) : this(mutableMapOf()) {
         prefs = application.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
+        audioRecorder = AudioRecorderImpl(application)
         loadQaItemsFromAssets(application)
         restoreLastCategory()
     }
@@ -171,11 +178,25 @@ class MainViewModel : AndroidViewModel {
     }
 
     fun nextQaItem() {
-        val category = _uiState.value.currentCategory ?: return
-        val items = itemsByCategory[category] ?: return
-        if (items.isEmpty()) return
+        Log.d("MainViewModel", "nextQaItem called")
+        val category = _uiState.value.currentCategory ?: run {
+            Log.w("MainViewModel", "No current category")
+            return
+        }
+        val items = itemsByCategory[category] ?: run {
+            Log.w("MainViewModel", "No items for category: $category")
+            return
+        }
+        if (items.isEmpty()) {
+            Log.w("MainViewModel", "Items list is empty for category: $category")
+            return
+        }
+        
         val currentIndex = itemIndexByCategory[category] ?: 0
         val nextIndex = (currentIndex + 1) % items.size
+        
+        Log.d("MainViewModel", "Moving from index $currentIndex to $nextIndex in category $category")
+        
         itemIndexByCategory[category] = nextIndex
         prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, nextIndex)?.apply()
         _uiState.value = _uiState.value.copy(
@@ -183,6 +204,8 @@ class MainViewModel : AndroidViewModel {
             isLoading = false,
             error = null
         )
+        
+        Log.d("MainViewModel", "Successfully moved to next question: ${items[nextIndex].questionEn.take(50)}...")
     }
 
     fun clearError() {
@@ -191,6 +214,81 @@ class MainViewModel : AndroidViewModel {
 
     fun getItemsInCategory(category: String): List<QaItem> {
         return itemsByCategory[category] ?: emptyList()
+    }
+
+    // 이전 질문으로 이동
+    fun previousQaItem() {
+        Log.d("MainViewModel", "previousQaItem called")
+        val category = _uiState.value.currentCategory ?: run {
+            Log.w("MainViewModel", "No current category")
+            return
+        }
+        val items = itemsByCategory[category] ?: run {
+            Log.w("MainViewModel", "No items for category: $category")
+            return
+        }
+        if (items.isEmpty()) {
+            Log.w("MainViewModel", "Items list is empty for category: $category")
+            return
+        }
+        
+        val currentIndex = itemIndexByCategory[category] ?: 0
+        val previousIndex = if (currentIndex > 0) currentIndex - 1 else items.size - 1
+        
+        Log.d("MainViewModel", "Moving from index $currentIndex to $previousIndex in category $category")
+        
+        itemIndexByCategory[category] = previousIndex
+        prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, previousIndex)?.apply()
+        _uiState.value = _uiState.value.copy(
+            currentQaItem = items[previousIndex],
+            isLoading = false,
+            error = null
+        )
+        
+        Log.d("MainViewModel", "Successfully moved to previous question: ${items[previousIndex].questionEn.take(50)}...")
+    }
+
+    // 질문 TTS 재생/일시정지 토글
+    fun toggleQuestionTts() {
+        // TTS 서비스와 통신하여 질문 재생/일시정지
+        // 실제 구현은 TtsService와 연동 필요
+        // 현재는 UI에서 직접 TtsService를 호출하도록 구현
+    }
+
+    // 답변 1회 재생
+    fun playAnswerOnce() {
+        // TTS 서비스와 통신하여 답변 1회 재생
+        // 실제 구현은 TtsService와 연동 필요
+        // 현재는 UI에서 직접 TtsService를 호출하도록 구현
+    }
+
+    // 답변 5회 반복 재생
+    fun playAnswerRepeat() {
+        // TTS 서비스와 통신하여 답변 5회 반복 재생
+        // 실제 구현은 TtsService와 연동 필요
+        // 현재는 UI에서 직접 TtsService를 호출하도록 구현
+    }
+
+    // 녹음 시작
+    fun startRecording() {
+        Log.d("MainViewModel", "startRecording called")
+        try {
+            currentRecordingFile = audioRecorder?.startRecording()
+            Log.d("MainViewModel", "Recording started successfully: ${currentRecordingFile?.absolutePath}")
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "Failed to start recording", e)
+        }
+    }
+
+    // 녹음 중지
+    fun stopRecording() {
+        Log.d("MainViewModel", "stopRecording called")
+        try {
+            currentRecordingFile = audioRecorder?.stopRecording()
+            Log.d("MainViewModel", "Recording stopped successfully: ${currentRecordingFile?.absolutePath}")
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "Failed to stop recording", e)
+        }
     }
 
     data class QaItemAsset(

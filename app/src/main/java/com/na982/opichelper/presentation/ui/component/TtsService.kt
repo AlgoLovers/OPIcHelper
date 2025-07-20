@@ -21,8 +21,9 @@ import android.media.AudioManager
 import android.os.PowerManager
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
+import com.na982.opichelper.domain.audio.TtsPlayer
 
-internal class TtsService : Service(), TextToSpeech.OnInitListener {
+internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
     private val binder = TtsBinder()
     internal var tts: TextToSpeech? = null
     internal var isReady = false
@@ -127,8 +128,25 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener {
         }
     }
 
-    fun speakQuestion(text: String, rate: Float = 0.8f) = speak(text, rate, "question")
-    fun speakAnswer(text: String, rate: Float = 0.8f) = speak(text, rate, "answer")
+    override fun speakQuestion(text: String, rate: Float) {
+        Log.d("TtsService", "speakQuestion called with text: ${text.take(50)}...")
+        speak(text, rate, "question")
+    }
+    
+    override fun speakAnswer(text: String, rate: Float) {
+        Log.d("TtsService", "speakAnswer called with text: ${text.take(50)}...")
+        speak(text, rate, "answer")
+    }
+    
+    // 답변을 지정된 횟수만큼 반복 재생
+    override fun speakAnswer(text: String, repeatCount: Int, rate: Float) {
+        Log.d("TtsService", "speakAnswer called with repeatCount=$repeatCount, text: ${text.take(50)}...")
+        if (repeatCount == 1) {
+            speakAnswer(text, rate)
+        } else {
+            speakBySentence(text, repeatCount, 1.5f, rate)
+        }
+    }
 
     fun speakBySentence(text: String, repeatCount: Int = 5, pauseRatio: Float = 1.5f, rate: Float = 0.8f) {
         if (!isReady) return
@@ -287,7 +305,7 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener {
     // 하이라이트 인덱스 브로드캐스트 함수 (전체 제거)
     // private fun sendHighlightBroadcast(index: Int, mode: String) { ... }
 
-    fun stopTts() {
+    override fun stopTts() {
         Log.d("TtsService", "stopTts called")
         speakJob?.cancel()
         tts?.stop()
@@ -300,5 +318,6 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener {
             @Suppress("DEPRECATION")
             stopForeground(true)
         }
+        Log.d("TtsService", "stopTts completed")
     }
 } 

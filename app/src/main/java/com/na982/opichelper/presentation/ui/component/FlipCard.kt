@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import android.util.Log
 
 /**
  * FlipCard: 재사용 가능한 플립 카드 컴포저블 (질문/답변 모두 사용 가능)
@@ -26,11 +27,16 @@ fun FlipCard(
         targetValue = if (flipped) 180f else 0f,
         animationSpec = tween(durationMillis = 800)
     )
+    
+    Log.d("FlipCard", "Rendering with flipped=$flipped, rotation=$rotation")
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { flipped = !flipped }
+            .clickable { 
+                flipped = !flipped
+                Log.d("FlipCard", "Card flipped to: $flipped")
+            }
             .graphicsLayer {
                 rotationX = rotation
                 cameraDistance = 16.dp.value * density

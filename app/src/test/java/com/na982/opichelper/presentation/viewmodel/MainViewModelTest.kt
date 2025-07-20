@@ -58,6 +58,8 @@ class MainViewModelTest {
         val qaItem = viewModel.uiState.value.currentQaItem
         assertNotNull(qaItem)
         assertEquals("personal", qaItem?.category)
+        assertEquals("Q1", qaItem?.questionEn)
+        assertEquals("A1", qaItem?.answerEn)
     }
 
     @Test
@@ -65,8 +67,10 @@ class MainViewModelTest {
         val viewModel = MainViewModel(itemsByCategory)
         viewModel.selectCategory("travel")
         val first = viewModel.uiState.value.currentQaItem
+        assertEquals("Q2", first?.questionEn)
         viewModel.nextQaItem()
         val second = viewModel.uiState.value.currentQaItem
+        assertEquals("Q2b", second?.questionEn)
         assertNotEquals(first, second)
     }
 
@@ -75,7 +79,8 @@ class MainViewModelTest {
         val viewModel = MainViewModel(itemsByCategory)
         viewModel.selectCategory("education")
         assertNull(viewModel.uiState.value.currentQaItem)
-        assertNotNull(viewModel.uiState.value.error)
+        // 에러 메시지가 설정되는지 확인
+        assertTrue(viewModel.uiState.value.error?.isNotEmpty() == true)
     }
 
     @Test
@@ -83,11 +88,11 @@ class MainViewModelTest {
         val viewModel = MainViewModel(itemsByCategory)
         viewModel.selectCategory("work")
         val first = viewModel.uiState.value.currentQaItem?.questionEn
-        val itemCount = 1 // work 카테고리 아이템 개수
-        repeat(itemCount) {
-            viewModel.nextQaItem()
-        }
+        assertEquals("Q3", first)
+        
+        // work 카테고리에는 1개 아이템만 있으므로 nextQaItem 호출 시 첫 번째로 돌아감
+        viewModel.nextQaItem()
         val current = viewModel.uiState.value.currentQaItem?.questionEn
-        assertEquals(first, current)
+        assertEquals("Q3", current) // 순환되어 같은 아이템
     }
 }
