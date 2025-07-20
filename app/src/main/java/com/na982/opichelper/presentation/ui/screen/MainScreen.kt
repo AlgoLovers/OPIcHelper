@@ -106,6 +106,9 @@ fun MainScreen(
         }
     )
 
+    val memorizeLevels by viewModel.memorizeLevels.collectAsState()
+    val selectedMemorizeLevel by viewModel.selectedMemorizeLevel.collectAsState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -119,19 +122,31 @@ fun MainScreen(
         // 앱 제목
         AppTitle()
         
-        // 카테고리 선택
-        CategorySelector(
-            selectedCategory = uiState.currentCategory ?: "",
-            onCategorySelected = { category ->
-                viewModel.selectCategory(category)
-            },
-            ttsPlayer = ttsPlayer,
-            screenState = screenState,
-            onHighlightReset = {
-                viewModel.setQuestionHighlightIndex(null)
-                viewModel.setAnswerHighlightIndex(null)
-            }
-        )
+        // 카테고리/암기레벨 선택 영역 (1:1 비율 Row)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CategorySelector(
+                selectedCategory = uiState.currentCategory ?: "",
+                onCategorySelected = { viewModel.selectCategory(it) },
+                ttsPlayer = ttsPlayer,
+                screenState = screenState,
+                onHighlightReset = {
+                    viewModel.setQuestionHighlightIndex(null)
+                    viewModel.setAnswerHighlightIndex(null)
+                },
+                modifier = Modifier.weight(1f)
+            )
+            MemorizeLevelSelector(
+                levels = memorizeLevels,
+                selectedLevel = selectedMemorizeLevel,
+                onLevelSelected = { viewModel.setMemorizeLevel(it) },
+                modifier = Modifier.weight(1f)
+            )
+        }
 
         // 질문과 답변 표시
         when {
@@ -186,23 +201,20 @@ fun MainScreen(
                         modifier = Modifier.weight(1f)
                     )
                     
-                    RecordingButton(
-                        context = context,
-                        onStartRecording = {
-                            Log.d("MainScreen", "Recording started")
-                            viewModel.startRecording()
-                        },
-                        onStopRecording = {
-                            Log.d("MainScreen", "Recording stopped")
-                            viewModel.stopRecording()
-                            Toast.makeText(context, "녹음을 중지합니다.", Toast.LENGTH_SHORT).show()
-                        },
-                        onPermissionRequest = {
-                            Log.d("MainScreen", "Requesting recording permission")
-                            recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    // 기존 녹음 버튼을 암기 테스트 버튼으로 교체
+                    Button(
+                        onClick = {
+                            viewModel.onMemorizeTestButtonClick(
+                                ttsPlayer = ttsPlayer!!,
+                                answerKo = uiState.currentQaItem!!.answerKo,
+                                answerEn = uiState.currentQaItem!!.answerEn,
+                                onHighlight = { idx -> viewModel.setAnswerHighlightIndex(idx) }
+                            )
                         },
                         modifier = Modifier.weight(1f)
-                    )
+                    ) {
+                        Text("암기 테스트")
+                    }
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -237,23 +249,7 @@ fun MainScreen(
                         isPlaying = screenState.isAnswerPlaying,
                         modifier = Modifier.weight(1f)
                     )
-                    
-                    AnswerRepeatPlayButton(
-                        currentAnswer = uiState.currentQaItem!!.answerEn,
-                        ttsPlayer = ttsPlayer,
-                        onStateChange = { isPlaying ->
-                            Log.d("MainScreen", "Answer repeat play state changed to: $isPlaying")
-                            if (isPlaying) {
-                                // 답변 반복 재생 시작 시 다른 모든 상태 초기화
-                                screenState.resetAllPlayStates()
-                                screenState.setPlayingState(PlayType.ANSWER_REPEAT, true)
-                            } else {
-                                screenState.setPlayingState(PlayType.ANSWER_REPEAT, false)
-                            }
-                        },
-                        isPlaying = screenState.isAnswerRepeatPlaying,
-                        modifier = Modifier.weight(1f)
-                    )
+                    // AnswerRepeatPlayButton 완전 삭제
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -273,6 +269,7 @@ fun MainScreen(
                         viewModel.setAnswerHighlightIndex(null)
                     }
                 )
+
             }
         }
     }

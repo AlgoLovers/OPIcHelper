@@ -138,16 +138,6 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
         speak(text, rate, "answer")
     }
     
-    // 답변을 지정된 횟수만큼 반복 재생
-    override fun speakAnswer(text: String, repeatCount: Int, rate: Float) {
-        Log.d("TtsService", "speakAnswer called with repeatCount=$repeatCount, text: ${text.take(50)}...")
-        if (repeatCount == 1) {
-            speakAnswer(text, rate)
-        } else {
-            speakBySentence(text, repeatCount, 1.5f, rate)
-        }
-    }
-
     fun speakBySentence(text: String, repeatCount: Int = 5, pauseRatio: Float = 1.5f, rate: Float = 0.8f) {
         if (!isReady) return
         Log.d("TtsService", "speakBySentence called: text=$text, repeatCount=$repeatCount")
@@ -319,5 +309,59 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
             stopForeground(true)
         }
         Log.d("TtsService", "stopTts completed")
+    }
+
+    override suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long {
+        return withContext(Dispatchers.Main) {
+            val start = System.currentTimeMillis()
+            val finished = CompletableDeferred<Unit>()
+            val utteranceId = "utt_duration_${System.currentTimeMillis()}"
+            val listener = object : UtteranceProgressListener() {
+                override fun onStart(utteranceId: String?) {}
+                override fun onDone(utteranceId: String?) { finished.complete(Unit) }
+                @Deprecated("Deprecated in Android API")
+                override fun onError(utteranceId: String?) { finished.complete(Unit) }
+                override fun onError(utteranceId: String?, errorCode: Int) { finished.complete(Unit) }
+            }
+            tts?.setOnUtteranceProgressListener(listener)
+            if (isKorean) {
+                tts?.setLanguage(java.util.Locale.KOREAN)
+                tts?.setSpeechRate(rate)
+                tts?.setPitch(1.05f)
+            } else {
+                tts?.setLanguage(java.util.Locale.US)
+                tts?.setSpeechRate(rate)
+                tts?.setPitch(1.0f)
+            }
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+            finished.await()
+            tts?.setOnUtteranceProgressListener(null)
+            val duration = System.currentTimeMillis() - start
+            duration
+        }
+    }
+
+    override suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
+        withContext(Dispatchers.Main) {
+            val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+            for ((idx, sentence) in sentences.withIndex()) {
+                onHighlight(idx)
+                val finished = CompletableDeferred<Unit>()
+                val utteranceId = "utt_highlight_${System.currentTimeMillis()}"
+                val listener = object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {}
+                    override fun onDone(utteranceId: String?) { finished.complete(Unit) }
+                    @Deprecated("Deprecated in Android API")
+                    override fun onError(utteranceId: String?) { finished.complete(Unit) }
+                    override fun onError(utteranceId: String?, errorCode: Int) { finished.complete(Unit) }
+                }
+                tts?.setOnUtteranceProgressListener(listener)
+                tts?.speak(sentence, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                finished.await()
+                delay(400L)
+            }
+            tts?.setOnUtteranceProgressListener(null)
+            onHighlight(null)
+        }
     }
 } 

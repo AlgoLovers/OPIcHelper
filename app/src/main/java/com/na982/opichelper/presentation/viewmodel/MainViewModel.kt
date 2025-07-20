@@ -17,13 +17,20 @@ import android.content.SharedPreferences
 import com.na982.opichelper.data.audio.AudioRecorderImpl
 import com.na982.opichelper.domain.audio.AudioRecorder
 import android.util.Log
+import com.na982.opichelper.domain.audio.TtsPlayer
+import com.na982.opichelper.domain.usecase.MemorizeTestUseCase
+import com.na982.opichelper.domain.usecase.RepeatListeningUseCase
+import com.na982.opichelper.domain.usecase.EnglishWritingTestUseCase
+import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 
 data class MainUiState(
     val currentQaItem: QaItem? = null,
     val currentCategory: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val categories: List<String> = emptyList()
+    val categories: List<String> = emptyList(),
+    val memorizeLevels: List<String> = emptyList(),
+    val selectedMemorizeLevel: String = ""
 )
 
 class MainViewModel : AndroidViewModel {
@@ -41,6 +48,17 @@ class MainViewModel : AndroidViewModel {
     val questionHighlightIndex: StateFlow<Int?> = _questionHighlightIndex
     private val _answerHighlightIndex = MutableStateFlow<Int?>(null)
     val answerHighlightIndex: StateFlow<Int?> = _answerHighlightIndex
+
+    private val _memorizeLevels = MutableStateFlow<List<String>>(emptyList())
+    val memorizeLevels: StateFlow<List<String>> = _memorizeLevels
+
+    private val _selectedMemorizeLevel = MutableStateFlow("")
+    val selectedMemorizeLevel: StateFlow<String> = _selectedMemorizeLevel
+
+    fun setMemorizeLevel(level: String) {
+        _selectedMemorizeLevel.value = level
+        _uiState.value = _uiState.value.copy(selectedMemorizeLevel = level)
+    }
 
     private var audioRecorder: AudioRecorder? = null
     private var currentRecordingFile: java.io.File? = null
@@ -66,6 +84,7 @@ class MainViewModel : AndroidViewModel {
         prefs = application.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
         audioRecorder = AudioRecorderImpl(application)
         loadQaItemsFromAssets(application)
+        loadMemorizeLevel()
         restoreLastCategory()
     }
 
@@ -128,6 +147,15 @@ class MainViewModel : AndroidViewModel {
             }
         }
         _uiState.value = _uiState.value.copy(categories = categories)
+    }
+
+    private fun loadMemorizeLevel() {
+        val levels = listOf("반복 듣기", "영작 테스트", "통암기")
+        _memorizeLevels.value = levels
+        if (_selectedMemorizeLevel.value.isEmpty() && levels.isNotEmpty()) {
+            setMemorizeLevel(levels[0])
+        }
+        _uiState.value = _uiState.value.copy(memorizeLevels = levels)
     }
 
     private fun restoreLastCategory() {
@@ -288,6 +316,29 @@ class MainViewModel : AndroidViewModel {
             Log.d("MainViewModel", "Recording stopped successfully: ${currentRecordingFile?.absolutePath}")
         } catch (e: Exception) {
             Log.e("MainViewModel", "Failed to stop recording", e)
+        }
+    }
+
+    fun onMemorizeTestButtonClick(
+        ttsPlayer: TtsPlayer,
+        answerKo: String,
+        answerEn: String,
+        onHighlight: (Int?) -> Unit
+    ) {
+        viewModelScope.launch {
+            when (selectedMemorizeLevel.value) {
+                "반복 듣기" -> {
+                    val useCase = RepeatListeningUseCase(
+                        ttsPlayer = ttsPlayer,
+                        answerKo = answerKo,
+                        answerEn = answerEn,
+                        repeatCount = 5,
+                        onHighlight = onHighlight
+                    )
+                    useCase.execute()
+                }
+                // TODO: 영작 테스트, 통암기도 동일하게 생성
+            }
         }
     }
 

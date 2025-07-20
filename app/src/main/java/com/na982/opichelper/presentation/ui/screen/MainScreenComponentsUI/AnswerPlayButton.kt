@@ -38,7 +38,7 @@ fun AnswerPlayButton(
                 Log.d("AnswerPlayButton", "Starting answer playback (1 time)")
                 ttsPlayer?.let { player ->
                     try {
-                        player.speakAnswer(currentAnswer, repeatCount = 1)
+                        player.speakAnswer(currentAnswer)
                         internalIsPlaying = true
                         Log.d("AnswerPlayButton", "Answer playback started successfully")
                     } catch (e: Exception) {
