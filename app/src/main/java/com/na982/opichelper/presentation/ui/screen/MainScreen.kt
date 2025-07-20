@@ -14,7 +14,6 @@ import com.na982.opichelper.domain.entity.QuestionCategory
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.presentation.viewmodel.MainUiState
 import androidx.compose.ui.platform.LocalContext
-import com.na982.opichelper.presentation.ui.component.FlipCard
 import com.na982.opichelper.domain.entity.QaItem
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -49,60 +48,17 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
     val categories = uiState.categories
 
-    var isQuestionPlaying by remember { mutableStateOf(false) }
-    var isAnswerPlaying by remember { mutableStateOf(false) }
-    var isAnswerRepeatPlaying by remember { mutableStateOf(false) }
+    // MainScreenState 사용
+    val screenState = remember { MainScreenState() }
     val context = LocalContext.current
-    // TtsService 바인딩 관련
-    var ttsService by remember { mutableStateOf<TtsService?>(null) }
+    
+    // TTS 서비스 관련 상태
     var ttsPlayer by remember { mutableStateOf<TtsPlayer?>(null) }
+    
     // 하이라이트 인덱스 상태 관리
     val questionHighlightIndex by viewModel.questionHighlightIndex.collectAsState()
     val answerHighlightIndex by viewModel.answerHighlightIndex.collectAsState()
-    // BroadcastReceiver 등록/해제 (전체 제거)
-    // val appContext = context.applicationContext
-    // DisposableEffect(Unit) { ... }
-    val serviceConnection = remember {
-        object : ServiceConnection {
-            override fun onServiceConnected(name: android.content.ComponentName?, service: IBinder?) {
-                val binder = service as? TtsService.TtsBinder
-                ttsService = binder?.getService()
-                ttsPlayer = ttsService // TtsService는 TtsPlayer를 구현함
-                ttsService?.setHighlightCallback(object : TtsService.HighlightCallback {
-                    override fun onQuestionHighlight(index: Int?) {
-                        Log.d("MainScreen", "Question highlight changed to: $index")
-                        viewModel.setQuestionHighlightIndex(index)
-                        if (index == null) {
-                            // 질문 재생이 완료되면 상태 초기화
-                            isQuestionPlaying = false
-                        }
-                    }
-                    override fun onAnswerHighlight(index: Int?) {
-                        Log.d("MainScreen", "Answer highlight changed to: $index")
-                        viewModel.setAnswerHighlightIndex(index)
-                        if (index == null) {
-                            // 답변 재생이 완료되면 상태 초기화
-                            isAnswerPlaying = false
-                            isAnswerRepeatPlaying = false
-                        }
-                    }
-                })
-            }
-            override fun onServiceDisconnected(name: android.content.ComponentName?) {
-                ttsService?.setHighlightCallback(null)
-                ttsService = null
-                ttsPlayer = null
-            }
-        }
-    }
-    DisposableEffect(Unit) {
-        val intent = android.content.Intent(context, TtsService::class.java)
-        context.bindService(intent, serviceConnection, android.content.Context.BIND_AUTO_CREATE)
-        onDispose {
-            ttsService?.setHighlightCallback(null)
-            context.unbindService(serviceConnection)
-        }
-    }
+    
     // 권한 요청 런처 (녹음 파일 저장용)
     val recordAudioPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (!isGranted) {
@@ -131,15 +87,24 @@ fun MainScreen(
     
     Log.d("MainScreen", "Current index: $currentIndex/$totalCount, category: $currentCategory")
 
-    // 모든 재생 상태를 초기화하는 함수
-    fun resetAllPlayStates() {
-        Log.d("MainScreen", "Resetting all play states")
-        isQuestionPlaying = false
-        isAnswerPlaying = false
-        isAnswerRepeatPlaying = false
-        viewModel.setQuestionHighlightIndex(null)
-        viewModel.setAnswerHighlightIndex(null)
-    }
+    // TTS 서비스 관리
+    TtsServiceManager(
+        context = context,
+        onTtsPlayerReady = { player ->
+            ttsPlayer = player
+        },
+        onHighlightChange = { questionIndex, answerIndex ->
+            viewModel.setQuestionHighlightIndex(questionIndex)
+            viewModel.setAnswerHighlightIndex(answerIndex)
+        },
+        onQuestionPlayStateChange = { isPlaying ->
+            screenState.setPlayingState(PlayType.QUESTION, isPlaying)
+        },
+        onAnswerPlayStateChange = { isPlaying ->
+            screenState.setPlayingState(PlayType.ANSWER, isPlaying)
+            screenState.setPlayingState(PlayType.ANSWER_REPEAT, isPlaying)
+        }
+    )
 
     Column(
         modifier = modifier
@@ -159,6 +124,12 @@ fun MainScreen(
             selectedCategory = uiState.currentCategory ?: "",
             onCategorySelected = { category ->
                 viewModel.selectCategory(category)
+            },
+            ttsPlayer = ttsPlayer,
+            screenState = screenState,
+            onHighlightReset = {
+                viewModel.setQuestionHighlightIndex(null)
+                viewModel.setAnswerHighlightIndex(null)
             }
         )
 
@@ -205,13 +176,13 @@ fun MainScreen(
                             Log.d("MainScreen", "Question play state changed to: $isPlaying")
                             if (isPlaying) {
                                 // 질문 재생 시작 시 다른 모든 상태 초기화
-                                resetAllPlayStates()
-                                isQuestionPlaying = true
+                                screenState.resetAllPlayStates()
+                                screenState.setPlayingState(PlayType.QUESTION, true)
                             } else {
-                                isQuestionPlaying = false
+                                screenState.setPlayingState(PlayType.QUESTION, false)
                             }
                         },
-                        isPlaying = isQuestionPlaying,
+                        isPlaying = screenState.isQuestionPlaying,
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -257,13 +228,13 @@ fun MainScreen(
                             Log.d("MainScreen", "Answer play state changed to: $isPlaying")
                             if (isPlaying) {
                                 // 답변 재생 시작 시 다른 모든 상태 초기화
-                                resetAllPlayStates()
-                                isAnswerPlaying = true
+                                screenState.resetAllPlayStates()
+                                screenState.setPlayingState(PlayType.ANSWER, true)
                             } else {
-                                isAnswerPlaying = false
+                                screenState.setPlayingState(PlayType.ANSWER, false)
                             }
                         },
-                        isPlaying = isAnswerPlaying,
+                        isPlaying = screenState.isAnswerPlaying,
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -274,62 +245,43 @@ fun MainScreen(
                             Log.d("MainScreen", "Answer repeat play state changed to: $isPlaying")
                             if (isPlaying) {
                                 // 답변 반복 재생 시작 시 다른 모든 상태 초기화
-                                resetAllPlayStates()
-                                isAnswerRepeatPlaying = true
+                                screenState.resetAllPlayStates()
+                                screenState.setPlayingState(PlayType.ANSWER_REPEAT, true)
                             } else {
-                                isAnswerRepeatPlaying = false
+                                screenState.setPlayingState(PlayType.ANSWER_REPEAT, false)
                             }
                         },
-                        isPlaying = isAnswerRepeatPlaying,
+                        isPlaying = screenState.isAnswerRepeatPlaying,
                         modifier = Modifier.weight(1f)
                     )
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 네비게이션 버튼들
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    PreviousQuestionButton(
-                        onPreviousQuestion = {
-                            Log.d("MainScreen", "Previous question button clicked")
-                            // TTS 중지
-                            ttsService?.stopTts()
-                            // 모든 상태 초기화
-                            resetAllPlayStates()
-                            // 이전 질문으로 이동
-                            viewModel.previousQaItem()
-                            Log.d("MainScreen", "Moved to previous question, all states reset")
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    NextQuestionButton(
-                        onNextQuestion = {
-                            Log.d("MainScreen", "Next question button clicked")
-                            // TTS 중지
-                            ttsService?.stopTts()
-                            // 모든 상태 초기화
-                            resetAllPlayStates()
-                            // 다음 질문으로 이동
-                            viewModel.nextQaItem()
-                            Log.d("MainScreen", "Moved to next question, all states reset")
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                // 네비게이션 섹션
+                NavigationSection(
+                    onPreviousQuestion = {
+                        viewModel.previousQaItem()
+                    },
+                    onNextQuestion = {
+                        viewModel.nextQaItem()
+                    },
+                    ttsPlayer = ttsPlayer,
+                    screenState = screenState,
+                    onHighlightReset = {
+                        viewModel.setQuestionHighlightIndex(null)
+                        viewModel.setAnswerHighlightIndex(null)
+                    }
+                )
             }
         }
-
-
     }
+    
     // 리소스 해제
     DisposableEffect(Unit) {
         onDispose {
             Log.d("MainScreen", "Disposing MainScreen resources")
-            ttsService?.stopTts()
+            ttsPlayer?.stopTts()
         }
     }
 }

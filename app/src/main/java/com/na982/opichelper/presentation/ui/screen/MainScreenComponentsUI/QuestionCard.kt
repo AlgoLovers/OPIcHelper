@@ -30,8 +30,6 @@ fun QuestionCard(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // 카테고리 정보 표시
-        
         // 플립 카드로 질문 표시
         FlipCard(
             frontContent = {
@@ -45,7 +43,7 @@ fun QuestionCard(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "질문",
+                            text = "영문",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -69,7 +67,7 @@ fun QuestionCard(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "답변",
+                            text = "한글",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -83,5 +81,27 @@ fun QuestionCard(
                 }
             }
         )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // 진행 정보 표시
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "진행 상황",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "$currentIndex / $totalCount",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 } 
