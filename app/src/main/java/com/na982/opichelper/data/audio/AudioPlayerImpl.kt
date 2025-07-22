@@ -3,6 +3,7 @@ package com.na982.opichelper.data.audio
 import android.media.MediaPlayer
 import java.io.File
 import com.na982.opichelper.domain.audio.AudioPlayer
+import android.util.Log
 
 class AudioPlayerImpl : AudioPlayer {
     private var player: MediaPlayer? = null
@@ -10,12 +11,40 @@ class AudioPlayerImpl : AudioPlayer {
         get() = player?.isPlaying == true
 
     override fun play(file: File, onCompletion: () -> Unit) {
+        Log.d("AudioPlayerImpl", "재생 시작: ${file.absolutePath}, 파일 크기: ${file.length()} bytes, 존재: ${file.exists()}")
+        
         stop()
         player = MediaPlayer().apply {
-            setDataSource(file.absolutePath)
-            prepare()
-            start()
-            setOnCompletionListener {
+            try {
+                setDataSource(file.absolutePath)
+                Log.d("AudioPlayerImpl", "setDataSource 완료")
+                
+                prepare()
+                Log.d("AudioPlayerImpl", "prepare 완료")
+                
+                start()
+                Log.d("AudioPlayerImpl", "start 완료")
+                
+                setOnCompletionListener {
+                    Log.d("AudioPlayerImpl", "재생 완료 콜백 호출")
+                    stop()
+                    onCompletion()
+                }
+                
+                setOnErrorListener { mp, what, extra ->
+                    Log.e("AudioPlayerImpl", "재생 오류: what=$what, extra=$extra")
+                    stop()
+                    onCompletion()
+                    true
+                }
+                
+                setOnInfoListener { mp, what, extra ->
+                    Log.d("AudioPlayerImpl", "재생 정보: what=$what, extra=$extra")
+                    false
+                }
+                
+            } catch (e: Exception) {
+                Log.e("AudioPlayerImpl", "재생 중 오류 발생", e)
                 stop()
                 onCompletion()
             }
@@ -23,7 +52,11 @@ class AudioPlayerImpl : AudioPlayer {
     }
 
     override fun stop() {
-        player?.release()
+        try {
+            player?.release()
+        } catch (e: Exception) {
+            Log.e("AudioPlayerImpl", "stop 중 오류 발생", e)
+        }
         player = null
     }
 } 

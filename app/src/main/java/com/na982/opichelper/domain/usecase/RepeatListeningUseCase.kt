@@ -13,11 +13,11 @@ import kotlinx.coroutines.delay
  * 한글 문장 1회 → 1/2 쉬고 → 영문 문장 1회 → 1.0배 쉬고 → 영문 문장 2회 ... 5회까지 → 다음 한글 문장 ...
  */
 class RepeatListeningUseCase(
-    private val ttsPlayer: TtsPlayer,
     private val answerKo: String,
     private val answerEn: String,
-    private val repeatCount: Int = 5,
-    private val onHighlight: (Int?) -> Unit
+    private val ttsPlayer: TtsPlayer,
+    private val onHighlight: (Int?) -> Unit,
+    private val repeatCount: Int = 5
 ) : MemorizeTestUseCase {
     override suspend fun execute() {
         val koSentences = answerKo.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }

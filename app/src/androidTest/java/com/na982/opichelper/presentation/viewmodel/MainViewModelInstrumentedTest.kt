@@ -22,15 +22,15 @@ class MainViewModelInstrumentedTest {
 
     @Test
     fun selectCategory_showsFirstQaItem() {
-        viewModel.selectCategory(QuestionCategory.PERSONAL)
+        viewModel.selectCategory("개인")
         val qaItem = viewModel.uiState.value.currentQaItem
         assertNotNull(qaItem)
-        assertEquals(QuestionCategory.PERSONAL, qaItem?.category)
+        assertEquals("개인", qaItem?.category)
     }
 
     @Test
     fun nextQaItem_incrementsIndex() {
-        viewModel.selectCategory(QuestionCategory.TRAVEL)
+        viewModel.selectCategory("여행")
         val first = viewModel.uiState.value.currentQaItem
         viewModel.nextQaItem()
         val second = viewModel.uiState.value.currentQaItem
@@ -39,8 +39,8 @@ class MainViewModelInstrumentedTest {
 
     @Test
     fun selectCategory_withNoItems_showsError() {
-        // 없는 카테고리(예: EDUCATION) 선택
-        viewModel.selectCategory(QuestionCategory.EDUCATION)
+        // 없는 카테고리 선택
+        viewModel.selectCategory("존재하지 않는 카테고리")
         assertNull(viewModel.uiState.value.currentQaItem)
         assertNotNull(viewModel.uiState.value.error)
     }

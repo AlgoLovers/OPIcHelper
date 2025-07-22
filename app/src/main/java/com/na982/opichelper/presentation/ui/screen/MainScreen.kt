@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import android.content.IntentFilter
 import android.util.Log
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import com.na982.opichelper.domain.audio.TtsPlayer
+import com.na982.opichelper.data.audio.AudioPlayerImpl
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -108,6 +110,14 @@ fun MainScreen(
 
     val memorizeLevels by viewModel.memorizeLevels.collectAsState()
     val selectedMemorizeLevel by viewModel.selectedMemorizeLevel.collectAsState()
+
+    val audioPlayer = remember { AudioPlayerImpl() }
+    LaunchedEffect(Unit) {
+        viewModel.setAudioPlayer(audioPlayer)
+        viewModel.setMergedAudioStateChangeCallback { isPlaying ->
+            screenState.setPlayingState(PlayType.MERGED_AUDIO, isPlaying)
+        }
+    }
 
     Column(
         modifier = modifier
@@ -249,7 +259,20 @@ fun MainScreen(
                         isPlaying = screenState.isAnswerPlaying,
                         modifier = Modifier.weight(1f)
                     )
-                    // AnswerRepeatPlayButton 완전 삭제
+                    
+                    // 병합된 오디오 파일 재생 버튼
+                    Button(
+                        onClick = {
+                            viewModel.playMergedAudioFile()
+                        },
+                        enabled = uiState.hasMergedAudioFile && !screenState.isMergedAudioPlaying,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = if (screenState.isMergedAudioPlaying) "재생 중..." else "녹음 재생",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))

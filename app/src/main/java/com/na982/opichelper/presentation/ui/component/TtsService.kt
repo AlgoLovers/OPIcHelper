@@ -137,7 +137,7 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
         Log.d("TtsService", "speakAnswer called with text: ${text.take(50)}...")
         speak(text, rate, "answer")
     }
-    
+
     fun speakBySentence(text: String, repeatCount: Int = 5, pauseRatio: Float = 1.5f, rate: Float = 0.8f) {
         if (!isReady) return
         Log.d("TtsService", "speakBySentence called: text=$text, repeatCount=$repeatCount")

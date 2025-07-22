@@ -62,9 +62,9 @@ fun QuestionCard(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
                     )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
                             text = "한글",

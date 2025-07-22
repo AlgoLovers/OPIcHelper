@@ -98,6 +98,4 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.8")
     // 코루틴 테스트
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    // JUnit (이미 있을 수 있음)
-    testImplementation("junit:junit:4.13.2")
 }

@@ -34,31 +34,31 @@ fun AnswerCard(
             .padding(16.dp)
     ) {
         // 숨기기 버튼과 제목
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "답변",
-                style = MaterialTheme.typography.titleMedium,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "답변",
+                    style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
-            )
+                    )
             
             TextButton(
                 onClick = {
                     isVisible = !isVisible
                     Log.d("AnswerCard", "Visibility toggled to: $isVisible")
                 }
-            ) {
-                Text(
+                ) {
+                    Text(
                     text = if (isVisible) "숨기기" else "보이기",
                     color = MaterialTheme.colorScheme.primary
-                )
+                    )
+                }
             }
-        }
-        
+            
         // 플립 카드로 답변 표시 (숨김 상태에 따라 크기 조절)
         AnimatedVisibility(
             visible = isVisible,
@@ -105,13 +105,13 @@ fun AnswerCard(
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
                                 text = currentAnswerKo,
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
+                )
+            }
                     }
                 }
             )

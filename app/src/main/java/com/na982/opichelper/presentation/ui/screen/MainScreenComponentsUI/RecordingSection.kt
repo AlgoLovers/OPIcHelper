@@ -18,6 +18,10 @@ fun RecordingSection(
     onStopRecording: () -> Unit,
     onPlayRecording: () -> Unit,
     onStopPlayback: () -> Unit,
+    hasMergedRecording: Boolean, // 병합 파일 존재 여부
+    isPlayingMergedRecording: Boolean, // 병합 파일 재생 중 여부
+    onPlayMergedRecording: () -> Unit, // 병합 파일 재생
+    onStopMergedPlayback: () -> Unit, // 병합 파일 재생 중지
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -59,11 +63,27 @@ fun RecordingSection(
                     else 
                         MaterialTheme.colorScheme.secondary
                 ) {
-                                    Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = if (isPlayingRecording) "재생 중지" else "녹음 재생",
-                    tint = MaterialTheme.colorScheme.onSecondary
-                )
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = if (isPlayingRecording) "재생 중지" else "녹음 재생",
+                        tint = MaterialTheme.colorScheme.onSecondary
+                    )
+                }
+            }
+            // 병합 파일 재생 버튼 (병합 파일이 있을 때만 표시)
+            if (hasMergedRecording) {
+                FloatingActionButton(
+                    onClick = if (isPlayingMergedRecording) onStopMergedPlayback else onPlayMergedRecording,
+                    containerColor = if (isPlayingMergedRecording)
+                        MaterialTheme.colorScheme.error
+                    else
+                        MaterialTheme.colorScheme.tertiary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = if (isPlayingMergedRecording) "병합 재생 중지" else "병합 파일 재생",
+                        tint = MaterialTheme.colorScheme.onTertiary
+                    )
                 }
             }
         }

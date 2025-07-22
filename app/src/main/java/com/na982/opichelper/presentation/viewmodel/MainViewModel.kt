@@ -22,6 +22,9 @@ import com.na982.opichelper.domain.usecase.MemorizeTestUseCase
 import com.na982.opichelper.domain.usecase.RepeatListeningUseCase
 import com.na982.opichelper.domain.usecase.EnglishWritingTestUseCase
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
+import com.na982.opichelper.domain.audio.AudioPlayer
+import com.na982.opichelper.domain.repository.AudioFileRepository
+import com.na982.opichelper.data.repository.AudioFileRepositoryImpl
 
 data class MainUiState(
     val currentQaItem: QaItem? = null,
@@ -30,7 +33,8 @@ data class MainUiState(
     val error: String? = null,
     val categories: List<String> = emptyList(),
     val memorizeLevels: List<String> = emptyList(),
-    val selectedMemorizeLevel: String = ""
+    val selectedMemorizeLevel: String = "",
+    val hasMergedAudioFile: Boolean = false // 병합된 오디오 파일 존재 여부 추가
 )
 
 class MainViewModel : AndroidViewModel {
@@ -61,7 +65,38 @@ class MainViewModel : AndroidViewModel {
     }
 
     private var audioRecorder: AudioRecorder? = null
+    private var audioPlayer: AudioPlayer? = null
+    private var audioFileRepository: AudioFileRepository? = null
     private var currentRecordingFile: java.io.File? = null
+    private var onMergedAudioStateChange: ((Boolean) -> Unit)? = null // 병합된 오디오 재생 상태 콜백
+
+    fun setAudioPlayer(player: AudioPlayer) {
+        audioPlayer = player
+    }
+
+    fun setMergedAudioStateChangeCallback(callback: (Boolean) -> Unit) {
+        onMergedAudioStateChange = callback
+    }
+
+    fun getCurrentMergedAudioFile(): java.io.File? {
+        return audioFileRepository?.getLatestMergedAudioFile()
+    }
+
+    fun updateMergedAudioFileStatus() {
+        val hasFile = getCurrentMergedAudioFile() != null
+        _uiState.value = _uiState.value.copy(hasMergedAudioFile = hasFile)
+        Log.d("MainViewModel", "병합된 오디오 파일 상태 업데이트: $hasFile")
+    }
+
+    fun playMergedAudioFile() {
+        getCurrentMergedAudioFile()?.let { file ->
+            onMergedAudioStateChange?.invoke(true) // 재생 시작
+            audioPlayer?.play(file) {
+                Log.d("MainViewModel", "병합된 오디오 파일 재생 완료")
+                onMergedAudioStateChange?.invoke(false) // 재생 완료
+            }
+        }
+    }
 
     fun setQuestionHighlightIndex(index: Int?) {
         _questionHighlightIndex.value = index
@@ -83,6 +118,7 @@ class MainViewModel : AndroidViewModel {
     constructor(application: Application) : this(mutableMapOf()) {
         prefs = application.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
         audioRecorder = AudioRecorderImpl(application)
+        audioFileRepository = AudioFileRepositoryImpl(application)
         loadQaItemsFromAssets(application)
         loadMemorizeLevel()
         restoreLastCategory()
@@ -276,68 +312,54 @@ class MainViewModel : AndroidViewModel {
         Log.d("MainViewModel", "Successfully moved to previous question: ${items[previousIndex].questionEn.take(50)}...")
     }
 
-    // 질문 TTS 재생/일시정지 토글
-    fun toggleQuestionTts() {
-        // TTS 서비스와 통신하여 질문 재생/일시정지
-        // 실제 구현은 TtsService와 연동 필요
-        // 현재는 UI에서 직접 TtsService를 호출하도록 구현
-    }
-
-    // 답변 1회 재생
-    fun playAnswerOnce() {
-        // TTS 서비스와 통신하여 답변 1회 재생
-        // 실제 구현은 TtsService와 연동 필요
-        // 현재는 UI에서 직접 TtsService를 호출하도록 구현
-    }
-
-    // 답변 5회 반복 재생
-    fun playAnswerRepeat() {
-        // TTS 서비스와 통신하여 답변 5회 반복 재생
-        // 실제 구현은 TtsService와 연동 필요
-        // 현재는 UI에서 직접 TtsService를 호출하도록 구현
-    }
-
-    // 녹음 시작
-    fun startRecording() {
-        Log.d("MainViewModel", "startRecording called")
-        try {
-            currentRecordingFile = audioRecorder?.startRecording()
-            Log.d("MainViewModel", "Recording started successfully: ${currentRecordingFile?.absolutePath}")
-        } catch (e: Exception) {
-            Log.e("MainViewModel", "Failed to start recording", e)
-        }
-    }
-
-    // 녹음 중지
-    fun stopRecording() {
-        Log.d("MainViewModel", "stopRecording called")
-        try {
-            currentRecordingFile = audioRecorder?.stopRecording()
-            Log.d("MainViewModel", "Recording stopped successfully: ${currentRecordingFile?.absolutePath}")
-        } catch (e: Exception) {
-            Log.e("MainViewModel", "Failed to stop recording", e)
-        }
-    }
-
     fun onMemorizeTestButtonClick(
         ttsPlayer: TtsPlayer,
         answerKo: String,
         answerEn: String,
         onHighlight: (Int?) -> Unit
     ) {
+        Log.d("MainViewModel", "onMemorizeTestButtonClick 호출됨, level=${selectedMemorizeLevel.value}")
         viewModelScope.launch {
             when (selectedMemorizeLevel.value) {
                 "반복 듣기" -> {
+                    Log.d("MainViewModel", "반복 듣기 UseCase 실행")
                     val useCase = RepeatListeningUseCase(
-                        ttsPlayer = ttsPlayer,
                         answerKo = answerKo,
                         answerEn = answerEn,
-                        repeatCount = 5,
-                        onHighlight = onHighlight
+                        ttsPlayer = ttsPlayer,
+                        onHighlight = onHighlight,
+                        repeatCount = 5
                     )
                     useCase.execute()
                 }
-                // TODO: 영작 테스트, 통암기도 동일하게 생성
+                "영작 테스트" -> {
+                    Log.d("MainViewModel", "영작 테스트 UseCase 실행")
+                    if (audioRecorder == null || audioFileRepository == null) {
+                        Log.e("MainViewModel", "audioRecorder 또는 audioFileRepository가 null입니다. 영작 테스트 실행 불가")
+                        return@launch
+                    }
+                    val useCase = EnglishWritingTestUseCase(
+                        answerEn = answerEn,
+                        answerKo = answerKo,
+                        ttsPlayer = ttsPlayer,
+                        audioRecorder = audioRecorder!!,
+                        audioFileRepository = audioFileRepository!!,
+                        onAutoFlip = null, // 필요시 콜백 구현
+                        onMergedFileCreated = { mergedFile ->
+                            Log.d("MainViewModel", "병합된 오디오 파일 생성됨: ${mergedFile.absolutePath}")
+                            updateMergedAudioFileStatus() // UI 상태 업데이트
+                        }
+                    )
+                    useCase.execute()
+                }
+                // TODO: 통암기도 동일하게 생성
+                "통암기" -> {
+                    Log.d("MainViewModel", "통암기 UseCase 실행 (미구현)")
+                    // val useCase = FullMemorizationUseCase(...)
+                }
+                else -> {
+                    Log.w("MainViewModel", "알 수 없는 암기 레벨: ${selectedMemorizeLevel.value}")
+                }
             }
         }
     }
