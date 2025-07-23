@@ -38,27 +38,20 @@ object AppModule {
         return AudioFileRepositoryImpl(context)
     }
     
-    // TTS Players
+    // TTS Player (Google TTS를 기본으로 사용)
     @Provides
     @Singleton
-    fun provideGoogleTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
+    fun provideTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
         return GoogleTtsPlayer(context)
     }
     
     @Provides
     @Singleton
-    fun provideSamsungTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
-        return SamsungTtsPlayer(context)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideTtsPlayerManager(
+    fun provideTtsOrchestrator(
         @ApplicationContext context: Context,
-        googleTtsPlayer: TtsPlayer,
-        samsungTtsPlayer: TtsPlayer
-    ): TtsPlayerManager {
-        return TtsPlayerManager(context, googleTtsPlayer, samsungTtsPlayer)
+        ttsPlayer: TtsPlayer
+    ): TtsOrchestrator {
+        return TtsOrchestrator(context, ttsPlayer, ttsPlayer)
     }
     
     @Provides

@@ -5,10 +5,10 @@ import android.util.Log
 import javax.inject.Inject
 
 /**
- * TTS 플레이어 매니저 (폴백 시스템)
- * 클린 아키텍처 원칙에 따라 TTS 서비스들을 관리
+ * TTS 오케스트레이터 (TTS 서비스 조율 및 폴백 관리)
+ * 클린 아키텍처 원칙에 따라 여러 TTS 서비스들을 조율하고 폴백 처리
  */
-class TtsPlayerManager @Inject constructor(
+class TtsOrchestrator @Inject constructor(
     private val context: Context,
     private val googleTtsPlayer: TtsPlayer,
     private val samsungTtsPlayer: TtsPlayer
@@ -43,7 +43,7 @@ class TtsPlayerManager @Inject constructor(
      * 영문 TTS 재생 (Google TTS)
      */
     private suspend fun speakEnglish(text: String, onComplete: (() -> Unit)?): Boolean {
-        Log.d("TtsPlayerManager", "🇺🇸 영문 TTS 재생: $text")
+        Log.d("TtsOrchestrator", "🇺🇸 영문 TTS 재생: $text")
         return googleTtsPlayer.speak(text, onComplete)
     }
     
@@ -51,32 +51,32 @@ class TtsPlayerManager @Inject constructor(
      * 한글 TTS 재생 (폴백 시스템)
      */
     private suspend fun speakKorean(text: String, onComplete: (() -> Unit)?): Boolean {
-        Log.d("TtsPlayerManager", "🇰🇷 한글 TTS 재생 시작 (현재 서비스: ${getCurrentKoreanTtsServiceName()})")
+        Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 재생 시작 (현재 서비스: ${getCurrentKoreanTtsServiceName()})")
         
         // 현재 서비스부터 순차적으로 시도
         for (i in currentKoreanTtsIndex until koreanTtsPlayers.size) {
             val player = koreanTtsPlayers[i]
-            Log.d("TtsPlayerManager", "🇰🇷 시도 중: ${player.getServiceName()} (인덱스: $i)")
+            Log.d("TtsOrchestrator", "🇰🇷 시도 중: ${player.getServiceName()} (인덱스: $i)")
             
             if (player.isAvailable()) {
-                Log.d("TtsPlayerManager", "🇰🇷 ${player.getServiceName()} 사용 가능, 재생 시도")
+                Log.d("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 사용 가능, 재생 시도")
                 val success = player.speak(text, onComplete)
                 if (success) {
                     currentKoreanTtsIndex = i // 성공한 서비스로 업데이트
-                    Log.d("TtsPlayerManager", "🇰🇷 한글 TTS 성공: ${player.getServiceName()}")
+                    Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 성공: ${player.getServiceName()}")
                     return true
                 } else {
-                    Log.w("TtsPlayerManager", "🇰🇷 한글 TTS 실패: ${player.getServiceName()}, 다음 서비스 시도")
+                    Log.w("TtsOrchestrator", "🇰🇷 한글 TTS 실패: ${player.getServiceName()}, 다음 서비스 시도")
                     currentKoreanTtsIndex = i + 1
                 }
             } else {
-                Log.w("TtsPlayerManager", "🇰🇷 한글 TTS 서비스 사용 불가: ${player.getServiceName()}, 다음 서비스 시도")
+                Log.w("TtsOrchestrator", "🇰🇷 한글 TTS 서비스 사용 불가: ${player.getServiceName()}, 다음 서비스 시도")
                 currentKoreanTtsIndex = i + 1
             }
         }
         
         // 모든 서비스 실패
-        Log.e("TtsPlayerManager", "🇰🇷 모든 한글 TTS 서비스 실패")
+        Log.e("TtsOrchestrator", "🇰🇷 모든 한글 TTS 서비스 실패")
         onComplete?.invoke()
         return false
     }
@@ -89,7 +89,7 @@ class TtsPlayerManager @Inject constructor(
         for (player in koreanTtsPlayers) {
             player.stop()
         }
-        Log.d("TtsPlayerManager", "모든 TTS 중지")
+        Log.d("TtsOrchestrator", "모든 TTS 중지")
     }
     
     /**
@@ -155,16 +155,16 @@ class TtsPlayerManager @Inject constructor(
      * TTS 재생 후 재생 시간 반환
      */
     suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long {
-        val start = System.currentTimeMillis()
-        val finished = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val startTime = System.currentTimeMillis()
+        val isKoreanText = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
         
-        if (isKorean) {
-            speakKorean(text) { finished.complete(Unit) }
+        val success = if (isKoreanText) {
+            speakKorean(text, null)
         } else {
-            speakEnglish(text) { finished.complete(Unit) }
+            speakEnglish(text, null)
         }
         
-        finished.await()
-        return System.currentTimeMillis() - start
+        val endTime = System.currentTimeMillis()
+        return if (success) (endTime - startTime) else 0L
     }
 } 

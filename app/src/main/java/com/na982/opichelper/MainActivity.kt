@@ -108,9 +108,7 @@ class MainActivity : ComponentActivity() {
             // ViewModel의 정리 함수 호출
             viewModel?.cleanupOnAppExit()
             
-            // TTS 서비스 중지 (서비스가 실행 중인 경우)
-            val ttsServiceIntent = android.content.Intent(this, com.na982.opichelper.presentation.ui.component.TtsService::class.java)
-            stopService(ttsServiceIntent)
+                        // TTS 서비스는 TtsPlaybackController에서 관리하므로 별도 중지 불필요
             
             Log.d("MainActivity", "모든 리소스 정리 완료")
         } catch (e: Exception) {

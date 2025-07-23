@@ -44,37 +44,26 @@ data class MainUiState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val audioRecorder: AudioRecorder,
-    private val audioPlayer: AudioPlayer,
     private val audioFileRepository: AudioFileRepository,
+    private val qaDataRepository: QaDataRepository,
+    private val ttsPlaybackController: TtsPlaybackController,
     application: Application
 ) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
-    private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
-    private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
-
     private var prefs: SharedPreferences? = null
-    private val PREF_KEY_LAST_CATEGORY = "last_category"
-    private val PREF_KEY_LAST_INDEX = "last_index"
     private val PREF_KEY_LAST_MEMORIZE_LEVEL = "last_memorize_level"
 
-    private val _questionHighlightIndex = MutableStateFlow<Int?>(null)
-    val questionHighlightIndex: StateFlow<Int?> = _questionHighlightIndex
-    private val _answerHighlightIndex = MutableStateFlow<Int?>(null)
-    val answerHighlightIndex: StateFlow<Int?> = _answerHighlightIndex
-    
-    // 한글 답변 하이라이트 상태
-    private val _answerKoHighlightIndex = MutableStateFlow<Int?>(null)
-    val answerKoHighlightIndex: StateFlow<Int?> = _answerKoHighlightIndex
+    // TtsPlaybackController에서 하이라이트 상태를 가져옴
+    val questionHighlightIndex: StateFlow<Int?> = ttsPlaybackController.questionHighlightIndex
+    val answerHighlightIndex: StateFlow<Int?> = ttsPlaybackController.answerHighlightIndex
+    val answerKoHighlightIndex: StateFlow<Int?> = ttsPlaybackController.answerKoHighlightIndex
+    val recordingHighlightIndex: StateFlow<Int?> = ttsPlaybackController.recordingHighlightIndex
     
     // 답변 카드 뒤집기 상태
     private val _isAnswerCardFlipped = MutableStateFlow(false)
     val isAnswerCardFlipped: StateFlow<Boolean> = _isAnswerCardFlipped
-    
-    // 녹음 하이라이트 상태
-    private val _recordingHighlightIndex = MutableStateFlow<Int?>(null)
-    val recordingHighlightIndex: StateFlow<Int?> = _recordingHighlightIndex
     
     // 현재 스크립트의 녹음 파일 존재 여부
     private val _hasRecordingFile = MutableStateFlow(false)
@@ -93,24 +82,53 @@ class MainViewModel @Inject constructor(
     private val _isMemorizeTestRunning = MutableStateFlow(false)
     val isMemorizeTestRunning: StateFlow<Boolean> = _isMemorizeTestRunning
 
-    // TTS 관련 상태
-    private val _isQuestionPlaying = MutableStateFlow(false)
-    val isQuestionPlaying: StateFlow<Boolean> = _isQuestionPlaying
+    // TtsPlaybackController에서 재생 상태를 가져옴
+    val isPlaying: StateFlow<Boolean> = ttsPlaybackController.isPlaying
+    val isQuestionPlaying: StateFlow<Boolean> = ttsPlaybackController.isQuestionPlaying
+    val isAnswerPlaying: StateFlow<Boolean> = ttsPlaybackController.isAnswerPlaying
 
-    private val _isAnswerPlaying = MutableStateFlow(false)
-    val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying
 
-    // TTS 플레이어 참조
-    private var ttsPlayer: TtsPlayer? = null
-
-    // 병합 오디오 상태 변경 콜백
-    private var onMergedAudioStateChange: ((Boolean) -> Unit)? = null
 
     init {
         prefs = getApplication<Application>().getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
-        loadQaItemsFromAssets(getApplication())
+        qaDataRepository.init(getApplication())
         loadMemorizeLevel()
-        restoreLastCategory()
+        
+        // TTS 오케스트레이터 설정
+        val application = getApplication<Application>() as com.na982.opichelper.OPicHelperApplication
+        setTtsOrchestrator(application.ttsOrchestrator)
+        
+        // QaDataRepository의 상태를 UI 상태와 동기화
+        viewModelScope.launch {
+            // QA 데이터 상태를 UI 상태로 복사
+            qaDataRepository.currentQaItem.collect { qaItem ->
+                _uiState.value = _uiState.value.copy(currentQaItem = qaItem)
+            }
+        }
+        
+        viewModelScope.launch {
+            qaDataRepository.currentCategory.collect { category ->
+                _uiState.value = _uiState.value.copy(currentCategory = category)
+            }
+        }
+        
+        viewModelScope.launch {
+            qaDataRepository.categories.collect { categories ->
+                _uiState.value = _uiState.value.copy(categories = categories)
+            }
+        }
+        
+        viewModelScope.launch {
+            qaDataRepository.isLoading.collect { isLoading ->
+                _uiState.value = _uiState.value.copy(isLoading = isLoading)
+            }
+        }
+        
+        viewModelScope.launch {
+            qaDataRepository.error.collect { error ->
+                _uiState.value = _uiState.value.copy(error = error)
+            }
+        }
         
         // 앱 시작 시 오래된 녹음 파일들 정리
         viewModelScope.launch {
@@ -141,137 +159,58 @@ class MainViewModel @Inject constructor(
         // 이 부분은 TtsService에서 호출될 예정
     }
 
-    fun setTtsPlayer(player: TtsPlayer?) {
-        ttsPlayer = player
-        // TTS 서비스에 하이라이트 콜백 설정
-        if (player is com.na982.opichelper.presentation.ui.component.TtsService) {
-            player.setHighlightCallback(object : com.na982.opichelper.presentation.ui.component.TtsService.HighlightCallback {
-                override fun onQuestionHighlight(index: Int?) {
-                    Log.d("MainViewModel", "Question highlight changed to: $index")
-                    _questionHighlightIndex.value = index
-                }
-                override fun onAnswerHighlight(index: Int?) {
-                    Log.d("MainViewModel", "Answer highlight changed to: $index")
-                    _answerHighlightIndex.value = index
-                }
-            })
-        }
+    fun setTtsOrchestrator(orchestrator: com.na982.opichelper.domain.audio.TtsOrchestrator) {
+        ttsPlaybackController.setTtsOrchestrator(orchestrator)
+        Log.d("MainViewModel", "TTS 오케스트레이터 설정 완료")
+    }
+    
+    fun bindTtsService(context: Context, onKoreanTtsServiceUpdate: ((String) -> Unit)? = null) {
+        ttsPlaybackController.bindTtsService(context, onKoreanTtsServiceUpdate)
+    }
+    
+    fun unbindTtsService(context: Context) {
+        ttsPlaybackController.unbindTtsService(context)
     }
 
     fun playQuestion(question: String) {
-        viewModelScope.launch {
-            try {
-                // 암기 테스트 중지
-                if (_isMemorizeTestRunning.value) {
-                    _isMemorizeTestRunning.value = false
-                    setAnswerCardFlipped(false)
-                    _answerKoHighlightIndex.value = null
-                    _recordingHighlightIndex.value = null
-                    Log.d("MainViewModel", "암기 테스트 중지됨 (질문 재생 시작)")
-                }
-                
-                // 다른 재생 중지 및 하이라이트 초기화 (항상 실행)
-                ttsPlayer?.stop()
-                _isAnswerPlaying.value = false
-                _answerHighlightIndex.value = null
-                Log.d("MainViewModel", "답변 재생 중지됨 (질문 재생 시작)")
-                
-                _isQuestionPlaying.value = true
-                ttsPlayer?.speakWithHighlight(question) { index ->
-                    _questionHighlightIndex.value = index
-                }
-                _isQuestionPlaying.value = false
-                _questionHighlightIndex.value = null
-                Log.d("MainViewModel", "질문 재생 완료")
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "질문 재생 실패", e)
-                _isQuestionPlaying.value = false
-                _questionHighlightIndex.value = null
-            }
+        // 암기 테스트 중지
+        if (_isMemorizeTestRunning.value) {
+            _isMemorizeTestRunning.value = false
+            setAnswerCardFlipped(false)
+            Log.d("MainViewModel", "암기 테스트 중지됨 (질문 재생 시작)")
         }
+        
+        ttsPlaybackController.playQuestion(question)
     }
 
     fun stopQuestion() {
         viewModelScope.launch {
-            try {
-                ttsPlayer?.stop()
-                _isQuestionPlaying.value = false
-                _questionHighlightIndex.value = null
-                _answerHighlightIndex.value = null
-                _answerKoHighlightIndex.value = null
-                _recordingHighlightIndex.value = null
-                Log.d("MainViewModel", "질문 재생 중지")
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "질문 재생 중지 실패", e)
-            }
+            ttsPlaybackController.stopTts()
         }
     }
 
     fun playAnswer(answer: String) {
-        viewModelScope.launch {
-            try {
-                // 암기 테스트 중지
-                if (_isMemorizeTestRunning.value) {
-                    _isMemorizeTestRunning.value = false
-                    setAnswerCardFlipped(false)
-                    _answerKoHighlightIndex.value = null
-                    _recordingHighlightIndex.value = null
-                    Log.d("MainViewModel", "암기 테스트 중지됨 (답변 재생 시작)")
-                }
-                
-                // 다른 재생 중지 및 하이라이트 초기화 (항상 실행)
-                ttsPlayer?.stop()
-                _isQuestionPlaying.value = false
-                _questionHighlightIndex.value = null
-                Log.d("MainViewModel", "질문 재생 중지됨 (답변 재생 시작)")
-                
-                _isAnswerPlaying.value = true
-                ttsPlayer?.speakWithHighlight(answer) { index ->
-                    _answerHighlightIndex.value = index
-                }
-                _isAnswerPlaying.value = false
-                _answerHighlightIndex.value = null
-                Log.d("MainViewModel", "답변 재생 완료")
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "답변 재생 실패", e)
-                _isAnswerPlaying.value = false
-                _answerHighlightIndex.value = null
-            }
+        // 암기 테스트 중지
+        if (_isMemorizeTestRunning.value) {
+            _isMemorizeTestRunning.value = false
+            setAnswerCardFlipped(false)
+            Log.d("MainViewModel", "암기 테스트 중지됨 (답변 재생 시작)")
         }
+        
+        ttsPlaybackController.playAnswer(answer)
     }
 
     fun stopAnswer() {
         viewModelScope.launch {
-            try {
-                ttsPlayer?.stop()
-                _isAnswerPlaying.value = false
-                _questionHighlightIndex.value = null
-                _answerHighlightIndex.value = null
-                _answerKoHighlightIndex.value = null
-                _recordingHighlightIndex.value = null
-                Log.d("MainViewModel", "답변 재생 중지")
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "답변 재생 중지 실패", e)
-            }
+            ttsPlaybackController.stopTts()
         }
     }
 
     fun stopAllTts() {
         viewModelScope.launch {
-            try {
-                ttsPlayer?.stop()
-                _isQuestionPlaying.value = false
-                _isAnswerPlaying.value = false
-                _isMemorizeTestRunning.value = false
-                _questionHighlightIndex.value = null
-                _answerHighlightIndex.value = null
-                _answerKoHighlightIndex.value = null
-                _recordingHighlightIndex.value = null
-                setAnswerCardFlipped(false)
-                Log.d("MainViewModel", "모든 TTS 재생 중지")
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "TTS 재생 중지 실패", e)
-            }
+            ttsPlaybackController.stopTts()
+            _isMemorizeTestRunning.value = false
+            setAnswerCardFlipped(false)
         }
     }
 
@@ -279,10 +218,6 @@ class MainViewModel @Inject constructor(
     // fun setAudioPlayer(player: AudioPlayer) {
     //     audioPlayer = player
     // }
-
-    fun setMergedAudioStateChangeCallback(callback: (Boolean) -> Unit) {
-        onMergedAudioStateChange = callback
-    }
 
     fun getCurrentMergedAudioFile(): java.io.File? {
         return audioFileRepository.getLatestMergedAudioFile()
@@ -295,48 +230,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun playMergedAudioFile() {
-        // 이미 재생 중이면 중지
-        if (_uiState.value.isMergedAudioPlaying) {
-            audioPlayer.stop()
-            _uiState.value = _uiState.value.copy(isMergedAudioPlaying = false)
-            onMergedAudioStateChange?.invoke(false)
-            Log.d("MainViewModel", "병합 오디오 재생 중지")
-            return
-        }
-        
-        // 다른 재생 중지 및 하이라이트 초기화
-        if (_isQuestionPlaying.value || _isAnswerPlaying.value) {
-            ttsPlayer?.stop()
-            _isQuestionPlaying.value = false
-            _isAnswerPlaying.value = false
-            _questionHighlightIndex.value = null
-            _answerHighlightIndex.value = null
-            _answerKoHighlightIndex.value = null
-            _recordingHighlightIndex.value = null
-            Log.d("MainViewModel", "기존 TTS 재생 중지됨 (병합 오디오 재생 시작)")
-        }
-        
         getCurrentMergedAudioFile()?.let { file ->
-            _uiState.value = _uiState.value.copy(isMergedAudioPlaying = true)
-            onMergedAudioStateChange?.invoke(true) // 재생 시작
-            audioPlayer.play(file) {
-                Log.d("MainViewModel", "병합된 오디오 파일 재생 완료")
-                _uiState.value = _uiState.value.copy(isMergedAudioPlaying = false)
-                onMergedAudioStateChange?.invoke(false) // 재생 완료
-            }
+            ttsPlaybackController.playAudioFile(file)
         }
-    }
-
-    fun setQuestionHighlightIndex(index: Int?) {
-        _questionHighlightIndex.value = index
-    }
-    fun setAnswerHighlightIndex(index: Int?) {
-        _answerHighlightIndex.value = index
-    }
-    
-    fun setAnswerKoHighlightIndex(index: Int?) {
-        _answerKoHighlightIndex.value = index
-        Log.d("MainViewModel", "한글 답변 하이라이트 상태 변경: $index")
     }
     
     fun setAnswerCardFlipped(isFlipped: Boolean) {
@@ -344,16 +240,13 @@ class MainViewModel @Inject constructor(
         Log.d("MainViewModel", "답변 카드 뒤집기 상태 변경: $isFlipped")
     }
     
-    fun setRecordingHighlightIndex(index: Int?) {
-        _recordingHighlightIndex.value = index
-        Log.d("MainViewModel", "녹음 하이라이트 상태 변경: $index")
-    }
+
     
     fun checkRecordingFileExists() {
         viewModelScope.launch {
-            val currentItem = _uiState.value.currentQaItem
+            val currentItem = qaDataRepository.getCurrentQaItem()
             if (currentItem != null) {
-                val currentIndex = itemIndexByCategory[currentItem.category] ?: 0
+                val currentIndex = qaDataRepository.getCurrentIndex()
                 val scriptId = "${currentItem.category}_$currentIndex"
                 val hasFile = audioFileRepository.hasRecordingFile(scriptId)
                 _hasRecordingFile.value = hasFile
@@ -373,17 +266,8 @@ class MainViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                // 모든 TTS 재생 중지
-                stopAllTts()
-                
-                // 오디오 플레이어 중지
-                audioPlayer.stop()
-                
-                // 모든 하이라이트 초기화
-                _questionHighlightIndex.value = null
-                _answerHighlightIndex.value = null
-                _answerKoHighlightIndex.value = null
-                _recordingHighlightIndex.value = null
+                // TtsPlaybackController 정리
+                ttsPlaybackController.stopTts()
                 
                 // 답변 카드 상태 초기화
                 setAnswerCardFlipped(false)
@@ -414,66 +298,7 @@ class MainViewModel @Inject constructor(
         // 포그라운드로 복귀 시 상태 확인 (필요시 정리)
     }
 
-    private fun loadQaItemsFromAssets(application: Application) {
-        val context = application
-        val gson = Gson()
-        // Define the desired category order and display names
-        val categoryDisplayNames = listOf(
-            "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
-        )
-        // Map display names to asset file names (for 레스토랑, use restaurants asset)
-        val categoryAssetMap = mapOf(
-            "집" to "home",
-            "음악" to "music",
-            "집에서 보내는 휴가" to "home_vacation",
-            "영화" to "movie",
-            "레스토랑" to "restaurants",
-            "해변" to "beach",
-            "인터넷" to "internet",
-            "산업,커리어" to "industry_career",
-            "은행" to "bank",
-            "교통" to "transportation",
-            "패션" to "fashion",
-            "가족,친구" to "family_friends",
-            "가구" to "furniture",
-            "예약" to "reservation",
-            "명절" to "holiday"
-        )
-        val categories = categoryDisplayNames
-        for (displayName in categoryDisplayNames) {
-            val assetKey = categoryAssetMap[displayName] ?: displayName
-            val fileName = "qa_${assetKey}.json"
-            try {
-                val assetList = context.assets.list("")?.toList() ?: emptyList()
-                if (assetList.contains(fileName)) {
-                    val inputStream = context.assets.open(fileName)
-                    val reader = InputStreamReader(inputStream)
-                    val type = object : TypeToken<List<QaItemAsset>>() {}.type
-                    val assetItems: List<QaItemAsset> = gson.fromJson(reader, type)
-                    val items = assetItems.map {
-                        QaItem(
-                            id = it.id ?: "",
-                            category = displayName,
-                            questionEn = it.question_en,
-                            questionKo = it.question_ko,
-                            answerEn = it.answer_en,
-                            answerKo = it.answer_ko
-                        )
-                    }
-                    itemsByCategory[displayName] = items
-                    itemIndexByCategory[displayName] = 0
-                } else {
-                    // No asset file yet, initialize with empty list
-                    itemsByCategory[displayName] = emptyList()
-                    itemIndexByCategory[displayName] = 0
-                }
-            } catch (e: Exception) {
-                itemsByCategory[displayName] = emptyList()
-                itemIndexByCategory[displayName] = 0
-            }
-        }
-        _uiState.value = _uiState.value.copy(categories = categories)
-    }
+
 
     private fun loadMemorizeLevel() {
         val levels = listOf("반복 듣기", "영작 테스트", "통암기")
@@ -492,136 +317,36 @@ class MainViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(memorizeLevels = levels)
     }
 
-    private fun restoreLastCategory() {
-        val lastCategory = prefs?.getString(PREF_KEY_LAST_CATEGORY, null)
-        val lastIndex = prefs?.getInt(PREF_KEY_LAST_INDEX, 0) ?: 0
-        if (lastCategory != null && itemsByCategory.containsKey(lastCategory)) {
-            val items = itemsByCategory[lastCategory] ?: emptyList()
-            val safeIndex = if (items.isNotEmpty()) lastIndex.coerceIn(0, items.size - 1) else 0
-            itemIndexByCategory[lastCategory] = safeIndex
-            if (items.isNotEmpty()) {
-                _uiState.value = _uiState.value.copy(
-                    currentQaItem = items[safeIndex],
-                    currentCategory = lastCategory,
-                    isLoading = false,
-                    error = null
-                )
-                // 녹음 파일 존재 여부 확인
-                checkRecordingFileExists()
-            } else {
-                _uiState.value = _uiState.value.copy(
-                    currentQaItem = null,
-                    currentCategory = lastCategory,
-                    isLoading = false,
-                    error = "해당 카테고리에 질문이 없습니다."
-                )
-            }
-        }
-    }
+
 
     fun selectCategory(category: String) {
-        prefs?.edit()?.putString(PREF_KEY_LAST_CATEGORY, category)?.apply()
-        val items = itemsByCategory[category] ?: emptyList()
-        val index = itemIndexByCategory[category] ?: 0
-        prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, index)?.apply()
-        if (items.isNotEmpty()) {
-            _uiState.value = _uiState.value.copy(
-                currentQaItem = items[index],
-                currentCategory = category,
-                isLoading = false,
-                error = null
-            )
-            // 녹음 파일 존재 여부 확인
-            checkRecordingFileExists()
-        } else {
-            _uiState.value = _uiState.value.copy(
-                currentQaItem = null,
-                currentCategory = category,
-                isLoading = false,
-                error = "해당 카테고리에 질문이 없습니다."
-            )
-        }
+        qaDataRepository.selectCategory(category)
+        // 녹음 파일 존재 여부 확인
+        checkRecordingFileExists()
     }
 
     fun nextQaItem() {
-        Log.d("MainViewModel", "nextQaItem called")
-        val category = _uiState.value.currentCategory ?: run {
-            Log.w("MainViewModel", "No current category")
-            return
-        }
-        val items = itemsByCategory[category] ?: run {
-            Log.w("MainViewModel", "No items for category: $category")
-            return
-        }
-        if (items.isEmpty()) {
-            Log.w("MainViewModel", "Items list is empty for category: $category")
-            return
-        }
-        
-        val currentIndex = itemIndexByCategory[category] ?: 0
-        val nextIndex = (currentIndex + 1) % items.size
-        
-        Log.d("MainViewModel", "Moving from index $currentIndex to $nextIndex in category $category")
-        
-        itemIndexByCategory[category] = nextIndex
-        prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, nextIndex)?.apply()
-        _uiState.value = _uiState.value.copy(
-            currentQaItem = items[nextIndex],
-            isLoading = false,
-            error = null
-        )
-        
+        qaDataRepository.nextQaItem()
         // 녹음 파일 존재 여부 확인
         checkRecordingFileExists()
-        
-        Log.d("MainViewModel", "Successfully moved to next question: ${items[nextIndex].questionEn.take(50)}...")
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
+        qaDataRepository.clearError()
     }
 
     fun getItemsInCategory(category: String): List<QaItem> {
-        return itemsByCategory[category] ?: emptyList()
+        return qaDataRepository.getItemsInCategory(category)
     }
 
     // 이전 질문으로 이동
     fun previousQaItem() {
-        Log.d("MainViewModel", "previousQaItem called")
-        val category = _uiState.value.currentCategory ?: run {
-            Log.w("MainViewModel", "No current category")
-            return
-        }
-        val items = itemsByCategory[category] ?: run {
-            Log.w("MainViewModel", "No items for category: $category")
-            return
-        }
-        if (items.isEmpty()) {
-            Log.w("MainViewModel", "Items list is empty for category: $category")
-            return
-        }
-        
-        val currentIndex = itemIndexByCategory[category] ?: 0
-        val previousIndex = if (currentIndex > 0) currentIndex - 1 else items.size - 1
-        
-        Log.d("MainViewModel", "Moving from index $currentIndex to $previousIndex in category $category")
-        
-        itemIndexByCategory[category] = previousIndex
-        prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, previousIndex)?.apply()
-        _uiState.value = _uiState.value.copy(
-            currentQaItem = items[previousIndex],
-            isLoading = false,
-            error = null
-        )
-        
+        qaDataRepository.previousQaItem()
         // 녹음 파일 존재 여부 확인
         checkRecordingFileExists()
-        
-        Log.d("MainViewModel", "Successfully moved to previous question: ${items[previousIndex].questionEn.take(50)}...")
     }
 
     fun onMemorizeTestButtonClick(
-        ttsPlayer: TtsPlayer,
         answerKo: String,
         answerEn: String,
         onHighlight: (Int?) -> Unit
@@ -630,12 +355,10 @@ class MainViewModel @Inject constructor(
         
         // 이미 암기 테스트가 실행 중이면 종료
         if (_isMemorizeTestRunning.value) {
-            ttsPlayer.stop()
+            viewModelScope.launch {
+                ttsPlaybackController.stopTts()
+            }
             _isMemorizeTestRunning.value = false
-            _questionHighlightIndex.value = null
-            _answerHighlightIndex.value = null
-            _answerKoHighlightIndex.value = null
-            _recordingHighlightIndex.value = null
             setAnswerCardFlipped(false)
             Log.d("MainViewModel", "암기 테스트 중지됨")
             return
@@ -643,14 +366,8 @@ class MainViewModel @Inject constructor(
         
         viewModelScope.launch {
             // 다른 재생 중지 및 하이라이트 초기화
-            if (_isQuestionPlaying.value || _isAnswerPlaying.value) {
-                ttsPlayer.stop()
-                _isQuestionPlaying.value = false
-                _isAnswerPlaying.value = false
-                _questionHighlightIndex.value = null
-                _answerHighlightIndex.value = null
-                _answerKoHighlightIndex.value = null
-                _recordingHighlightIndex.value = null
+            if (isPlaying.value) {
+                ttsPlaybackController.stopTts()
                 Log.d("MainViewModel", "기존 재생 중지됨 (암기 테스트 시작)")
             }
             
@@ -666,8 +383,28 @@ class MainViewModel @Inject constructor(
                     val useCase = RepeatListeningUseCase(
                         answerKo = answerKo,
                         answerEn = answerEn,
-                        ttsPlayer = ttsPlayer,
-                        onHighlight = onHighlight,
+                        ttsPlayer = ttsPlaybackController.getTtsPlayer(),
+                        onHighlight = { index ->
+                            // TtsPlaybackController의 하이라이트 상태와 동기화
+                            if (index != null) {
+                                // 현재 카드가 한글로 뒤집혀 있으면 한글 하이라이트, 아니면 영문 하이라이트
+                                if (_isAnswerCardFlipped.value) {
+                                    // 한글 답변 하이라이트 (답변 카드의 한글 부분)
+                                    ttsPlaybackController.setAnswerKoHighlightIndex(index)
+                                } else {
+                                    // 영문 답변 하이라이트 (답변 카드의 영문 부분)
+                                    ttsPlaybackController.setAnswerHighlightIndex(index)
+                                }
+                            } else {
+                                // 하이라이트 제거
+                                ttsPlaybackController.clearHighlight()
+                            }
+                            onHighlight(index) // 원래 콜백도 호출
+                        },
+                        onCardFlip = { isKorean ->
+                            setAnswerCardFlipped(isKorean)
+                            Log.d("MainViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
+                        },
                         repeatCount = 5
                     )
                     useCase.execute()
@@ -675,23 +412,20 @@ class MainViewModel @Inject constructor(
                     // 암기 테스트 완료 후 상태 초기화
                     _isMemorizeTestRunning.value = false
                     setAnswerCardFlipped(false)
-                    _questionHighlightIndex.value = null
-                    _answerHighlightIndex.value = null
-                    _answerKoHighlightIndex.value = null
-                    _recordingHighlightIndex.value = null
+                    ttsPlaybackController.clearHighlight()
                     Log.d("MainViewModel", "반복 듣기 완료: 상태 초기화")
                 }
                 "영작 테스트" -> {
                     Log.d("MainViewModel", "영작 테스트 UseCase 실행")
-                    val currentItem = _uiState.value.currentQaItem
-                    val currentIndex = itemIndexByCategory[currentItem?.category] ?: 0
+                    val currentItem = qaDataRepository.getCurrentQaItem()
+                    val currentIndex = qaDataRepository.getCurrentIndex()
                     val scriptId = "${currentItem?.category}_$currentIndex"
                     
                     val useCase = EnglishWritingTestUseCase(
                         answerEn = answerEn,
                         answerKo = answerKo,
                         scriptId = scriptId,
-                        ttsPlayer = ttsPlayer,
+                        ttsPlayer = ttsPlaybackController.getTtsPlayer(),
                         audioRecorder = audioRecorder,
                         audioFileRepository = audioFileRepository,
                         onAutoFlip = {
@@ -701,13 +435,23 @@ class MainViewModel @Inject constructor(
                         },
                         onKoreanHighlight = { index ->
                             // 한글 하이라이트 설정
-                            setAnswerKoHighlightIndex(index)
-                            Log.d("MainViewModel", "영작 테스트: 한글 하이라이트 설정: $index")
+                            if (index != null) {
+                                ttsPlaybackController.setAnswerKoHighlightIndex(index)
+                                Log.d("MainViewModel", "영작 테스트: 한글 하이라이트 설정: $index")
+                            } else {
+                                ttsPlaybackController.clearHighlight()
+                                Log.d("MainViewModel", "영작 테스트: 한글 하이라이트 제거")
+                            }
                         },
                         onRecordingHighlight = { index ->
-                            // 녹음 하이라이트 설정
-                            setRecordingHighlightIndex(index)
-                            Log.d("MainViewModel", "영작 테스트: 녹음 하이라이트 설정: $index")
+                            // 녹음 하이라이트 설정 (더 강한 하이라이트)
+                            if (index != null) {
+                                ttsPlaybackController.setRecordingHighlightIndex(index)
+                                Log.d("MainViewModel", "영작 테스트: 녹음 하이라이트 설정: $index")
+                            } else {
+                                ttsPlaybackController.clearHighlight()
+                                Log.d("MainViewModel", "영작 테스트: 녹음 하이라이트 제거")
+                            }
                         },
                         onMergedFileCreated = { mergedFile ->
                             Log.d("MainViewModel", "병합된 오디오 파일 생성됨: ${mergedFile.absolutePath}")
@@ -719,9 +463,7 @@ class MainViewModel @Inject constructor(
                     // 영작 테스트 완료 후 답변 카드를 원래 상태로 복원
                     _isMemorizeTestRunning.value = false
                     setAnswerCardFlipped(false)
-                    setAnswerHighlightIndex(null)
-                    setAnswerKoHighlightIndex(null)
-                    setRecordingHighlightIndex(null)
+                    ttsPlaybackController.clearHighlight()
                     Log.d("MainViewModel", "영작 테스트 완료: 답변 카드 상태 복원")
                     
                     // 오래된 녹음 파일들 정리
@@ -745,11 +487,5 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    data class QaItemAsset(
-        val id: String? = null,
-        val question_en: String,
-        val question_ko: String,
-        val answer_en: String,
-        val answer_ko: String
-    )
+
 } 

@@ -47,6 +47,8 @@ fun MainScreen(
     // 하이라이트 인덱스 상태 관리
     val questionHighlightIndex by viewModel.questionHighlightIndex.collectAsState()
     val answerHighlightIndex by viewModel.answerHighlightIndex.collectAsState()
+    val answerKoHighlightIndex by viewModel.answerKoHighlightIndex.collectAsState()
+    val recordingHighlightIndex by viewModel.recordingHighlightIndex.collectAsState()
 
     // 백버튼 시 녹음 종료 (녹음 상태는 RecordingButton에서 관리)
     BackHandler(enabled = false) {
@@ -69,25 +71,25 @@ fun MainScreen(
     
     Log.d("MainScreen", "Current index: $currentIndex/$totalCount, category: $currentCategory")
 
-    // TTS 서비스 관리
-    TtsServiceManager(
-        context = context,
-        onTtsPlayerReady = { player ->
-            ttsPlayer = player
-            viewModel.setTtsPlayer(player)
-        },
-        onKoreanTtsServiceUpdate = { serviceName ->
+    // TTS 서비스 바인딩
+    LaunchedEffect(Unit) {
+        viewModel.bindTtsService(context) { serviceName ->
             viewModel.updateKoreanTtsServiceName(serviceName)
         }
-    )
+    }
+    
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.unbindTtsService(context)
+        }
+    }
 
     val memorizeLevels by viewModel.memorizeLevels.collectAsState()
     val selectedMemorizeLevel by viewModel.selectedMemorizeLevel.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
     val isQuestionPlaying by viewModel.isQuestionPlaying.collectAsState()
     val isAnswerPlaying by viewModel.isAnswerPlaying.collectAsState()
-    val answerKoHighlightIndex by viewModel.answerKoHighlightIndex.collectAsState()
     val isAnswerCardFlipped by viewModel.isAnswerCardFlipped.collectAsState()
-    val recordingHighlightIndex by viewModel.recordingHighlightIndex.collectAsState()
     val hasRecordingFile by viewModel.hasRecordingFile.collectAsState()
     val currentKoreanTtsService by viewModel.currentKoreanTtsService.collectAsState()
 
@@ -98,9 +100,7 @@ fun MainScreen(
     }
     LaunchedEffect(Unit) {
         // AudioPlayer는 ViewModel에서 Hilt를 통해 주입받으므로 여기서는 설정하지 않음
-        viewModel.setMergedAudioStateChangeCallback { isPlaying ->
-            screenState.setPlayingState(PlayType.MERGED_AUDIO, isPlaying)
-        }
+        // 병합된 오디오 상태는 ViewModel에서 관리
     }
 
     Column(
@@ -166,8 +166,7 @@ fun MainScreen(
                 },
                 screenState = screenState,
                 onHighlightReset = {
-                    viewModel.setQuestionHighlightIndex(null)
-                    viewModel.setAnswerHighlightIndex(null)
+                    // 하이라이트 초기화는 TtsPlaybackController에서 자동으로 처리됨
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -231,10 +230,11 @@ fun MainScreen(
                     Button(
                         onClick = {
                             viewModel.onMemorizeTestButtonClick(
-                                ttsPlayer = ttsPlayer!!,
                                 answerKo = uiState.currentQaItem!!.answerKo,
                                 answerEn = uiState.currentQaItem!!.answerEn,
-                                onHighlight = { idx -> viewModel.setAnswerHighlightIndex(idx) }
+                                onHighlight = { idx -> 
+                    // 하이라이트는 TtsPlaybackController에서 자동으로 처리됨
+                }
                             )
                         },
                         modifier = Modifier.weight(1f)
@@ -251,7 +251,7 @@ fun MainScreen(
                     currentAnswerKo = uiState.currentQaItem!!.answerKo,
                     highlightIndex = answerHighlightIndex,
                     answerKoHighlightIndex = answerKoHighlightIndex,
-                    recordingHighlightIndex = recordingHighlightIndex,
+                    recordingHighlightIndex = recordingHighlightIndex, // TtsPlaybackController에서 관리
                     isFlipped = isAnswerCardFlipped
                 )
                 
@@ -302,39 +302,16 @@ fun MainScreen(
                         viewModel.nextQaItem()
                     },
                     screenState = screenState,
-                    onHighlightReset = {
-                        viewModel.setQuestionHighlightIndex(null)
-                        viewModel.setAnswerHighlightIndex(null)
-                    }
+                                            onHighlightReset = {
+                            // 하이라이트 초기화는 TtsPlaybackController에서 자동으로 처리됨
+                        }
                 )
 
             }
         }
     }
     
-    // 리소스 해제
-    DisposableEffect(Unit) {
-        onDispose {
-            Log.d("MainScreen", "Disposing MainScreen resources")
-            try {
-                // TTS 플레이어 중지
-                ttsPlayer?.stop()
-                
-                // 오디오 플레이어 중지
-                audioPlayer?.stop()
-                
-                // 하이라이트 초기화
-                viewModel.setQuestionHighlightIndex(null)
-                viewModel.setAnswerHighlightIndex(null)
-                viewModel.setAnswerKoHighlightIndex(null)
-                viewModel.setRecordingHighlightIndex(null)
-                
-                Log.d("MainScreen", "MainScreen resources disposed successfully")
-            } catch (e: Exception) {
-                Log.e("MainScreen", "Error disposing MainScreen resources", e)
-            }
-        }
-    }
+                    // 리소스 해제는 TtsPlaybackController에서 자동으로 처리됨
 }
 
  
