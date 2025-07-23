@@ -59,4 +59,15 @@ class AudioPlayerImpl : AudioPlayer {
         }
         player = null
     }
+    
+    override fun playAudio(filePath: String) {
+        val file = File(filePath)
+        if (file.exists()) {
+            play(file) {
+                Log.d("AudioPlayerImpl", "playAudio 완료: $filePath")
+            }
+        } else {
+            Log.e("AudioPlayerImpl", "파일이 존재하지 않음: $filePath")
+        }
+    }
 } 

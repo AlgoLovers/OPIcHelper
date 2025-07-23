@@ -15,6 +15,12 @@ interface AudioFileRepository {
     suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File?
     
     /**
+     * 녹음 파일을 저장
+     * @param recordedFile 녹음된 파일 경로
+     */
+    suspend fun saveRecording(recordedFile: String)
+    
+    /**
      * 최근 병합된 오디오 파일 가져오기
      * @return 병합된 오디오 파일 (없으면 null)
      */

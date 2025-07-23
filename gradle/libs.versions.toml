@@ -11,7 +11,7 @@ activityCompose = "1.8.0"
 composeBom = "2023.08.00"
 # MVVM & Clean Architecture dependencies
 viewmodelCompose = "2.6.1"
-hilt = "2.51.1"
+hilt = "2.48"
 hiltCompose = "1.0.0"
 room = "2.6.1"
 retrofit = "2.9.0"
@@ -19,6 +19,8 @@ okhttp = "4.11.0"
 coroutines = "1.7.3"
 navigationCompose = "2.7.5"
 datastore = "1.0.0"
+ksp = "1.9.22-1.0.16"
+javapoet = "1.13.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -56,9 +58,13 @@ okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor",
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 
+# JavaPoet
+javapoet = { group = "com.squareup", name = "javapoet", version.ref = "javapoet" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose = { id = "org.jetbrains.compose", version.ref = "composePlugin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 

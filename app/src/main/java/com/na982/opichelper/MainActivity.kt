@@ -16,7 +16,9 @@ import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.util.Log
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     
     private var isFinishing = false // 앱이 실제로 종료되는지 추적
@@ -35,29 +37,25 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // 오디오 녹음 권한 확인 및 요청
-        when {
-            ContextCompat.checkSelfPermission(
+        // 권한 요청
+        if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.RECORD_AUDIO
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // 권한이 이미 있음
-            }
-            shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) -> {
-                // 권한 설명이 필요한 경우
-                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-            }
-            else -> {
-                // 권한 요청
-                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-            }
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
         
         setContent {
             OPicHelperTheme {
-                val vm: MainViewModel = viewModel()
-                viewModel = vm // ViewModel 참조 저장
-                MainScreen(viewModel = vm)
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val vm: MainViewModel = viewModel()
+                    viewModel = vm // ViewModel 참조 저장
+                    MainScreen(viewModel = vm)
+                }
             }
         }
     }

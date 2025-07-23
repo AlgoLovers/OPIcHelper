@@ -50,7 +50,10 @@ internal class TtsService : Service(), TtsPlayer {
 
     override fun onCreate() {
         super.onCreate()
-        ttsPlayerManager = TtsPlayerManager(this)
+        // Service에서는 직접 구현체를 생성해야 함
+        val googleTtsPlayer = com.na982.opichelper.data.audio.GoogleTtsPlayer(this)
+        val samsungTtsPlayer = com.na982.opichelper.data.audio.SamsungTtsPlayer(this)
+        ttsPlayerManager = TtsPlayerManager(this, googleTtsPlayer, samsungTtsPlayer)
         createNotificationChannel()
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }

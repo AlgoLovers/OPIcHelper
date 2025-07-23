@@ -16,8 +16,6 @@ import org.mockito.Mockito.`when`
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.FileInputStream
-import android.util.Log
-
 class AudioFileRepositoryImplTest {
     
     @Mock
@@ -142,8 +140,8 @@ class AudioFileRepositoryImplTest {
         val totalOriginalSize = testFiles.sumOf { it.length() }
         assertTrue(mergedFile.length() >= totalOriginalSize)
         
-        Log.d("AudioFileRepositoryTest", "병합된 파일 크기: ${mergedFile.length()} bytes")
-        Log.d("AudioFileRepositoryTest", "원본 파일들 총 크기: $totalOriginalSize bytes")
+        println("병합된 파일 크기: ${mergedFile.length()} bytes")
+        println("원본 파일들 총 크기: $totalOriginalSize bytes")
     }
     
     @Test
@@ -158,7 +156,7 @@ class AudioFileRepositoryImplTest {
         assertTrue(testFile.exists())
         assertTrue(fileSize > 0)
         
-        Log.d("AudioFileRepositoryTest", "테스트 파일 크기: $fileSize bytes")
+        println("테스트 파일 크기: $fileSize bytes")
     }
     
     // 테스트용 AudioFileRepositoryImpl (Android Log 대신 println 사용)
@@ -241,7 +239,7 @@ class AudioFileRepositoryImplTest {
         override fun deleteAudioFile(file: File) {
             if (file.exists()) {
                 val deleted = file.delete()
-                Log.d("TestAudioFileRepositoryImpl", "오디오 파일 삭제: ${file.name}, 성공: $deleted")
+                println("TestAudioFileRepositoryImpl: 오디오 파일 삭제: ${file.name}, 성공: $deleted")
             }
         }
         
@@ -250,6 +248,15 @@ class AudioFileRepositoryImplTest {
         }
         
         override suspend fun cleanupOldRecordings(scriptId: String, keepLatestCount: Int) {
+            // 테스트에서는 아무것도 하지 않음
+        }
+        
+        override suspend fun hasRecordingFile(scriptId: String): Boolean {
+            // 테스트에서는 항상 false 반환
+            return false
+        }
+        
+        override suspend fun saveRecording(recordedFile: String) {
             // 테스트에서는 아무것도 하지 않음
         }
     }

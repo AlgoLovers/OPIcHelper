@@ -95,6 +95,22 @@ class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepositor
         }
     }
 
+    override suspend fun saveRecording(recordedFile: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                val file = File(recordedFile)
+                if (file.exists()) {
+                    Log.d("AudioFileRepository", "녹음 파일 저장: $recordedFile")
+                    // 여기서는 단순히 로그만 남기고, 실제 파일은 이미 존재하므로 추가 작업 불필요
+                } else {
+                    Log.w("AudioFileRepository", "녹음 파일이 존재하지 않음: $recordedFile")
+                }
+            } catch (e: Exception) {
+                Log.e("AudioFileRepository", "녹음 파일 저장 실패", e)
+            }
+        }
+    }
+
     override fun getLatestMergedAudioFile(): File? {
         // merged 디렉토리에서 가장 최근 파일 찾기
         val mergedDir = File(context.filesDir, "merged")
@@ -264,7 +280,7 @@ class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepositor
                                 offset = 0
                                 size = sampleSize
                                 presentationTimeUs = extractor.sampleTime + totalDuration
-                                flags = extractor.sampleFlags
+                                flags = 0 // MediaCodec.BUFFER_FLAG_SYNC_FRAME 대신 0 사용
                             }
                             
                             muxer.writeSampleData(audioTrackIndex, buffer, bufferInfo)

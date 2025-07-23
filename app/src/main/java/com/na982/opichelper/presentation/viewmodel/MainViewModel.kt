@@ -26,6 +26,8 @@ import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.repository.AudioFileRepository
 import com.na982.opichelper.data.repository.AudioFileRepositoryImpl
 import kotlinx.coroutines.delay
+import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 data class MainUiState(
     val currentQaItem: QaItem? = null,
@@ -39,7 +41,13 @@ data class MainUiState(
     val isMergedAudioPlaying: Boolean = false // 병합된 오디오 재생 상태 추가
 )
 
-class MainViewModel : AndroidViewModel {
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val audioRecorder: AudioRecorder,
+    private val audioPlayer: AudioPlayer,
+    private val audioFileRepository: AudioFileRepository,
+    application: Application
+) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
@@ -95,15 +103,24 @@ class MainViewModel : AndroidViewModel {
     // TTS 플레이어 참조
     private var ttsPlayer: TtsPlayer? = null
 
-    // 오디오 플레이어 참조
-    private var audioPlayer: AudioPlayer? = null
-
-    // 오디오 녹음 관련
-    private var audioRecorder: AudioRecorder? = null
-    private var audioFileRepository: AudioFileRepository? = null
-
     // 병합 오디오 상태 변경 콜백
     private var onMergedAudioStateChange: ((Boolean) -> Unit)? = null
+
+    init {
+        prefs = getApplication<Application>().getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
+        loadQaItemsFromAssets(getApplication())
+        loadMemorizeLevel()
+        restoreLastCategory()
+        
+        // 앱 시작 시 오래된 녹음 파일들 정리
+        viewModelScope.launch {
+            audioFileRepository.cleanupAllOldRecordings(1)
+            Log.d("MainViewModel", "앱 시작 시 전체 녹음 파일 정리 완료")
+            
+            // 초기 녹음 파일 존재 여부 확인
+            checkRecordingFileExists()
+        }
+    }
 
     fun setMemorizeLevel(level: String) {
         _selectedMemorizeLevel.value = level
@@ -258,16 +275,17 @@ class MainViewModel : AndroidViewModel {
         }
     }
 
-    fun setAudioPlayer(player: AudioPlayer) {
-        audioPlayer = player
-    }
+    // Hilt로 주입되므로 별도 설정 불필요
+    // fun setAudioPlayer(player: AudioPlayer) {
+    //     audioPlayer = player
+    // }
 
     fun setMergedAudioStateChangeCallback(callback: (Boolean) -> Unit) {
         onMergedAudioStateChange = callback
     }
 
     fun getCurrentMergedAudioFile(): java.io.File? {
-        return audioFileRepository?.getLatestMergedAudioFile()
+        return audioFileRepository.getLatestMergedAudioFile()
     }
 
     fun updateMergedAudioFileStatus() {
@@ -279,7 +297,7 @@ class MainViewModel : AndroidViewModel {
     fun playMergedAudioFile() {
         // 이미 재생 중이면 중지
         if (_uiState.value.isMergedAudioPlaying) {
-            audioPlayer?.stop()
+            audioPlayer.stop()
             _uiState.value = _uiState.value.copy(isMergedAudioPlaying = false)
             onMergedAudioStateChange?.invoke(false)
             Log.d("MainViewModel", "병합 오디오 재생 중지")
@@ -301,7 +319,7 @@ class MainViewModel : AndroidViewModel {
         getCurrentMergedAudioFile()?.let { file ->
             _uiState.value = _uiState.value.copy(isMergedAudioPlaying = true)
             onMergedAudioStateChange?.invoke(true) // 재생 시작
-            audioPlayer?.play(file) {
+            audioPlayer.play(file) {
                 Log.d("MainViewModel", "병합된 오디오 파일 재생 완료")
                 _uiState.value = _uiState.value.copy(isMergedAudioPlaying = false)
                 onMergedAudioStateChange?.invoke(false) // 재생 완료
@@ -337,7 +355,7 @@ class MainViewModel : AndroidViewModel {
             if (currentItem != null) {
                 val currentIndex = itemIndexByCategory[currentItem.category] ?: 0
                 val scriptId = "${currentItem.category}_$currentIndex"
-                val hasFile = audioFileRepository?.hasRecordingFile(scriptId) ?: false
+                val hasFile = audioFileRepository.hasRecordingFile(scriptId)
                 _hasRecordingFile.value = hasFile
                 Log.d("MainViewModel", "스크립트 $scriptId 녹음 파일 존재 여부: $hasFile")
             } else {
@@ -359,7 +377,7 @@ class MainViewModel : AndroidViewModel {
                 stopAllTts()
                 
                 // 오디오 플레이어 중지
-                audioPlayer?.stop()
+                audioPlayer.stop()
                 
                 // 모든 하이라이트 초기화
                 _questionHighlightIndex.value = null
@@ -394,34 +412,6 @@ class MainViewModel : AndroidViewModel {
     fun onForegroundReturn() {
         Log.d("MainViewModel", "포그라운드로 복귀 - 상태 확인")
         // 포그라운드로 복귀 시 상태 확인 (필요시 정리)
-    }
-
-    // Primary constructor for test (inject data)
-    constructor(itemsByCategory: Map<String, List<QaItem>>) : super(Application()) {
-        this.itemsByCategory.putAll(itemsByCategory)
-        for (category in itemsByCategory.keys) {
-            itemIndexByCategory[category] = 0
-        }
-        _uiState.value = _uiState.value.copy(categories = itemsByCategory.keys.toList())
-    }
-
-    // Secondary constructor for production (load from assets)
-    constructor(application: Application) : this(mutableMapOf()) {
-        prefs = application.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
-        audioRecorder = AudioRecorderImpl(application)
-        audioFileRepository = AudioFileRepositoryImpl(application)
-        loadQaItemsFromAssets(application)
-        loadMemorizeLevel()
-        restoreLastCategory()
-        
-        // 앱 시작 시 오래된 녹음 파일들 정리
-        viewModelScope.launch {
-            audioFileRepository?.cleanupAllOldRecordings(1)
-            Log.d("MainViewModel", "앱 시작 시 전체 녹음 파일 정리 완료")
-            
-            // 초기 녹음 파일 존재 여부 확인
-            checkRecordingFileExists()
-        }
     }
 
     private fun loadQaItemsFromAssets(application: Application) {
@@ -693,10 +683,6 @@ class MainViewModel : AndroidViewModel {
                 }
                 "영작 테스트" -> {
                     Log.d("MainViewModel", "영작 테스트 UseCase 실행")
-                    if (audioRecorder == null || audioFileRepository == null) {
-                        Log.e("MainViewModel", "audioRecorder 또는 audioFileRepository가 null입니다. 영작 테스트 실행 불가")
-                        return@launch
-                    }
                     val currentItem = _uiState.value.currentQaItem
                     val currentIndex = itemIndexByCategory[currentItem?.category] ?: 0
                     val scriptId = "${currentItem?.category}_$currentIndex"
@@ -706,8 +692,8 @@ class MainViewModel : AndroidViewModel {
                         answerKo = answerKo,
                         scriptId = scriptId,
                         ttsPlayer = ttsPlayer,
-                        audioRecorder = audioRecorder!!,
-                        audioFileRepository = audioFileRepository!!,
+                        audioRecorder = audioRecorder,
+                        audioFileRepository = audioFileRepository,
                         onAutoFlip = {
                             // 답변 카드를 한글 페이지로 뒤집기
                             setAnswerCardFlipped(true)
@@ -740,7 +726,7 @@ class MainViewModel : AndroidViewModel {
                     
                     // 오래된 녹음 파일들 정리
                     if (currentItem != null) {
-                        audioFileRepository?.cleanupOldRecordings(scriptId, 1)
+                        audioFileRepository.cleanupOldRecordings(scriptId, 1)
                         Log.d("MainViewModel", "스크립트 $scriptId 오래된 녹음 파일들 정리 완료")
                     }
                     

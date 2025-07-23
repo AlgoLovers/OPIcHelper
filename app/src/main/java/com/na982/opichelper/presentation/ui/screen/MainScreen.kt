@@ -25,7 +25,7 @@ import androidx.activity.compose.BackHandler
 import android.util.Log
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.data.audio.AudioPlayerImpl
+import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.entity.MainScreenState
 import com.na982.opichelper.domain.entity.PlayType
 
@@ -91,9 +91,13 @@ fun MainScreen(
     val hasRecordingFile by viewModel.hasRecordingFile.collectAsState()
     val currentKoreanTtsService by viewModel.currentKoreanTtsService.collectAsState()
 
-    val audioPlayer = remember { AudioPlayerImpl() }
+    val audioPlayer = remember { 
+        // Hilt를 통해 주입받은 AudioPlayer 사용
+        // 여기서는 null로 설정하고 ViewModel에서 처리
+        null as AudioPlayer?
+    }
     LaunchedEffect(Unit) {
-        viewModel.setAudioPlayer(audioPlayer)
+        // AudioPlayer는 ViewModel에서 Hilt를 통해 주입받으므로 여기서는 설정하지 않음
         viewModel.setMergedAudioStateChangeCallback { isPlaying ->
             screenState.setPlayingState(PlayType.MERGED_AUDIO, isPlaying)
         }
@@ -317,7 +321,7 @@ fun MainScreen(
                 ttsPlayer?.stop()
                 
                 // 오디오 플레이어 중지
-                audioPlayer.stop()
+                audioPlayer?.stop()
                 
                 // 하이라이트 초기화
                 viewModel.setQuestionHighlightIndex(null)

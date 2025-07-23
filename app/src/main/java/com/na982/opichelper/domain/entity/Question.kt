@@ -22,5 +22,6 @@ data class QaItem(
     val answerEn: String = "",
     val answerKo: String = "",
     val keywords: List<String> = emptyList(),
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val recordingPath: String? = null // 녹음 파일 경로 추가
 ) 

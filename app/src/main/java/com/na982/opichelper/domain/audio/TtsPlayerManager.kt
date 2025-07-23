@@ -2,22 +2,21 @@ package com.na982.opichelper.domain.audio
 
 import android.content.Context
 import android.util.Log
-import com.na982.opichelper.data.audio.GoogleTtsPlayer
-// import com.na982.opichelper.data.audio.NaverTtsPlayer
-// import com.na982.opichelper.data.audio.KakaoTtsPlayer
-import com.na982.opichelper.data.audio.SamsungTtsPlayer
+import javax.inject.Inject
 
 /**
  * TTS 플레이어 매니저 (폴백 시스템)
  * 클린 아키텍처 원칙에 따라 TTS 서비스들을 관리
  */
-class TtsPlayerManager(private val context: Context) {
-    // 영문 TTS (Google TTS)
-    private val googleTtsPlayer = GoogleTtsPlayer(context)
+class TtsPlayerManager @Inject constructor(
+    private val context: Context,
+    private val googleTtsPlayer: TtsPlayer,
+    private val samsungTtsPlayer: TtsPlayer
+) {
     
     // 한글 TTS 플레이어들 (폴백 순서)
     private val koreanTtsPlayers = listOf(
-        SamsungTtsPlayer(context),   // 1순위: 삼성 TTS (무료)
+        samsungTtsPlayer,   // 1순위: 삼성 TTS (무료)
         // NaverTtsPlayer(context),    // 2순위: 네이버 클로바 (유료 - 월 9만원)
         // KakaoTtsPlayer(context),    // 3순위: 카카오 음성 (유료 - 요금 불명)
     )
@@ -87,7 +86,9 @@ class TtsPlayerManager(private val context: Context) {
      */
     fun stop() {
         googleTtsPlayer.stop()
-        koreanTtsPlayers.forEach { it.stop() }
+        for (player in koreanTtsPlayers) {
+            player.stop()
+        }
         Log.d("TtsPlayerManager", "모든 TTS 중지")
     }
     
@@ -95,7 +96,7 @@ class TtsPlayerManager(private val context: Context) {
      * 현재 재생 중인지 확인
      */
     fun isPlaying(): Boolean {
-        return googleTtsPlayer.isPlaying() || koreanTtsPlayers.any { it.isPlaying() }
+        return googleTtsPlayer.isPlaying() || koreanTtsPlayers.any { player -> player.isPlaying() }
     }
     
     /**
@@ -113,8 +114,8 @@ class TtsPlayerManager(private val context: Context) {
      * 사용 가능한 한글 TTS 서비스 목록 반환
      */
     fun getAvailableKoreanTtsServices(): List<String> {
-        return koreanTtsPlayers.mapNotNull { 
-            if (it.isAvailable()) it.getServiceName() else null 
+        return koreanTtsPlayers.mapNotNull { player -> 
+            if (player.isAvailable()) player.getServiceName() else null 
         }
     }
     
@@ -122,8 +123,8 @@ class TtsPlayerManager(private val context: Context) {
      * 한글 TTS 서비스 상태 정보 반환
      */
     fun getKoreanTtsServiceStatus(): List<Pair<String, Boolean>> {
-        return koreanTtsPlayers.map { 
-            it.getServiceName() to it.isAvailable() 
+        return koreanTtsPlayers.map { player -> 
+            player.getServiceName() to player.isAvailable() 
         }
     }
     
@@ -165,18 +166,5 @@ class TtsPlayerManager(private val context: Context) {
         
         finished.await()
         return System.currentTimeMillis() - start
-    }
-    
-    /**
-     * 리소스 정리
-     */
-    fun destroy() {
-        googleTtsPlayer.destroy()
-        koreanTtsPlayers.forEach { 
-            if (it is SamsungTtsPlayer) {
-                it.destroy()
-            }
-        }
-        Log.d("TtsPlayerManager", "TTS 매니저 리소스 정리 완료")
     }
 } 
