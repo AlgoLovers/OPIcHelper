@@ -70,11 +70,9 @@ dependencies {
     // implementation(libs.room.ktx)
     // kapt(libs.room.compiler)
     
-    // Retrofit & OkHttp - 임시 제거
-    // implementation(libs.retrofit)
-    // implementation(libs.retrofit.converter.gson)
-    // implementation(libs.okhttp)
-    // implementation(libs.okhttp.logging)
+    // Retrofit & OkHttp - 네이버/카카오 TTS용
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")

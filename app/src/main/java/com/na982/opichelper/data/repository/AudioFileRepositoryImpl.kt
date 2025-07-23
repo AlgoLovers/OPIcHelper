@@ -19,7 +19,7 @@ import java.nio.ByteBuffer
  */
 class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepository {
     
-    override suspend fun mergeAndSaveAudioFiles(files: List<File>): File? {
+    override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
         return withContext(Dispatchers.IO) {
             if (files.isEmpty()) {
                 Log.d("AudioFileRepository", "병합할 파일이 없습니다.")
@@ -37,7 +37,7 @@ class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepositor
                 outputDir.mkdirs()
             }
 
-            val output = File(outputDir, "merged_${System.currentTimeMillis()}.m4a")
+            val output = File(outputDir, "${scriptId}_merged_${System.currentTimeMillis()}.m4a")
             Log.d("AudioFileRepository", "출력 파일: ${output.absolutePath}")
 
             // 단일 파일인 경우 그대로 복사
@@ -47,38 +47,32 @@ class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepositor
                 return@withContext output
             }
 
-            // 여러 파일인 경우 MediaCodec을 우선적으로 사용   한 병합
+            // 여러 파일인 경우 MediaCodec을 우선적으로 사용한 병합
             var totalBytesWritten = 0L
             
             try {
                 mergeWithMediaCodec(files, output)
                 Log.d("AudioFileRepository", "MediaCodec 병합 완료: ${output.length()} bytes")
             } catch (e: Exception) {
-                Log.e("AudioFileRepository", "MediaCodec 병합 실패, FFmpeg 방식 사용", e)
+                Log.e("AudioFileRepository", "MediaCodec 병합 실패, 헤더 분석 방식 사용", e)
                 try {
-                    mergeWithFFmpeg(files, output)
-                    Log.d("AudioFileRepository", "FFmpeg 병합 완료: ${output.length()} bytes")
+                    mergeWithHeaderAnalysis(files, output)
+                    Log.d("AudioFileRepository", "헤더 분석 병합 완료: ${output.length()} bytes")
                 } catch (e2: Exception) {
-                    Log.e("AudioFileRepository", "FFmpeg 병합 실패, 헤더 분석 방식 사용", e2)
-                    try {
-                        mergeWithHeaderAnalysis(files, output)
-                        Log.d("AudioFileRepository", "헤더 분석 병합 완료: ${output.length()} bytes")
-                    } catch (e3: Exception) {
-                        Log.e("AudioFileRepository", "헤더 분석 병합 실패, fallback 방식 사용", e3)
-                        // Fallback: 간단한 파일 연결
-                        FileOutputStream(output).use { out ->
-                            files.forEachIndexed { idx, file ->
-                                Log.d("AudioFileRepository", "파일 ${idx + 1} 처리 시작: ${file.name}, 크기: ${file.length()} bytes")
-                                FileInputStream(file).use { input ->
-                                    val bytesCopied = input.copyTo(out)
-                                    totalBytesWritten += bytesCopied
-                                    Log.d("AudioFileRepository", "파일 ${idx + 1} 복사 완료: $bytesCopied bytes")
-                                }
+                    Log.e("AudioFileRepository", "헤더 분석 병합 실패, fallback 방식 사용", e2)
+                    // Fallback: 간단한 파일 연결
+                    FileOutputStream(output).use { out ->
+                        files.forEachIndexed { idx, file ->
+                            Log.d("AudioFileRepository", "파일 ${idx + 1} 처리 시작: ${file.name}, 크기: ${file.length()} bytes")
+                            FileInputStream(file).use { input ->
+                                val bytesCopied = input.copyTo(out)
+                                totalBytesWritten += bytesCopied
+                                Log.d("AudioFileRepository", "파일 ${idx + 1} 복사 완료: $bytesCopied bytes")
                             }
                         }
-                        
-                        Log.d("AudioFileRepository", "Fallback 병합 완료: 총 ${totalBytesWritten} bytes")
                     }
+                    
+                    Log.d("AudioFileRepository", "Fallback 병합 완료: 총 ${totalBytesWritten} bytes")
                 }
             }
             
@@ -116,70 +110,182 @@ class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepositor
             Log.d("AudioFileRepository", "오디오 파일 삭제: ${file.name}, 성공: $deleted")
         }
     }
-
-    // FFmpeg를 사용한 오디오 파일 병합
-    private fun mergeWithFFmpeg(files: List<File>, output: File) {
-        Log.d("AudioFileRepository", "FFmpeg 병합 시작: ${files.size}개 파일")
-        
-        try {
-            // FFmpeg 명령어 구성 (concat demuxer 사용)
-            val ffmpegCommand = mutableListOf<String>()
-            ffmpegCommand.add("ffmpeg")
-            
-            // 입력 파일들 추가
-            files.forEach { file ->
-                ffmpegCommand.add("-i")
-                ffmpegCommand.add(file.absolutePath)
+    
+    override suspend fun cleanupOldRecordings(scriptId: String, keepLatestCount: Int) {
+        withContext(Dispatchers.IO) {
+            val recordingsDir = File(context.filesDir, "recordings")
+            if (!recordingsDir.exists()) {
+                Log.d("AudioFileRepository", "녹음 디렉토리가 존재하지 않음: ${recordingsDir.absolutePath}")
+                return@withContext
             }
             
-            // 필터 복합체 구성 (파일들을 순차적으로 연결)
-            val filterComplex = StringBuilder()
-            for (i in files.indices) {
-                filterComplex.append("[$i:0]")
+            // 스크립트 ID로 시작하는 파일들 찾기 (예: "집_0_1", "집_0_2" 등)
+            val scriptFiles = recordingsDir.listFiles { file ->
+                file.name.startsWith("${scriptId}_") && file.extension == "m4a"
+            }?.sortedByDescending { it.lastModified() } ?: emptyList()
+            
+            Log.d("AudioFileRepository", "스크립트 $scriptId 녹음 파일들: ${scriptFiles.size}개")
+            
+            // 최신 파일들만 유지하고 나머지 삭제
+            val filesToDelete = scriptFiles.drop(keepLatestCount)
+            filesToDelete.forEach { file ->
+                val deleted = file.delete()
+                Log.d("AudioFileRepository", "오래된 녹음 파일 삭제: ${file.name}, 성공: $deleted")
             }
-            filterComplex.append("concat=n=${files.size}:v=0:a=1[out]")
             
-            ffmpegCommand.add("-filter_complex")
-            ffmpegCommand.add(filterComplex.toString())
-            ffmpegCommand.add("-map")
-            ffmpegCommand.add("[out]")
-            ffmpegCommand.add("-c:a") // 오디오 코덱 설정
-            ffmpegCommand.add("aac") // AAC 코덱 사용
-            ffmpegCommand.add("-b:a") // 비트레이트 설정
-            ffmpegCommand.add("128k") // 128kbps
-            ffmpegCommand.add("-y") // 기존 파일 덮어쓰기
-            ffmpegCommand.add(output.absolutePath)
+            Log.d("AudioFileRepository", "스크립트 $scriptId 정리 완료: ${filesToDelete.size}개 파일 삭제")
+        }
+    }
+    
+    override suspend fun cleanupAllOldRecordings(keepLatestCount: Int) {
+        withContext(Dispatchers.IO) {
+            val recordingsDir = File(context.filesDir, "recordings")
+            if (!recordingsDir.exists()) {
+                Log.d("AudioFileRepository", "녹음 디렉토리가 존재하지 않음: ${recordingsDir.absolutePath}")
+                return@withContext
+            }
             
-            Log.d("AudioFileRepository", "FFmpeg 명령어: ${ffmpegCommand.joinToString(" ")}")
+            // 모든 녹음 파일들을 스크립트별로 그룹화
+            val allFiles = recordingsDir.listFiles { file -> file.extension == "m4a" } ?: emptyArray()
+            val filesByScript = allFiles.groupBy { file ->
+                // 파일명에서 스크립트 ID 추출 (예: "집_0_1_20231201_123456.m4a" -> "집_0")
+                val nameWithoutExt = file.nameWithoutExtension
+                val parts = nameWithoutExt.split("_")
+                if (parts.size >= 2) {
+                    "${parts[0]}_${parts[1]}"
+                } else {
+                    nameWithoutExt // 스크립트 ID를 추출할 수 없는 경우 파일명 그대로 사용
+                }
+            }.toMutableMap()
             
-            // FFmpeg 프로세스 실행
-            val process = ProcessBuilder(ffmpegCommand)
-                .redirectErrorStream(true)
-                .start()
-            
-            // FFmpeg 실행 결과 읽기
-            val inputStream = process.inputStream
-            val outputBuilder = StringBuilder()
-            inputStream.bufferedReader().use { reader ->
-                reader.forEachLine { line ->
-                    outputBuilder.append(line).append("\n")
-                    Log.d("AudioFileRepository", "FFmpeg: $line")
+            // 병합된 파일들도 스크립트별로 그룹화
+            val mergedDir = File(context.filesDir, "merged")
+            if (mergedDir.exists()) {
+                val mergedFiles = mergedDir.listFiles { file -> file.extension == "m4a" } ?: emptyArray()
+                mergedFiles.forEach { file ->
+                    val nameWithoutExt = file.nameWithoutExtension
+                    val parts = nameWithoutExt.split("_")
+                    if (parts.size >= 2 && nameWithoutExt.contains("_merged_")) {
+                        val scriptId = "${parts[0]}_${parts[1]}"
+                        val existingFiles = filesByScript[scriptId] ?: emptyList()
+                        filesByScript[scriptId] = existingFiles + file
+                    }
                 }
             }
             
-            // 프로세스 종료 대기
-            val exitCode = process.waitFor()
+            Log.d("AudioFileRepository", "발견된 스크립트 수: ${filesByScript.size}")
             
-            if (exitCode == 0) {
-                Log.d("AudioFileRepository", "FFmpeg 병합 성공: ${output.length()} bytes")
-            } else {
-                Log.e("AudioFileRepository", "FFmpeg 병합 실패. 종료 코드: $exitCode")
-                Log.e("AudioFileRepository", "FFmpeg 출력: ${outputBuilder.toString()}")
-                throw Exception("FFmpeg 병합 실패. 종료 코드: $exitCode")
+            var totalDeleted = 0
+            filesByScript.forEach { (scriptId, files) ->
+                val sortedFiles = files.sortedByDescending { it.lastModified() }
+                val filesToDelete = sortedFiles.drop(keepLatestCount)
+                
+                filesToDelete.forEach { file ->
+                    val deleted = file.delete()
+                    if (deleted) totalDeleted++
+                    Log.d("AudioFileRepository", "오래된 녹음 파일 삭제: ${file.name}, 성공: $deleted")
+                }
+                
+                Log.d("AudioFileRepository", "스크립트 $scriptId 정리: ${filesToDelete.size}개 파일 삭제")
             }
             
+            Log.d("AudioFileRepository", "전체 정리 완료: 총 $totalDeleted 개 파일 삭제")
+        }
+    }
+    
+    override suspend fun hasRecordingFile(scriptId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            val recordingsDir = File(context.filesDir, "recordings")
+            if (!recordingsDir.exists()) {
+                Log.d("AudioFileRepository", "녹음 디렉토리가 존재하지 않음: ${recordingsDir.absolutePath}")
+                return@withContext false
+            }
+            
+            // 스크립트 ID로 시작하는 파일들 찾기 (예: "집_0_1", "집_0_2" 등)
+            val scriptFiles = recordingsDir.listFiles { file ->
+                file.name.startsWith("${scriptId}_") && file.extension == "m4a"
+            }
+            
+            // 스크립트 ID 기반 병합된 파일들도 확인 (merged 디렉토리에서)
+            val mergedDir = File(context.filesDir, "merged")
+            val mergedFiles = if (mergedDir.exists()) {
+                mergedDir.listFiles { file ->
+                    file.name.startsWith("${scriptId}_merged_") && file.extension == "m4a"
+                }
+            } else {
+                null
+            }
+            
+            val hasFile = scriptFiles?.isNotEmpty() == true || (mergedFiles?.isNotEmpty() == true)
+            Log.d("AudioFileRepository", "스크립트 $scriptId 녹음 파일 존재 여부: $hasFile (개별 파일: ${scriptFiles?.size ?: 0}개, 병합 파일: ${mergedFiles?.size ?: 0}개)")
+            hasFile
+        }
+    }
+
+    // MediaCodec을 사용한 오디오 파일 병합
+    private fun mergeWithMediaCodec(files: List<File>, output: File) {
+        Log.d("AudioFileRepository", "MediaCodec 병합 시작: ${files.size}개 파일")
+        
+        try {
+            val muxer = MediaMuxer(output.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            var audioTrackIndex = -1
+            var totalDuration = 0L
+            
+            // 각 파일을 순차적으로 처리
+            files.forEachIndexed { fileIndex, file ->
+                Log.d("AudioFileRepository", "파일 ${fileIndex + 1} 처리: ${file.name}")
+                
+                val extractor = MediaExtractor()
+                extractor.setDataSource(file.absolutePath)
+                
+                // 오디오 트랙 찾기
+                for (i in 0 until extractor.trackCount) {
+                    val format = extractor.getTrackFormat(i)
+                    val mime = format.getString(MediaFormat.KEY_MIME)
+                    
+                    if (mime?.startsWith("audio/") == true) {
+                        extractor.selectTrack(i)
+                        
+                        // 첫 번째 파일에서 오디오 트랙 설정
+                        if (fileIndex == 0) {
+                            audioTrackIndex = muxer.addTrack(format)
+                            muxer.start()
+                        }
+                        
+                        // 오디오 데이터 복사
+                        val buffer = ByteBuffer.allocate(1024 * 1024) // 1MB 버퍼
+                        val bufferInfo = MediaCodec.BufferInfo()
+                        
+                        while (true) {
+                            val sampleSize = extractor.readSampleData(buffer, 0)
+                            if (sampleSize < 0) break
+                            
+                            bufferInfo.apply {
+                                offset = 0
+                                size = sampleSize
+                                presentationTimeUs = extractor.sampleTime + totalDuration
+                                flags = extractor.sampleFlags
+                            }
+                            
+                            muxer.writeSampleData(audioTrackIndex, buffer, bufferInfo)
+                            extractor.advance()
+                        }
+                        
+                        totalDuration += extractor.getTrackFormat(i).getLong(MediaFormat.KEY_DURATION)
+                        break
+                    }
+                }
+                
+                extractor.release()
+            }
+            
+            muxer.stop()
+            muxer.release()
+            
+            Log.d("AudioFileRepository", "MediaCodec 병합 완료: 총 지속시간=${totalDuration}μs")
+            
         } catch (e: Exception) {
-            Log.e("AudioFileRepository", "FFmpeg 병합 중 오류 발생", e)
+            Log.e("AudioFileRepository", "MediaCodec 병합 중 오류 발생", e)
             throw e
         }
     }
@@ -299,73 +405,5 @@ class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepositor
         }
         
         Log.d("AudioFileRepository", "헤더 분석 병합 완료: 총 오디오 크기=${totalAudioSize} bytes, 새 mdat 크기=${newMdatSize} bytes")
-    }
-
-    // MediaCodec을 사용한 오디오 파일 병합
-    private fun mergeWithMediaCodec(files: List<File>, output: File) {
-        Log.d("AudioFileRepository", "MediaCodec 병합 시작: ${files.size}개 파일")
-        
-        try {
-            val muxer = MediaMuxer(output.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-            var audioTrackIndex = -1
-            var totalDuration = 0L
-            
-            // 각 파일을 순차적으로 처리
-            files.forEachIndexed { fileIndex, file ->
-                Log.d("AudioFileRepository", "파일 ${fileIndex + 1} 처리: ${file.name}")
-                
-                val extractor = MediaExtractor()
-                extractor.setDataSource(file.absolutePath)
-                
-                // 오디오 트랙 찾기
-                for (i in 0 until extractor.trackCount) {
-                    val format = extractor.getTrackFormat(i)
-                    val mime = format.getString(MediaFormat.KEY_MIME)
-                    
-                    if (mime?.startsWith("audio/") == true) {
-                        extractor.selectTrack(i)
-                        
-                        // 첫 번째 파일에서 오디오 트랙 설정
-                        if (fileIndex == 0) {
-                            audioTrackIndex = muxer.addTrack(format)
-                            muxer.start()
-                        }
-                        
-                        // 오디오 데이터 복사
-                        val buffer = ByteBuffer.allocate(1024 * 1024) // 1MB 버퍼
-                        val bufferInfo = MediaCodec.BufferInfo()
-                        
-                        while (true) {
-                            val sampleSize = extractor.readSampleData(buffer, 0)
-                            if (sampleSize < 0) break
-                            
-                            bufferInfo.apply {
-                                offset = 0
-                                size = sampleSize
-                                presentationTimeUs = extractor.sampleTime + totalDuration
-                                flags = extractor.sampleFlags
-                            }
-                            
-                            muxer.writeSampleData(audioTrackIndex, buffer, bufferInfo)
-                            extractor.advance()
-                        }
-                        
-                        totalDuration += extractor.getTrackFormat(i).getLong(MediaFormat.KEY_DURATION)
-                        break
-                    }
-                }
-                
-                extractor.release()
-            }
-            
-            muxer.stop()
-            muxer.release()
-            
-            Log.d("AudioFileRepository", "MediaCodec 병합 완료: 총 지속시간=${totalDuration}μs")
-            
-        } catch (e: Exception) {
-            Log.e("AudioFileRepository", "MediaCodec 병합 중 오류 발생", e)
-            throw e
-        }
     }
 } 

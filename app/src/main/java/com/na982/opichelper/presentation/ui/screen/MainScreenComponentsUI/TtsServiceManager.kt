@@ -4,17 +4,18 @@ import androidx.compose.runtime.*
 import android.content.Context
 import android.content.ServiceConnection
 import android.os.IBinder
-import com.na982.opichelper.presentation.ui.component.TtsService
 import com.na982.opichelper.domain.audio.TtsPlayer
 import android.util.Log
 
+/**
+ * TTS 서비스 관리자
+ * 도메인 계층의 TtsPlayer 인터페이스에만 의존
+ */
 @Composable
 fun TtsServiceManager(
     context: Context,
     onTtsPlayerReady: (TtsPlayer?) -> Unit,
-    onHighlightChange: (questionIndex: Int?, answerIndex: Int?) -> Unit,
-    onQuestionPlayStateChange: (Boolean) -> Unit,
-    onAnswerPlayStateChange: (Boolean) -> Unit
+    onKoreanTtsServiceUpdate: ((String) -> Unit)? = null
 ) {
     Log.d("TtsServiceManager", "Initializing TTS service manager")
     
@@ -22,30 +23,19 @@ fun TtsServiceManager(
         object : ServiceConnection {
             override fun onServiceConnected(name: android.content.ComponentName?, service: IBinder?) {
                 Log.d("TtsServiceManager", "TTS service connected")
-                val binder = service as? TtsService.TtsBinder
-                val ttsService = binder?.getService()
-                val ttsPlayer = ttsService // TtsService는 TtsPlayer를 구현함
+                val ttsBinder = service as? com.na982.opichelper.presentation.ui.component.TtsService.TtsBinder
+                val ttsPlayer = ttsBinder?.getService()
                 
+                // 한글 TTS 서비스 이름 업데이트
+                val ttsService = ttsBinder?.getService() as? com.na982.opichelper.presentation.ui.component.TtsService
+                ttsService?.let { service ->
+                    val serviceName = service.getCurrentKoreanTtsServiceName()
+                    Log.d("TtsServiceManager", "한글 TTS 서비스: $serviceName")
+                    onKoreanTtsServiceUpdate?.invoke(serviceName)
+                }
+                
+                Log.d("TtsServiceManager", "TTS player ready: ${ttsPlayer != null}")
                 onTtsPlayerReady(ttsPlayer)
-                
-                ttsService?.setHighlightCallback(object : TtsService.HighlightCallback {
-                    override fun onQuestionHighlight(index: Int?) {
-                        Log.d("TtsServiceManager", "Question highlight changed to: $index")
-                        onHighlightChange(index, null)
-                        if (index == null) {
-                            // 질문 재생이 완료되면 상태 초기화
-                            onQuestionPlayStateChange(false)
-                        }
-                    }
-                    override fun onAnswerHighlight(index: Int?) {
-                        Log.d("TtsServiceManager", "Answer highlight changed to: $index")
-                        onHighlightChange(null, index)
-                        if (index == null) {
-                            // 답변 재생이 완료되면 상태 초기화
-                            onAnswerPlayStateChange(false)
-                        }
-                    }
-                })
             }
             override fun onServiceDisconnected(name: android.content.ComponentName?) {
                 Log.d("TtsServiceManager", "TTS service disconnected")
@@ -56,12 +46,23 @@ fun TtsServiceManager(
     
     DisposableEffect(Unit) {
         Log.d("TtsServiceManager", "Binding TTS service")
-        val intent = android.content.Intent(context, TtsService::class.java)
+        val intent = android.content.Intent(context, com.na982.opichelper.presentation.ui.component.TtsService::class.java)
         context.bindService(intent, serviceConnection, android.content.Context.BIND_AUTO_CREATE)
         
         onDispose {
             Log.d("TtsServiceManager", "Unbinding TTS service")
-            context.unbindService(serviceConnection)
+            try {
+                // 하이라이트 콜백 해제
+                val ttsService = context.getSystemService(com.na982.opichelper.presentation.ui.component.TtsService::class.java)
+                ttsService?.setHighlightCallback(null)
+                
+                // 서비스 연결 해제
+                context.unbindService(serviceConnection)
+                
+                Log.d("TtsServiceManager", "TTS service unbound successfully")
+            } catch (e: Exception) {
+                Log.e("TtsServiceManager", "Error unbinding TTS service", e)
+            }
         }
     }
 } 

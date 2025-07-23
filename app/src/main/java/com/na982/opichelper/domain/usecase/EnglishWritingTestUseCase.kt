@@ -22,10 +22,13 @@ import com.na982.opichelper.domain.repository.AudioFileRepository
 class EnglishWritingTestUseCase(
     private val answerEn: String,
     private val answerKo: String? = null,
+    private val scriptId: String, // 스크립트 ID 추가
     private val ttsPlayer: TtsPlayer,
     private val audioRecorder: AudioRecorder,
     private val audioFileRepository: AudioFileRepository,
     private val onAutoFlip: (() -> Unit)? = null,
+    private val onKoreanHighlight: ((Int?) -> Unit)? = null, // 한글 하이라이트 콜백 추가
+    private val onRecordingHighlight: ((Int?) -> Unit)? = null, // 녹음 하이라이트 콜백 추가
     private val onMergedFileCreated: ((File) -> Unit)? = null // 병합된 파일 콜백 추가
 ) : MemorizeTestUseCase {
     override suspend fun execute() {
@@ -41,7 +44,15 @@ class EnglishWritingTestUseCase(
             // 1. (옵션) 한글 문장 읽기 (answerKo가 있으면)
             if (koSentences.size > idx) {
                 Log.d("EnglishWritingTestUseCase", "한글 문장 TTS 실행: '${koSentences[idx].take(30)}...'")
-                ttsPlayer.speakAndGetDuration(koSentences[idx], isKorean = true)
+                // 자동 뒤집기 콜백 호출 (한글 페이지로)
+                onAutoFlip?.invoke()
+                // 한글 하이라이트 설정 (TTS 재생 중)
+                onKoreanHighlight?.invoke(idx)
+                // 한글 TTS 재생 (한글 TTS 엔진 사용)
+                val koreanDuration = ttsPlayer.speakAndGetDuration(koSentences[idx], isKorean = true, rate = 0.8f)
+                Log.d("EnglishWritingTestUseCase", "한글 TTS 재생 완료: ${koSentences[idx].take(30)}..., 시간=${koreanDuration}ms")
+                // TTS 재생 완료 후 하이라이트 초기화
+                onKoreanHighlight?.invoke(null)
             }
             
             // 2. 영문 문장 TTS 시간만 추정 (실제 재생 X) - 시간을 더 길게 설정
@@ -49,16 +60,21 @@ class EnglishWritingTestUseCase(
             val recordDuration = (enDuration).toLong()
             Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 녹음 시간 계산: 길이=${enSentence.length}, 계산된 시간=${enDuration}ms, 최종 시간=${recordDuration}ms")
             
-            // 3. 녹음 시작
+            // 3. 녹음 시작 (녹음 하이라이트 표시)
             val recordedFile = withContext(Dispatchers.IO) {
                 Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 녹음 시작")
+                // 녹음 하이라이트 설정 (녹음 중임을 표시)
+                onRecordingHighlight?.invoke(idx)
                 val startTime = System.currentTimeMillis()
-                audioRecorder.startRecording()
+                audioRecorder.startRecording("${scriptId}_${idx + 1}") // 스크립트 ID와 문장 번호 사용
                 kotlinx.coroutines.delay(recordDuration)
                 val endTime = System.currentTimeMillis()
                 val actualDuration = endTime - startTime
                 Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 녹음 완료: 예상 시간=${recordDuration}ms, 실제 시간=${actualDuration}ms")
-                audioRecorder.stopRecording()
+                val file = audioRecorder.stopRecording()
+                // 녹음 완료 후 하이라이트 초기화
+                onRecordingHighlight?.invoke(null)
+                file
             }
             recordedFile?.let { 
                 recordedFiles.add(it)
@@ -70,7 +86,7 @@ class EnglishWritingTestUseCase(
         }
         
         // 5. Repository를 통해 파일 병합 및 저장
-        val mergedFile = audioFileRepository.mergeAndSaveAudioFiles(recordedFiles)
+        val mergedFile = audioFileRepository.mergeAndSaveAudioFiles(recordedFiles, scriptId)
         Log.d("EnglishWritingTestUseCase", "병합된 파일: ${mergedFile?.absolutePath}")
         
         // 6. 병합된 파일 콜백 호출

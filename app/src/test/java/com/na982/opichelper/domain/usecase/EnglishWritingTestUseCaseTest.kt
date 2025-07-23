@@ -25,16 +25,18 @@ class EnglishWritingTestUseCaseTest {
         
         // Mock TtsPlayer
         mockTtsPlayer = object : TtsPlayer {
-            override fun speakQuestion(text: String, rate: Float) {}
-            override fun speakAnswer(text: String, rate: Float) {}
-            override fun stopTts() {}
-            override suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long = 1000L
+            override suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean = true
+            override fun stop() {}
+            override fun isPlaying(): Boolean = false
+            override fun isAvailable(): Boolean = true
+            override fun getServiceName(): String = "Mock TTS"
             override suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {}
+            override suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long = 1000L
         }
         
         // Mock AudioRecorder
         mockAudioRecorder = object : AudioRecorder {
-            override fun startRecording(): File {
+            override fun startRecording(scriptId: String): File {
                 val file = File(testDir, "test_recording_${System.currentTimeMillis()}.m4a")
                 createMockAudioFile(file)
                 return file
@@ -43,11 +45,15 @@ class EnglishWritingTestUseCaseTest {
             override fun stopRecording(): File? {
                 return null
             }
+            
+            override fun startRecording(): File {
+                return startRecording("test_script")
+            }
         }
         
         // Mock AudioFileRepository
         mockAudioFileRepository = object : AudioFileRepository {
-            override suspend fun mergeAndSaveAudioFiles(files: List<File>): File? {
+            override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
                 if (files.isEmpty()) return null
                 
                 val mergedFile = File(testDir, "merged_${System.currentTimeMillis()}.m4a")
@@ -61,6 +67,14 @@ class EnglishWritingTestUseCaseTest {
             
             override fun deleteAudioFile(file: File) {
                 if (file.exists()) file.delete()
+            }
+            
+            override suspend fun cleanupAllOldRecordings(keepLatestCount: Int) {
+                // 테스트에서는 아무것도 하지 않음
+            }
+            
+            override suspend fun cleanupOldRecordings(scriptId: String, keepLatestCount: Int) {
+                // 테스트에서는 아무것도 하지 않음
             }
         }
     }
@@ -76,6 +90,7 @@ class EnglishWritingTestUseCaseTest {
         val useCase = EnglishWritingTestUseCase(
             answerEn = "This is a test sentence. It has multiple parts.",
             answerKo = "이것은 테스트 문장입니다. 여러 부분이 있습니다.",
+            scriptId = "test_script",
             ttsPlayer = mockTtsPlayer,
             audioRecorder = mockAudioRecorder,
             audioFileRepository = mockAudioFileRepository,
@@ -103,6 +118,7 @@ class EnglishWritingTestUseCaseTest {
         val useCase = EnglishWritingTestUseCase(
             answerEn = "",
             answerKo = "",
+            scriptId = "test_script",
             ttsPlayer = mockTtsPlayer,
             audioRecorder = mockAudioRecorder,
             audioFileRepository = mockAudioFileRepository,

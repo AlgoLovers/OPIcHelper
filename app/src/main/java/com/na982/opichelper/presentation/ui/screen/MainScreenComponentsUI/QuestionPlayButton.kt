@@ -12,50 +12,24 @@ import com.na982.opichelper.domain.audio.TtsPlayer
 @Composable
 fun QuestionPlayButton(
     currentQuestion: String,
-    ttsPlayer: TtsPlayer?,
-    onStateChange: (Boolean) -> Unit,
-    isPlaying: Boolean = false, // 외부에서 상태 제어
+    isPlaying: Boolean,
+    onPlayClick: () -> Unit,
+    onStopClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var internalIsPlaying by remember { mutableStateOf(isPlaying) }
-    
-    // 외부 상태가 변경되면 내부 상태도 업데이트
-    LaunchedEffect(isPlaying) {
-        internalIsPlaying = isPlaying
-    }
-    
-    Log.d("QuestionPlayButton", "Rendering with isPlaying=$internalIsPlaying, question=${currentQuestion.take(50)}...")
+    Log.d("QuestionPlayButton", "Rendering with isPlaying=$isPlaying, question=${currentQuestion.take(50)}...")
     
     Button(
         onClick = {
-            Log.d("QuestionPlayButton", "Button clicked, current isPlaying=$internalIsPlaying")
-            
-            if (internalIsPlaying) {
-                Log.d("QuestionPlayButton", "Stopping TTS playback")
-                ttsPlayer?.stopTts()
-                internalIsPlaying = false
+            Log.d("QuestionPlayButton", "Button clicked, current isPlaying=$isPlaying")
+            if (isPlaying) {
+                onStopClick()
             } else {
-                Log.d("QuestionPlayButton", "Starting TTS playback for question")
-                ttsPlayer?.let { player ->
-                    try {
-                        player.speakQuestion(currentQuestion)
-                        internalIsPlaying = true
-                        Log.d("QuestionPlayButton", "TTS playback started successfully")
-                    } catch (e: Exception) {
-                        Log.e("QuestionPlayButton", "Failed to start TTS playback", e)
-                        internalIsPlaying = false
-                    }
-                } ?: run {
-                    Log.e("QuestionPlayButton", "TtsPlayer is null, cannot play question")
-                    internalIsPlaying = false
-                }
+                onPlayClick()
             }
-            
-            Log.d("QuestionPlayButton", "State changed to isPlaying=$internalIsPlaying")
-            onStateChange(internalIsPlaying)
         },
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (internalIsPlaying) 
+            containerColor = if (isPlaying) 
                 MaterialTheme.colorScheme.error 
             else 
                 MaterialTheme.colorScheme.primary
@@ -63,7 +37,7 @@ fun QuestionPlayButton(
         modifier = modifier
     ) {
         Text(
-            text = if (internalIsPlaying) "질문 일시정지" else "질문 재생",
+            text = if (isPlaying) "질문 일시정지" else "질문 재생",
             color = MaterialTheme.colorScheme.onPrimary
         )
     }

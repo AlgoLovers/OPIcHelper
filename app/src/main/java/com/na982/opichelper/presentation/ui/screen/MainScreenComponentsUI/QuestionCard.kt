@@ -30,6 +30,37 @@ fun QuestionCard(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
+        // 진행사항 표시 (카드 위쪽에 더 크게)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "진행사항",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = "$currentIndex / $totalCount",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
         // 플립 카드로 질문 표시
         FlipCard(
             frontContent = {
@@ -43,7 +74,7 @@ fun QuestionCard(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "영문",
+                            text = "Question",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -67,7 +98,7 @@ fun QuestionCard(
             modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "한글",
+                            text = "질문",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -81,27 +112,5 @@ fun QuestionCard(
                 }
             }
         )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // 진행 정보 표시
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "진행 상황",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "$currentIndex / $totalCount",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
     }
 } 

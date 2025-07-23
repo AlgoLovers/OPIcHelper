@@ -19,16 +19,23 @@ import android.util.Log
 @Composable
 fun FlipCard(
     modifier: Modifier = Modifier,
+    isFlipped: Boolean = false,
     frontContent: @Composable () -> Unit,
     backContent: @Composable () -> Unit
 ) {
-    var flipped by remember { mutableStateOf(false) }
+    var flipped by remember { mutableStateOf(isFlipped) }
     val rotation by animateFloatAsState(
         targetValue = if (flipped) 180f else 0f,
         animationSpec = tween(durationMillis = 800)
     )
     
-    Log.d("FlipCard", "Rendering with flipped=$flipped, rotation=$rotation")
+    Log.d("FlipCard", "Rendering with flipped=$flipped, rotation=$rotation, isFlipped=$isFlipped")
+    
+    // isFlipped가 변경되면 flipped 상태 업데이트
+    LaunchedEffect(isFlipped) {
+        flipped = isFlipped
+        Log.d("FlipCard", "External flip triggered: $isFlipped")
+    }
 
     Box(
         modifier = modifier

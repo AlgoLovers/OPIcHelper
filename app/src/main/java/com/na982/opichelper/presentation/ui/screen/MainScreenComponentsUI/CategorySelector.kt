@@ -10,23 +10,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.presentation.ui.screen.MainScreenState
+import com.na982.opichelper.domain.entity.MainScreenState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategorySelector(
     selectedCategory: String,
+    categories: List<String>, // 외부에서 주입받음
     onCategorySelected: (String) -> Unit,
-    ttsPlayer: TtsPlayer?,
     screenState: MainScreenState,
     onHighlightReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val categories = listOf(
-        "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", 
-        "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
-    )
-    
     var expanded by remember { mutableStateOf(false) }
     
     Column(
@@ -67,8 +62,6 @@ fun CategorySelector(
                         text = { Text(category) },
                         onClick = {
                             Log.d("CategorySelector", "Category selected: $category")
-                            // TTS 중지
-                            ttsPlayer?.stopTts()
                             // 모든 상태 초기화
                             screenState.resetAllPlayStates()
                             onHighlightReset()

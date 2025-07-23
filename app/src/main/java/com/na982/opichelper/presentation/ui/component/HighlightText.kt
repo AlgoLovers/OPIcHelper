@@ -17,35 +17,38 @@ import android.util.Log
 fun HighlightText(
     text: String,
     highlightIndex: Int?,
-    modifier: Modifier = Modifier,
-    onHighlightChange: (Int?) -> Unit = {}
+    recordingHighlightIndex: Int? = null,
+    modifier: Modifier = Modifier
 ) {
-    Log.d("HighlightText", "Rendering with highlightIndex=$highlightIndex, text=${text.take(50)}...")
+    Log.d("HighlightText", "Rendering with highlightIndex=$highlightIndex, recordingHighlightIndex=$recordingHighlightIndex, text=${text.take(50)}...")
     
     val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
     
     Column(modifier = modifier) {
         sentences.forEachIndexed { index, sentence ->
             val isHighlighted = highlightIndex == index
-            val backgroundColor = if (isHighlighted) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                Color.Transparent
+            val isRecordingHighlighted = recordingHighlightIndex == index
+            
+            // 녹음 하이라이트가 우선순위가 높음
+            val backgroundColor = when {
+                isRecordingHighlighted -> MaterialTheme.colorScheme.errorContainer
+                isHighlighted -> MaterialTheme.colorScheme.primaryContainer
+                else -> Color.Transparent
             }
-            val textColor = if (isHighlighted) {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            } else {
-                MaterialTheme.colorScheme.onSurface
+            val textColor = when {
+                isRecordingHighlighted -> MaterialTheme.colorScheme.onErrorContainer
+                isHighlighted -> MaterialTheme.colorScheme.onPrimaryContainer
+                else -> MaterialTheme.colorScheme.onSurface
             }
-            val fontSize = if (isHighlighted) {
-                18.sp
-            } else {
-                16.sp
+            val fontSize = when {
+                isRecordingHighlighted -> 20.sp
+                isHighlighted -> 18.sp
+                else -> 16.sp
             }
-            val fontWeight = if (isHighlighted) {
-                FontWeight.Bold
-            } else {
-                FontWeight.Normal
+            val fontWeight = when {
+                isRecordingHighlighted -> FontWeight.Bold
+                isHighlighted -> FontWeight.Bold
+                else -> FontWeight.Normal
             }
             
             Text(

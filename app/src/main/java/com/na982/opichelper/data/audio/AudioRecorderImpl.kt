@@ -16,6 +16,10 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
     private var outputFile: File? = null
 
     override fun startRecording(): File {
+        return startRecording("recording_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()))
+    }
+    
+    override fun startRecording(scriptId: String): File {
         // 권한 확인
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
             != PackageManager.PERMISSION_GRANTED) {
@@ -24,7 +28,7 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
         
         val recordingsDir = File(context.filesDir, "recordings")
         if (!recordingsDir.exists()) recordingsDir.mkdirs()
-        val fileName = "recording_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()) + ".m4a"
+        val fileName = "${scriptId}_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.m4a"
         outputFile = File(recordingsDir, fileName)
         
         try {

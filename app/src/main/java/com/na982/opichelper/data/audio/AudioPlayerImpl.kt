@@ -31,14 +31,14 @@ class AudioPlayerImpl : AudioPlayer {
                     onCompletion()
                 }
                 
-                setOnErrorListener { mp, what, extra ->
+                setOnErrorListener { _, what, extra ->
                     Log.e("AudioPlayerImpl", "재생 오류: what=$what, extra=$extra")
                     stop()
                     onCompletion()
                     true
                 }
                 
-                setOnInfoListener { mp, what, extra ->
+                setOnInfoListener { _, what, extra ->
                     Log.d("AudioPlayerImpl", "재생 정보: what=$what, extra=$extra")
                     false
                 }

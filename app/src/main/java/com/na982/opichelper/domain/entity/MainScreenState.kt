@@ -1,4 +1,4 @@
-package com.na982.opichelper.presentation.ui.screen
+package com.na982.opichelper.domain.entity
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -6,13 +6,14 @@ import androidx.compose.runtime.setValue
 import android.util.Log
 
 /**
- * MainScreen의 상태를 관리하는 클래스
+ * MainScreen의 도메인 상태를 관리하는 클래스
+ * 비즈니스 로직과 UI 상태를 함께 관리
  */
 class MainScreenState {
     var isQuestionPlaying by mutableStateOf(false)
     var isAnswerPlaying by mutableStateOf(false)
     var isAnswerRepeatPlaying by mutableStateOf(false)
-    var isMergedAudioPlaying by mutableStateOf(false) // 병합된 오디오 파일 재생 상태 추가
+    var isMergedAudioPlaying by mutableStateOf(false)
     
     /**
      * 모든 재생 상태를 초기화합니다.
@@ -46,9 +47,13 @@ class MainScreenState {
     }
 }
 
+/**
+ * 재생 타입을 정의하는 열거형
+ * 도메인 로직과 관련된 타입들을 포함
+ */
 enum class PlayType {
     QUESTION,
     ANSWER,
     ANSWER_REPEAT,
-    MERGED_AUDIO // 병합된 오디오 파일 재생 타입 추가
+    MERGED_AUDIO
 } 

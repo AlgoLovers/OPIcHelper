@@ -55,7 +55,7 @@ class AudioFileRepositoryImplTest {
         val testFiles = createTestAudioFiles(3)
         
         // When: 파일 병합 실행
-        val mergedFile = audioFileRepository.mergeAndSaveAudioFiles(testFiles)
+        val mergedFile = audioFileRepository.mergeAndSaveAudioFiles(testFiles, "test_script")
         
         // Then: 병합된 파일이 생성되어야 함
         assertNotNull(mergedFile)
@@ -72,7 +72,7 @@ class AudioFileRepositoryImplTest {
         val emptyFiles = emptyList<File>()
         
         // When: 파일 병합 실행
-        val mergedFile = audioFileRepository.mergeAndSaveAudioFiles(emptyFiles)
+        val mergedFile = audioFileRepository.mergeAndSaveAudioFiles(emptyFiles, "test_script")
         
         // Then: null이 반환되어야 함
         assertEquals(null, mergedFile)
@@ -130,7 +130,7 @@ class AudioFileRepositoryImplTest {
         
         // When: 파일 병합 실행
         val mergedFile = runBlocking {
-            audioFileRepository.mergeAndSaveAudioFiles(testFiles)
+            audioFileRepository.mergeAndSaveAudioFiles(testFiles, "test_script")
         }
         
         // Then: 병합된 파일이 생성되고 크기가 예상보다 큼
@@ -163,7 +163,7 @@ class AudioFileRepositoryImplTest {
     
     // 테스트용 AudioFileRepositoryImpl (Android Log 대신 println 사용)
     private class TestAudioFileRepositoryImpl(private val context: Context) : AudioFileRepository {
-        override suspend fun mergeAndSaveAudioFiles(files: List<File>): File? {
+        override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
             return withContext(Dispatchers.IO) {
                 if (files.isEmpty()) {
                     println("AudioFileRepository: 병합할 파일이 없습니다.")
@@ -243,6 +243,14 @@ class AudioFileRepositoryImplTest {
                 val deleted = file.delete()
                 Log.d("TestAudioFileRepositoryImpl", "오디오 파일 삭제: ${file.name}, 성공: $deleted")
             }
+        }
+        
+        override suspend fun cleanupAllOldRecordings(keepLatestCount: Int) {
+            // 테스트에서는 아무것도 하지 않음
+        }
+        
+        override suspend fun cleanupOldRecordings(scriptId: String, keepLatestCount: Int) {
+            // 테스트에서는 아무것도 하지 않음
         }
     }
     

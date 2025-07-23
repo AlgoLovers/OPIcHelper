@@ -9,9 +9,10 @@ interface AudioFileRepository {
     /**
      * 녹음된 파일들을 병합하여 저장
      * @param files 병합할 녹음 파일들
+     * @param scriptId 스크립트 식별자 (병합된 파일명에 사용)
      * @return 병합된 파일
      */
-    suspend fun mergeAndSaveAudioFiles(files: List<File>): File?
+    suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File?
     
     /**
      * 최근 병합된 오디오 파일 가져오기
@@ -24,4 +25,24 @@ interface AudioFileRepository {
      * @param file 삭제할 파일
      */
     fun deleteAudioFile(file: File)
-} 
+    
+    /**
+     * 스크립트별 오래된 녹음 파일들 정리
+     * @param scriptId 스크립트 식별자 (예: "category_index")
+     * @param keepLatestCount 유지할 최신 파일 개수 (기본값: 1)
+     */
+    suspend fun cleanupOldRecordings(scriptId: String, keepLatestCount: Int = 1)
+    
+    /**
+     * 모든 오래된 녹음 파일들 정리
+     * @param keepLatestCount 각 스크립트당 유지할 최신 파일 개수 (기본값: 1)
+     */
+    suspend fun cleanupAllOldRecordings(keepLatestCount: Int = 1)
+    
+    /**
+     * 특정 스크립트의 녹음 파일 존재 여부 확인
+     * @param scriptId 스크립트 식별자 (예: "category_index")
+     * @return 녹음 파일이 존재하면 true, 없으면 false
+     */
+    suspend fun hasRecordingFile(scriptId: String): Boolean
+}

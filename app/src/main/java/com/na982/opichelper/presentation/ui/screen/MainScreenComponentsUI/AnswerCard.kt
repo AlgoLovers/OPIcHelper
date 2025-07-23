@@ -22,9 +22,12 @@ fun AnswerCard(
     currentAnswer: String,
     currentAnswerKo: String,
     highlightIndex: Int?,
+    answerKoHighlightIndex: Int? = null,
+    recordingHighlightIndex: Int? = null,
+    isFlipped: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    Log.d("AnswerCard", "Rendering with highlightIndex=$highlightIndex")
+    Log.d("AnswerCard", "Rendering with highlightIndex=$highlightIndex, answerKoHighlightIndex=$answerKoHighlightIndex, recordingHighlightIndex=$recordingHighlightIndex, isFlipped=$isFlipped")
     
     var isVisible by remember { mutableStateOf(true) }
     
@@ -66,6 +69,7 @@ fun AnswerCard(
             exit = ExitTransition.None
         ) {
             FlipCard(
+                isFlipped = isFlipped,
                 frontContent = {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -76,15 +80,11 @@ fun AnswerCard(
                         Column(
                             modifier = Modifier.padding(16.dp)
                         ) {
-                            Text(
-                                text = "영문",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
                             Spacer(modifier = Modifier.height(8.dp))
                             HighlightText(
                                 text = currentAnswer,
                                 highlightIndex = highlightIndex,
+                                recordingHighlightIndex = recordingHighlightIndex,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -100,17 +100,14 @@ fun AnswerCard(
                         Column(
                             modifier = Modifier.padding(16.dp)
                         ) {
-                            Text(
-                                text = "한글",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                                text = currentAnswerKo,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+                                        
+                            Spacer(modifier = Modifier.height(8.dp))
+                                                    HighlightText(
+                            text = currentAnswerKo,
+                            highlightIndex = answerKoHighlightIndex,
+                            recordingHighlightIndex = recordingHighlightIndex,
+                            modifier = Modifier.fillMaxWidth()
+                        )
             }
                     }
                 }

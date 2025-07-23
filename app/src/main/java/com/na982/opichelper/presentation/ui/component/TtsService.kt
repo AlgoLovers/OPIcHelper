@@ -11,29 +11,27 @@ import android.content.IntentFilter
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.speech.tts.TextToSpeech
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
-import java.util.*
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.PowerManager
-import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
+import com.na982.opichelper.domain.audio.TtsPlayerManager
 
-internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
+internal class TtsService : Service(), TtsPlayer {
     private val binder = TtsBinder()
-    internal var tts: TextToSpeech? = null
-    internal var isReady = false
-    internal var speakJob: Job? = null
     private val CHANNEL_ID = "TTS_FOREGROUND_CHANNEL"
     private val NOTIFICATION_ID = 1001
     private var wakeLock: PowerManager.WakeLock? = null
     private var audioManager: AudioManager? = null
     private var audioFocusRequest: AudioFocusRequest? = null
     private var noisyReceiverRegistered = false
+    
+    // 새로운 TTS 매니저 사용
+    private lateinit var ttsPlayerManager: TtsPlayerManager
 
     interface HighlightCallback {
         fun onQuestionHighlight(index: Int?)
@@ -52,16 +50,9 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
 
     override fun onCreate() {
         super.onCreate()
-        tts = TextToSpeech(this, this)
+        ttsPlayerManager = TtsPlayerManager(this)
         createNotificationChannel()
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    }
-
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            tts?.language = Locale.US
-            isReady = true
-        }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -69,125 +60,49 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
     }
 
     override fun onDestroy() {
-        speakJob?.cancel()
-        tts?.shutdown()
-        releaseWakeLock()
-        abandonAudioFocus()
-        unregisterNoisyReceiver()
+        Log.d("TtsService", "onDestroy() - TTS 서비스 종료")
+        destroy()
         super.onDestroy()
+    }
+
+    /**
+     * 서비스 리소스 정리 함수
+     */
+    fun destroy() {
+        Log.d("TtsService", "destroy() - 리소스 정리 시작")
+        
+        try {
+            // TTS 매니저 정리
+            ttsPlayerManager.stop()
+            
+            // WakeLock 해제
+            releaseWakeLock()
+            
+            // 오디오 포커스 해제
+            abandonAudioFocus()
+            
+            // 노이즈 리시버 해제
+            unregisterNoisyReceiver()
+            
+            // 하이라이트 콜백 해제
+            highlightCallback = null
+            
+            // 포그라운드 서비스 중지
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                stopForeground(Service.STOP_FOREGROUND_REMOVE)
+            } else {
+                @Suppress("DEPRECATION")
+                stopForeground(true)
+            }
+            
+            Log.d("TtsService", "destroy() - 리소스 정리 완료")
+        } catch (e: Exception) {
+            Log.e("TtsService", "destroy() - 리소스 정리 중 오류", e)
+        }
     }
 
     inner class TtsBinder : Binder() {
         fun getService(): TtsService = this@TtsService
-    }
-
-    fun speak(text: String, rate: Float = 0.8f, mode: String = "question") {
-        if (!isReady) return
-        Log.d("TtsService", "speak called: mode=$mode, text=$text")
-        speakJob?.cancel()
-        if (requestAudioFocus()) {
-            acquireWakeLock()
-            registerNoisyReceiver()
-            speakJob = CoroutineScope(Dispatchers.Main).launch {
-                val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-                for ((idx, sentence) in sentences.withIndex()) {
-                    if (!isActive) return@launch
-                    if (mode == "question") highlightCallback?.onQuestionHighlight(idx)
-                    if (mode == "answer") highlightCallback?.onAnswerHighlight(idx)
-                    val utteranceId = "utt_${mode}_${System.currentTimeMillis()}"
-                    tts?.setSpeechRate(rate)
-                    val finished = CompletableDeferred<Unit>()
-                    val listener = object : UtteranceProgressListener() {
-                        override fun onStart(utteranceId: String?) {}
-                        override fun onDone(utteranceId: String?) { finished.complete(Unit) }
-                        @Deprecated("Deprecated in Android API")
-                        override fun onError(utteranceId: String?) { finished.complete(Unit) }
-                        override fun onError(utteranceId: String?, errorCode: Int) { finished.complete(Unit) }
-                    }
-                    tts?.setOnUtteranceProgressListener(listener)
-                    tts?.speak(sentence, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-                    finished.await()
-                    if (!isActive) return@launch
-                    delay(400L)
-                }
-                tts?.setOnUtteranceProgressListener(null)
-                if (mode == "question") highlightCallback?.onQuestionHighlight(null)
-                if (mode == "answer") highlightCallback?.onAnswerHighlight(null)
-                Log.d("TtsService", "speak finished: mode=$mode")
-                releaseWakeLock()
-                abandonAudioFocus()
-                unregisterNoisyReceiver()
-                if (android.os.Build.VERSION.SDK_INT >= 31) {
-                    stopForeground(Service.STOP_FOREGROUND_REMOVE)
-                } else {
-                    @Suppress("DEPRECATION")
-                    stopForeground(true)
-                }
-            }
-            startForeground(NOTIFICATION_ID, buildNotification())
-        }
-    }
-
-    override fun speakQuestion(text: String, rate: Float) {
-        Log.d("TtsService", "speakQuestion called with text: ${text.take(50)}...")
-        speak(text, rate, "question")
-    }
-    
-    override fun speakAnswer(text: String, rate: Float) {
-        Log.d("TtsService", "speakAnswer called with text: ${text.take(50)}...")
-        speak(text, rate, "answer")
-    }
-
-    fun speakBySentence(text: String, repeatCount: Int = 5, pauseRatio: Float = 1.5f, rate: Float = 0.8f) {
-        if (!isReady) return
-        Log.d("TtsService", "speakBySentence called: text=$text, repeatCount=$repeatCount")
-        speakJob?.cancel()
-        if (requestAudioFocus()) {
-            acquireWakeLock()
-            registerNoisyReceiver()
-            speakJob = CoroutineScope(Dispatchers.Main).launch {
-                val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-                for ((sentenceIdx, sentence) in sentences.withIndex()) {
-                    repeat(repeatCount) { i ->
-                        if (!isActive) return@launch
-                        highlightCallback?.onAnswerHighlight(sentenceIdx)
-                        val utteranceId = "utt_abs_${System.currentTimeMillis()}_${i}"
-                        tts?.setSpeechRate(rate)
-                        val finished = CompletableDeferred<Unit>()
-                        val listener = object : UtteranceProgressListener() {
-                            override fun onStart(utteranceId: String?) {}
-                            override fun onDone(utteranceId: String?) { finished.complete(Unit) }
-                            @Deprecated("Deprecated in Android API")
-                            override fun onError(utteranceId: String?) { finished.complete(Unit) }
-                            override fun onError(utteranceId: String?, errorCode: Int) { finished.complete(Unit) }
-                        }
-                        tts?.setOnUtteranceProgressListener(listener)
-                        tts?.speak(sentence, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-                        finished.await()
-                        if (!isActive) return@launch
-                        delay(calcRestDuration(sentence, pauseRatio))
-                    }
-                }
-                tts?.setOnUtteranceProgressListener(null)
-                highlightCallback?.onAnswerHighlight(null)
-                Log.d("TtsService", "speakBySentence finished")
-                releaseWakeLock()
-                abandonAudioFocus()
-                unregisterNoisyReceiver()
-                if (android.os.Build.VERSION.SDK_INT >= 31) {
-                    stopForeground(Service.STOP_FOREGROUND_REMOVE)
-                } else {
-                    @Suppress("DEPRECATION")
-                    stopForeground(true)
-                }
-            }
-            startForeground(NOTIFICATION_ID, buildNotification())
-        }
-    }
-
-    fun calcRestDuration(sentence: String, ratio: Float): Long {
-        val baseDuration = (sentence.length * 50L).coerceAtLeast(800L)
-        return (baseDuration * ratio).toLong()
     }
 
     private fun buildNotification(): Notification {
@@ -221,6 +136,7 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
             wakeLock?.acquire(10*60*1000L /*10분 제한*/)
         }
     }
+    
     private fun releaseWakeLock() {
         if (wakeLock?.isHeld == true) {
             wakeLock?.release()
@@ -230,17 +146,18 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
     // 오디오 포커스 관련
     private fun requestAudioFocus(): Boolean {
         audioManager ?: return false
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+            
             val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
-                .setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .build()
-                )
+                .setAudioAttributes(audioAttributes)
                 .setOnAudioFocusChangeListener { focusChange ->
                     if (focusChange == AudioManager.AUDIOFOCUS_LOSS || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
-                        stopTts()
+                        stop()
                     }
                 }
                 .build()
@@ -252,7 +169,7 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
             val result = audioManager!!.requestAudioFocus(
                 { focusChange ->
                     if (focusChange == AudioManager.AUDIOFOCUS_LOSS || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
-                        stopTts()
+                        stop()
                     }
                 },
                 AudioManager.STREAM_MUSIC,
@@ -261,6 +178,7 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
             return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
         }
     }
+    
     private fun abandonAudioFocus() {
         audioManager ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -275,16 +193,18 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
     private val noisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
-                stopTts()
+                stop()
             }
         }
     }
+    
     private fun registerNoisyReceiver() {
         if (!noisyReceiverRegistered) {
             registerReceiver(noisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
             noisyReceiverRegistered = true
         }
     }
+    
     private fun unregisterNoisyReceiver() {
         if (noisyReceiverRegistered) {
             unregisterReceiver(noisyReceiver)
@@ -292,13 +212,40 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
         }
     }
 
-    // 하이라이트 인덱스 브로드캐스트 함수 (전체 제거)
-    // private fun sendHighlightBroadcast(index: Int, mode: String) { ... }
+    /**
+     * 현재 사용 중인 한글 TTS 서비스 이름 반환
+     */
+    fun getCurrentKoreanTtsServiceName(): String {
+        return ttsPlayerManager.getCurrentKoreanTtsServiceName()
+    }
+    
+    override fun isAvailable(): Boolean {
+        return true // TTS 매니저는 항상 사용 가능
+    }
+    
+    override fun getServiceName(): String {
+        return "TTS Manager"
+    }
+    
+    override suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
+        return ttsPlayerManager.speak(text, onComplete)
+    }
+    
+    override fun isPlaying(): Boolean {
+        return ttsPlayerManager.isPlaying()
+    }
+    
+    override suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
+        ttsPlayerManager.speakWithHighlight(text, onHighlight)
+    }
+    
+    override suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long {
+        return ttsPlayerManager.speakAndGetDuration(text, isKorean, rate)
+    }
 
-    override fun stopTts() {
+    override fun stop() {
         Log.d("TtsService", "stopTts called")
-        speakJob?.cancel()
-        tts?.stop()
+        ttsPlayerManager.stop()
         releaseWakeLock()
         abandonAudioFocus()
         unregisterNoisyReceiver()
@@ -309,59 +256,5 @@ internal class TtsService : Service(), TextToSpeech.OnInitListener, TtsPlayer {
             stopForeground(true)
         }
         Log.d("TtsService", "stopTts completed")
-    }
-
-    override suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long {
-        return withContext(Dispatchers.Main) {
-            val start = System.currentTimeMillis()
-            val finished = CompletableDeferred<Unit>()
-            val utteranceId = "utt_duration_${System.currentTimeMillis()}"
-            val listener = object : UtteranceProgressListener() {
-                override fun onStart(utteranceId: String?) {}
-                override fun onDone(utteranceId: String?) { finished.complete(Unit) }
-                @Deprecated("Deprecated in Android API")
-                override fun onError(utteranceId: String?) { finished.complete(Unit) }
-                override fun onError(utteranceId: String?, errorCode: Int) { finished.complete(Unit) }
-            }
-            tts?.setOnUtteranceProgressListener(listener)
-            if (isKorean) {
-                tts?.setLanguage(java.util.Locale.KOREAN)
-                tts?.setSpeechRate(rate)
-                tts?.setPitch(1.05f)
-            } else {
-                tts?.setLanguage(java.util.Locale.US)
-                tts?.setSpeechRate(rate)
-                tts?.setPitch(1.0f)
-            }
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-            finished.await()
-            tts?.setOnUtteranceProgressListener(null)
-            val duration = System.currentTimeMillis() - start
-            duration
-        }
-    }
-
-    override suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
-        withContext(Dispatchers.Main) {
-            val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-            for ((idx, sentence) in sentences.withIndex()) {
-                onHighlight(idx)
-                val finished = CompletableDeferred<Unit>()
-                val utteranceId = "utt_highlight_${System.currentTimeMillis()}"
-                val listener = object : UtteranceProgressListener() {
-                    override fun onStart(utteranceId: String?) {}
-                    override fun onDone(utteranceId: String?) { finished.complete(Unit) }
-                    @Deprecated("Deprecated in Android API")
-                    override fun onError(utteranceId: String?) { finished.complete(Unit) }
-                    override fun onError(utteranceId: String?, errorCode: Int) { finished.complete(Unit) }
-                }
-                tts?.setOnUtteranceProgressListener(listener)
-                tts?.speak(sentence, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-                finished.await()
-                delay(400L)
-            }
-            tts?.setOnUtteranceProgressListener(null)
-            onHighlight(null)
-        }
     }
 } 

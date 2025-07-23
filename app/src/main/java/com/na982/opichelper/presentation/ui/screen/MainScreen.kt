@@ -1,6 +1,5 @@
 package com.na982.opichelper.presentation.ui.screen
 
-import android.app.Activity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,23 +22,12 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.activity.compose.BackHandler
-import android.media.MediaPlayer
-import android.Manifest
-import android.content.pm.PackageManager
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import android.content.ServiceConnection
-import android.os.IBinder
-import com.na982.opichelper.presentation.ui.component.TtsService
-import android.content.BroadcastReceiver
-import android.content.Intent
-import android.content.IntentFilter
 import android.util.Log
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import com.na982.opichelper.domain.audio.TtsPlayer
 import com.na982.opichelper.data.audio.AudioPlayerImpl
+import com.na982.opichelper.domain.entity.MainScreenState
+import com.na982.opichelper.domain.entity.PlayType
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +36,6 @@ fun MainScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val categories = uiState.categories
 
     // MainScreenState 사용
     val screenState = remember { MainScreenState() }
@@ -60,13 +47,6 @@ fun MainScreen(
     // 하이라이트 인덱스 상태 관리
     val questionHighlightIndex by viewModel.questionHighlightIndex.collectAsState()
     val answerHighlightIndex by viewModel.answerHighlightIndex.collectAsState()
-    
-    // 권한 요청 런처 (녹음 파일 저장용)
-    val recordAudioPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (!isGranted) {
-            Toast.makeText(context, "녹음 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     // 백버튼 시 녹음 종료 (녹음 상태는 RecordingButton에서 관리)
     BackHandler(enabled = false) {
@@ -94,22 +74,22 @@ fun MainScreen(
         context = context,
         onTtsPlayerReady = { player ->
             ttsPlayer = player
+            viewModel.setTtsPlayer(player)
         },
-        onHighlightChange = { questionIndex, answerIndex ->
-            viewModel.setQuestionHighlightIndex(questionIndex)
-            viewModel.setAnswerHighlightIndex(answerIndex)
-        },
-        onQuestionPlayStateChange = { isPlaying ->
-            screenState.setPlayingState(PlayType.QUESTION, isPlaying)
-        },
-        onAnswerPlayStateChange = { isPlaying ->
-            screenState.setPlayingState(PlayType.ANSWER, isPlaying)
-            screenState.setPlayingState(PlayType.ANSWER_REPEAT, isPlaying)
+        onKoreanTtsServiceUpdate = { serviceName ->
+            viewModel.updateKoreanTtsServiceName(serviceName)
         }
     )
 
     val memorizeLevels by viewModel.memorizeLevels.collectAsState()
     val selectedMemorizeLevel by viewModel.selectedMemorizeLevel.collectAsState()
+    val isQuestionPlaying by viewModel.isQuestionPlaying.collectAsState()
+    val isAnswerPlaying by viewModel.isAnswerPlaying.collectAsState()
+    val answerKoHighlightIndex by viewModel.answerKoHighlightIndex.collectAsState()
+    val isAnswerCardFlipped by viewModel.isAnswerCardFlipped.collectAsState()
+    val recordingHighlightIndex by viewModel.recordingHighlightIndex.collectAsState()
+    val hasRecordingFile by viewModel.hasRecordingFile.collectAsState()
+    val currentKoreanTtsService by viewModel.currentKoreanTtsService.collectAsState()
 
     val audioPlayer = remember { AudioPlayerImpl() }
     LaunchedEffect(Unit) {
@@ -129,6 +109,37 @@ fun MainScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // 한글 TTS 서비스 정보 표시
+        if (currentKoreanTtsService.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "한글 TTS",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = currentKoreanTtsService,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+        
         // 앱 제목
         AppTitle()
         
@@ -141,8 +152,14 @@ fun MainScreen(
         ) {
             CategorySelector(
                 selectedCategory = uiState.currentCategory ?: "",
-                onCategorySelected = { viewModel.selectCategory(it) },
-                ttsPlayer = ttsPlayer,
+                categories = listOf(
+                    "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", 
+                    "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
+                ),
+                onCategorySelected = { 
+                    viewModel.stopAllTts()
+                    viewModel.selectCategory(it) 
+                },
                 screenState = screenState,
                 onHighlightReset = {
                     viewModel.setQuestionHighlightIndex(null)
@@ -196,18 +213,13 @@ fun MainScreen(
                 ) {
                     QuestionPlayButton(
                         currentQuestion = uiState.currentQaItem!!.questionEn,
-                        ttsPlayer = ttsPlayer,
-                        onStateChange = { isPlaying ->
-                            Log.d("MainScreen", "Question play state changed to: $isPlaying")
-                            if (isPlaying) {
-                                // 질문 재생 시작 시 다른 모든 상태 초기화
-                                screenState.resetAllPlayStates()
-                                screenState.setPlayingState(PlayType.QUESTION, true)
-                            } else {
-                                screenState.setPlayingState(PlayType.QUESTION, false)
-                            }
+                        isPlaying = isQuestionPlaying,
+                        onPlayClick = {
+                            viewModel.playQuestion(uiState.currentQaItem!!.questionEn)
                         },
-                        isPlaying = screenState.isQuestionPlaying,
+                        onStopClick = {
+                            viewModel.stopQuestion()
+                        },
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -233,7 +245,10 @@ fun MainScreen(
                 AnswerCard(
                     currentAnswer = uiState.currentQaItem!!.answerEn,
                     currentAnswerKo = uiState.currentQaItem!!.answerKo,
-                    highlightIndex = answerHighlightIndex
+                    highlightIndex = answerHighlightIndex,
+                    answerKoHighlightIndex = answerKoHighlightIndex,
+                    recordingHighlightIndex = recordingHighlightIndex,
+                    isFlipped = isAnswerCardFlipped
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -245,27 +260,22 @@ fun MainScreen(
                 ) {
                     AnswerPlayButton(
                         currentAnswer = uiState.currentQaItem!!.answerEn,
-                        ttsPlayer = ttsPlayer,
-                        onStateChange = { isPlaying ->
-                            Log.d("MainScreen", "Answer play state changed to: $isPlaying")
-                            if (isPlaying) {
-                                // 답변 재생 시작 시 다른 모든 상태 초기화
-                                screenState.resetAllPlayStates()
-                                screenState.setPlayingState(PlayType.ANSWER, true)
-                            } else {
-                                screenState.setPlayingState(PlayType.ANSWER, false)
-                            }
+                        isPlaying = isAnswerPlaying,
+                        onPlayClick = {
+                            viewModel.playAnswer(uiState.currentQaItem!!.answerEn)
                         },
-                        isPlaying = screenState.isAnswerPlaying,
+                        onStopClick = {
+                            viewModel.stopAnswer()
+                        },
                         modifier = Modifier.weight(1f)
                     )
                     
-                    // 병합된 오디오 파일 재생 버튼
+                    // 병합된 오디오 파일 재생 버튼 (영작 테스트 레벨이고 녹음 파일이 있을 때만 활성화)
                     Button(
                         onClick = {
                             viewModel.playMergedAudioFile()
                         },
-                        enabled = uiState.hasMergedAudioFile && !screenState.isMergedAudioPlaying,
+                        enabled = selectedMemorizeLevel == "영작 테스트" && hasRecordingFile && !screenState.isMergedAudioPlaying,
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
@@ -280,12 +290,13 @@ fun MainScreen(
                 // 네비게이션 섹션
                 NavigationSection(
                     onPreviousQuestion = {
+                        viewModel.stopAllTts()
                         viewModel.previousQaItem()
                     },
                     onNextQuestion = {
+                        viewModel.stopAllTts()
                         viewModel.nextQaItem()
                     },
-                    ttsPlayer = ttsPlayer,
                     screenState = screenState,
                     onHighlightReset = {
                         viewModel.setQuestionHighlightIndex(null)
@@ -301,7 +312,23 @@ fun MainScreen(
     DisposableEffect(Unit) {
         onDispose {
             Log.d("MainScreen", "Disposing MainScreen resources")
-            ttsPlayer?.stopTts()
+            try {
+                // TTS 플레이어 중지
+                ttsPlayer?.stop()
+                
+                // 오디오 플레이어 중지
+                audioPlayer.stop()
+                
+                // 하이라이트 초기화
+                viewModel.setQuestionHighlightIndex(null)
+                viewModel.setAnswerHighlightIndex(null)
+                viewModel.setAnswerKoHighlightIndex(null)
+                viewModel.setRecordingHighlightIndex(null)
+                
+                Log.d("MainScreen", "MainScreen resources disposed successfully")
+            } catch (e: Exception) {
+                Log.e("MainScreen", "Error disposing MainScreen resources", e)
+            }
         }
     }
 }

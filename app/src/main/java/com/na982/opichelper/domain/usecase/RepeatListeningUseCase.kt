@@ -26,7 +26,7 @@ class RepeatListeningUseCase(
         for (i in 0 until count) {
             // 1. 한글 문장 1회 TTS
             onHighlight(i)
-            val koDuration = ttsPlayer.speakAndGetDuration(koSentences[i], isKorean = true)
+            val koDuration = ttsPlayer.speakAndGetDuration(koSentences[i], isKorean = true, rate = 0.8f)
             delay((koDuration * 0.5).toLong())
             // 2. 영문 문장 1~repeatCount회 TTS (속도 0.75, 쉬는 시간 1.0배)
             for (j in 1..repeatCount) {
