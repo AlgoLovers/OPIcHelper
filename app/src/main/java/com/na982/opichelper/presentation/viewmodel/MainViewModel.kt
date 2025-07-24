@@ -28,6 +28,9 @@ import com.na982.opichelper.data.repository.AudioFileRepositoryImpl
 import kotlinx.coroutines.delay
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.na982.opichelper.domain.repository.QaDataRepository
+import com.na982.opichelper.domain.audio.TtsPlaybackController
+import com.na982.opichelper.domain.usecase.MemorizeTestState
 
 data class MainUiState(
     val currentQaItem: QaItem? = null,
@@ -47,6 +50,7 @@ class MainViewModel @Inject constructor(
     private val audioFileRepository: AudioFileRepository,
     private val qaDataRepository: QaDataRepository,
     private val ttsPlaybackController: TtsPlaybackController,
+    private val memorizeTestState: MemorizeTestState,
     application: Application
 ) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(MainUiState())
@@ -97,6 +101,11 @@ class MainViewModel @Inject constructor(
         // TTS 오케스트레이터 설정
         val application = getApplication<Application>() as com.na982.opichelper.OPicHelperApplication
         setTtsOrchestrator(application.ttsOrchestrator)
+        
+        // 진행 상태 복원
+        viewModelScope.launch {
+            memorizeTestState.restoreProgress()
+        }
         
         // QaDataRepository의 상태를 UI 상태와 동기화
         viewModelScope.launch {
@@ -380,6 +389,17 @@ class MainViewModel @Inject constructor(
             when (selectedMemorizeLevel.value) {
                 "반복 듣기" -> {
                     Log.d("MainViewModel", "반복 듣기 UseCase 실행")
+                    val currentItem = qaDataRepository.getCurrentQaItem()
+                    val currentIndex = qaDataRepository.getCurrentIndex()
+                    
+                    // 진행 상태 시작
+                    memorizeTestState.startProgress(
+                        category = currentItem?.category ?: "",
+                        qaItemId = currentItem?.id ?: "",
+                        testType = "반복 듣기",
+                        totalSentences = answerKo.split(Regex("(?<=[.!?])\\s+")).size
+                    )
+                    
                     val useCase = RepeatListeningUseCase(
                         answerKo = answerKo,
                         answerEn = answerEn,
@@ -405,6 +425,9 @@ class MainViewModel @Inject constructor(
                             setAnswerCardFlipped(isKorean)
                             Log.d("MainViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
                         },
+                        memorizeTestState = memorizeTestState,
+                        category = currentItem?.category ?: "",
+                        qaItemId = currentItem?.id ?: "",
                         repeatCount = 5
                     )
                     useCase.execute()
@@ -421,6 +444,14 @@ class MainViewModel @Inject constructor(
                     val currentIndex = qaDataRepository.getCurrentIndex()
                     val scriptId = "${currentItem?.category}_$currentIndex"
                     
+                    // 진행 상태 시작
+                    memorizeTestState.startProgress(
+                        category = currentItem?.category ?: "",
+                        qaItemId = currentItem?.id ?: "",
+                        testType = "영작 테스트",
+                        totalSentences = answerEn.split(Regex("(?<=[.!?])\\s+")).size
+                    )
+                    
                     val useCase = EnglishWritingTestUseCase(
                         answerEn = answerEn,
                         answerKo = answerKo,
@@ -428,6 +459,9 @@ class MainViewModel @Inject constructor(
                         ttsPlayer = ttsPlaybackController.getTtsPlayer(),
                         audioRecorder = audioRecorder,
                         audioFileRepository = audioFileRepository,
+                        memorizeTestState = memorizeTestState,
+                        category = currentItem?.category ?: "",
+                        qaItemId = currentItem?.id ?: "",
                         onAutoFlip = {
                             // 답변 카드를 한글 페이지로 뒤집기
                             setAnswerCardFlipped(true)

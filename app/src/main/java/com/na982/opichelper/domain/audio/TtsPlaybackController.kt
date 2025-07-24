@@ -1,4 +1,4 @@
-package com.na982.opichelper.presentation.viewmodel
+package com.na982.opichelper.domain.audio
 
 import android.content.Context
 import android.content.Intent

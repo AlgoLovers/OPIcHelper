@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.audio.TtsPlayer
+import com.na982.opichelper.domain.usecase.MemorizeTestState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -16,6 +17,9 @@ import com.na982.opichelper.domain.repository.AudioFileRepository
  * - audioFileRepository: 오디오 파일 관리
  * - onAutoFlip: 자동 플립 콜백 (예: 답변 카드 자동 뒤집기)
  * - onMergedFileCreated: 병합된 파일 생성 콜백
+ * - memorizeTestState: 암기 테스트 상태 관리
+ * - category: 카테고리
+ * - qaItemId: QA 아이템 ID
  *
  * execute()는 실제 영작 평가 로직 담당
  */
@@ -26,6 +30,9 @@ class EnglishWritingTestUseCase(
     private val ttsPlayer: TtsPlayer,
     private val audioRecorder: AudioRecorder,
     private val audioFileRepository: AudioFileRepository,
+    private val memorizeTestState: MemorizeTestState,
+    private val category: String,
+    private val qaItemId: String,
     private val onAutoFlip: (() -> Unit)? = null,
     private val onKoreanHighlight: ((Int?) -> Unit)? = null, // 한글 하이라이트 콜백 추가
     private val onRecordingHighlight: ((Int?) -> Unit)? = null, // 녹음 하이라이트 콜백 추가
@@ -38,8 +45,23 @@ class EnglishWritingTestUseCase(
         val koSentences = answerKo?.split(Regex("(?<=[.!?])\\s+")).orEmpty().map { it.trim() }.filter { it.isNotEmpty() }
         val recordedFiles = mutableListOf<File>()
         
+        // 진행 상태에서 시작 인덱스 복원
+        val currentProgress = memorizeTestState.getCurrentProgress()
+        val startIndex = currentProgress?.currentSentenceIndex ?: 0
+        
+        Log.d("EnglishWritingTestUseCase", "영작 테스트 시작: 총 ${enSentences.size} 문장, 시작 인덱스: $startIndex")
+        
         for ((idx, enSentence) in enSentences.withIndex()) {
+            // 시작 인덱스 이전 문장은 건너뛰기
+            if (idx < startIndex) {
+                Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 건너뛰기 (이미 완료됨)")
+                continue
+            }
+            
             Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 처리 시작: '${enSentence.take(50)}...'")
+            
+            // 진행 상태 업데이트
+            memorizeTestState.updateProgress(idx)
             
             // 1. (옵션) 한글 문장 읽기 (answerKo가 있으면)
             if (koSentences.size > idx) {
@@ -94,7 +116,10 @@ class EnglishWritingTestUseCase(
             onMergedFileCreated?.invoke(file)
         }
         
-        // 7. (옵션) 평가/피드백 로직 추가 가능
+        // 7. 테스트 완료 - 진행 상태 삭제
+        memorizeTestState.completeProgress()
+        
+        // 8. (옵션) 평가/피드백 로직 추가 가능
         Log.d("EnglishWritingTestUseCase", "execute() 완료")
     }
 } 

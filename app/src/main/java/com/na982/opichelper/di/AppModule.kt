@@ -7,6 +7,8 @@ import com.na982.opichelper.data.repository.QuestionRepositoryImpl
 import com.na982.opichelper.domain.audio.*
 import com.na982.opichelper.domain.repository.AudioFileRepository
 import com.na982.opichelper.domain.repository.QuestionRepository
+import com.na982.opichelper.domain.repository.ProgressRepository
+import com.na982.opichelper.domain.repository.ProgressRepositoryImpl
 import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
@@ -58,6 +60,12 @@ object AppModule {
     @Singleton
     fun provideQuestionRepository(@ApplicationContext context: Context): QuestionRepository {
         return QuestionRepositoryImpl(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideProgressRepository(@ApplicationContext context: Context): ProgressRepository {
+        return ProgressRepositoryImpl(context)
     }
     
     @Provides

@@ -1,4 +1,4 @@
-package com.na982.opichelper.presentation.viewmodel
+package com.na982.opichelper.domain.repository
 
 import android.app.Application
 import android.content.Context
@@ -211,6 +211,41 @@ class QaDataRepository @Inject constructor() {
                 _currentQaItem.value = items[safeIndex]
                 _currentCategory.value = lastCategory
             }
+        }
+    }
+    
+    /**
+     * 특정 카테고리와 QA 아이템으로 복원
+     */
+    fun restoreToQaItem(category: String, qaItemId: String): Boolean {
+        return try {
+            val items = itemsByCategory[category]
+            if (items != null) {
+                val targetIndex = items.indexOfFirst { it.id == qaItemId }
+                if (targetIndex >= 0) {
+                    _currentCategory.value = category
+                    itemIndexByCategory[category] = targetIndex
+                    _currentQaItem.value = items[targetIndex]
+                    
+                    // 프리퍼런스에 저장
+                    prefs?.edit()?.apply {
+                        putString(PREF_KEY_LAST_CATEGORY, category)
+                        putInt(PREF_KEY_LAST_INDEX, targetIndex)
+                    }?.apply()
+                    
+                    Log.d("QaDataRepository", "QA 아이템 복원 성공: category=$category, qaItemId=$qaItemId, index=$targetIndex")
+                    true
+                } else {
+                    Log.w("QaDataRepository", "QA 아이템을 찾을 수 없음: category=$category, qaItemId=$qaItemId")
+                    false
+                }
+            } else {
+                Log.w("QaDataRepository", "카테고리를 찾을 수 없음: $category")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("QaDataRepository", "QA 아이템 복원 실패", e)
+            false
         }
     }
     
