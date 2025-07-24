@@ -5,9 +5,10 @@ import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.repository.AudioFileRepositoryImpl
 import com.na982.opichelper.data.repository.QuestionRepositoryImpl
 import com.na982.opichelper.domain.audio.*
-import com.na982.opichelper.domain.repository.AudioFileRepository
-import com.na982.opichelper.domain.repository.QuestionRepository
-import com.na982.opichelper.domain.repository.ProgressRepository
+import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.repository.QaDataLoader
+import com.na982.opichelper.domain.repository.ProgressPersistenceService
+import com.na982.opichelper.domain.repository.QaDataManager
 import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
@@ -35,7 +36,7 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideAudioFileRepository(@ApplicationContext context: Context): AudioFileRepository {
+    fun provideAudioFileManager(@ApplicationContext context: Context): AudioFileManager {
         return AudioFileRepositoryImpl(context)
     }
     
@@ -57,14 +58,20 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQuestionRepository(@ApplicationContext context: Context): QuestionRepository {
+    fun provideQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
         return QuestionRepositoryImpl(context)
     }
     
     @Provides
     @Singleton
-    fun provideProgressRepository(@ApplicationContext context: Context): ProgressRepository {
-        return ProgressRepository(context)
+    fun provideProgressPersistenceService(@ApplicationContext context: Context): ProgressPersistenceService {
+        return ProgressPersistenceService(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideQaDataManager(): QaDataManager {
+        return QaDataManager()
     }
     
     @Provides

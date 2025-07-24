@@ -3,9 +3,10 @@ package com.na982.opichelper.domain.repository
 import com.na982.opichelper.domain.entity.QaItem
 
 /**
- * 질문 데이터를 관리하는 Repository
+ * QA 데이터 로딩을 담당하는 인터페이스 (Loader 패턴)
+ * 책임: QA 데이터의 로딩만 담당
  */
-interface QuestionRepository {
+interface QaDataLoader {
     /**
      * Assets에서 QA 아이템들을 로드
      * @return 카테고리별 QA 아이템 맵

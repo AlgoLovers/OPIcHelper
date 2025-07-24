@@ -8,10 +8,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 진행 상황 저장/로드를 담당하는 Repository
+ * 진행 상황 저장/로드를 담당하는 서비스 (Persistence Service 패턴)
+ * 책임: 진행 상황 데이터의 영속성 관리 (저장/로드/삭제)
  */
 @Singleton
-class ProgressRepository @Inject constructor(
+class ProgressPersistenceService @Inject constructor(
     private val context: Context
 ) {
     private val prefs: SharedPreferences = context.getSharedPreferences("opic_progress", Context.MODE_PRIVATE)
@@ -46,9 +47,9 @@ class ProgressRepository @Inject constructor(
             val json = gson.toJson(appExitState)
             prefs.edit().putString(KEY_APP_EXIT_STATE, json).apply()
             
-            Log.d("ProgressRepository", "앱 종료 상태 저장: $appExitState")
+            Log.d("ProgressPersistenceService", "앱 종료 상태 저장: $appExitState")
         } catch (e: Exception) {
-            Log.e("ProgressRepository", "앱 종료 상태 저장 실패", e)
+            Log.e("ProgressPersistenceService", "앱 종료 상태 저장 실패", e)
         }
     }
     
@@ -60,14 +61,14 @@ class ProgressRepository @Inject constructor(
             val json = prefs.getString(KEY_APP_EXIT_STATE, null)
             if (json != null) {
                 val appExitState = gson.fromJson(json, AppExitState::class.java)
-                Log.d("ProgressRepository", "앱 종료 상태 로드: $appExitState")
+                Log.d("ProgressPersistenceService", "앱 종료 상태 로드: $appExitState")
                 appExitState
             } else {
-                Log.d("ProgressRepository", "저장된 앱 종료 상태 없음")
+                Log.d("ProgressPersistenceService", "저장된 앱 종료 상태 없음")
                 null
             }
         } catch (e: Exception) {
-            Log.e("ProgressRepository", "앱 종료 상태 로드 실패", e)
+            Log.e("ProgressPersistenceService", "앱 종료 상태 로드 실패", e)
             null
         }
     }
@@ -81,9 +82,9 @@ class ProgressRepository @Inject constructor(
             val json = gson.toJson(progress)
             prefs.edit().putString(key, json).apply()
             
-            Log.d("ProgressRepository", "카테고리 진행 상황 저장: ${progress.getKey()} -> $progress")
+            Log.d("ProgressPersistenceService", "카테고리 진행 상황 저장: ${progress.getKey()} -> $progress")
         } catch (e: Exception) {
-            Log.e("ProgressRepository", "카테고리 진행 상황 저장 실패", e)
+            Log.e("ProgressPersistenceService", "카테고리 진행 상황 저장 실패", e)
         }
     }
     
@@ -96,14 +97,14 @@ class ProgressRepository @Inject constructor(
             val json = prefs.getString(key, null)
             if (json != null) {
                 val progress = gson.fromJson(json, CategoryProgress::class.java)
-                Log.d("ProgressRepository", "카테고리 진행 상황 로드: $key -> $progress")
+                Log.d("ProgressPersistenceService", "카테고리 진행 상황 로드: $key -> $progress")
                 progress
             } else {
-                Log.d("ProgressRepository", "저장된 카테고리 진행 상황 없음: $key")
+                Log.d("ProgressPersistenceService", "저장된 진행 상황 없음: $key")
                 null
             }
         } catch (e: Exception) {
-            Log.e("ProgressRepository", "카테고리 진행 상황 로드 실패", e)
+            Log.e("ProgressPersistenceService", "카테고리 진행 상황 로드 실패", e)
             null
         }
     }
@@ -114,34 +115,38 @@ class ProgressRepository @Inject constructor(
     suspend fun loadAllCategoryProgress(): Map<String, CategoryProgress> {
         return try {
             val progressMap = mutableMapOf<String, CategoryProgress>()
-            val allKeys = prefs.all.keys.filter { it.startsWith(KEY_CATEGORY_PROGRESS_PREFIX) }
+            val allPrefs = prefs.all
             
-            for (key in allKeys) {
-                val json = prefs.getString(key, null)
-                if (json != null) {
-                    val progress = gson.fromJson(json, CategoryProgress::class.java)
-                    progressMap[progress.getKey()] = progress
+            allPrefs.forEach { (key, value) ->
+                if (key.startsWith(KEY_CATEGORY_PROGRESS_PREFIX)) {
+                    try {
+                        val json = value as String
+                        val progress = gson.fromJson(json, CategoryProgress::class.java)
+                        progressMap[progress.getKey()] = progress
+                    } catch (e: Exception) {
+                        Log.e("ProgressPersistenceService", "진행 상황 파싱 실패: $key", e)
+                    }
                 }
             }
             
-            Log.d("ProgressRepository", "모든 카테고리 진행 상황 로드: ${progressMap.size}개")
+            Log.d("ProgressPersistenceService", "모든 진행 상황 로드 완료: ${progressMap.size}개")
             progressMap
         } catch (e: Exception) {
-            Log.e("ProgressRepository", "모든 카테고리 진행 상황 로드 실패", e)
+            Log.e("ProgressPersistenceService", "모든 진행 상황 로드 실패", e)
             emptyMap()
         }
     }
     
     /**
-     * 카테고리 진행 상황 삭제
+     * 특정 카테고리 진행 상황 삭제
      */
     suspend fun clearCategoryProgress(category: String, scriptIndex: Int) {
         try {
             val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}"
             prefs.edit().remove(key).apply()
-            Log.d("ProgressRepository", "카테고리 진행 상황 삭제: $key")
+            Log.d("ProgressPersistenceService", "진행 상황 삭제: $key")
         } catch (e: Exception) {
-            Log.e("ProgressRepository", "카테고리 진행 상황 삭제 실패", e)
+            Log.e("ProgressPersistenceService", "진행 상황 삭제 실패", e)
         }
     }
     
@@ -150,17 +155,19 @@ class ProgressRepository @Inject constructor(
      */
     suspend fun clearAllProgress() {
         try {
-            val allKeys = prefs.all.keys.filter { 
-                it.startsWith(KEY_APP_EXIT_STATE) || it.startsWith(KEY_CATEGORY_PROGRESS_PREFIX) 
+            val allPrefs = prefs.all
+            val editor = prefs.edit()
+            
+            allPrefs.forEach { (key, _) ->
+                if (key.startsWith(KEY_CATEGORY_PROGRESS_PREFIX) || key == KEY_APP_EXIT_STATE) {
+                    editor.remove(key)
+                }
             }
             
-            for (key in allKeys) {
-                prefs.edit().remove(key).apply()
-            }
-            
-            Log.d("ProgressRepository", "모든 진행 상황 삭제 완료")
+            editor.apply()
+            Log.d("ProgressPersistenceService", "모든 진행 상황 삭제 완료")
         } catch (e: Exception) {
-            Log.e("ProgressRepository", "모든 진행 상황 삭제 실패", e)
+            Log.e("ProgressPersistenceService", "모든 진행 상황 삭제 실패", e)
         }
     }
 } 

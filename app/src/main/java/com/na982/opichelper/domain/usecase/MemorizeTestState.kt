@@ -1,9 +1,9 @@
 package com.na982.opichelper.domain.usecase
 
-import com.na982.opichelper.domain.repository.ProgressRepository
-import com.na982.opichelper.domain.repository.AppExitState
-import com.na982.opichelper.domain.repository.CategoryProgress
-import com.na982.opichelper.domain.repository.QaDataRepository
+import com.na982.opichelper.domain.repository.ProgressPersistenceService
+import com.na982.opichelper.domain.repository.ScriptProgress
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,20 +11,21 @@ import android.util.Log
 import javax.inject.Inject
 
 /**
- * 카테고리별 진행 상황 관리 및 복원을 담당하는 클래스
- * 책임: 카테고리별 진행 상황 저장/로드, 앱 종료 시 상태 저장, 테스트 완료 시 상태 삭제
+ * 암기 테스트 상태를 관리하는 클래스
+ * 이 클래스는 MemorizeTestProgressTracker로 대체되었습니다.
+ * 하위 호환성을 위해 유지하지만, 새로운 코드는 MemorizeTestProgressTracker를 사용해야 합니다.
  */
+@Deprecated("Use MemorizeTestProgressTracker instead")
 class MemorizeTestState @Inject constructor(
-    private val progressRepository: ProgressRepository,
-    private val qaDataRepository: QaDataRepository
+    private val progressPersistenceService: ProgressPersistenceService
 ) {
     // 현재 앱 종료 상태 (하위 호환성을 위해 유지)
-    private val _appExitState = MutableStateFlow<AppExitState?>(null)
-    val appExitState: StateFlow<AppExitState?> = _appExitState.asStateFlow()
+    private val _appExitState = MutableStateFlow<com.na982.opichelper.domain.repository.AppExitState?>(null)
+    val appExitState: StateFlow<com.na982.opichelper.domain.repository.AppExitState?> = _appExitState.asStateFlow()
     
     // 모든 카테고리의 진행 상황
-    private val _categoryProgressMap = MutableStateFlow<Map<String, CategoryProgress>>(emptyMap())
-    val categoryProgressMap: StateFlow<Map<String, CategoryProgress>> = _categoryProgressMap.asStateFlow()
+    private val _categoryProgressMap = MutableStateFlow<Map<String, com.na982.opichelper.domain.repository.CategoryProgress>>(emptyMap())
+    val categoryProgressMap: StateFlow<Map<String, com.na982.opichelper.domain.repository.CategoryProgress>> = _categoryProgressMap.asStateFlow()
     
     // 진행 상태 존재 여부
     private val _hasProgress = MutableStateFlow(false)
@@ -36,11 +37,11 @@ class MemorizeTestState @Inject constructor(
     suspend fun restoreAllProgress() {
         try {
             // 모든 카테고리 진행 상황 로드
-            val allProgress = progressRepository.loadAllCategoryProgress()
+            val allProgress = progressPersistenceService.loadAllCategoryProgress()
             _categoryProgressMap.value = allProgress
             
             // 앱 종료 상태 로드 (하위 호환성)
-            val appExitState = progressRepository.loadAppExitState()
+            val appExitState = progressPersistenceService.loadAppExitState()
             _appExitState.value = appExitState
             
             // 진행 상태 존재 여부 업데이트
@@ -58,7 +59,7 @@ class MemorizeTestState @Inject constructor(
     /**
      * 현재 카테고리의 진행 상황 가져오기
      */
-    fun getCurrentCategoryProgress(category: String, scriptIndex: Int): CategoryProgress? {
+    fun getCurrentCategoryProgress(category: String, scriptIndex: Int): com.na982.opichelper.domain.repository.CategoryProgress? {
         val key = "${category}_${scriptIndex}"
         return _categoryProgressMap.value[key]
     }
@@ -73,9 +74,9 @@ class MemorizeTestState @Inject constructor(
     /**
      * 카테고리별 진행 상황 저장
      */
-    suspend fun saveCategoryProgress(progress: CategoryProgress) {
+    suspend fun saveCategoryProgress(progress: com.na982.opichelper.domain.repository.CategoryProgress) {
         try {
-            progressRepository.saveCategoryProgress(progress)
+            progressPersistenceService.saveCategoryProgress(progress)
             
             // 메모리 상태 업데이트
             val currentMap = _categoryProgressMap.value.toMutableMap()
@@ -104,7 +105,7 @@ class MemorizeTestState @Inject constructor(
     ) {
         try {
             // 카테고리별 진행 상황으로 저장
-            val categoryProgress = CategoryProgress(
+            val categoryProgress = com.na982.opichelper.domain.repository.CategoryProgress(
                 category = category,
                 scriptIndex = scriptIndex,
                 memorizeLevel = memorizeLevel,
@@ -116,7 +117,7 @@ class MemorizeTestState @Inject constructor(
             saveCategoryProgress(categoryProgress)
             
             // 하위 호환성을 위해 앱 종료 상태도 저장
-            progressRepository.saveAppExitState(
+            progressPersistenceService.saveAppExitState(
                 category = category,
                 scriptIndex = scriptIndex,
                 memorizeLevel = memorizeLevel,
@@ -125,7 +126,7 @@ class MemorizeTestState @Inject constructor(
                 isMemorizeTestRunning = isMemorizeTestRunning
             )
             
-            val appExitState = AppExitState(
+            val appExitState = com.na982.opichelper.domain.repository.AppExitState(
                 category = category,
                 scriptIndex = scriptIndex,
                 memorizeLevel = memorizeLevel,
@@ -171,7 +172,7 @@ class MemorizeTestState @Inject constructor(
      */
     suspend fun clearCategoryProgress(category: String, scriptIndex: Int) {
         try {
-            progressRepository.clearCategoryProgress(category, scriptIndex)
+            progressPersistenceService.clearCategoryProgress(category, scriptIndex)
             
             // 메모리 상태 업데이트
             val currentMap = _categoryProgressMap.value.toMutableMap()
@@ -193,7 +194,7 @@ class MemorizeTestState @Inject constructor(
      */
     suspend fun clearAllProgress() {
         try {
-            progressRepository.clearAllProgress()
+            progressPersistenceService.clearAllProgress()
             _categoryProgressMap.value = emptyMap()
             _appExitState.value = null
             _hasProgress.value = false
@@ -209,7 +210,7 @@ class MemorizeTestState @Inject constructor(
      */
     suspend fun restoreAppState() = restoreAllProgress()
     
-    fun getCurrentAppState(): AppExitState? = _appExitState.value
+    fun getCurrentAppState(): com.na982.opichelper.domain.repository.AppExitState? = _appExitState.value
     
     suspend fun clearProgress() = clearAllProgress()
 } 

@@ -1,7 +1,9 @@
 package com.na982.opichelper.domain.usecase
 
-import com.na982.opichelper.domain.repository.ProgressRepository
+import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.ScriptProgress
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,12 +12,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 암기 테스트 진행 상황 추적을 담당하는 클래스
- * 책임: 모든 스크립트의 진행 상황을 메모리에서 추적하고, 변경된 것만 저장
+ * 암기 테스트 진행 상황을 추적하는 싱글톤 클래스
+ * 모든 스크립트의 진행 상황을 메모리에 보관하고, 앱 종료 시에만 변경된 항목을 저장
  */
 @Singleton
 class MemorizeTestProgressTracker @Inject constructor(
-    private val progressRepository: ProgressRepository
+    private val progressPersistenceService: ProgressPersistenceService
 ) {
     // 모든 스크립트의 진행 상황 (메모리에서 관리)
     private val _progressMap = MutableStateFlow<Map<String, ScriptProgress>>(emptyMap())
@@ -31,7 +33,7 @@ class MemorizeTestProgressTracker @Inject constructor(
     suspend fun restoreAllProgress() {
         try {
             // 모든 카테고리 진행 상황 로드
-            val allProgress = progressRepository.loadAllCategoryProgress()
+            val allProgress = progressPersistenceService.loadAllCategoryProgress()
             
             // ScriptProgress로 변환
             val scriptProgressMap = allProgress.mapValues { (_, categoryProgress) ->
@@ -131,7 +133,7 @@ class MemorizeTestProgressTracker @Inject constructor(
             
             if (changedProgress.isNotEmpty()) {
                 // CategoryProgress로 변환하여 저장
-                changedProgress.forEach { scriptProgress ->
+                changedProgress.forEach { scriptProgress: ScriptProgress ->
                     val categoryProgress = com.na982.opichelper.domain.repository.CategoryProgress(
                         category = scriptProgress.category,
                         scriptIndex = scriptProgress.scriptIndex,
@@ -142,12 +144,12 @@ class MemorizeTestProgressTracker @Inject constructor(
                         timestamp = scriptProgress.timestamp
                     )
                     
-                    progressRepository.saveCategoryProgress(categoryProgress)
+                    progressPersistenceService.saveCategoryProgress(categoryProgress)
                 }
                 
                 // 저장 완료 후 needsSave 플래그 제거
                 val currentMap = _progressMap.value.toMutableMap()
-                changedProgress.forEach { scriptProgress ->
+                changedProgress.forEach { scriptProgress: ScriptProgress ->
                     val key = scriptProgress.getKey()
                     currentMap[key] = scriptProgress.toPersistable()
                 }
@@ -174,7 +176,7 @@ class MemorizeTestProgressTracker @Inject constructor(
             _hasProgress.value = currentMap.isNotEmpty()
             
             // 저장소에서도 삭제
-            progressRepository.clearCategoryProgress(category, scriptIndex)
+            progressPersistenceService.clearCategoryProgress(category, scriptIndex)
             
             Log.d("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제: $key")
         } catch (e: Exception) {
@@ -187,7 +189,7 @@ class MemorizeTestProgressTracker @Inject constructor(
      */
     suspend fun clearAllProgress() {
         try {
-            progressRepository.clearAllProgress()
+            progressPersistenceService.clearAllProgress()
             _progressMap.value = emptyMap()
             _hasProgress.value = false
             

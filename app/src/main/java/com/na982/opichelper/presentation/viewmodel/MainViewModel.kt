@@ -23,12 +23,12 @@ import com.na982.opichelper.domain.usecase.RepeatListeningUseCase
 import com.na982.opichelper.domain.usecase.EnglishWritingTestUseCase
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import com.na982.opichelper.domain.audio.AudioPlayer
-import com.na982.opichelper.domain.repository.AudioFileRepository
+import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.data.repository.AudioFileRepositoryImpl
 import kotlinx.coroutines.delay
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.na982.opichelper.domain.repository.QaDataRepository
+import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.MemorizeTestState
 import com.na982.opichelper.domain.repository.AppExitState
@@ -50,8 +50,8 @@ data class MainUiState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val audioRecorder: AudioRecorder,
-    private val audioFileRepository: AudioFileRepository,
-    private val qaDataRepository: QaDataRepository,
+    private val audioFileManager: AudioFileManager,
+    private val qaDataManager: QaDataManager,
     private val ttsPlaybackController: TtsPlaybackController,
     private val progressTracker: MemorizeTestProgressTracker,
     private val fullMemorizationUseCase: FullMemorizationUseCase,
@@ -132,7 +132,7 @@ class MainViewModel @Inject constructor(
         }
         
         // QA 데이터 로딩
-        qaDataRepository.init(getApplication())
+        qaDataManager.init(getApplication())
         
         // 암기 레벨 로드
         loadMemorizeLevel()
@@ -140,34 +140,34 @@ class MainViewModel @Inject constructor(
         // 녹음 파일 존재 여부 확인
         checkRecordingFileExists()
         
-        // QaDataRepository의 상태를 UI 상태와 동기화
+        // QaDataManager의 상태를 UI 상태와 동기화
         viewModelScope.launch {
             // QA 데이터 상태를 UI 상태로 복사
-            qaDataRepository.currentQaItem.collect { qaItem ->
+            qaDataManager.currentQaItem.collect { qaItem ->
                 _uiState.value = _uiState.value.copy(currentQaItem = qaItem)
             }
         }
         
         viewModelScope.launch {
-            qaDataRepository.currentCategory.collect { category ->
+            qaDataManager.currentCategory.collect { category ->
                 _uiState.value = _uiState.value.copy(currentCategory = category)
             }
         }
         
         viewModelScope.launch {
-            qaDataRepository.categories.collect { categories ->
+            qaDataManager.categories.collect { categories ->
                 _uiState.value = _uiState.value.copy(categories = categories)
             }
         }
         
         viewModelScope.launch {
-            qaDataRepository.isLoading.collect { isLoading ->
+            qaDataManager.isLoading.collect { isLoading ->
                 _uiState.value = _uiState.value.copy(isLoading = isLoading)
             }
         }
         
         viewModelScope.launch {
-            qaDataRepository.error.collect { error ->
+            qaDataManager.error.collect { error ->
                 _uiState.value = _uiState.value.copy(error = error)
             }
         }
@@ -178,7 +178,7 @@ class MainViewModel @Inject constructor(
         
         // 앱 시작 시 오래된 녹음 파일들 정리
         viewModelScope.launch {
-            audioFileRepository.cleanupAllOldRecordings(1)
+            audioFileManager.cleanupAllOldRecordings(1)
             Log.d("MainViewModel", "앱 시작 시 전체 녹음 파일 정리 완료")
             
             // 초기 녹음 파일 존재 여부 확인
@@ -270,7 +270,7 @@ class MainViewModel @Inject constructor(
     // }
 
     fun getCurrentMergedAudioFile(): java.io.File? {
-        return audioFileRepository.getLatestMergedAudioFile()
+        return audioFileManager.getLatestMergedAudioFile()
     }
 
     fun updateMergedAudioFileStatus() {
@@ -294,11 +294,11 @@ class MainViewModel @Inject constructor(
     
     fun checkRecordingFileExists() {
         viewModelScope.launch {
-            val currentItem = qaDataRepository.getCurrentQaItem()
+            val currentItem = qaDataManager.getCurrentQaItem()
             if (currentItem != null) {
-                val currentIndex = qaDataRepository.getCurrentIndex()
+                val currentIndex = qaDataManager.getCurrentIndex()
                 val scriptId = "${currentItem.category}_$currentIndex"
-                val hasFile = audioFileRepository.hasRecordingFile(scriptId)
+                val hasFile = audioFileManager.hasRecordingFile(scriptId)
                 _hasRecordingFile.value = hasFile
                 Log.d("MainViewModel", "스크립트 $scriptId 녹음 파일 존재 여부: $hasFile")
             } else {
@@ -324,13 +324,13 @@ class MainViewModel @Inject constructor(
                 ttsPlaybackController.stopTts()
                 
                 // 3. 현재 상태 저장 (암기 테스트 중단 전에)
-                val currentCategory = qaDataRepository.currentCategory.value
-                val currentIndex = qaDataRepository.getCurrentIndex()
+                val currentCategory = qaDataManager.currentCategory.value
+                val currentIndex = qaDataManager.getCurrentIndex()
                 val selectedMemorizeLevel = _selectedMemorizeLevel.value
                 val isMemorizeTestRunning = _isMemorizeTestRunning.value
                 
                 // 현재 활성화된 스크립트의 진행 상황 업데이트
-                val currentItem = qaDataRepository.getCurrentQaItem()
+                val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null && isMemorizeTestRunning) {
                     val totalSentences = currentItem.answerKo.split(Regex("(?<=[.!?])\\s+")).size
                     
@@ -418,30 +418,30 @@ class MainViewModel @Inject constructor(
 
 
     fun selectCategory(category: String) {
-        qaDataRepository.selectCategory(category)
+        qaDataManager.selectCategory(category)
         // 카테고리 변경 시 진행 상황은 유지 (다른 카테고리로 돌아올 수 있음)
         // 녹음 파일 존재 여부 확인
         checkRecordingFileExists()
     }
 
     fun nextQaItem() {
-        qaDataRepository.nextQaItem()
+        qaDataManager.nextQaItem()
         // 스크립트 변경 시 진행 상황은 유지 (다른 스크립트로 돌아올 수 있음)
         // 녹음 파일 존재 여부 확인
         checkRecordingFileExists()
     }
 
     fun clearError() {
-        qaDataRepository.clearError()
+        qaDataManager.clearError()
     }
 
     fun getItemsInCategory(category: String): List<QaItem> {
-        return qaDataRepository.getItemsInCategory(category)
+        return qaDataManager.getItemsInCategory(category)
     }
 
     // 이전 질문으로 이동
     fun previousQaItem() {
-        qaDataRepository.previousQaItem()
+        qaDataManager.previousQaItem()
         // 스크립트 변경 시 진행 상황은 유지 (다른 스크립트로 돌아올 수 있음)
         // 녹음 파일 존재 여부 확인
         checkRecordingFileExists()
@@ -523,8 +523,8 @@ class MainViewModel @Inject constructor(
                 
                 // 통암기 UseCase 시작
                 currentUseCaseJob = viewModelScope.launch {
-                    val category = qaDataRepository.getCurrentCategory() ?: ""
-                    val scriptIndex = qaDataRepository.getCurrentIndex()
+                    val category = qaDataManager.getCurrentCategory() ?: ""
+                    val scriptIndex = qaDataManager.getCurrentIndex()
                     
                     fullMemorizationUseCase.startFullMemorization(
                         category = category,
@@ -667,7 +667,7 @@ class MainViewModel @Inject constructor(
                 _isMemorizeTestRunning.value = true
                 setAnswerCardFlipped(false)
                 
-                val currentItem = qaDataRepository.getCurrentQaItem()
+                val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
                     Log.d("MainViewModel", "반복 듣기 UseCase 실행")
                     val useCase = RepeatListeningUseCase(
@@ -697,7 +697,7 @@ class MainViewModel @Inject constructor(
                         },
                         progressTracker = progressTracker,
                         category = currentItem.category,
-                        scriptIndex = qaDataRepository.getCurrentIndex()
+                        scriptIndex = qaDataManager.getCurrentIndex()
                     )
                     currentUseCaseJob = launch { useCase.execute() }
                 }
@@ -717,7 +717,7 @@ class MainViewModel @Inject constructor(
                 _isMemorizeTestRunning.value = true
                 setAnswerCardFlipped(false)
                 
-                val currentItem = qaDataRepository.getCurrentQaItem()
+                val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
                     Log.d("MainViewModel", "영작 테스트 UseCase 실행")
                     val useCase = EnglishWritingTestUseCase(
@@ -760,7 +760,7 @@ class MainViewModel @Inject constructor(
                         },
                         progressTracker = progressTracker,
                         category = currentItem.category,
-                        scriptIndex = qaDataRepository.getCurrentIndex()
+                        scriptIndex = qaDataManager.getCurrentIndex()
                     )
                     currentUseCaseJob = launch { useCase.execute() }
                 }

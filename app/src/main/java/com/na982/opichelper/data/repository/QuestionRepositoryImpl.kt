@@ -4,16 +4,16 @@ import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.entity.QaItem
-import com.na982.opichelper.domain.repository.QuestionRepository
+import com.na982.opichelper.domain.repository.QaDataLoader
 import java.io.InputStreamReader
 import javax.inject.Inject
 
 /**
- * QuestionRepository 구현체
+ * QaDataLoader 구현체
  */
 class QuestionRepositoryImpl @Inject constructor(
     private val context: Context
-) : QuestionRepository {
+) : QaDataLoader {
     
     private val gson = Gson()
     private val categoryDisplayNames = listOf(

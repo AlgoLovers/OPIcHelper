@@ -3,9 +3,10 @@ package com.na982.opichelper.domain.repository
 import java.io.File
 
 /**
- * 오디오 파일 관리를 담당하는 Repository
+ * 오디오 파일 관리를 담당하는 인터페이스 (Manager 패턴)
+ * 책임: 오디오 파일의 생성, 병합, 삭제, 관리
  */
-interface AudioFileRepository {
+interface AudioFileManager {
     /**
      * 녹음된 파일들을 병합하여 저장
      * @param files 병합할 녹음 파일들
@@ -72,4 +73,4 @@ interface AudioFileRepository {
      * @return 삭제 성공하면 true, 실패하면 false
      */
     suspend fun deleteRecordingFileByPath(filePath: String): Boolean
-}
+} 

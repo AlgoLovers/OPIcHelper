@@ -1,6 +1,6 @@
 package com.na982.opichelper.data.repository
 
-import com.na982.opichelper.domain.repository.AudioFileRepository
+import com.na982.opichelper.domain.repository.AudioFileManager
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -15,9 +15,9 @@ import android.media.MediaCodec
 import java.nio.ByteBuffer
 
 /**
- * AudioFileRepository 구현체
+ * AudioFileManager 구현체
  */
-class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepository {
+class AudioFileRepositoryImpl(private val context: Context) : AudioFileManager {
     
     override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
         return withContext(Dispatchers.IO) {

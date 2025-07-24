@@ -3,10 +3,11 @@ package com.na982.opichelper.domain.usecase
 import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.audio.TtsOrchestrator
-import com.na982.opichelper.domain.repository.AudioFileRepository
-import com.na982.opichelper.domain.repository.QaDataRepository
-import com.na982.opichelper.domain.repository.ProgressRepository
-import com.na982.opichelper.domain.usecase.MemorizeTestState
+import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.ProgressPersistenceService
+import com.na982.opichelper.domain.entity.QaItem
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,9 +23,9 @@ class FullMemorizationUseCase @Inject constructor(
     private val audioRecorder: AudioRecorder,
     private val audioPlayer: AudioPlayer,
     private val ttsOrchestrator: TtsOrchestrator,
-    private val audioFileRepository: AudioFileRepository,
-    private val qaDataRepository: QaDataRepository,
-    private val memorizeTestState: MemorizeTestState
+    private val audioFileManager: AudioFileManager,
+    private val qaDataManager: QaDataManager,
+    private val progressPersistenceService: ProgressPersistenceService
 ) {
     // 녹음 상태 관리
     private val _isRecording = MutableStateFlow(false)
@@ -61,7 +62,7 @@ class FullMemorizationUseCase @Inject constructor(
             this.onRecordingStateChange = onRecordingStateChange
             
             // 현재 QA 아이템 가져오기
-            val qaItem = qaDataRepository.getCurrentQaItem()
+            val qaItem = qaDataManager.getCurrentQaItem()
             if (qaItem == null) {
                 Log.e("FullMemorizationUseCase", "QA 아이템을 찾을 수 없음")
                 return
@@ -69,7 +70,7 @@ class FullMemorizationUseCase @Inject constructor(
             
             // 녹음 파일 경로 생성
             val recordingFileName = "full_memorization_${category}_${scriptIndex}.m4a"
-            currentRecordingPath = audioFileRepository.getRecordingFilePath(recordingFileName)
+            currentRecordingPath = audioFileManager.getRecordingFilePath(recordingFileName)
             
             // 녹음 시작
             _isRecording.value = true
@@ -178,7 +179,7 @@ class FullMemorizationUseCase @Inject constructor(
      * 녹음 파일 존재 여부 확인
      */
     suspend fun hasRecordingFile(): Boolean {
-        return currentRecordingPath?.let { audioFileRepository.hasRecordingFileByPath(it) } ?: false
+        return currentRecordingPath?.let { audioFileManager.hasRecordingFileByPath(it) } ?: false
     }
     
     /**
@@ -186,7 +187,7 @@ class FullMemorizationUseCase @Inject constructor(
      */
     suspend fun deleteRecordingFile() {
         currentRecordingPath?.let { path ->
-            audioFileRepository.deleteRecordingFileByPath(path)
+            audioFileManager.deleteRecordingFileByPath(path)
             currentRecordingPath = null
             Log.d("FullMemorizationUseCase", "녹음 파일 삭제: $path")
         }
