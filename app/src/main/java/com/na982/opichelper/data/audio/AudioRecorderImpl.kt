@@ -26,10 +26,19 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
             throw SecurityException("오디오 녹음 권한이 필요합니다.")
         }
         
-        val recordingsDir = File(context.filesDir, "recordings")
-        if (!recordingsDir.exists()) recordingsDir.mkdirs()
-        val fileName = "${scriptId}_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.m4a"
-        outputFile = File(recordingsDir, fileName)
+        // scriptId가 이미 절대 경로인지 확인
+        val outputFile = if (scriptId.startsWith("/")) {
+            // 이미 절대 경로인 경우
+            File(scriptId)
+        } else {
+            // 상대 경로인 경우
+            val recordingsDir = File(context.filesDir, "recordings")
+            if (!recordingsDir.exists()) recordingsDir.mkdirs()
+            val fileName = "${scriptId}_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.m4a"
+            File(recordingsDir, fileName)
+        }
+        
+        this.outputFile = outputFile
         
         try {
             recorder = MediaRecorder().apply {
@@ -38,7 +47,7 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                 setAudioEncodingBitRate(128000)
                 setAudioSamplingRate(44100)
-                setOutputFile(outputFile!!.absolutePath)
+                setOutputFile(outputFile.absolutePath)
                 prepare()
                 start()
             }
@@ -48,7 +57,7 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
             throw RuntimeException("녹음을 시작할 수 없습니다: ${e.message}", e)
         }
         
-        return outputFile!!
+        return outputFile
     }
 
     override fun stopRecording(): File? {

@@ -51,4 +51,25 @@ interface AudioFileRepository {
      * @return 녹음 파일이 존재하면 true, 없으면 false
      */
     suspend fun hasRecordingFile(scriptId: String): Boolean
+    
+    /**
+     * 녹음 파일 경로 생성
+     * @param fileName 파일명
+     * @return 전체 파일 경로
+     */
+    fun getRecordingFilePath(fileName: String): String
+    
+    /**
+     * 특정 파일 경로의 녹음 파일 존재 여부 확인
+     * @param filePath 파일 경로
+     * @return 파일이 존재하면 true, 없으면 false
+     */
+    suspend fun hasRecordingFileByPath(filePath: String): Boolean
+    
+    /**
+     * 특정 파일 경로의 녹음 파일 삭제
+     * @param filePath 파일 경로
+     * @return 삭제 성공하면 true, 실패하면 false
+     */
+    suspend fun deleteRecordingFileByPath(filePath: String): Boolean
 }

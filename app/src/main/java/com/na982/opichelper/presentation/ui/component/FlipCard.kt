@@ -29,12 +29,12 @@ fun FlipCard(
         animationSpec = tween(durationMillis = 800)
     )
     
-    Log.d("FlipCard", "Rendering with flipped=$flipped, rotation=$rotation, isFlipped=$isFlipped")
-    
+    //Log.d("FlipCard", "Rendering with flipped=$flipped, rotation=$rotation, isFlipped=$isFlipped")
+
     // isFlipped가 변경되면 flipped 상태 업데이트
     LaunchedEffect(isFlipped) {
         flipped = isFlipped
-        Log.d("FlipCard", "External flip triggered: $isFlipped")
+        //Log.d("FlipCard", "External flip triggered: $isFlipped")
     }
 
     Box(

@@ -29,6 +29,7 @@ import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.entity.MainScreenState
 import com.na982.opichelper.domain.entity.PlayType
 
+
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -47,8 +48,9 @@ fun MainScreen(
     // 하이라이트 인덱스 상태 관리
     val questionHighlightIndex by viewModel.questionHighlightIndex.collectAsState()
     val answerHighlightIndex by viewModel.answerHighlightIndex.collectAsState()
-    val answerKoHighlightIndex by viewModel.answerKoHighlightIndex.collectAsState()
-    val recordingHighlightIndex by viewModel.recordingHighlightIndex.collectAsState()
+    val answerKoHighlightIndex by viewModel.answerKoHighlightIndex.collectAsState(initial = null)
+    val recordingHighlightIndex by viewModel.recordingHighlightIndex.collectAsState(initial = null)
+    val hasProgress by viewModel.hasProgress.collectAsState(initial = false)
 
     // 백버튼 시 녹음 종료 (녹음 상태는 RecordingButton에서 관리)
     BackHandler(enabled = false) {
@@ -92,6 +94,14 @@ fun MainScreen(
     val isAnswerCardFlipped by viewModel.isAnswerCardFlipped.collectAsState()
     val hasRecordingFile by viewModel.hasRecordingFile.collectAsState()
     val currentKoreanTtsService by viewModel.currentKoreanTtsService.collectAsState()
+    
+    // 통암기 관련 상태
+    val isFullMemorizationMode by viewModel.isFullMemorizationMode.collectAsState()
+    val fullMemorizationHighlightIndex by viewModel.fullMemorizationHighlightIndex.collectAsState()
+    val isMemorizeTestRunning by viewModel.isMemorizeTestRunning.collectAsState()
+    val isFullMemorizationRecording by viewModel.isFullMemorizationRecording.collectAsState()
+    val isFullMemorizationPlaying by viewModel.isFullMemorizationPlaying.collectAsState()
+    val hasFullMemorizationRecording by viewModel.hasFullMemorizationRecording.collectAsState()
 
     val audioPlayer = remember { 
         // Hilt를 통해 주입받은 AudioPlayer 사용
@@ -226,34 +236,53 @@ fun MainScreen(
                         modifier = Modifier.weight(1f)
                     )
                     
-                    // 기존 녹음 버튼을 암기 테스트 버튼으로 교체
-                    Button(
-                        onClick = {
-                            viewModel.onMemorizeTestButtonClick(
-                                answerKo = uiState.currentQaItem!!.answerKo,
-                                answerEn = uiState.currentQaItem!!.answerEn,
-                                onHighlight = { idx -> 
-                    // 하이라이트는 TtsPlaybackController에서 자동으로 처리됨
-                }
+                    // 암기 테스트 버튼
+                    if (isFullMemorizationMode) {
+                        // 통암기 모드일 때는 전용 녹음 버튼 사용
+                        FullMemorizationRecordingButton(
+                            isRecording = isFullMemorizationRecording,
+                            onStartRecording = {
+                                viewModel.startFullMemorizationMode()
+                            },
+                            onStopRecording = {
+                                viewModel.stopFullMemorizationRecording()
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        // 일반 암기 테스트 버튼
+                        Button(
+                            onClick = {
+                                viewModel.onMemorizeTestButtonClick()
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = when {
+                                    isMemorizeTestRunning -> "암기 테스트 종료"
+                                    hasProgress -> "암기 테스트 재개"
+                                    else -> "암기 테스트"
+                                }
                             )
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("암기 테스트")
+                        }
                     }
                 }
                 
+
+                
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // 답변 카드
-                AnswerCard(
-                    currentAnswer = uiState.currentQaItem!!.answerEn,
-                    currentAnswerKo = uiState.currentQaItem!!.answerKo,
-                    highlightIndex = answerHighlightIndex,
-                    answerKoHighlightIndex = answerKoHighlightIndex,
-                    recordingHighlightIndex = recordingHighlightIndex, // TtsPlaybackController에서 관리
-                    isFlipped = isAnswerCardFlipped
-                )
+                // 답변 카드 (통암기 모드가 아니거나 녹음 중이 아닐 때만 표시)
+                if (!isFullMemorizationMode || !isFullMemorizationRecording) {
+                    AnswerCard(
+                        currentAnswer = uiState.currentQaItem!!.answerEn,
+                        currentAnswerKo = uiState.currentQaItem!!.answerKo,
+                        highlightIndex = if (isFullMemorizationMode && isFullMemorizationPlaying) fullMemorizationHighlightIndex else answerHighlightIndex,
+                        answerKoHighlightIndex = answerKoHighlightIndex,
+                        recordingHighlightIndex = recordingHighlightIndex, // TtsPlaybackController에서 관리
+                        isFlipped = isAnswerCardFlipped
+                    )
+                }
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -274,18 +303,39 @@ fun MainScreen(
                         modifier = Modifier.weight(1f)
                     )
                     
-                    // 병합된 오디오 파일 재생 버튼 (영작 테스트 레벨이고 녹음 파일이 있을 때만 활성화)
-                    Button(
-                        onClick = {
-                            viewModel.playMergedAudioFile()
-                        },
-                        enabled = selectedMemorizeLevel == "영작 테스트" && hasRecordingFile && !screenState.isMergedAudioPlaying,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = if (screenState.isMergedAudioPlaying) "재생 중..." else "녹음 재생",
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
+                    // 통암기 모드일 때 녹음 재생 버튼
+                    if (isFullMemorizationMode) {
+                        if (hasFullMemorizationRecording) {
+                            Button(
+                                onClick = {
+                                    viewModel.playFullMemorizationRecording()
+                                },
+                                enabled = !isFullMemorizationPlaying,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = if (isFullMemorizationPlaying) "재생 중..." else "녹음 재생",
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        } else {
+                            // 녹음 파일이 없을 때는 빈 공간
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    } else {
+                        // 병합된 오디오 파일 재생 버튼 (영작 테스트 레벨이고 녹음 파일이 있을 때만 활성화)
+                        Button(
+                            onClick = {
+                                viewModel.playMergedAudioFile()
+                            },
+                            enabled = selectedMemorizeLevel == "영작 테스트" && hasRecordingFile && !screenState.isMergedAudioPlaying,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = if (screenState.isMergedAudioPlaying) "재생 중..." else "녹음 재생",
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 }
                 

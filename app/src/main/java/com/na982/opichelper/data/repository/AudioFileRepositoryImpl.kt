@@ -37,7 +37,7 @@ class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepositor
                 outputDir.mkdirs()
             }
 
-            val output = File(outputDir, "${scriptId}_merged_${System.currentTimeMillis()}.m4a")
+            val output = File(outputDir, "english_writing_${scriptId}_merged.m4a")
             Log.d("AudioFileRepository", "출력 파일: ${output.absolutePath}")
 
             // 단일 파일인 경우 그대로 복사
@@ -421,5 +421,48 @@ class AudioFileRepositoryImpl(private val context: Context) : AudioFileRepositor
         }
         
         Log.d("AudioFileRepository", "헤더 분석 병합 완료: 총 오디오 크기=${totalAudioSize} bytes, 새 mdat 크기=${newMdatSize} bytes")
+    }
+
+    /**
+     * 녹음 파일 경로 생성
+     */
+    override fun getRecordingFilePath(fileName: String): String {
+        val recordingsDir = File(context.filesDir, "recordings")
+        if (!recordingsDir.exists()) {
+            recordingsDir.mkdirs()
+        }
+        return File(recordingsDir, fileName).absolutePath
+    }
+    
+    /**
+     * 특정 파일 경로의 녹음 파일 존재 여부 확인
+     */
+    override suspend fun hasRecordingFileByPath(filePath: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            val file = File(filePath)
+            file.exists() && file.length() > 0
+        }
+    }
+    
+    /**
+     * 녹음 파일 삭제
+     */
+    override suspend fun deleteRecordingFileByPath(filePath: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val file = File(filePath)
+                if (file.exists()) {
+                    val deleted = file.delete()
+                    Log.d("AudioFileRepository", "녹음 파일 삭제: $filePath, 성공: $deleted")
+                    deleted
+                } else {
+                    Log.d("AudioFileRepository", "삭제할 녹음 파일이 존재하지 않음: $filePath")
+                    false
+                }
+            } catch (e: Exception) {
+                Log.e("AudioFileRepository", "녹음 파일 삭제 실패: $filePath", e)
+                false
+            }
+        }
     }
 } 

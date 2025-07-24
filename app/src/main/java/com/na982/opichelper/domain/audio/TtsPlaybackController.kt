@@ -57,6 +57,7 @@ class TtsPlaybackController @Inject constructor(
     
     // TTS 서비스 바인딩 관련
     private var serviceConnection: ServiceConnection? = null
+    private var isServiceBound = false
     
     fun setTtsOrchestrator(orchestrator: TtsOrchestrator) {
         ttsOrchestrator = orchestrator
@@ -69,9 +70,17 @@ class TtsPlaybackController @Inject constructor(
     fun bindTtsService(context: Context, onKoreanTtsServiceUpdate: ((String) -> Unit)? = null) {
         Log.d("TtsPlaybackController", "TTS 서비스 바인딩 시작")
         
+        // 이미 바인딩되어 있으면 해제
+        if (isServiceBound) {
+            Log.d("TtsPlaybackController", "이미 바인딩되어 있음 - 해제 후 재바인딩")
+            unbindTtsService(context)
+        }
+        
         serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: android.content.ComponentName?, service: IBinder?) {
                 Log.d("TtsPlaybackController", "TTS 서비스 연결됨")
+                isServiceBound = true
+                
                 // 서비스 바인딩은 제거했으므로 직접 TtsOrchestrator 사용
                 
                 // 한글 TTS 서비스 이름 업데이트
@@ -86,6 +95,7 @@ class TtsPlaybackController @Inject constructor(
             
             override fun onServiceDisconnected(name: android.content.ComponentName?) {
                 Log.d("TtsPlaybackController", "TTS 서비스 연결 해제됨")
+                isServiceBound = false
             }
         }
         
@@ -98,14 +108,23 @@ class TtsPlaybackController @Inject constructor(
      */
     fun unbindTtsService(context: Context) {
         Log.d("TtsPlaybackController", "TTS 서비스 바인딩 해제")
+        
+        // 바인딩되지 않은 경우 해제하지 않음
+        if (!isServiceBound || serviceConnection == null) {
+            Log.d("TtsPlaybackController", "서비스가 바인딩되지 않음 - 해제 건너뜀")
+            return
+        }
+        
         try {
             serviceConnection?.let { connection ->
                 context.unbindService(connection)
+                Log.d("TtsPlaybackController", "TTS 서비스 바인딩 해제 완료")
             }
-            serviceConnection = null
-            Log.d("TtsPlaybackController", "TTS 서비스 바인딩 해제 완료")
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 서비스 바인딩 해제 중 오류", e)
+        } finally {
+            serviceConnection = null
+            isServiceBound = false
         }
     }
     

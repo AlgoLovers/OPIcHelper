@@ -60,6 +60,24 @@ class AudioPlayerImpl : AudioPlayer {
         player = null
     }
     
+    override fun stopAudio() {
+        stop()
+    }
+    
+    override fun getDuration(filePath: String): Int {
+        return try {
+            val mediaPlayer = MediaPlayer()
+            mediaPlayer.setDataSource(filePath)
+            mediaPlayer.prepare()
+            val duration = mediaPlayer.duration
+            mediaPlayer.release()
+            duration
+        } catch (e: Exception) {
+            Log.e("AudioPlayerImpl", "getDuration 실패: $filePath", e)
+            0
+        }
+    }
+    
     override fun playAudio(filePath: String) {
         val file = File(filePath)
         if (file.exists()) {

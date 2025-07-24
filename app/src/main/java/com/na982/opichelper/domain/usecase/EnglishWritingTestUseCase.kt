@@ -1,125 +1,98 @@
 package com.na982.opichelper.domain.usecase
 
-import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.domain.usecase.MemorizeTestState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
+import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import android.util.Log
-import com.na982.opichelper.domain.repository.AudioFileRepository
 
 /**
- * 영작 테스트(암기 레벨) 테스트용 UseCase
- * - answerText: 정답 텍스트 (ViewModel에서 주입)
- * - ttsPlayer: TTS 재생기
- * - audioRecorder: 오디오 녹음기
- * - audioFileRepository: 오디오 파일 관리
- * - onAutoFlip: 자동 플립 콜백 (예: 답변 카드 자동 뒤집기)
- * - onMergedFileCreated: 병합된 파일 생성 콜백
- * - memorizeTestState: 암기 테스트 상태 관리
+ * 영작 테스트용 UseCase
+ * - answerKo: 한글 답변 텍스트
+ * - answerEn: 영문 답변 텍스트
+ * - onKoreanHighlight: 한글 문장 하이라이트 콜백
+ * - onEnglishHighlight: 영문 문장 하이라이트 콜백
+ * - onRecordingHighlight: 녹음 하이라이트 콜백
+ * - onCardFlip: 카드 뒤집기 콜백 (true: 한글, false: 영문)
+ * - progressTracker: 암기 테스트 진행 상황 추적
  * - category: 카테고리
- * - qaItemId: QA 아이템 ID
+ * - scriptIndex: 스크립트 인덱스
  *
- * execute()는 실제 영작 평가 로직 담당
+ * 한글 문장 1회 → 1/2 쉬고 → 영문 문장 1회 → 종료
  */
 class EnglishWritingTestUseCase(
+    private val answerKo: String,
     private val answerEn: String,
-    private val answerKo: String? = null,
-    private val scriptId: String, // 스크립트 ID 추가
     private val ttsPlayer: TtsPlayer,
-    private val audioRecorder: AudioRecorder,
-    private val audioFileRepository: AudioFileRepository,
-    private val memorizeTestState: MemorizeTestState,
+    private val onKoreanHighlight: (Int?) -> Unit,
+    private val onEnglishHighlight: (Int?) -> Unit,
+    private val onRecordingHighlight: (Int?) -> Unit,
+    private val onCardFlip: (Boolean) -> Unit, // true: 한글, false: 영문
+    private val progressTracker: MemorizeTestProgressTracker,
     private val category: String,
-    private val qaItemId: String,
-    private val onAutoFlip: (() -> Unit)? = null,
-    private val onKoreanHighlight: ((Int?) -> Unit)? = null, // 한글 하이라이트 콜백 추가
-    private val onRecordingHighlight: ((Int?) -> Unit)? = null, // 녹음 하이라이트 콜백 추가
-    private val onMergedFileCreated: ((File) -> Unit)? = null // 병합된 파일 콜백 추가
+    private val scriptIndex: Int
 ) : MemorizeTestUseCase {
     override suspend fun execute() {
-        Log.d("EnglishWritingTestUseCase", "execute() 진입")
-        // 1. 문장별로 분리 (영문 기준)
+        val koSentences = answerKo.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         val enSentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-        val koSentences = answerKo?.split(Regex("(?<=[.!?])\\s+")).orEmpty().map { it.trim() }.filter { it.isNotEmpty() }
-        val recordedFiles = mutableListOf<File>()
+        val count = minOf(koSentences.size, enSentences.size)
         
-        // 진행 상태에서 시작 인덱스 복원
-        val currentProgress = memorizeTestState.getCurrentProgress()
-        val startIndex = currentProgress?.currentSentenceIndex ?: 0
+        // 복원된 앱 상태에서 시작 인덱스 가져오기
+        val currentProgress = progressTracker.getScriptProgress(category, scriptIndex)
         
-        Log.d("EnglishWritingTestUseCase", "영작 테스트 시작: 총 ${enSentences.size} 문장, 시작 인덱스: $startIndex")
-        
-        for ((idx, enSentence) in enSentences.withIndex()) {
-            // 시작 인덱스 이전 문장은 건너뛰기
-            if (idx < startIndex) {
-                Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 건너뛰기 (이미 완료됨)")
-                continue
-            }
-            
-            Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 처리 시작: '${enSentence.take(50)}...'")
-            
-            // 진행 상태 업데이트
-            memorizeTestState.updateProgress(idx)
-            
-            // 1. (옵션) 한글 문장 읽기 (answerKo가 있으면)
-            if (koSentences.size > idx) {
-                Log.d("EnglishWritingTestUseCase", "한글 문장 TTS 실행: '${koSentences[idx].take(30)}...'")
-                // 자동 뒤집기 콜백 호출 (한글 페이지로)
-                onAutoFlip?.invoke()
-                // 한글 하이라이트 설정 (TTS 재생 중)
-                onKoreanHighlight?.invoke(idx)
-                // 한글 TTS 재생 (한글 TTS 엔진 사용)
-                val koreanDuration = ttsPlayer.speakAndGetDuration(koSentences[idx], isKorean = true, rate = 0.8f)
-                Log.d("EnglishWritingTestUseCase", "한글 TTS 재생 완료: ${koSentences[idx].take(30)}..., 시간=${koreanDuration}ms")
-                // TTS 재생 완료 후 하이라이트 초기화
-                onKoreanHighlight?.invoke(null)
-            }
-            
-            // 2. 영문 문장 TTS 시간만 추정 (실제 재생 X) - 시간을 더 길게 설정
-            val enDuration = (enSentence.length * 120L).coerceAtLeast(2000L) // 120ms per char, 최소 2000ms
-            val recordDuration = (enDuration).toLong()
-            Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 녹음 시간 계산: 길이=${enSentence.length}, 계산된 시간=${enDuration}ms, 최종 시간=${recordDuration}ms")
-            
-            // 3. 녹음 시작 (녹음 하이라이트 표시)
-            val recordedFile = withContext(Dispatchers.IO) {
-                Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 녹음 시작")
-                // 녹음 하이라이트 설정 (녹음 중임을 표시)
-                onRecordingHighlight?.invoke(idx)
-                val startTime = System.currentTimeMillis()
-                audioRecorder.startRecording("${scriptId}_${idx + 1}") // 스크립트 ID와 문장 번호 사용
-                kotlinx.coroutines.delay(recordDuration)
-                val endTime = System.currentTimeMillis()
-                val actualDuration = endTime - startTime
-                Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 녹음 완료: 예상 시간=${recordDuration}ms, 실제 시간=${actualDuration}ms")
-                val file = audioRecorder.stopRecording()
-                // 녹음 완료 후 하이라이트 초기화
-                onRecordingHighlight?.invoke(null)
-                file
-            }
-            recordedFile?.let { 
-                recordedFiles.add(it)
-                Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 녹음 파일 추가: ${it.absolutePath}, 크기: ${it.length()} bytes")
-            }
-            
-            // 4. (옵션) 자동 플립 콜백 (문장별로 필요시)
-            onAutoFlip?.invoke()
+        val startIndex = if (currentProgress?.isMemorizeTestRunning == true) {
+            currentProgress.currentSentenceIndex
+        } else {
+            0
         }
         
-        // 5. Repository를 통해 파일 병합 및 저장
-        val mergedFile = audioFileRepository.mergeAndSaveAudioFiles(recordedFiles, scriptId)
-        Log.d("EnglishWritingTestUseCase", "병합된 파일: ${mergedFile?.absolutePath}")
+        Log.d("EnglishWritingTestUseCase", "영작 테스트 시작: 총 $count 문장, 시작 인덱스: $startIndex")
+        Log.d("EnglishWritingTestUseCase", "현재 스크립트 진행 상황: $currentProgress")
+        Log.d("EnglishWritingTestUseCase", "검색한 카테고리: $category, 스크립트 인덱스: $scriptIndex")
         
-        // 6. 병합된 파일 콜백 호출
-        mergedFile?.let { file ->
-            onMergedFileCreated?.invoke(file)
+        for (idx in startIndex until count) {
+            // 코루틴이 취소되었는지 확인
+            if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
+                Log.d("EnglishWritingTestUseCase", "코루틴이 취소됨 - UseCase 중단")
+                break
+            }
+            
+            Log.d("EnglishWritingTestUseCase", "문장 ${idx + 1} 처리 시작 (인덱스: $idx)")
+            
+            // 진행 상황 업데이트
+            progressTracker.updateCurrentSentenceIndex(category, scriptIndex, idx)
+            
+            // 1. 한글 문장 1회 TTS (카드를 한글로 뒤집고 하이라이트)
+            onCardFlip(true) // 카드를 한글로 뒤집기
+            delay(100) // 카드 뒤집기 애니메이션 대기
+            onKoreanHighlight(idx) // 한글 하이라이트
+            val koDuration = ttsPlayer.speakAndGetDuration(koSentences[idx], isKorean = true, rate = 0.8f)
+            delay((koDuration * 0.5).toLong())
+
+            // 코루틴이 취소되었는지 다시 확인
+            if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
+                Log.d("EnglishWritingTestUseCase", "코루틴이 취소됨 - UseCase 중단")
+                break
+            }
+
+            // 2. 영문 문장 1회 TTS (카드를 영문으로 뒤집고 하이라이트)
+            onCardFlip(false) // 카드를 영문으로 뒤집기
+            delay(100) // 카드 뒤집기 애니메이션 대기
+            onEnglishHighlight(idx) // 영문 하이라이트
+            val enDuration = ttsPlayer.speakAndGetDuration(enSentences[idx], isKorean = false, rate = 0.75f)
+            delay((enDuration * 1.0).toLong())
+
+            onEnglishHighlight(null) // 영문 하이라이트 제거
         }
         
-        // 7. 테스트 완료 - 진행 상태 삭제
-        memorizeTestState.completeProgress()
+        // 마지막에 카드를 원래 상태(영문)로 복원
+        onCardFlip(false)
+        onKoreanHighlight(null)
+        onEnglishHighlight(null)
         
-        // 8. (옵션) 평가/피드백 로직 추가 가능
-        Log.d("EnglishWritingTestUseCase", "execute() 완료")
+        // 테스트 완료 - 현재 스크립트 진행 상황 삭제
+        progressTracker.clearScriptProgress(category, scriptIndex)
+        
+        Log.d("EnglishWritingTestUseCase", "영작 테스트 완료")
     }
 } 

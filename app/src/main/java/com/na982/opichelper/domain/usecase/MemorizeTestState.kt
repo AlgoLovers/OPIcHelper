@@ -1,162 +1,215 @@
 package com.na982.opichelper.domain.usecase
 
-import android.util.Log
 import com.na982.opichelper.domain.repository.ProgressRepository
-import com.na982.opichelper.domain.repository.ProgressState
+import com.na982.opichelper.domain.repository.AppExitState
+import com.na982.opichelper.domain.repository.CategoryProgress
 import com.na982.opichelper.domain.repository.QaDataRepository
-import com.na982.opichelper.domain.entity.QaItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import android.util.Log
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
- * 암기 테스트 진행 상태 관리 전담 클래스
- * 책임: 암기 테스트 진행 상태 관리, 제어 흐름, Repository와 UseCase 간 중재
+ * 카테고리별 진행 상황 관리 및 복원을 담당하는 클래스
+ * 책임: 카테고리별 진행 상황 저장/로드, 앱 종료 시 상태 저장, 테스트 완료 시 상태 삭제
  */
-@Singleton
 class MemorizeTestState @Inject constructor(
     private val progressRepository: ProgressRepository,
     private val qaDataRepository: QaDataRepository
 ) {
+    // 현재 앱 종료 상태 (하위 호환성을 위해 유지)
+    private val _appExitState = MutableStateFlow<AppExitState?>(null)
+    val appExitState: StateFlow<AppExitState?> = _appExitState.asStateFlow()
     
-    // 현재 진행 상태
-    private val _currentProgress = MutableStateFlow<ProgressState?>(null)
-    val currentProgress: StateFlow<ProgressState?> = _currentProgress.asStateFlow()
+    // 모든 카테고리의 진행 상황
+    private val _categoryProgressMap = MutableStateFlow<Map<String, CategoryProgress>>(emptyMap())
+    val categoryProgressMap: StateFlow<Map<String, CategoryProgress>> = _categoryProgressMap.asStateFlow()
     
     // 진행 상태 존재 여부
     private val _hasProgress = MutableStateFlow(false)
     val hasProgress: StateFlow<Boolean> = _hasProgress.asStateFlow()
     
     /**
-     * 앱 시작 시 진행 상태 복원
+     * 앱 시작 시 모든 진행 상황 복원
      */
-    suspend fun restoreProgress() {
+    suspend fun restoreAllProgress() {
         try {
-            val progress = progressRepository.loadProgress()
-            if (progress != null && !progress.isCompleted) {
-                // QA 아이템 복원
-                val success = qaDataRepository.restoreToQaItem(progress.category, progress.qaItemId)
-                if (success) {
-                    _currentProgress.value = progress
-                    _hasProgress.value = true
-                    Log.d("MemorizeTestState", "진행 상태 복원 성공: $progress")
-                } else {
-                    Log.w("MemorizeTestState", "QA 아이템 복원 실패, 진행 상태 삭제")
-                    progressRepository.clearProgress()
-                    _currentProgress.value = null
-                    _hasProgress.value = false
-                }
-            } else {
-                Log.d("MemorizeTestState", "완료된 진행 상태 또는 저장된 상태 없음")
-                _currentProgress.value = null
-                _hasProgress.value = false
-            }
+            // 모든 카테고리 진행 상황 로드
+            val allProgress = progressRepository.loadAllCategoryProgress()
+            _categoryProgressMap.value = allProgress
+            
+            // 앱 종료 상태 로드 (하위 호환성)
+            val appExitState = progressRepository.loadAppExitState()
+            _appExitState.value = appExitState
+            
+            // 진행 상태 존재 여부 업데이트
+            _hasProgress.value = allProgress.isNotEmpty() || appExitState != null
+            
+            Log.d("MemorizeTestState", "모든 진행 상황 복원 완료: ${allProgress.size}개 카테고리")
         } catch (e: Exception) {
-            Log.e("MemorizeTestState", "진행 상태 복원 실패", e)
-            _currentProgress.value = null
+            Log.e("MemorizeTestState", "진행 상황 복원 실패", e)
+            _categoryProgressMap.value = emptyMap()
+            _appExitState.value = null
             _hasProgress.value = false
         }
     }
     
     /**
-     * 테스트 시작 시 진행 상태 초기화
+     * 현재 카테고리의 진행 상황 가져오기
      */
-    suspend fun startProgress(
+    fun getCurrentCategoryProgress(category: String, scriptIndex: Int): CategoryProgress? {
+        val key = "${category}_${scriptIndex}"
+        return _categoryProgressMap.value[key]
+    }
+    
+    /**
+     * 현재 카테고리의 진행 상황 존재 여부 확인
+     */
+    fun hasCurrentCategoryProgress(category: String, scriptIndex: Int): Boolean {
+        return getCurrentCategoryProgress(category, scriptIndex) != null
+    }
+    
+    /**
+     * 카테고리별 진행 상황 저장
+     */
+    suspend fun saveCategoryProgress(progress: CategoryProgress) {
+        try {
+            progressRepository.saveCategoryProgress(progress)
+            
+            // 메모리 상태 업데이트
+            val currentMap = _categoryProgressMap.value.toMutableMap()
+            currentMap[progress.getKey()] = progress
+            _categoryProgressMap.value = currentMap
+            
+            // 진행 상태 존재 여부 업데이트
+            _hasProgress.value = currentMap.isNotEmpty()
+            
+            Log.d("MemorizeTestState", "카테고리 진행 상황 저장: ${progress.getKey()}")
+        } catch (e: Exception) {
+            Log.e("MemorizeTestState", "카테고리 진행 상황 저장 실패", e)
+        }
+    }
+    
+    /**
+     * 앱 종료 시 상태 저장 (하위 호환성)
+     */
+    suspend fun saveAppExitState(
         category: String,
-        qaItemId: String,
-        testType: String,
-        totalSentences: Int
+        scriptIndex: Int,
+        memorizeLevel: String,
+        currentSentenceIndex: Int,
+        totalSentences: Int,
+        isMemorizeTestRunning: Boolean
     ) {
         try {
-            val progressState = ProgressState(
+            // 카테고리별 진행 상황으로 저장
+            val categoryProgress = CategoryProgress(
                 category = category,
-                qaItemId = qaItemId,
-                testType = testType,
-                currentSentenceIndex = 0,
+                scriptIndex = scriptIndex,
+                memorizeLevel = memorizeLevel,
+                currentSentenceIndex = currentSentenceIndex,
                 totalSentences = totalSentences,
-                isCompleted = false
+                isMemorizeTestRunning = isMemorizeTestRunning
             )
             
-            progressRepository.saveProgress(
+            saveCategoryProgress(categoryProgress)
+            
+            // 하위 호환성을 위해 앱 종료 상태도 저장
+            progressRepository.saveAppExitState(
                 category = category,
-                qaItemId = qaItemId,
-                testType = testType,
-                currentSentenceIndex = 0,
+                scriptIndex = scriptIndex,
+                memorizeLevel = memorizeLevel,
+                currentSentenceIndex = currentSentenceIndex,
                 totalSentences = totalSentences,
-                isCompleted = false
+                isMemorizeTestRunning = isMemorizeTestRunning
             )
             
-            _currentProgress.value = progressState
-            _hasProgress.value = true
+            val appExitState = AppExitState(
+                category = category,
+                scriptIndex = scriptIndex,
+                memorizeLevel = memorizeLevel,
+                currentSentenceIndex = currentSentenceIndex,
+                totalSentences = totalSentences,
+                isMemorizeTestRunning = isMemorizeTestRunning
+            )
             
-            Log.d("MemorizeTestState", "테스트 시작 - 진행 상태 초기화: $progressState")
+            _appExitState.value = appExitState
+            
+            Log.d("MemorizeTestState", "앱 종료 상태 저장: $appExitState")
         } catch (e: Exception) {
-            Log.e("MemorizeTestState", "진행 상태 초기화 실패", e)
+            Log.e("MemorizeTestState", "앱 종료 상태 저장 실패", e)
         }
     }
     
     /**
-     * 문장 진행 시 상태 업데이트
+     * 현재 문장 인덱스 업데이트
      */
-    suspend fun updateProgress(currentSentenceIndex: Int) {
-        try {
-            val currentProgress = _currentProgress.value
-            if (currentProgress != null) {
-                val updatedProgress = currentProgress.copy(
-                    currentSentenceIndex = currentSentenceIndex
-                )
-                
-                progressRepository.saveProgress(
-                    category = updatedProgress.category,
-                    qaItemId = updatedProgress.qaItemId,
-                    testType = updatedProgress.testType,
-                    currentSentenceIndex = updatedProgress.currentSentenceIndex,
-                    totalSentences = updatedProgress.totalSentences,
-                    isCompleted = updatedProgress.isCompleted
-                )
-                
-                _currentProgress.value = updatedProgress
-                
-                Log.d("MemorizeTestState", "진행 상태 업데이트: $updatedProgress")
+    fun updateCurrentSentenceIndex(index: Int) {
+        // 앱 종료 상태 업데이트 (하위 호환성)
+        val currentState = _appExitState.value
+        if (currentState != null) {
+            val updatedState = currentState.copy(currentSentenceIndex = index)
+            _appExitState.value = updatedState
+            Log.d("MemorizeTestState", "현재 문장 인덱스 업데이트: $index")
+        }
+        
+        // 카테고리 진행 상황도 업데이트
+        val currentMap = _categoryProgressMap.value.toMutableMap()
+        for ((key, progress) in currentMap) {
+            if (progress.isMemorizeTestRunning) {
+                val updatedProgress = progress.copy(currentSentenceIndex = index)
+                currentMap[key] = updatedProgress
+                Log.d("MemorizeTestState", "카테고리 진행 상황 업데이트: $key -> 인덱스 $index")
             }
+        }
+        _categoryProgressMap.value = currentMap
+    }
+    
+    /**
+     * 카테고리 진행 상황 삭제 (테스트 완료 시)
+     */
+    suspend fun clearCategoryProgress(category: String, scriptIndex: Int) {
+        try {
+            progressRepository.clearCategoryProgress(category, scriptIndex)
+            
+            // 메모리 상태 업데이트
+            val currentMap = _categoryProgressMap.value.toMutableMap()
+            val key = "${category}_${scriptIndex}"
+            currentMap.remove(key)
+            _categoryProgressMap.value = currentMap
+            
+            // 진행 상태 존재 여부 업데이트
+            _hasProgress.value = currentMap.isNotEmpty()
+            
+            Log.d("MemorizeTestState", "카테고리 진행 상황 삭제: $key")
         } catch (e: Exception) {
-            Log.e("MemorizeTestState", "진행 상태 업데이트 실패", e)
+            Log.e("MemorizeTestState", "카테고리 진행 상황 삭제 실패", e)
         }
     }
     
     /**
-     * 테스트 완료 시 진행 상태 삭제
+     * 모든 진행 상황 삭제
      */
-    suspend fun completeProgress() {
+    suspend fun clearAllProgress() {
         try {
-            progressRepository.clearProgress()
-            _currentProgress.value = null
+            progressRepository.clearAllProgress()
+            _categoryProgressMap.value = emptyMap()
+            _appExitState.value = null
             _hasProgress.value = false
             
-            Log.d("MemorizeTestState", "테스트 완료 - 진행 상태 삭제")
+            Log.d("MemorizeTestState", "모든 진행 상황 삭제 완료")
         } catch (e: Exception) {
-            Log.e("MemorizeTestState", "진행 상태 삭제 실패", e)
+            Log.e("MemorizeTestState", "모든 진행 상황 삭제 실패", e)
         }
     }
     
     /**
-     * 현재 진행 상태 확인
+     * 하위 호환성을 위한 메서드들
      */
-    fun getCurrentProgress(): ProgressState? {
-        return _currentProgress.value
-    }
+    suspend fun restoreAppState() = restoreAllProgress()
     
-    /**
-     * 진행률 계산 (0.0 ~ 1.0)
-     */
-    fun getProgressPercentage(): Float {
-        val progress = _currentProgress.value
-        return if (progress != null && progress.totalSentences > 0) {
-            progress.currentSentenceIndex.toFloat() / progress.totalSentences.toFloat()
-        } else {
-            0.0f
-        }
-    }
+    fun getCurrentAppState(): AppExitState? = _appExitState.value
+    
+    suspend fun clearProgress() = clearAllProgress()
 } 
