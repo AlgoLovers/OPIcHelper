@@ -10,8 +10,9 @@ import javax.inject.Inject
 
 /**
  * QaDataLoader 구현체
+ * QA 데이터를 assets에서 로드하는 역할
  */
-class QuestionRepositoryImpl @Inject constructor(
+class QaDataLoaderImpl @Inject constructor(
     private val context: Context
 ) : QaDataLoader {
     

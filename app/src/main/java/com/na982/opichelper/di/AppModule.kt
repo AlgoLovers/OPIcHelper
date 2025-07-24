@@ -2,8 +2,8 @@ package com.na982.opichelper.di
 
 import android.content.Context
 import com.na982.opichelper.data.audio.*
-import com.na982.opichelper.data.repository.AudioFileRepositoryImpl
-import com.na982.opichelper.data.repository.QuestionRepositoryImpl
+import com.na982.opichelper.data.repository.AudioFileManagerImpl
+import com.na982.opichelper.data.repository.QaDataLoaderImpl
 import com.na982.opichelper.domain.audio.*
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataLoader
@@ -37,7 +37,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAudioFileManager(@ApplicationContext context: Context): AudioFileManager {
-        return AudioFileRepositoryImpl(context)
+        return AudioFileManagerImpl(context)
     }
     
     // TTS Player (Google TTS를 기본으로 사용)
@@ -59,7 +59,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
-        return QuestionRepositoryImpl(context)
+        return QaDataLoaderImpl(context)
     }
     
     @Provides

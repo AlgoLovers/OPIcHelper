@@ -24,7 +24,7 @@ import com.na982.opichelper.domain.usecase.EnglishWritingTestService
 import com.na982.opichelper.domain.usecase.FullMemorizationService
 import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.repository.AudioFileManager
-import com.na982.opichelper.data.repository.AudioFileRepositoryImpl
+import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import kotlinx.coroutines.delay
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -30,23 +30,25 @@
   - `RepeatListeningUseCase` → `RepeatListeningService`
 - **개선점**: Service 패턴 적용, 의존성 주입 개선, 중복 제거
 
-## 2단계: Data Layer 정리 🔄 **다음 단계**
+## 2단계: Data Layer 정리 ✅ **완료**
 
 ### 2.1 Repository 구현체 정리
-- **목표**: 구현체들의 책임과 네이밍 정리
-- **예상 변경사항**:
-  - 구현체 클래스명 정리
-  - 메서드 네이밍 개선
-  - 불필요한 코드 제거
+- `QuestionRepositoryImpl` → `QaDataLoaderImpl` (네이밍 일치)
+- `AudioFileRepositoryImpl` → `AudioFileManagerImpl` (네이밍 일치)
+- DI 모듈(AppModule)에서 구현체 주입 코드 변경
+- 기존 구현체 파일 삭제
 
 ### 2.2 Audio 관련 클래스 정리
-- **목표**: Audio 관련 클래스들의 책임 분리
-- **예상 변경사항**:
-  - TTS 관련 클래스 정리
-  - Audio Recorder/Player 정리
-  - 파일 관리 로직 분리
+- `BaseTtsPlayer` 생성: TTS 공통 로직 추출 및 상속 구조로 개선
+- `GoogleTtsPlayer`, `SamsungTtsPlayer` 등은 BaseTtsPlayer 상속으로 단순화
+- 중복 코드 제거 및 네이밍 일관성 확보
 
-## 3단계: Presentation Layer 정리
+### 2.3 테스트 코드 및 빌드 오류 수정
+- AudioFileManager 인터페이스 변경에 맞춰 테스트 코드 전체 수정
+- 불필요한 중복 메서드 제거 및 시그니처 통일
+- Lint/빌드 오류 수정
+
+## 3단계: Presentation Layer 정리 🔄 **다음 단계**
 
 ### 3.1 ViewModel 정리
 - **목표**: ViewModel의 책임과 상태 관리 정리
@@ -66,4 +68,5 @@
 - ✅ 1.1 Entity 정리 완료
 - ✅ 1.2 Repository 정리 완료
 - ✅ 1.3 UseCase 정리 완료
-- 🔄 2단계 Data Layer 정리 (다음 단계) 
+- ✅ 2단계 Data Layer 정리 완료
+- 🔄 3단계 Presentation Layer 정리 (다음 단계) 
