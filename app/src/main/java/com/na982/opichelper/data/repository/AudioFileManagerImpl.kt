@@ -252,7 +252,17 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                             bufferInfo.offset = 0
                             bufferInfo.size = sampleSize
                             bufferInfo.presentationTimeUs = extractor.sampleTime + totalDuration
-                            bufferInfo.flags = extractor.sampleFlags
+                            
+                            // MediaExtractor의 플래그를 MediaCodec의 플래그로 변환
+                            val extractorFlags = extractor.sampleFlags
+                            var codecFlags = 0
+                            if (extractorFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
+                                codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_KEY_FRAME
+                            }
+                            if (extractorFlags and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME != 0) {
+                                codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
+                            }
+                            bufferInfo.flags = codecFlags
 
                             muxer.writeSampleData(audioTrackIndex, buffer, bufferInfo)
                             extractor.advance()

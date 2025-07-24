@@ -44,7 +44,24 @@ data class MainUiState(
     val memorizeLevels: List<String> = emptyList(),
     val selectedMemorizeLevel: String = "",
     val hasMergedAudioFile: Boolean = false, // 병합된 오디오 파일 존재 여부 추가
-    val isMergedAudioPlaying: Boolean = false // 병합된 오디오 재생 상태 추가
+    val isMergedAudioPlaying: Boolean = false, // 병합된 오디오 재생 상태 추가
+    val isAnswerCardFlipped: Boolean = false, // 답변 카드 뒤집기 상태
+    val hasRecordingFile: Boolean = false, // 현재 스크립트의 녹음 파일 존재 여부
+    val currentKoreanTtsService: String = "", // 현재 사용 중인 한글 TTS 서비스 이름
+    val isMemorizeTestRunning: Boolean = false, // 암기 테스트 실행 중 여부
+    val isFullMemorizationMode: Boolean = false, // 통암기 모드 활성화 여부
+    val fullMemorizationHighlightIndex: Int? = null, // 통암기 하이라이트 인덱스
+    val isFullMemorizationRecording: Boolean = false, // 통암기 녹음 상태
+    val isFullMemorizationPlaying: Boolean = false, // 통암기 재생 상태
+    val hasFullMemorizationRecording: Boolean = false, // 통암기 녹음 파일 존재 여부
+    val questionHighlightIndex: Int? = null, // TTS 재생 상태
+    val answerHighlightIndex: Int? = null, // TTS 재생 상태
+    val answerKoHighlightIndex: Int? = null, // TTS 재생 상태
+    val recordingHighlightIndex: Int? = null, // TTS 재생 상태
+    val isPlaying: Boolean = false, // TTS 재생 상태
+    val isQuestionPlaying: Boolean = false, // TTS 재생 상태
+    val isAnswerPlaying: Boolean = false, // TTS 재생 상태
+    val hasProgress: Boolean = false // 진행 상태
 )
 
 @HiltViewModel
@@ -65,65 +82,11 @@ class MainViewModel @Inject constructor(
     private var prefs: SharedPreferences? = null
     private val PREF_KEY_LAST_MEMORIZE_LEVEL = "last_memorize_level"
 
-    // TtsPlaybackController에서 하이라이트 상태를 가져옴
-    val questionHighlightIndex: StateFlow<Int?> = ttsPlaybackController.questionHighlightIndex
-    val answerHighlightIndex: StateFlow<Int?> = ttsPlaybackController.answerHighlightIndex
-    val answerKoHighlightIndex: StateFlow<Int?> = ttsPlaybackController.answerKoHighlightIndex
-    val recordingHighlightIndex: StateFlow<Int?> = ttsPlaybackController.recordingHighlightIndex
-    
-    // 답변 카드 뒤집기 상태
-    private val _isAnswerCardFlipped = MutableStateFlow(false)
-    val isAnswerCardFlipped: StateFlow<Boolean> = _isAnswerCardFlipped
-    
-    // 현재 스크립트의 녹음 파일 존재 여부
-    private val _hasRecordingFile = MutableStateFlow(false)
-    val hasRecordingFile: StateFlow<Boolean> = _hasRecordingFile
-    
-    // 현재 사용 중인 한글 TTS 서비스 이름
-    private val _currentKoreanTtsService = MutableStateFlow("")
-    val currentKoreanTtsService: StateFlow<String> = _currentKoreanTtsService
-
-    private val _memorizeLevels = MutableStateFlow<List<String>>(emptyList())
-    val memorizeLevels: StateFlow<List<String>> = _memorizeLevels
-
-    private val _selectedMemorizeLevel = MutableStateFlow("")
-    val selectedMemorizeLevel: StateFlow<String> = _selectedMemorizeLevel
-
-    private val _isMemorizeTestRunning = MutableStateFlow(false)
-    val isMemorizeTestRunning: StateFlow<Boolean> = _isMemorizeTestRunning
-
-    // TtsPlaybackController에서 재생 상태를 가져옴
-    val isPlaying: StateFlow<Boolean> = ttsPlaybackController.isPlaying
-    val isQuestionPlaying: StateFlow<Boolean> = ttsPlaybackController.isQuestionPlaying
-    val isAnswerPlaying: StateFlow<Boolean> = ttsPlaybackController.isAnswerPlaying
-
-    // ProgressTracker에서 진행 상태를 가져옴
-    val hasProgress: StateFlow<Boolean> = progressTracker.hasProgress
-
     // UseCase 실행 Job 저장
     private var currentUseCaseJob: Job? = null
     
     // 현재 진행 중인 문장 인덱스 추적
     private var _currentSentenceIndex = 0
-    
-    // 통암기 관련 상태
-    private val _isFullMemorizationMode = MutableStateFlow(false)
-    val isFullMemorizationMode: StateFlow<Boolean> = _isFullMemorizationMode.asStateFlow()
-    
-    // 통암기 하이라이트 인덱스
-    private val _fullMemorizationHighlightIndex = MutableStateFlow<Int?>(null)
-    val fullMemorizationHighlightIndex: StateFlow<Int?> = _fullMemorizationHighlightIndex.asStateFlow()
-    
-    // 통암기 녹음/재생 상태
-    private val _isFullMemorizationRecording = MutableStateFlow(false)
-    val isFullMemorizationRecording: StateFlow<Boolean> = _isFullMemorizationRecording.asStateFlow()
-    
-    private val _isFullMemorizationPlaying = MutableStateFlow(false)
-    val isFullMemorizationPlaying: StateFlow<Boolean> = _isFullMemorizationPlaying.asStateFlow()
-    
-    // 통암기 녹음 파일 존재 여부
-    private val _hasFullMemorizationRecording = MutableStateFlow(false)
-    val hasFullMemorizationRecording: StateFlow<Boolean> = _hasFullMemorizationRecording.asStateFlow()
 
     init {
         prefs = getApplication<Application>().getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
@@ -144,7 +107,6 @@ class MainViewModel @Inject constructor(
         
         // QaDataManager의 상태를 UI 상태와 동기화
         viewModelScope.launch {
-            // QA 데이터 상태를 UI 상태로 복사
             qaDataManager.currentQaItem.collect { qaItem ->
                 _uiState.value = _uiState.value.copy(currentQaItem = qaItem)
             }
@@ -175,8 +137,8 @@ class MainViewModel @Inject constructor(
         }
         
         // TTS 오케스트레이터 설정
-        val application = getApplication<Application>() as com.na982.opichelper.OPicHelperApplication
-        setTtsOrchestrator(application.ttsOrchestrator)
+        val app = getApplication<Application>() as com.na982.opichelper.OPicHelperApplication
+        setTtsOrchestrator(app.ttsOrchestrator)
         
         // 앱 시작 시 오래된 녹음 파일들 정리
         viewModelScope.launch {
@@ -186,14 +148,55 @@ class MainViewModel @Inject constructor(
             // 초기 녹음 파일 존재 여부 확인
             checkRecordingFileExists()
         }
+
+        // 각 StateFlow/MutableStateFlow의 collect를 통해 _uiState를 갱신
+        viewModelScope.launch {
+            ttsPlaybackController.questionHighlightIndex.collect { idx ->
+                _uiState.value = _uiState.value.copy(questionHighlightIndex = idx)
+            }
+        }
+        viewModelScope.launch {
+            ttsPlaybackController.answerHighlightIndex.collect { idx ->
+                _uiState.value = _uiState.value.copy(answerHighlightIndex = idx)
+            }
+        }
+        viewModelScope.launch {
+            ttsPlaybackController.answerKoHighlightIndex.collect { idx ->
+                _uiState.value = _uiState.value.copy(answerKoHighlightIndex = idx)
+            }
+        }
+        viewModelScope.launch {
+            ttsPlaybackController.recordingHighlightIndex.collect { idx ->
+                _uiState.value = _uiState.value.copy(recordingHighlightIndex = idx)
+            }
+        }
+        viewModelScope.launch {
+            ttsPlaybackController.isPlaying.collect { playing ->
+                _uiState.value = _uiState.value.copy(isPlaying = playing)
+            }
+        }
+        viewModelScope.launch {
+            ttsPlaybackController.isQuestionPlaying.collect { playing ->
+                _uiState.value = _uiState.value.copy(isQuestionPlaying = playing)
+            }
+        }
+        viewModelScope.launch {
+            ttsPlaybackController.isAnswerPlaying.collect { playing ->
+                _uiState.value = _uiState.value.copy(isAnswerPlaying = playing)
+            }
+        }
+        viewModelScope.launch {
+            progressTracker.hasProgress.collect { has ->
+                _uiState.value = _uiState.value.copy(hasProgress = has)
+            }
+        }
     }
 
     fun setMemorizeLevel(level: String) {
-        _selectedMemorizeLevel.value = level
-        _uiState.value = _uiState.value.copy(selectedMemorizeLevel = level)
-        
-        // 통암기 모드 설정
-        _isFullMemorizationMode.value = (level == "통암기")
+        _uiState.value = _uiState.value.copy(
+            selectedMemorizeLevel = level,
+            isFullMemorizationMode = (level == "통암기")
+        )
         
         // 프리퍼런스에 암기 레벨 저장
         prefs?.edit()?.putString(PREF_KEY_LAST_MEMORIZE_LEVEL, level)?.apply()
@@ -201,7 +204,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun updateKoreanTtsServiceName(serviceName: String) {
-        _currentKoreanTtsService.value = serviceName
+        _uiState.value = _uiState.value.copy(currentKoreanTtsService = serviceName)
         Log.d("MainViewModel", "한글 TTS 서비스 업데이트: $serviceName")
     }
     
@@ -226,8 +229,8 @@ class MainViewModel @Inject constructor(
 
     fun playQuestion(question: String) {
         // 암기 테스트 중지
-        if (_isMemorizeTestRunning.value) {
-            _isMemorizeTestRunning.value = false
+        if (_uiState.value.isMemorizeTestRunning) {
+            _uiState.value = _uiState.value.copy(isMemorizeTestRunning = false)
             setAnswerCardFlipped(false)
             Log.d("MainViewModel", "암기 테스트 중지됨 (질문 재생 시작)")
         }
@@ -243,8 +246,8 @@ class MainViewModel @Inject constructor(
 
     fun playAnswer(answer: String) {
         // 암기 테스트 중지
-        if (_isMemorizeTestRunning.value) {
-            _isMemorizeTestRunning.value = false
+        if (_uiState.value.isMemorizeTestRunning) {
+            _uiState.value = _uiState.value.copy(isMemorizeTestRunning = false)
             setAnswerCardFlipped(false)
             Log.d("MainViewModel", "암기 테스트 중지됨 (답변 재생 시작)")
         }
@@ -261,15 +264,10 @@ class MainViewModel @Inject constructor(
     fun stopAllTts() {
         viewModelScope.launch {
             ttsPlaybackController.stopTts()
-            _isMemorizeTestRunning.value = false
+            _uiState.value = _uiState.value.copy(isMemorizeTestRunning = false)
             setAnswerCardFlipped(false)
         }
     }
-
-    // Hilt로 주입되므로 별도 설정 불필요
-    // fun setAudioPlayer(player: AudioPlayer) {
-    //     audioPlayer = player
-    // }
 
     fun getCurrentMergedAudioFile(): java.io.File? {
         return audioFileManager.getLatestMergedAudioFile()
@@ -288,11 +286,9 @@ class MainViewModel @Inject constructor(
     }
     
     fun setAnswerCardFlipped(isFlipped: Boolean) {
-        _isAnswerCardFlipped.value = isFlipped
+        _uiState.value = _uiState.value.copy(isAnswerCardFlipped = isFlipped)
         Log.d("MainViewModel", "답변 카드 뒤집기 상태 변경: $isFlipped")
     }
-    
-
     
     fun checkRecordingFileExists() {
         viewModelScope.launch {
@@ -301,10 +297,10 @@ class MainViewModel @Inject constructor(
                 val currentIndex = qaDataManager.getCurrentIndex()
                 val scriptId = "${currentItem.category}_$currentIndex"
                 val hasFile = audioFileManager.hasRecordingFile(scriptId)
-                _hasRecordingFile.value = hasFile
+                _uiState.value = _uiState.value.copy(hasRecordingFile = hasFile)
                 Log.d("MainViewModel", "스크립트 $scriptId 녹음 파일 존재 여부: $hasFile")
             } else {
-                _hasRecordingFile.value = false
+                _uiState.value = _uiState.value.copy(hasRecordingFile = false)
             }
         }
     }
@@ -328,8 +324,8 @@ class MainViewModel @Inject constructor(
                 // 3. 현재 상태 저장 (암기 테스트 중단 전에)
                 val currentCategory = qaDataManager.currentCategory.value
                 val currentIndex = qaDataManager.getCurrentIndex()
-                val selectedMemorizeLevel = _selectedMemorizeLevel.value
-                val isMemorizeTestRunning = _isMemorizeTestRunning.value
+                val selectedMemorizeLevel = _uiState.value.selectedMemorizeLevel
+                val isMemorizeTestRunning = _uiState.value.isMemorizeTestRunning
                 
                 // 현재 활성화된 스크립트의 진행 상황 업데이트
                 val currentItem = qaDataManager.getCurrentQaItem()
@@ -356,8 +352,8 @@ class MainViewModel @Inject constructor(
                 progressTracker.persistChangedProgress()
                 
                 // 4. 암기 테스트 중단 (상태 저장 후)
-                if (_isMemorizeTestRunning.value) {
-                    _isMemorizeTestRunning.value = false
+                if (_uiState.value.isMemorizeTestRunning) {
+                    _uiState.value = _uiState.value.copy(isMemorizeTestRunning = false)
                     setAnswerCardFlipped(false)
                     ttsPlaybackController.clearHighlight()
                     Log.d("MainViewModel", "앱 종료 시 암기 테스트 중단")
@@ -377,10 +373,10 @@ class MainViewModel @Inject constructor(
         Log.d("MainViewModel", "백그라운드로 이동 - UseCase 중단")
         
         // 암기 테스트 실행 중이면 중단
-        if (_isMemorizeTestRunning.value) {
+        if (_uiState.value.isMemorizeTestRunning) {
             viewModelScope.launch {
                 ttsPlaybackController.stopTts()
-                _isMemorizeTestRunning.value = false
+                _uiState.value = _uiState.value.copy(isMemorizeTestRunning = false)
                 setAnswerCardFlipped(false)
                 ttsPlaybackController.clearHighlight()
                 Log.d("MainViewModel", "백그라운드 이동 시 암기 테스트 중단")
@@ -396,15 +392,12 @@ class MainViewModel @Inject constructor(
         // 포그라운드로 복귀 시 상태 확인 (필요시 정리)
     }
 
-
-
     private fun loadMemorizeLevel() {
         val levels = listOf(
             "반복 듣기",
             "영작 테스트", 
             "통암기"
         )
-        _memorizeLevels.value = levels
         _uiState.value = _uiState.value.copy(memorizeLevels = levels)
         
         // 저장된 암기 레벨 복원
@@ -416,8 +409,6 @@ class MainViewModel @Inject constructor(
             setMemorizeLevel(levels.first())
         }
     }
-
-
 
     fun selectCategory(category: String) {
         qaDataManager.selectCategory(category)
@@ -456,7 +447,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // 이미 암기 테스트가 실행 중이면 종료
-                if (_isMemorizeTestRunning.value) {
+                if (_uiState.value.isMemorizeTestRunning) {
                     Log.d("MainViewModel", "암기 테스트 종료")
                     
                     // 기존 UseCase 중지
@@ -464,8 +455,13 @@ class MainViewModel @Inject constructor(
                     currentUseCaseJob = null
                     
                     // 상태 초기화
-                    _isMemorizeTestRunning.value = false
-                    _isFullMemorizationMode.value = false
+                    _uiState.value = _uiState.value.copy(
+                        isMemorizeTestRunning = false,
+                        isFullMemorizationMode = false,
+                        fullMemorizationHighlightIndex = null,
+                        isFullMemorizationRecording = false,
+                        isFullMemorizationPlaying = false
+                    )
                     setAnswerCardFlipped(false)
                     
                     // TTS 중지
@@ -473,13 +469,12 @@ class MainViewModel @Inject constructor(
                     
                     // 하이라이트 초기화
                     ttsPlaybackController.clearHighlight()
-                    _fullMemorizationHighlightIndex.value = null
                     
                     return@launch
                 }
                 
                 // 암기 테스트 시작
-                val selectedLevel = _selectedMemorizeLevel.value
+                val selectedLevel = _uiState.value.selectedMemorizeLevel
                 Log.d("MainViewModel", "암기 테스트 시작: $selectedLevel")
                 
                 when (selectedLevel) {
@@ -499,7 +494,7 @@ class MainViewModel @Inject constructor(
                 
             } catch (e: Exception) {
                 Log.e("MainViewModel", "암기 테스트 시작 실패", e)
-                _isMemorizeTestRunning.value = false
+                _uiState.value = _uiState.value.copy(isMemorizeTestRunning = false)
             }
         }
     }
@@ -514,8 +509,10 @@ class MainViewModel @Inject constructor(
                 currentUseCaseJob?.cancel()
                 
                 // 통암기 모드 활성화
-                _isFullMemorizationMode.value = true
-                _isMemorizeTestRunning.value = true
+                _uiState.value = _uiState.value.copy(
+                    isFullMemorizationMode = true,
+                    isMemorizeTestRunning = true
+                )
                 
                 // 카드 뒤집기 상태 초기화
                 setAnswerCardFlipped(false)
@@ -532,7 +529,7 @@ class MainViewModel @Inject constructor(
                         category = category,
                         scriptIndex = scriptIndex,
                         onRecordingStateChange = { isRecording ->
-                            _isFullMemorizationRecording.value = isRecording
+                            _uiState.value = _uiState.value.copy(isFullMemorizationRecording = isRecording)
                             Log.d("MainViewModel", "통암기 녹음 상태 변경: $isRecording")
                             
                             // 녹음 종료 시 파일 존재 여부 업데이트
@@ -543,11 +540,11 @@ class MainViewModel @Inject constructor(
                             }
                         },
                         onPlayingStateChange = { isPlaying ->
-                            _isFullMemorizationPlaying.value = isPlaying
+                            _uiState.value = _uiState.value.copy(isFullMemorizationPlaying = isPlaying)
                             Log.d("MainViewModel", "통암기 재생 상태 변경: $isPlaying")
                         },
                         onHighlight = { index ->
-                            _fullMemorizationHighlightIndex.value = index
+                            _uiState.value = _uiState.value.copy(fullMemorizationHighlightIndex = index)
                         }
                     )
                 }
@@ -556,8 +553,10 @@ class MainViewModel @Inject constructor(
                 
             } catch (e: Exception) {
                 Log.e("MainViewModel", "통암기 모드 시작 실패", e)
-                _isFullMemorizationMode.value = false
-                _isMemorizeTestRunning.value = false
+                _uiState.value = _uiState.value.copy(
+                    isFullMemorizationMode = false,
+                    isMemorizeTestRunning = false
+                )
             }
         }
     }
@@ -571,11 +570,11 @@ class MainViewModel @Inject constructor(
                 fullMemorizationService.stopRecording()
                 
                 // 녹음 상태만 비활성화 (통암기 모드는 유지)
-                _isFullMemorizationRecording.value = false
-                _isMemorizeTestRunning.value = false
-                
-                // 하이라이트 초기화
-                _fullMemorizationHighlightIndex.value = null
+                _uiState.value = _uiState.value.copy(
+                    isFullMemorizationRecording = false,
+                    isMemorizeTestRunning = false,
+                    fullMemorizationHighlightIndex = null
+                )
                 
                 Log.d("MainViewModel", "통암기 녹음 종료")
                 
@@ -596,10 +595,10 @@ class MainViewModel @Inject constructor(
                 
                 fullMemorizationService.playRecording(
                     onPlayingStateChange = { isPlaying ->
-                        // 재생 상태는 UseCase 내부에서 관리
+                        _uiState.value = _uiState.value.copy(isFullMemorizationPlaying = isPlaying)
                     },
                     onHighlight = { index ->
-                        _fullMemorizationHighlightIndex.value = index
+                        _uiState.value = _uiState.value.copy(fullMemorizationHighlightIndex = index)
                     }
                 )
                 
@@ -607,7 +606,7 @@ class MainViewModel @Inject constructor(
                 
             } catch (e: Exception) {
                 Log.e("MainViewModel", "통암기 녹음 재생 실패", e)
-                _fullMemorizationHighlightIndex.value = null
+                _uiState.value = _uiState.value.copy(fullMemorizationHighlightIndex = null)
             }
         }
     }
@@ -619,7 +618,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 fullMemorizationService.stopPlaying()
-                _fullMemorizationHighlightIndex.value = null
+                _uiState.value = _uiState.value.copy(fullMemorizationHighlightIndex = null)
                 
                 Log.d("MainViewModel", "통암기 재생 중지")
                 
@@ -640,8 +639,8 @@ class MainViewModel @Inject constructor(
      * 통암기 녹음 파일 존재 여부 업데이트
      */
     private suspend fun updateFullMemorizationRecordingStatus() {
-                    val hasRecording = fullMemorizationService.hasRecordingFile()
-        _hasFullMemorizationRecording.value = hasRecording
+        val hasRecording = fullMemorizationService.hasRecordingFile()
+        _uiState.value = _uiState.value.copy(hasFullMemorizationRecording = hasRecording)
         Log.d("MainViewModel", "통암기 녹음 파일 존재 여부 업데이트: $hasRecording")
     }
     
@@ -666,7 +665,7 @@ class MainViewModel @Inject constructor(
     private fun startRepeatListening() {
         viewModelScope.launch {
             try {
-                _isMemorizeTestRunning.value = true
+                _uiState.value = _uiState.value.copy(isMemorizeTestRunning = true)
                 setAnswerCardFlipped(false)
                 
                 val currentItem = qaDataManager.getCurrentQaItem()
@@ -679,7 +678,7 @@ class MainViewModel @Inject constructor(
                             onHighlight = { index ->
                                 if (index != null) {
                                     // 현재 카드 상태에 따라 한글 또는 영문 하이라이트 설정
-                                    if (_isAnswerCardFlipped.value) {
+                                    if (_uiState.value.isAnswerCardFlipped) {
                                         // 카드가 한글로 뒤집혀 있으면 한글 하이라이트
                                         ttsPlaybackController.setAnswerKoHighlightIndex(index)
                                         Log.d("MainViewModel", "반복 듣기: 한글 하이라이트 설정: $index")
@@ -704,7 +703,7 @@ class MainViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("MainViewModel", "반복 듣기 시작 실패", e)
-                _isMemorizeTestRunning.value = false
+                _uiState.value = _uiState.value.copy(isMemorizeTestRunning = false)
             }
         }
     }
@@ -715,7 +714,7 @@ class MainViewModel @Inject constructor(
     private fun startEnglishWritingTest() {
         viewModelScope.launch {
             try {
-                _isMemorizeTestRunning.value = true
+                _uiState.value = _uiState.value.copy(isMemorizeTestRunning = true)
                 setAnswerCardFlipped(false)
                 
                 val currentItem = qaDataManager.getCurrentQaItem()
@@ -766,9 +765,8 @@ class MainViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("MainViewModel", "영작 테스트 시작 실패", e)
-                _isMemorizeTestRunning.value = false
+                _uiState.value = _uiState.value.copy(isMemorizeTestRunning = false)
             }
         }
     }
-
 } 

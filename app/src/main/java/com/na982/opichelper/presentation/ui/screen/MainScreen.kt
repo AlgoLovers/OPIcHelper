@@ -37,20 +37,7 @@ fun MainScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    // PlaybackState 사용
-    val playbackState = remember { PlaybackState() }
     val context = LocalContext.current
-    
-    // TTS 서비스 관련 상태
-    var ttsPlayer by remember { mutableStateOf<TtsPlayer?>(null) }
-    
-    // 하이라이트 인덱스 상태 관리
-    val questionHighlightIndex by viewModel.questionHighlightIndex.collectAsState()
-    val answerHighlightIndex by viewModel.answerHighlightIndex.collectAsState()
-    val answerKoHighlightIndex by viewModel.answerKoHighlightIndex.collectAsState(initial = null)
-    val recordingHighlightIndex by viewModel.recordingHighlightIndex.collectAsState(initial = null)
-    val hasProgress by viewModel.hasProgress.collectAsState(initial = false)
 
     // 백버튼 시 녹음 종료 (녹음 상태는 RecordingButton에서 관리)
     BackHandler(enabled = false) {
@@ -70,7 +57,7 @@ fun MainScreen(
         } else 0
     }
     val totalCount = itemsInCategory.size
-    
+
     Log.d("MainScreen", "Current index: $currentIndex/$totalCount, category: $currentCategory")
 
     // TTS 서비스 바인딩
@@ -79,38 +66,11 @@ fun MainScreen(
             viewModel.updateKoreanTtsServiceName(serviceName)
         }
     }
-    
+
     DisposableEffect(Unit) {
         onDispose {
             viewModel.unbindTtsService(context)
         }
-    }
-
-    val memorizeLevels by viewModel.memorizeLevels.collectAsState()
-    val selectedMemorizeLevel by viewModel.selectedMemorizeLevel.collectAsState()
-    val isPlaying by viewModel.isPlaying.collectAsState()
-    val isQuestionPlaying by viewModel.isQuestionPlaying.collectAsState()
-    val isAnswerPlaying by viewModel.isAnswerPlaying.collectAsState()
-    val isAnswerCardFlipped by viewModel.isAnswerCardFlipped.collectAsState()
-    val hasRecordingFile by viewModel.hasRecordingFile.collectAsState()
-    val currentKoreanTtsService by viewModel.currentKoreanTtsService.collectAsState()
-    
-    // 통암기 관련 상태
-    val isFullMemorizationMode by viewModel.isFullMemorizationMode.collectAsState()
-    val fullMemorizationHighlightIndex by viewModel.fullMemorizationHighlightIndex.collectAsState()
-    val isMemorizeTestRunning by viewModel.isMemorizeTestRunning.collectAsState()
-    val isFullMemorizationRecording by viewModel.isFullMemorizationRecording.collectAsState()
-    val isFullMemorizationPlaying by viewModel.isFullMemorizationPlaying.collectAsState()
-    val hasFullMemorizationRecording by viewModel.hasFullMemorizationRecording.collectAsState()
-
-    val audioPlayer = remember { 
-        // Hilt를 통해 주입받은 AudioPlayer 사용
-        // 여기서는 null로 설정하고 ViewModel에서 처리
-        null as AudioPlayer?
-    }
-    LaunchedEffect(Unit) {
-        // AudioPlayer는 ViewModel에서 Hilt를 통해 주입받으므로 여기서는 설정하지 않음
-        // 병합된 오디오 상태는 ViewModel에서 관리
     }
 
     Column(
@@ -124,7 +84,7 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 한글 TTS 서비스 정보 표시
-        if (currentKoreanTtsService.isNotEmpty()) {
+        if (uiState.currentKoreanTtsService.isNotEmpty()) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,17 +106,17 @@ fun MainScreen(
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = currentKoreanTtsService,
+                        text = uiState.currentKoreanTtsService,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
         }
-        
+
         // 앱 제목
         AppTitle()
-        
+
         // 카테고리/암기레벨 선택 영역 (1:1 비율 Row)
         Row(
             modifier = Modifier
@@ -167,22 +127,18 @@ fun MainScreen(
             CategorySelector(
                 selectedCategory = uiState.currentCategory ?: "",
                 categories = listOf(
-                    "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", 
+                    "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷",
                     "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
                 ),
-                onCategorySelected = { 
+                onCategorySelected = {
                     viewModel.stopAllTts()
-                    viewModel.selectCategory(it) 
-                },
-                playbackState = playbackState,
-                onHighlightReset = {
-                    // 하이라이트 초기화는 TtsPlaybackController에서 자동으로 처리됨
+                    viewModel.selectCategory(it)
                 },
                 modifier = Modifier.weight(1f)
             )
             MemorizeLevelSelector(
-                levels = memorizeLevels,
-                selectedLevel = selectedMemorizeLevel,
+                levels = uiState.memorizeLevels,
+                selectedLevel = uiState.selectedMemorizeLevel,
                 onLevelSelected = { viewModel.setMemorizeLevel(it) },
                 modifier = Modifier.weight(1f)
             )
@@ -214,11 +170,11 @@ fun MainScreen(
                 QuestionCard(
                     currentQuestion = uiState.currentQaItem!!.questionEn,
                     currentQuestionKo = uiState.currentQaItem!!.questionKo,
-                    highlightIndex = questionHighlightIndex,
+                    highlightIndex = uiState.questionHighlightIndex,
                     currentIndex = currentIndex,
                     totalCount = totalCount
                 )
-                
+
                 // 질문 카드 바로 아래 버튼들
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -226,7 +182,7 @@ fun MainScreen(
                 ) {
                     QuestionPlayButton(
                         currentQuestion = uiState.currentQaItem!!.questionEn,
-                        isPlaying = isQuestionPlaying,
+                        isPlaying = uiState.isQuestionPlaying,
                         onPlayClick = {
                             viewModel.playQuestion(uiState.currentQaItem!!.questionEn)
                         },
@@ -235,12 +191,12 @@ fun MainScreen(
                         },
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     // 암기 테스트 버튼
-                    if (isFullMemorizationMode) {
+                    if (uiState.isFullMemorizationMode) {
                         // 통암기 모드일 때는 전용 녹음 버튼 사용
                         FullMemorizationRecordingButton(
-                            isRecording = isFullMemorizationRecording,
+                            isRecording = uiState.isFullMemorizationRecording,
                             onStartRecording = {
                                 viewModel.startFullMemorizationMode()
                             },
@@ -259,33 +215,31 @@ fun MainScreen(
                         ) {
                             Text(
                                 text = when {
-                                    isMemorizeTestRunning -> "암기 테스트 종료"
-                                    hasProgress -> "암기 테스트 재개"
+                                    uiState.isMemorizeTestRunning -> "암기 테스트 종료"
+                                    uiState.hasProgress -> "암기 테스트 재개"
                                     else -> "암기 테스트"
                                 }
                             )
                         }
                     }
                 }
-                
 
-                
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // 답변 카드 (통암기 모드가 아니거나 녹음 중이 아닐 때만 표시)
-                if (!isFullMemorizationMode || !isFullMemorizationRecording) {
+                if (!uiState.isFullMemorizationMode || !uiState.isFullMemorizationRecording) {
                     AnswerCard(
                         currentAnswer = uiState.currentQaItem!!.answerEn,
                         currentAnswerKo = uiState.currentQaItem!!.answerKo,
-                        highlightIndex = if (isFullMemorizationMode && isFullMemorizationPlaying) fullMemorizationHighlightIndex else answerHighlightIndex,
-                        answerKoHighlightIndex = answerKoHighlightIndex,
-                        recordingHighlightIndex = recordingHighlightIndex, // TtsPlaybackController에서 관리
-                        isFlipped = isAnswerCardFlipped
+                        highlightIndex = if (uiState.isFullMemorizationMode && uiState.isFullMemorizationPlaying) uiState.fullMemorizationHighlightIndex else uiState.answerHighlightIndex,
+                        answerKoHighlightIndex = uiState.answerKoHighlightIndex,
+                        recordingHighlightIndex = uiState.recordingHighlightIndex,
+                        isFlipped = uiState.isAnswerCardFlipped
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // 답변 아래 버튼들
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -293,7 +247,7 @@ fun MainScreen(
                 ) {
                     AnswerPlayButton(
                         currentAnswer = uiState.currentQaItem!!.answerEn,
-                        isPlaying = isAnswerPlaying,
+                        isPlaying = uiState.isAnswerPlaying,
                         onPlayClick = {
                             viewModel.playAnswer(uiState.currentQaItem!!.answerEn)
                         },
@@ -302,19 +256,19 @@ fun MainScreen(
                         },
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     // 통암기 모드일 때 녹음 재생 버튼
-                    if (isFullMemorizationMode) {
-                        if (hasFullMemorizationRecording) {
+                    if (uiState.isFullMemorizationMode) {
+                        if (uiState.hasFullMemorizationRecording) {
                             Button(
                                 onClick = {
                                     viewModel.playFullMemorizationRecording()
                                 },
-                                enabled = !isFullMemorizationPlaying,
+                                enabled = !uiState.isFullMemorizationPlaying,
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(
-                                    text = if (isFullMemorizationPlaying) "재생 중..." else "녹음 재생",
+                                    text = if (uiState.isFullMemorizationPlaying) "재생 중..." else "녹음 재생",
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
@@ -328,19 +282,19 @@ fun MainScreen(
                             onClick = {
                                 viewModel.playMergedAudioFile()
                             },
-                            enabled = selectedMemorizeLevel == "영작 테스트" && hasRecordingFile && !playbackState.isMergedAudioPlaying,
+                            enabled = uiState.selectedMemorizeLevel == "영작 테스트" && uiState.hasRecordingFile && !uiState.isMergedAudioPlaying,
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = if (playbackState.isMergedAudioPlaying) "재생 중..." else "녹음 재생",
+                                text = if (uiState.isMergedAudioPlaying) "재생 중..." else "녹음 재생",
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // 네비게이션 섹션
                 NavigationSection(
                     onPreviousQuestion = {
@@ -351,17 +305,11 @@ fun MainScreen(
                         viewModel.stopAllTts()
                         viewModel.nextQaItem()
                     },
-                    playbackState = playbackState,
-                    onHighlightReset = {
-                        // 하이라이트 초기화는 TtsPlaybackController에서 자동으로 처리됨
-                    }
+                    modifier = Modifier.fillMaxWidth()
                 )
-
             }
         }
     }
-    
-                    // 리소스 해제는 TtsPlaybackController에서 자동으로 처리됨
 }
 
  
