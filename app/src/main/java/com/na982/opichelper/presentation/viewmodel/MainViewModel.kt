@@ -18,10 +18,10 @@ import com.na982.opichelper.data.audio.AudioRecorderImpl
 import com.na982.opichelper.domain.audio.AudioRecorder
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.domain.usecase.MemorizeTestUseCase
-import com.na982.opichelper.domain.usecase.RepeatListeningUseCase
-import com.na982.opichelper.domain.usecase.EnglishWritingTestUseCase
-import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
+
+import com.na982.opichelper.domain.usecase.RepeatListeningService
+import com.na982.opichelper.domain.usecase.EnglishWritingTestService
+import com.na982.opichelper.domain.usecase.FullMemorizationService
 import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.data.repository.AudioFileRepositoryImpl
@@ -30,7 +30,7 @@ import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.audio.TtsPlaybackController
-import com.na982.opichelper.domain.usecase.MemorizeTestState
+
 import com.na982.opichelper.domain.repository.AppExitState
 import kotlinx.coroutines.Job
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
@@ -54,7 +54,9 @@ class MainViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
     private val ttsPlaybackController: TtsPlaybackController,
     private val progressTracker: MemorizeTestProgressTracker,
-    private val fullMemorizationUseCase: FullMemorizationUseCase,
+    private val fullMemorizationService: FullMemorizationService,
+    private val repeatListeningService: RepeatListeningService,
+    private val englishWritingTestService: EnglishWritingTestService,
     application: Application
 ) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(MainUiState())
@@ -526,7 +528,7 @@ class MainViewModel @Inject constructor(
                     val category = qaDataManager.getCurrentCategory() ?: ""
                     val scriptIndex = qaDataManager.getCurrentIndex()
                     
-                    fullMemorizationUseCase.startFullMemorization(
+                    fullMemorizationService.startFullMemorization(
                         category = category,
                         scriptIndex = scriptIndex,
                         onRecordingStateChange = { isRecording ->
@@ -566,7 +568,7 @@ class MainViewModel @Inject constructor(
     fun stopFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                fullMemorizationUseCase.stopRecording()
+                fullMemorizationService.stopRecording()
                 
                 // 녹음 상태만 비활성화 (통암기 모드는 유지)
                 _isFullMemorizationRecording.value = false
@@ -592,7 +594,7 @@ class MainViewModel @Inject constructor(
                 // 카드를 영문으로 뒤집기
                 setAnswerCardFlipped(false)
                 
-                fullMemorizationUseCase.playRecording(
+                fullMemorizationService.playRecording(
                     onPlayingStateChange = { isPlaying ->
                         // 재생 상태는 UseCase 내부에서 관리
                     },
@@ -616,7 +618,7 @@ class MainViewModel @Inject constructor(
     fun stopFullMemorizationPlaying() {
         viewModelScope.launch {
             try {
-                fullMemorizationUseCase.stopPlaying()
+                fullMemorizationService.stopPlaying()
                 _fullMemorizationHighlightIndex.value = null
                 
                 Log.d("MainViewModel", "통암기 재생 중지")
@@ -631,14 +633,14 @@ class MainViewModel @Inject constructor(
      * 통암기 녹음 파일 존재 여부 확인
      */
     suspend fun hasFullMemorizationRecording(): Boolean {
-        return fullMemorizationUseCase.hasRecordingFile()
+        return fullMemorizationService.hasRecordingFile()
     }
     
     /**
      * 통암기 녹음 파일 존재 여부 업데이트
      */
     private suspend fun updateFullMemorizationRecordingStatus() {
-        val hasRecording = fullMemorizationUseCase.hasRecordingFile()
+                    val hasRecording = fullMemorizationService.hasRecordingFile()
         _hasFullMemorizationRecording.value = hasRecording
         Log.d("MainViewModel", "통암기 녹음 파일 존재 여부 업데이트: $hasRecording")
     }
@@ -649,7 +651,7 @@ class MainViewModel @Inject constructor(
     fun deleteFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                fullMemorizationUseCase.deleteRecordingFile()
+                fullMemorizationService.deleteRecordingFile()
                 Log.d("MainViewModel", "통암기 녹음 파일 삭제")
                 
             } catch (e: Exception) {
@@ -669,37 +671,36 @@ class MainViewModel @Inject constructor(
                 
                 val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
-                    Log.d("MainViewModel", "반복 듣기 UseCase 실행")
-                    val useCase = RepeatListeningUseCase(
-                        answerKo = currentItem.answerKo,
-                        answerEn = currentItem.answerEn,
-                        ttsPlayer = ttsPlaybackController.getTtsPlayer(),
-                        onHighlight = { index ->
-                            if (index != null) {
-                                // 현재 카드 상태에 따라 한글 또는 영문 하이라이트 설정
-                                if (_isAnswerCardFlipped.value) {
-                                    // 카드가 한글로 뒤집혀 있으면 한글 하이라이트
-                                    ttsPlaybackController.setAnswerKoHighlightIndex(index)
-                                    Log.d("MainViewModel", "반복 듣기: 한글 하이라이트 설정: $index")
+                    Log.d("MainViewModel", "반복 듣기 Service 실행")
+                    currentUseCaseJob = launch {
+                        repeatListeningService.executeRepeatListeningTest(
+                            answerKo = currentItem.answerKo,
+                            answerEn = currentItem.answerEn,
+                            onHighlight = { index ->
+                                if (index != null) {
+                                    // 현재 카드 상태에 따라 한글 또는 영문 하이라이트 설정
+                                    if (_isAnswerCardFlipped.value) {
+                                        // 카드가 한글로 뒤집혀 있으면 한글 하이라이트
+                                        ttsPlaybackController.setAnswerKoHighlightIndex(index)
+                                        Log.d("MainViewModel", "반복 듣기: 한글 하이라이트 설정: $index")
+                                    } else {
+                                        // 카드가 영문으로 뒤집혀 있으면 영문 하이라이트
+                                        ttsPlaybackController.setAnswerHighlightIndex(index)
+                                        Log.d("MainViewModel", "반복 듣기: 영문 하이라이트 설정: $index")
+                                    }
                                 } else {
-                                    // 카드가 영문으로 뒤집혀 있으면 영문 하이라이트
-                                    ttsPlaybackController.setAnswerHighlightIndex(index)
-                                    Log.d("MainViewModel", "반복 듣기: 영문 하이라이트 설정: $index")
+                                    ttsPlaybackController.clearHighlight()
+                                    Log.d("MainViewModel", "반복 듣기: 하이라이트 제거")
                                 }
-                            } else {
-                                ttsPlaybackController.clearHighlight()
-                                Log.d("MainViewModel", "반복 듣기: 하이라이트 제거")
-                            }
-                        },
-                        onCardFlip = { isKorean ->
-                            setAnswerCardFlipped(isKorean)
-                            Log.d("MainViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
-                        },
-                        progressTracker = progressTracker,
-                        category = currentItem.category,
-                        scriptIndex = qaDataManager.getCurrentIndex()
-                    )
-                    currentUseCaseJob = launch { useCase.execute() }
+                            },
+                            onCardFlip = { isKorean ->
+                                setAnswerCardFlipped(isKorean)
+                                Log.d("MainViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
+                            },
+                            category = currentItem.category,
+                            scriptIndex = qaDataManager.getCurrentIndex()
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MainViewModel", "반복 듣기 시작 실패", e)
@@ -719,50 +720,49 @@ class MainViewModel @Inject constructor(
                 
                 val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
-                    Log.d("MainViewModel", "영작 테스트 UseCase 실행")
-                    val useCase = EnglishWritingTestUseCase(
-                        answerKo = currentItem.answerKo,
-                        answerEn = currentItem.answerEn,
-                        ttsPlayer = ttsPlaybackController.getTtsPlayer(),
-                        onKoreanHighlight = { index ->
-                            if (index != null) {
-                                // 한글 하이라이트 설정
-                                ttsPlaybackController.setAnswerKoHighlightIndex(index)
-                                Log.d("MainViewModel", "영작 테스트: 한글 하이라이트 설정: $index")
-                            } else {
-                                ttsPlaybackController.clearHighlight()
-                                Log.d("MainViewModel", "영작 테스트: 한글 하이라이트 제거")
-                            }
-                        },
-                        onEnglishHighlight = { index ->
-                            if (index != null) {
-                                // 영문 하이라이트 설정
-                                ttsPlaybackController.setAnswerHighlightIndex(index)
-                                Log.d("MainViewModel", "영작 테스트: 영문 하이라이트 설정: $index")
-                            } else {
-                                ttsPlaybackController.clearHighlight()
-                                Log.d("MainViewModel", "영작 테스트: 영문 하이라이트 제거")
-                            }
-                        },
-                        onRecordingHighlight = { index ->
-                            if (index != null) {
-                                // 녹음 하이라이트 설정 (더 강한 하이라이트)
-                                ttsPlaybackController.setRecordingHighlightIndex(index)
-                                Log.d("MainViewModel", "영작 테스트: 녹음 하이라이트 설정: $index")
-                            } else {
-                                ttsPlaybackController.clearHighlight()
-                                Log.d("MainViewModel", "영작 테스트: 녹음 하이라이트 제거")
-                            }
-                        },
-                        onCardFlip = { isKorean ->
-                            setAnswerCardFlipped(isKorean)
-                            Log.d("MainViewModel", "영작 테스트: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
-                        },
-                        progressTracker = progressTracker,
-                        category = currentItem.category,
-                        scriptIndex = qaDataManager.getCurrentIndex()
-                    )
-                    currentUseCaseJob = launch { useCase.execute() }
+                    Log.d("MainViewModel", "영작 테스트 Service 실행")
+                    currentUseCaseJob = launch {
+                        englishWritingTestService.executeEnglishWritingTest(
+                            answerKo = currentItem.answerKo,
+                            answerEn = currentItem.answerEn,
+                            onKoreanHighlight = { index ->
+                                if (index != null) {
+                                    // 한글 하이라이트 설정
+                                    ttsPlaybackController.setAnswerKoHighlightIndex(index)
+                                    Log.d("MainViewModel", "영작 테스트: 한글 하이라이트 설정: $index")
+                                } else {
+                                    ttsPlaybackController.clearHighlight()
+                                    Log.d("MainViewModel", "영작 테스트: 한글 하이라이트 제거")
+                                }
+                            },
+                            onEnglishHighlight = { index ->
+                                if (index != null) {
+                                    // 영문 하이라이트 설정
+                                    ttsPlaybackController.setAnswerHighlightIndex(index)
+                                    Log.d("MainViewModel", "영작 테스트: 영문 하이라이트 설정: $index")
+                                } else {
+                                    ttsPlaybackController.clearHighlight()
+                                    Log.d("MainViewModel", "영작 테스트: 영문 하이라이트 제거")
+                                }
+                            },
+                            onRecordingHighlight = { index ->
+                                if (index != null) {
+                                    // 녹음 하이라이트 설정 (더 강한 하이라이트)
+                                    ttsPlaybackController.setRecordingHighlightIndex(index)
+                                    Log.d("MainViewModel", "영작 테스트: 녹음 하이라이트 설정: $index")
+                                } else {
+                                    ttsPlaybackController.clearHighlight()
+                                    Log.d("MainViewModel", "영작 테스트: 녹음 하이라이트 제거")
+                                }
+                            },
+                            onCardFlip = { isKorean ->
+                                setAnswerCardFlipped(isKorean)
+                                Log.d("MainViewModel", "영작 테스트: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
+                            },
+                            category = currentItem.category,
+                            scriptIndex = qaDataManager.getCurrentIndex()
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MainViewModel", "영작 테스트 시작 실패", e)

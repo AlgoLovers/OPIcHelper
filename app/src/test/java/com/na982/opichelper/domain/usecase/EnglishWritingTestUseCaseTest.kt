@@ -15,7 +15,7 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.junit.Assert.*
 
-class EnglishWritingTestUseCaseTest {
+class EnglishWritingTestServiceTest {
 
     @Mock
     private lateinit var mockAudioRecorder: AudioRecorder
@@ -38,30 +38,22 @@ class EnglishWritingTestUseCaseTest {
     @Mock
     private lateinit var mockProgressTracker: MemorizeTestProgressTracker
 
-    private lateinit var englishWritingTestUseCase: EnglishWritingTestUseCase
+    @Mock
+    private lateinit var mockTtsPlayer: com.na982.opichelper.domain.audio.TtsPlayer
+
+    private lateinit var englishWritingTestService: EnglishWritingTestService
 
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        englishWritingTestUseCase = EnglishWritingTestUseCase(
-            audioRecorder = mockAudioRecorder,
-            audioPlayer = mockAudioPlayer,
-            ttsOrchestrator = mockTtsOrchestrator,
-            qaDataManager = mockQaDataManager,
-            progressPersistenceService = mockProgressPersistenceService,
-            audioFileManager = mockAudioFileManager,
-            onKoreanHighlight = {},
-            onEnglishHighlight = {},
-            onRecordingHighlight = {},
-            onCardFlip = {},
-            progressTracker = mockProgressTracker,
-            category = "test_category",
-            scriptIndex = 0
+        englishWritingTestService = EnglishWritingTestService(
+            ttsPlayer = mockTtsPlayer,
+            progressTracker = mockProgressTracker
         )
     }
 
     @Test
-    fun `test EnglishWritingTestUseCase creation`() {
-        assertNotNull(englishWritingTestUseCase)
+    fun `test EnglishWritingTestService creation`() {
+        assertNotNull(englishWritingTestService)
     }
 } 

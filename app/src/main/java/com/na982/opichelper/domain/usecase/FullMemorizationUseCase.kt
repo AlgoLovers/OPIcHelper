@@ -14,12 +14,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import android.util.Log
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * 통암기 기능을 담당하는 UseCase
+ * 통암기 기능을 담당하는 Service
  * 책임: 전체 스크립트 녹음, 녹음 재생, 하이라이트 관리
  */
-class FullMemorizationUseCase @Inject constructor(
+@Singleton
+class FullMemorizationService @Inject constructor(
     private val audioRecorder: AudioRecorder,
     private val audioPlayer: AudioPlayer,
     private val ttsOrchestrator: TtsOrchestrator,

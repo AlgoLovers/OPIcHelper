@@ -19,14 +19,18 @@
   - `AudioFileRepository` → `AudioFileManager` (파일 관리 전담)
 - **개선점**: 책임 분리, 명확한 네이밍, DI 모듈 업데이트
 
-### 1.3 UseCase 정리 🔄 **다음 단계**
+### 1.3 UseCase 정리 ✅ **완료**
 - **목표**: UseCase들의 책임과 네이밍 정리
-- **예상 변경사항**:
-  - UseCase 생성자 파라미터 정리
-  - 불필요한 의존성 제거
-  - 메서드 네이밍 개선
+- **변경사항**:
+  - `MemorizeTestUseCase` 인터페이스 삭제 (불필요)
+  - `MemorizeTestState` 삭제 (중복 기능)
+  - `SaveUserPreferencesUseCase` → `UserPreferencesService`
+  - `FullMemorizationUseCase` → `FullMemorizationService`
+  - `EnglishWritingTestUseCase` → `EnglishWritingTestService`
+  - `RepeatListeningUseCase` → `RepeatListeningService`
+- **개선점**: Service 패턴 적용, 의존성 주입 개선, 중복 제거
 
-## 2단계: Data Layer 정리
+## 2단계: Data Layer 정리 🔄 **다음 단계**
 
 ### 2.1 Repository 구현체 정리
 - **목표**: 구현체들의 책임과 네이밍 정리
@@ -61,4 +65,5 @@
 ## 진행 상황
 - ✅ 1.1 Entity 정리 완료
 - ✅ 1.2 Repository 정리 완료
-- 🔄 1.3 UseCase 정리 (다음 단계) 
+- ✅ 1.3 UseCase 정리 완료
+- 🔄 2단계 Data Layer 정리 (다음 단계) 

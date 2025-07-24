@@ -5,32 +5,39 @@ import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import android.util.Log
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * 반복 듣기(암기 레벨) 테스트용 UseCase
- * - answerKo: 한글 답변 텍스트
- * - answerEn: 영문 답변 텍스트
- * - repeatCount: 반복 횟수 (기본 5회)
- * - onHighlight: 문장별 하이라이트 콜백
- * - onCardFlip: 카드 뒤집기 콜백 (true: 한글, false: 영문)
- * - progressTracker: 암기 테스트 진행 상황 추적
- * - category: 카테고리
- * - scriptIndex: 스크립트 인덱스
- *
- * 한글 문장 1회 → 1/2 쉬고 → 영문 문장 1회 → 1.0배 쉬고 → 영문 문장 2회 ... 5회까지 → 다음 한글 문장 ...
+ * 반복 듣기 테스트용 Service
+ * 책임: 반복 듣기 테스트 실행, 진행 상황 관리, TTS 제어
  */
-class RepeatListeningUseCase(
-    private val answerKo: String,
-    private val answerEn: String,
+@Singleton
+class RepeatListeningService @Inject constructor(
     private val ttsPlayer: TtsPlayer,
-    private val onHighlight: (Int?) -> Unit,
-    private val onCardFlip: (Boolean) -> Unit, // true: 한글, false: 영문
-    private val progressTracker: MemorizeTestProgressTracker,
-    private val category: String,
-    private val scriptIndex: Int,
-    private val repeatCount: Int = 5
-) : MemorizeTestUseCase {
-    override suspend fun execute() {
+    private val progressTracker: MemorizeTestProgressTracker
+) {
+    /**
+     * 반복 듣기 테스트 실행
+     * - answerKo: 한글 답변 텍스트
+     * - answerEn: 영문 답변 텍스트
+     * - repeatCount: 반복 횟수 (기본 5회)
+     * - onHighlight: 문장별 하이라이트 콜백
+     * - onCardFlip: 카드 뒤집기 콜백 (true: 한글, false: 영문)
+     * - category: 카테고리
+     * - scriptIndex: 스크립트 인덱스
+     *
+     * 한글 문장 1회 → 1/2 쉬고 → 영문 문장 1회 → 1.0배 쉬고 → 영문 문장 2회 ... 5회까지 → 다음 한글 문장 ...
+     */
+    suspend fun executeRepeatListeningTest(
+        answerKo: String,
+        answerEn: String,
+        onHighlight: (Int?) -> Unit,
+        onCardFlip: (Boolean) -> Unit, // true: 한글, false: 영문
+        category: String,
+        scriptIndex: Int,
+        repeatCount: Int = 5
+    ) {
         val koSentences = answerKo.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         val enSentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         val count = minOf(koSentences.size, enSentences.size)
@@ -44,18 +51,18 @@ class RepeatListeningUseCase(
             0
         }
         
-        Log.d("RepeatListeningUseCase", "반복 듣기 시작: 총 $count 문장, 시작 인덱스: $startIndex")
-        Log.d("RepeatListeningUseCase", "현재 스크립트 진행 상황: $currentProgress")
-        Log.d("RepeatListeningUseCase", "검색한 카테고리: $category, 스크립트 인덱스: $scriptIndex")
+        Log.d("RepeatListeningService", "반복 듣기 시작: 총 $count 문장, 시작 인덱스: $startIndex")
+        Log.d("RepeatListeningService", "현재 스크립트 진행 상황: $currentProgress")
+        Log.d("RepeatListeningService", "검색한 카테고리: $category, 스크립트 인덱스: $scriptIndex")
         
         for (i in startIndex until count) {
             // 코루틴이 취소되었는지 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("RepeatListeningUseCase", "코루틴이 취소됨 - UseCase 중단")
+                Log.d("RepeatListeningService", "코루틴이 취소됨 - Service 중단")
                 break
             }
             
-            Log.d("RepeatListeningUseCase", "문장 ${i + 1} 처리 시작 (인덱스: $i)")
+            Log.d("RepeatListeningService", "문장 ${i + 1} 처리 시작 (인덱스: $i)")
             
             // 진행 상황 업데이트
             progressTracker.updateCurrentSentenceIndex(category, scriptIndex, i)
@@ -69,7 +76,7 @@ class RepeatListeningUseCase(
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("RepeatListeningUseCase", "코루틴이 취소됨 - UseCase 중단")
+                Log.d("RepeatListeningService", "코루틴이 취소됨 - Service 중단")
                 break
             }
             
@@ -77,7 +84,7 @@ class RepeatListeningUseCase(
             for (j in 1..repeatCount) {
                 // 코루틴이 취소되었는지 확인
                 if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                    Log.d("RepeatListeningUseCase", "코루틴이 취소됨 - UseCase 중단")
+                    Log.d("RepeatListeningService", "코루틴이 취소됨 - Service 중단")
                     break
                 }
                 
@@ -97,6 +104,6 @@ class RepeatListeningUseCase(
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제
         progressTracker.clearScriptProgress(category, scriptIndex)
         
-        Log.d("RepeatListeningUseCase", "반복 듣기 완료")
+        Log.d("RepeatListeningService", "반복 듣기 완료")
     }
 } 
