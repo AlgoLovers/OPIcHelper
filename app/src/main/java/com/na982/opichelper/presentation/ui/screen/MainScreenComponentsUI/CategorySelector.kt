@@ -10,7 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.domain.entity.MainScreenState
+import com.na982.opichelper.domain.entity.PlaybackState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,7 +18,7 @@ fun CategorySelector(
     selectedCategory: String,
     categories: List<String>, // 외부에서 주입받음
     onCategorySelected: (String) -> Unit,
-    screenState: MainScreenState,
+    playbackState: PlaybackState,
     onHighlightReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -63,7 +63,7 @@ fun CategorySelector(
                         onClick = {
                             Log.d("CategorySelector", "Category selected: $category")
                             // 모든 상태 초기화
-                            screenState.resetAllPlayStates()
+                            playbackState.resetAllPlayStates()
                             onHighlightReset()
                             // 카테고리 변경
                             onCategorySelected(category)

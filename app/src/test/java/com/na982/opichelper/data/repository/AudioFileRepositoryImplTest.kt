@@ -259,6 +259,23 @@ class AudioFileRepositoryImplTest {
         override suspend fun saveRecording(recordedFile: String) {
             // 테스트에서는 아무것도 하지 않음
         }
+        
+        override fun getRecordingFilePath(fileName: String): String {
+            return File(context.filesDir, fileName).absolutePath
+        }
+        
+        override suspend fun hasRecordingFileByPath(filePath: String): Boolean {
+            return File(filePath).exists()
+        }
+        
+        override suspend fun deleteRecordingFileByPath(filePath: String): Boolean {
+            val file = File(filePath)
+            return if (file.exists()) {
+                file.delete()
+            } else {
+                false
+            }
+        }
     }
     
     // 헬퍼 메서드들

@@ -7,14 +7,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.domain.entity.MainScreenState
+import com.na982.opichelper.domain.entity.PlaybackState
 import com.na982.opichelper.domain.entity.PlayType
 
 @Composable
 fun NavigationSection(
     onPreviousQuestion: () -> Unit,
     onNextQuestion: () -> Unit,
-    screenState: MainScreenState,
+    playbackState: PlaybackState,
     onHighlightReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -28,7 +28,7 @@ fun NavigationSection(
             onPreviousQuestion = {
                 Log.d("NavigationSection", "Previous question button clicked")
                 // 모든 상태 초기화
-                screenState.resetAllPlayStates()
+                playbackState.resetAllPlayStates()
                 onHighlightReset()
                 // 이전 질문으로 이동
                 onPreviousQuestion()
@@ -41,7 +41,7 @@ fun NavigationSection(
             onNextQuestion = {
                 Log.d("NavigationSection", "Next question button clicked")
                 // 모든 상태 초기화
-                screenState.resetAllPlayStates()
+                playbackState.resetAllPlayStates()
                 onHighlightReset()
                 // 다음 질문으로 이동
                 onNextQuestion()

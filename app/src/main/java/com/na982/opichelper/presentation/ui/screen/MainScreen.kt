@@ -26,7 +26,7 @@ import android.util.Log
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import com.na982.opichelper.domain.audio.TtsPlayer
 import com.na982.opichelper.domain.audio.AudioPlayer
-import com.na982.opichelper.domain.entity.MainScreenState
+import com.na982.opichelper.domain.entity.PlaybackState
 import com.na982.opichelper.domain.entity.PlayType
 
 
@@ -38,8 +38,8 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // MainScreenState 사용
-    val screenState = remember { MainScreenState() }
+    // PlaybackState 사용
+    val playbackState = remember { PlaybackState() }
     val context = LocalContext.current
     
     // TTS 서비스 관련 상태
@@ -174,7 +174,7 @@ fun MainScreen(
                     viewModel.stopAllTts()
                     viewModel.selectCategory(it) 
                 },
-                screenState = screenState,
+                playbackState = playbackState,
                 onHighlightReset = {
                     // 하이라이트 초기화는 TtsPlaybackController에서 자동으로 처리됨
                 },
@@ -328,11 +328,11 @@ fun MainScreen(
                             onClick = {
                                 viewModel.playMergedAudioFile()
                             },
-                            enabled = selectedMemorizeLevel == "영작 테스트" && hasRecordingFile && !screenState.isMergedAudioPlaying,
+                            enabled = selectedMemorizeLevel == "영작 테스트" && hasRecordingFile && !playbackState.isMergedAudioPlaying,
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = if (screenState.isMergedAudioPlaying) "재생 중..." else "녹음 재생",
+                                text = if (playbackState.isMergedAudioPlaying) "재생 중..." else "녹음 재생",
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
@@ -351,10 +351,10 @@ fun MainScreen(
                         viewModel.stopAllTts()
                         viewModel.nextQaItem()
                     },
-                    screenState = screenState,
-                                            onHighlightReset = {
-                            // 하이라이트 초기화는 TtsPlaybackController에서 자동으로 처리됨
-                        }
+                    playbackState = playbackState,
+                    onHighlightReset = {
+                        // 하이라이트 초기화는 TtsPlaybackController에서 자동으로 처리됨
+                    }
                 )
 
             }
