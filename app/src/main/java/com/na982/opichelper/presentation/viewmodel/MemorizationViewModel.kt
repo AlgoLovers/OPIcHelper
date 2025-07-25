@@ -79,6 +79,7 @@ class MemorizationViewModel @Inject constructor(
                     _isFullMemorizationPlaying.value = false
                     _isEnglishWritingTestMode.value = false
                     _isEnglishWritingTestCardFlipped.value = false // 영작테스트 카드 상태 초기화
+                    _isRepeatListeningCardFlipped.value = false // 반복듣기 카드 상태 초기화
                     
                     // 반복듣기 종료 시 현재 진행상황 저장
                     if (selectedLevel == "반복 듣기") {
@@ -260,6 +261,7 @@ class MemorizationViewModel @Inject constructor(
                                 }
                             },
                             onCardFlip = { isKorean ->
+                                _isRepeatListeningCardFlipped.value = isKorean
                                 Log.d("MemorizationViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
                             },
                             category = currentItem.category,
@@ -394,4 +396,8 @@ class MemorizationViewModel @Inject constructor(
     fun resetStopEnglishWritingTestMergedFilePlaying() {
         _stopEnglishWritingTestMergedFilePlaying.value = false
     }
+
+    // 반복듣기 카드 상태
+    private val _isRepeatListeningCardFlipped = MutableStateFlow(false)
+    val isRepeatListeningCardFlipped: StateFlow<Boolean> = _isRepeatListeningCardFlipped.asStateFlow()
 } 

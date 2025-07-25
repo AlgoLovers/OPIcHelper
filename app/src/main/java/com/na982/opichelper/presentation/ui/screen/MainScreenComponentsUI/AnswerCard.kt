@@ -25,6 +25,7 @@ fun AnswerCard(
     answerKoHighlightIndex: Int? = null,
     recordingHighlightIndex: Int? = null,
     isFlipped: Boolean = false,
+    isRepeatListeningCardFlipped: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Log.d("AnswerCard", "Rendering with highlightIndex=$highlightIndex, answerKoHighlightIndex=$answerKoHighlightIndex, recordingHighlightIndex=$recordingHighlightIndex, isFlipped=$isFlipped")
@@ -69,7 +70,7 @@ fun AnswerCard(
             exit = ExitTransition.None
         ) {
             FlipCard(
-                isFlipped = isFlipped,
+                isFlipped = isFlipped || isRepeatListeningCardFlipped,
                 frontContent = {
                     Card(
                         modifier = Modifier.fillMaxWidth(),

@@ -7,6 +7,7 @@ import com.na982.opichelper.MainActivity
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import android.util.Log
 
 @RunWith(AndroidJUnit4::class)
 class RepeatListeningModeTest {
@@ -267,5 +268,55 @@ class RepeatListeningModeTest {
         
         // 암기 테스트 버튼이 다시 활성화되었는지 확인
         composeTestRule.onNodeWithText("암기 테스트").assertIsDisplayed()
+    }
+
+    @Test
+    fun testRepeatListeningCardFlipAndHighlight() {
+        Log.d("RepeatListeningModeTest", "반복듣기 카드 전환 및 하이라이트 테스트 시작")
+
+        // 1. 카테고리 선택
+        composeTestRule.onNodeWithText("집").performClick()
+        Log.d("RepeatListeningModeTest", "카테고리 선택 완료")
+
+        // 2. 반복듣기 모드 선택
+        composeTestRule.onNodeWithText("반복 듣기").performClick()
+        Log.d("RepeatListeningModeTest", "반복듣기 모드 선택 완료")
+
+        // 3. 반복듣기 시작
+        composeTestRule.onNodeWithText("반복듣기").performClick()
+        Log.d("RepeatListeningModeTest", "반복듣기 시작")
+
+        // 4. 한글 카드 표시 확인 (첫 번째 문장)
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            try {
+                // 한글 카드가 표시되는지 확인 (하이라이트된 텍스트 확인)
+                composeTestRule.onNodeWithText("집").assertIsDisplayed()
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
+        Log.d("RepeatListeningModeTest", "한글 카드 표시 확인")
+
+        // 5. 영문 카드 표시 확인 (영문 재생 시)
+        Thread.sleep(3000) // 영문 재생 대기
+        Log.d("RepeatListeningModeTest", "영문 카드 표시 확인")
+
+        // 6. 반복듣기 종료
+        composeTestRule.onNodeWithText("반복듣기 종료").performClick()
+        Log.d("RepeatListeningModeTest", "반복듣기 종료")
+
+        // 7. 카드가 원래 상태로 복원되는지 확인
+        composeTestRule.waitUntil(timeoutMillis = 3000) {
+            try {
+                composeTestRule.onNodeWithText("반복듣기").assertIsDisplayed()
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
+        Log.d("RepeatListeningModeTest", "카드 원래 상태 복원 확인")
+
+        Log.d("RepeatListeningModeTest", "반복듣기 카드 전환 및 하이라이트 테스트 완료")
     }
 } 

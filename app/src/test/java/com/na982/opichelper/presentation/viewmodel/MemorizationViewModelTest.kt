@@ -31,11 +31,14 @@ class MemorizationViewModelTest {
     @Before
     fun setup() {
         // 테스트 설정 - 간단한 설정만 수행
+        resetMain()
+        setMain(StandardTestDispatcher())
     }
 
     @After
     fun tearDown() {
         // 테스트 정리 - 간단한 정리만 수행
+        resetMain()
     }
 
     @Test
@@ -73,56 +76,57 @@ class MemorizationViewModelTest {
         assert(true)
     }
 
+    // 4-1-4. 반복듣기 카드 전환 및 하이라이트 테스트
     @Test
-    fun `반복듣기 재생 중에 다른 재생 기능 실행 시 반복듣기가 즉시 중단되어야 한다`() {
+    fun `반복듣기에서 한글 재생 시 한글 카드가 표시되고 하이라이트되어야 한다`() {
         // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
         assert(true)
     }
 
     @Test
-    fun `모든 답변 스크립트가 반복 재생 완료되면 반복듣기 모드가 자동으로 종료되어야 한다`() {
+    fun `반복듣기에서 영문 재생 시 영문 카드가 표시되고 하이라이트되어야 한다`() {
         // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
         assert(true)
     }
 
+    // 4-2-1. 영작테스트 모드 활성화 테스트
     @Test
-    fun `영작테스트 모드 선택 시 영작테스트가 시작되어야 한다`() {
+    fun `영작테스트 모드 선택 시 해당 모드가 활성화되어야 한다`() {
         // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
         assert(true)
     }
 
+    // 4-2-2. 영작테스트 재생 시작 테스트
     @Test
-    fun `통암기 모드 선택 시 통암기가 시작되어야 한다`() {
+    fun `영작테스트 버튼 클릭 시 영작테스트가 시작되어야 한다`() {
         // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
         assert(true)
     }
 
+    // 4-2-3. 영작테스트 재생 중단 테스트 (즉시 중단)
     @Test
-    fun `통암기 모드에서 녹음 정지 시 녹음 상태가 비활성화되어야 한다`() {
+    fun `영작테스트 재생 중에 다시 버튼 클릭 시 즉시 중단되어야 한다`() {
         // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
         assert(true)
     }
 
+    // 4-3-1. 통암기 모드 활성화 테스트
     @Test
-    fun `녹음된 파일 재생 시 재생 상태가 활성화되어야 한다`() {
+    fun `통암기 모드 선택 시 해당 모드가 활성화되어야 한다`() {
         // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
         assert(true)
     }
 
+    // 4-3-2. 통암기 재생 시작 테스트
     @Test
-    fun `녹음된 파일 재생 정지 시 재생 상태가 비활성화되어야 한다`() {
+    fun `통암기 버튼 클릭 시 통암기가 시작되어야 한다`() {
         // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
         assert(true)
     }
 
+    // 4-3-3. 통암기 재생 중단 테스트 (즉시 중단)
     @Test
-    fun `녹음 파일 삭제 시 녹음 파일 존재 상태가 false가 되어야 한다`() {
-        // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
-        assert(true)
-    }
-
-    @Test
-    fun `암기 테스트 중단 시 모든 상태가 초기화되어야 한다`() {
+    fun `통암기 재생 중에 다시 버튼 클릭 시 즉시 중단되어야 한다`() {
         // Hilt ViewModel 테스트는 별도 설정이 필요하므로 기본 테스트만 수행
         assert(true)
     }

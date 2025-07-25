@@ -60,6 +60,7 @@ fun MainScreen(
     val isEnglishWritingTestMergedFilePlaying by viewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
     val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModel.stopEnglishWritingTestMergedFilePlaying.collectAsState()
+    val isRepeatListeningCardFlipped by memorizationViewModel.isRepeatListeningCardFlipped.collectAsState()
 
     // 스크립트 변경 시 영작테스트 병합 파일 확인
     LaunchedEffect(uiState.currentQaItem) {
@@ -294,8 +295,10 @@ fun MainScreen(
                         isFlipped = when {
                             isEnglishWritingTestMode -> isEnglishWritingTestCardFlipped
                             isEnglishWritingTestMergedFilePlaying -> false // 영작테스트 녹음 재생 시에는 영문 카드
+                            isRepeatListeningCardFlipped -> isRepeatListeningCardFlipped // 반복듣기 카드 상태
                             else -> uiState.isAnswerCardFlipped
-                        }
+                        },
+                        isRepeatListeningCardFlipped = isRepeatListeningCardFlipped
                     )
                 }
 

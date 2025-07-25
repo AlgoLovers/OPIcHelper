@@ -41,6 +41,9 @@ class EnglishWritingTestServiceTest {
     @Mock
     private lateinit var mockTtsPlayer: com.na982.opichelper.domain.audio.TtsPlayer
 
+    @Mock
+    private lateinit var mockRecordingTimeManager: com.na982.opichelper.domain.repository.RecordingTimeManager
+
     private lateinit var englishWritingTestService: EnglishWritingTestService
 
     @Before
@@ -50,12 +53,10 @@ class EnglishWritingTestServiceTest {
             ttsPlayer = mockTtsPlayer,
             audioRecorder = mockAudioRecorder,
             audioFileManager = mockAudioFileManager,
-            progressTracker = mockProgressTracker
+            progressTracker = mockProgressTracker,
+            recordingTimeManager = mockRecordingTimeManager
         )
     }
 
     @Test
-    fun `test EnglishWritingTestService creation`() {
-        assertNotNull(englishWritingTestService)
-    }
-} 
+    fun `
