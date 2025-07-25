@@ -73,4 +73,38 @@ interface AudioFileManager {
      * @return 삭제 성공하면 true, 실패하면 false
      */
     suspend fun deleteRecordingFileByPath(filePath: String): Boolean
+
+    // ===== 영작테스트 관련 메서드들 =====
+    
+    /**
+     * 녹음 파일을 저장
+     * @param recordingFile 녹음된 파일
+     * @param fileName 저장할 파일명
+     * @return 저장된 파일
+     */
+    suspend fun saveRecordingFile(recordingFile: File, fileName: String): File
+    
+    /**
+     * 여러 오디오 파일을 하나로 합치기
+     * @param files 합칠 파일들
+     * @param mergedFileName 합쳐진 파일명
+     * @return 합쳐진 파일
+     */
+    suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File
+    
+    /**
+     * 영작테스트 머지 파일이 있는지 확인
+     * @param category 카테고리
+     * @param scriptIndex 스크립트 인덱스
+     * @return 머지 파일이 있으면 true, 없으면 false
+     */
+    suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean
+    
+    /**
+     * 영작테스트 머지 파일 가져오기
+     * @param category 카테고리
+     * @param scriptIndex 스크립트 인덱스
+     * @return 머지 파일 (없으면 null)
+     */
+    suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File?
 } 

@@ -162,5 +162,32 @@ class AudioFileRepositoryImplTest {
                 false
             }
         }
+
+        // ===== 영작테스트 관련 메서드들 =====
+        
+        override suspend fun saveRecordingFile(recordingFile: File, fileName: String): File {
+            val outputFile = File("${fileName}.m4a")
+            recordingFile.copyTo(outputFile, overwrite = true)
+            println("AudioFileManager: 녹음 파일 저장: ${outputFile.absolutePath}")
+            return outputFile
+        }
+        
+        override suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File {
+            val outputFile = File("${mergedFileName}.m4a")
+            outputFile.createNewFile()
+            outputFile.writeText("test merged content")
+            println("AudioFileManager: 오디오 파일 병합 완료: ${outputFile.absolutePath}")
+            return outputFile
+        }
+        
+        override suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean {
+            val testFile = File("영작테스트_${category}_${scriptIndex}_test.m4a")
+            return testFile.exists()
+        }
+        
+        override suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File? {
+            val testFile = File("영작테스트_${category}_${scriptIndex}_test.m4a")
+            return if (testFile.exists()) testFile else null
+        }
     }
 } 

@@ -45,7 +45,7 @@ class RepeatListeningService @Inject constructor(
         // 복원된 앱 상태에서 시작 인덱스 가져오기
         val currentProgress = progressTracker.getScriptProgress(category, scriptIndex)
         
-        val startIndex = if (currentProgress?.isMemorizeTestRunning == true) {
+        val startIndex = if (currentProgress != null && currentProgress.memorizeLevel == "반복 듣기") {
             currentProgress.currentSentenceIndex
         } else {
             0
@@ -64,8 +64,18 @@ class RepeatListeningService @Inject constructor(
             
             Log.d("RepeatListeningService", "문장 ${i + 1} 처리 시작 (인덱스: $i)")
             
-            // 진행 상황 업데이트
-            progressTracker.updateCurrentSentenceIndex(category, scriptIndex, i)
+            // 진행 상황 업데이트 및 실시간 저장
+            progressTracker.updateProgress(
+                category = category,
+                scriptIndex = scriptIndex,
+                memorizeLevel = "반복 듣기",
+                currentSentenceIndex = i,
+                totalSentences = count,
+                isMemorizeTestRunning = true
+            )
+            // 실시간으로 진행상황 저장
+            progressTracker.persistChangedProgress()
+            Log.d("RepeatListeningService", "문장 $i 진행상황 실시간 저장 완료")
             
             // 1. 한글 문장 1회 TTS (카드를 한글로 뒤집고 하이라이트)
             onCardFlip(true) // 카드를 한글로 뒤집기

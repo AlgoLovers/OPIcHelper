@@ -4,11 +4,13 @@ import android.content.Context
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import com.na982.opichelper.data.repository.QaDataLoaderImpl
+import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.domain.audio.*
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataLoader
-import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.ProgressPersistenceService
+import com.na982.opichelper.domain.repository.RecordingTimeManager
 import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
@@ -78,6 +80,12 @@ object AppModule {
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideRecordingTimeManager(@ApplicationContext context: Context): RecordingTimeManager {
+        return RecordingTimeManagerImpl(context)
     }
     
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요

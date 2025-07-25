@@ -90,7 +90,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onBackPressed() {
         Log.d("MainActivity", "onBackPressed() - 백버튼 눌림")
-        // 백버튼으로 앱 종료 시 모든 TTS와 하이라이트 정리
+        // 백버튼으로 앱 종료 시 모든 TTS와 하이라이트 즉시 정리
+        viewModel?.stopAllTts()
         cleanupAllResources()
         super.onBackPressed()
     }

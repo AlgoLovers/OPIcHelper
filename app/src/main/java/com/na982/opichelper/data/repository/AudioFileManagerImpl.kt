@@ -299,4 +299,91 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             }
         }
     }
+
+    // ===== 영작테스트 관련 메서드들 =====
+    
+    override suspend fun saveRecordingFile(recordingFile: File, fileName: String): File {
+        return withContext(Dispatchers.IO) {
+            val outputDir = File(context.filesDir, "recordings")
+            if (!outputDir.exists()) {
+                outputDir.mkdirs()
+            }
+            
+            val outputFile = File(outputDir, "${fileName}.m4a")
+            recordingFile.copyTo(outputFile, overwrite = true)
+            
+            Log.d("AudioFileManager", "녹음 파일 저장: ${outputFile.absolutePath}, 크기: ${outputFile.length()} bytes")
+            outputFile
+        }
+    }
+    
+    override suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File {
+        return withContext(Dispatchers.IO) {
+            val outputDir = File(context.filesDir, "merged")
+            if (!outputDir.exists()) {
+                outputDir.mkdirs()
+            }
+            
+            val outputFile = File(outputDir, "${mergedFileName}.m4a")
+            Log.d("AudioFileManager", "오디오 파일 병합 시작: 파일명=${mergedFileName}, 출력경로=${outputFile.absolutePath}")
+            Log.d("AudioFileManager", "병합할 파일들: ${files.map { it.absolutePath }}")
+            
+            if (files.size == 1) {
+                files[0].copyTo(outputFile, overwrite = true)
+                Log.d("AudioFileManager", "단일 파일 복사 완료")
+            } else {
+                mergeWithMediaCodec(files, outputFile)
+                Log.d("AudioFileManager", "MediaCodec 병합 완료")
+            }
+            
+            Log.d("AudioFileManager", "오디오 파일 병합 완료: ${outputFile.absolutePath}, 크기: ${outputFile.length()} bytes")
+            outputFile
+        }
+    }
+    
+    override suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            val mergedDir = File(context.filesDir, "merged")
+            if (!mergedDir.exists()) {
+                Log.d("AudioFileManager", "영작테스트 파일 확인: merged 디렉토리가 존재하지 않음")
+                return@withContext false
+            }
+            
+            val pattern = Regex("영작테스트_${category}_${scriptIndex}_.*")
+            Log.d("AudioFileManager", "영작테스트 파일 확인: 패턴=${pattern.pattern}")
+            
+            val files = mergedDir.listFiles { file ->
+                val matches = file.name.matches(pattern)
+                Log.d("AudioFileManager", "영작테스트 파일 확인: 파일=${file.name}, 매치=${matches}")
+                matches
+            }
+            
+            val hasFile = files?.isNotEmpty() == true
+            Log.d("AudioFileManager", "영작테스트 파일 확인: category=$category, scriptIndex=$scriptIndex, 결과=$hasFile")
+            hasFile
+        }
+    }
+    
+    override suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File? {
+        return withContext(Dispatchers.IO) {
+            val mergedDir = File(context.filesDir, "merged")
+            if (!mergedDir.exists()) {
+                Log.d("AudioFileManager", "영작테스트 파일 조회: merged 디렉토리가 존재하지 않음")
+                return@withContext null
+            }
+            
+            val pattern = Regex("영작테스트_${category}_${scriptIndex}_.*")
+            Log.d("AudioFileManager", "영작테스트 파일 조회: 패턴=${pattern.pattern}")
+            
+            val files = mergedDir.listFiles { file ->
+                val matches = file.name.matches(pattern)
+                Log.d("AudioFileManager", "영작테스트 파일 조회: 파일=${file.name}, 매치=${matches}")
+                matches
+            }
+            
+            val result = files?.maxByOrNull { it.lastModified() }
+            Log.d("AudioFileManager", "영작테스트 파일 조회: category=$category, scriptIndex=$scriptIndex, 결과=${result?.absolutePath}")
+            result
+        }
+    }
 } 

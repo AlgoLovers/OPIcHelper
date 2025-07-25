@@ -48,6 +48,8 @@ class EnglishWritingTestServiceTest {
         MockitoAnnotations.openMocks(this)
         englishWritingTestService = EnglishWritingTestService(
             ttsPlayer = mockTtsPlayer,
+            audioRecorder = mockAudioRecorder,
+            audioFileManager = mockAudioFileManager,
             progressTracker = mockProgressTracker
         )
     }
