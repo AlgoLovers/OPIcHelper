@@ -37,37 +37,45 @@ import kotlinx.coroutines.Job
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import java.io.File
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
- * UI 상태를 관리하는 StateHolder 클래스
- * 각 ViewModel의 상태를 조합하여 생성됩니다.
+ * 앱 전체 상태를 관리하는 통합 상태 클래스
  */
-data class MainUiState(
+data class AppState(
+    // 기본 UI 상태
     val currentQaItem: QaItem? = null,
     val currentCategory: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
     val categories: List<String> = emptyList(),
-    val memorizeLevels: List<String> = emptyList(),
+    
+    // 암기 관련 상태
+    val memorizeLevels: List<String> = listOf("반복 듣기", "영작 테스트", "통암기"),
     val selectedMemorizeLevel: String = "",
-    val hasMergedAudioFile: Boolean = false,
-    val isMergedAudioPlaying: Boolean = false,
-    val isAnswerCardFlipped: Boolean = false,
-    val hasRecordingFile: Boolean = false,
-    val currentKoreanTtsService: String = "",
-    val isFullMemorizationMode: Boolean = false,
-    val fullMemorizationHighlightIndex: Int? = null,
-    val isFullMemorizationRecording: Boolean = false,
-    val isFullMemorizationPlaying: Boolean = false,
-    val hasFullMemorizationRecording: Boolean = false,
+    
+    // 영작테스트 모드 상태
+    val hasEnglishWritingTestMergedFile: Boolean = false,
+    val isEnglishWritingTestMergedFilePlaying: Boolean = false,
+    val englishWritingTestMergedFileHighlightIndex: Int? = null,
+    
+    // TTS 재생 상태
+    val isPlaying: Boolean = false,
+    val isQuestionPlaying: Boolean = false,
+    val isAnswerPlaying: Boolean = false,
     val questionHighlightIndex: Int? = null,
     val answerHighlightIndex: Int? = null,
     val answerKoHighlightIndex: Int? = null,
     val recordingHighlightIndex: Int? = null,
-    val isPlaying: Boolean = false,
-    val isQuestionPlaying: Boolean = false,
-    val isAnswerPlaying: Boolean = false,
-    val hasProgress: Boolean = false
+    
+    // 카드 상태
+    val isAnswerCardFlipped: Boolean = false,
+    val isQuestionCardFlipped: Boolean = false,
+    
+    // 기타 상태
+    val hasProgress: Boolean = false,
+    val currentKoreanTtsService: String = ""
 )
 
 /**
@@ -90,8 +98,8 @@ class MainViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
     
     // 단일 StateFlow로 상태 관리 (각 ViewModel의 상태를 조합)
-    private val _uiState = MutableStateFlow(MainUiState())
-    val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(AppState())
+    val uiState: StateFlow<AppState> = _uiState.asStateFlow()
 
     private val _hasEnglishWritingTestMergedFile = MutableStateFlow(false)
     val hasEnglishWritingTestMergedFile: StateFlow<Boolean> = _hasEnglishWritingTestMergedFile.asStateFlow()
@@ -102,9 +110,22 @@ class MainViewModel @Inject constructor(
     private val _englishWritingTestMergedFileHighlightIndex = MutableStateFlow<Int?>(null)
     val englishWritingTestMergedFileHighlightIndex: StateFlow<Int?> = _englishWritingTestMergedFileHighlightIndex.asStateFlow()
 
+    private val _isQuestionCardFlipped = MutableStateFlow(false)
+    val isQuestionCardFlipped: StateFlow<Boolean> = _isQuestionCardFlipped.asStateFlow()
+
     private var prefs: SharedPreferences? = null
     private val PREF_KEY_LAST_MEMORIZE_LEVEL = "last_memorize_level"
     private var _currentSentenceIndex = 0
+
+    // 통암기 녹음 파일 관련 상태 - 제거 (MemorizationViewModel로 이동)
+    // private val _hasFullMemorizationRecording = MutableStateFlow(false)
+    // val hasFullMemorizationRecording: StateFlow<Boolean> = _hasFullMemorizationRecording.asStateFlow()
+
+    // private val _isFullMemorizationRecordingPlaying = MutableStateFlow(false)
+    // val isFullMemorizationRecordingPlaying: StateFlow<Boolean> = _isFullMemorizationRecordingPlaying.asStateFlow()
+
+    // private val _fullMemorizationRecordingHighlightIndex = MutableStateFlow<Int?>(null)
+    // val fullMemorizationRecordingHighlightIndex: StateFlow<Int?> = _fullMemorizationRecordingHighlightIndex.asStateFlow()
 
     init {
         initializeViewModel()
@@ -218,16 +239,34 @@ class MainViewModel @Inject constructor(
     }
 
     fun setMergedAudioPlaying(isPlaying: Boolean) {
-        _uiState.value = _uiState.value.copy(isMergedAudioPlaying = isPlaying)
+        _uiState.value = _uiState.value.copy(
+            isEnglishWritingTestMergedFilePlaying = isPlaying
+        )
+    }
+
+    fun setQuestionCardFlipped(isFlipped: Boolean) {
+        _isQuestionCardFlipped.value = isFlipped
+        Log.d("MainViewModel", "질문 카드 뒤집기: $isFlipped")
     }
 
     fun setSelectedMemorizeLevel(level: String) {
+        Log.d("MainViewModel", "암기레벨 변경: $level")
         _uiState.value = _uiState.value.copy(selectedMemorizeLevel = level)
         
-        // 프리퍼런스에 저장
+        // SharedPreferences에 암기 레벨 저장
         prefs?.edit()?.putString(PREF_KEY_LAST_MEMORIZE_LEVEL, level)?.apply()
+        Log.d("MainViewModel", "암기레벨 SharedPreferences 저장: $level")
         
-        Log.d("MainViewModel", "암기 레벨 설정: $level")
+        // 암기레벨 변경 시 MemorizationViewModel 상태 초기화
+        viewModelScope.launch {
+            try {
+                // MemorizationViewModel의 상태를 초기화하는 이벤트 발생
+                // 이는 MemorizationViewModel에서 감지하여 처리
+                Log.d("MainViewModel", "암기레벨 변경으로 인한 상태 초기화 요청")
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "암기레벨 변경 처리 실패", e)
+            }
+        }
     }
 
     fun setMemorizeTestRunning(isRunning: Boolean) {
@@ -444,12 +483,31 @@ class MainViewModel @Inject constructor(
 
     fun stopAllTts() {
         viewModelScope.launch {
-            // 영작테스트 녹음 파일 재생 중단
-            stopEnglishWritingTestMergedFile()
-            
-            ttsPlaybackController.stopTts()
+            try {
+                ttsPlaybackController.stopTts()
+                ttsPlaybackController.clearHighlight()
+                _isEnglishWritingTestMergedFilePlaying.value = false
+                _englishWritingTestMergedFileHighlightIndex.value = null
+                Log.d("MainViewModel", "모든 TTS 및 재생 중지")
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "TTS 중지 실패", e)
+            }
         }
-        setAnswerCardFlipped(false)
+    }
+
+    fun checkFullMemorizationRecording() {
+        // MemorizationViewModel로 기능 이동 - 여기서는 호출만
+        Log.d("MainViewModel", "통암기 녹음 파일 확인 요청 - MemorizationViewModel로 위임")
+    }
+
+    fun playFullMemorizationRecording() {
+        // MemorizationViewModel로 기능 이동 - 여기서는 호출만
+        Log.d("MainViewModel", "통암기 녹음 재생 요청 - MemorizationViewModel로 위임")
+    }
+
+    fun stopFullMemorizationRecording() {
+        // MemorizationViewModel로 기능 이동 - 여기서는 호출만
+        Log.d("MainViewModel", "통암기 녹음 재생 중지 요청 - MemorizationViewModel로 위임")
     }
 
     // ===== 앱 생명주기 관련 메서드들 =====

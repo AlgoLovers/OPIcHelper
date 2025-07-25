@@ -12,7 +12,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.na982.opichelper.domain.entity.QuestionCategory
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
-import com.na982.opichelper.presentation.viewmodel.MainUiState
+import com.na982.opichelper.presentation.viewmodel.AppState
 import androidx.compose.ui.platform.LocalContext
 import com.na982.opichelper.domain.entity.QaItem
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +31,10 @@ import com.na982.opichelper.domain.entity.PlayType
 import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.shape.RoundedCornerShape
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -50,7 +54,8 @@ fun MainScreen(
     val isFullMemorizationRecording by memorizationViewModel.isFullMemorizationRecording.collectAsState()
     val isFullMemorizationPlaying by memorizationViewModel.isFullMemorizationPlaying.collectAsState()
     val hasFullMemorizationRecording by memorizationViewModel.hasFullMemorizationRecording.collectAsState()
-    val fullMemorizationHighlightIndex by memorizationViewModel.fullMemorizationHighlightIndex.collectAsState()
+    val isFullMemorizationRecordingPlaying by memorizationViewModel.isFullMemorizationPlaying.collectAsState()
+    val fullMemorizationRecordingHighlightIndex by memorizationViewModel.fullMemorizationHighlightIndex.collectAsState()
     val currentQaItemState = uiState.currentQaItem
     val categories = uiState.categories
     val currentCategoryState = uiState.currentCategory
@@ -61,6 +66,7 @@ fun MainScreen(
     val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModel.stopEnglishWritingTestMergedFilePlaying.collectAsState()
     val isRepeatListeningCardFlipped by memorizationViewModel.isRepeatListeningCardFlipped.collectAsState()
+    val isQuestionCardFlipped by viewModel.isQuestionCardFlipped.collectAsState()
 
     // 스크립트 변경 시 영작테스트 병합 파일 확인
     LaunchedEffect(uiState.currentQaItem) {
@@ -93,6 +99,12 @@ fun MainScreen(
             memorizationViewModel.resetStopEnglishWritingTestMergedFilePlaying()
             Log.d("MainScreen", "영작테스트 녹음 파일 재생 중단 처리 완료")
         }
+    }
+
+    // 암기레벨 변경 감지 및 상태 초기화
+    LaunchedEffect(selectedLevel) {
+        Log.d("MainScreen", "암기레벨 변경 감지: $selectedLevel")
+        memorizationViewModel.onMemorizeLevelChanged()
     }
 
     // 백버튼 시 녹음 종료 (녹음 상태는 RecordingButton에서 관리)
@@ -221,21 +233,39 @@ fun MainScreen(
                     currentQuestionKo = qaItem.questionKo,
                     highlightIndex = uiState.questionHighlightIndex,
                     currentIndex = currentIndex,
-                    totalCount = totalCount
+                    totalCount = totalCount,
+                    isFlipped = isQuestionCardFlipped
                 )
+                
+                Log.d("MainScreen", "질문 카드 상태: isFlipped=$isQuestionCardFlipped, isFullMemorizationMode=$isFullMemorizationMode")
 
                 // 질문 카드 바로 아래 버튼들
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // 질문 재생 버튼
                     QuestionPlayButton(
                         currentQuestion = qaItem.questionEn,
                         isPlaying = uiState.isQuestionPlaying,
                         onPlayClick = {
-                            // 반복듣기 등 중단 후 질문 재생
-                            memorizationViewModel.stopMemorization()
-                            qaItem?.let { viewModel.playQuestion(it.questionEn) }
+                            // 통암기 모드일 때는 통암기 서비스 시작
+                            if (isFullMemorizationMode) {
+                                Log.d("MainScreen", "통암기 답변 녹음 버튼 클릭: 현재 질문 카드 상태=$isQuestionCardFlipped")
+                                // 질문 카드를 영어로 뒤집기 (TTS 시작 전에 확실히)
+                                viewModel.setQuestionCardFlipped(false)
+                                Log.d("MainScreen", "통암기 답변 녹음: 질문 카드를 영어로 설정")
+                                // 약간의 지연 후 TTS 시작 (카드 뒤집기 애니메이션 완료 대기)
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    delay(300L) // 카드 뒤집기 애니메이션 대기
+                                    Log.d("MainScreen", "통암기: TTS 시작")
+                                    memorizationViewModel.startFullMemorizationMode()
+                                }
+                            } else {
+                                // 기존 질문 재생 로직
+                                memorizationViewModel.stopMemorization()
+                                viewModel.playQuestion(qaItem.questionEn)
+                            }
                         },
                         onStopClick = {
                             viewModel.stopAllTts()
@@ -260,6 +290,7 @@ fun MainScreen(
                         // 일반 암기 테스트 버튼 (선택된 레벨에 따라 텍스트 변경)
                         Button(
                             onClick = {
+                                Log.d("MainScreen", "암기 테스트 버튼 클릭 - selectedLevel: '$selectedLevel'")
                                 // 반복듣기 시작 전에 현재 TTS를 중지하고 하이라이트를 제거
                                 viewModel.stopAllTts()
                                 memorizationViewModel.onMemorizeTestButtonClick(selectedLevel)
@@ -269,8 +300,8 @@ fun MainScreen(
                             Text(
                                 text = when {
                                     isMemorizeTestRunning -> "${selectedLevel} 종료"
-                                    uiState.hasProgress -> "${selectedLevel} 재개"
                                     selectedLevel == "영작 테스트" -> "부분암기 테스트"
+                                    selectedLevel == "통암기" -> "통암기"
                                     else -> selectedLevel.ifEmpty { "암기 테스트" }
                                 }
                             )
@@ -286,7 +317,8 @@ fun MainScreen(
                         currentAnswer = qaItem.answerEn,
                         currentAnswerKo = qaItem.answerKo,
                         highlightIndex = when {
-                            isFullMemorizationMode && isFullMemorizationPlaying -> fullMemorizationHighlightIndex
+                            isFullMemorizationMode && isFullMemorizationPlaying -> fullMemorizationRecordingHighlightIndex
+                            isFullMemorizationRecordingPlaying -> fullMemorizationRecordingHighlightIndex
                             isEnglishWritingTestMergedFilePlaying -> englishWritingTestMergedFileHighlightIndex
                             else -> uiState.answerHighlightIndex
                         },
@@ -300,6 +332,14 @@ fun MainScreen(
                         },
                         isRepeatListeningCardFlipped = isRepeatListeningCardFlipped
                     )
+                } else {
+                    // 통암기 모드에서 녹음 중일 때 녹음 애니메이션 표시
+                    RecordingAnimation(
+                        isRecording = isFullMemorizationRecording,
+                        onStopRecording = {
+                            memorizationViewModel.stopFullMemorizationRecording()
+                        }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -309,6 +349,7 @@ fun MainScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // 답변 1회 재생 버튼 (항상 표시)
                     AnswerPlayButton(
                         currentAnswer = qaItem?.answerEn ?: "",
                         isPlaying = uiState.isAnswerPlaying,
@@ -323,44 +364,64 @@ fun MainScreen(
                         modifier = Modifier.weight(1f)
                     )
 
-                    // 통암기 모드일 때 녹음 재생 버튼
-                    if (isFullMemorizationMode) {
-                        if (hasFullMemorizationRecording) {
-                            Button(
-                                onClick = {
-                                    memorizationViewModel.playFullMemorizationRecording()
-                                },
-                                enabled = !isFullMemorizationPlaying,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = if (isFullMemorizationPlaying) "재생 중..." else "녹음 재생",
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        } else {
-                            // 녹음 파일이 없을 때는 빈 공간
-                            Spacer(modifier = Modifier.weight(1f))
+                    // 암기 레벨별 조건부 녹음 재생 버튼
+                    Log.d("MainScreen", "암기 레벨별 재생 버튼 조건 확인: selectedLevel='$selectedLevel', hasFullMemorizationRecording=$hasFullMemorizationRecording, hasEnglishWritingTestMergedFile=$hasEnglishWritingTestMergedFile")
+                    
+                    when (selectedLevel) {
+                        "반복 듣기" -> {
+                            // 반복듣기는 녹음 재생 버튼 없음 - 답변 버튼이 전체 차지
+                            Log.d("MainScreen", "반복듣기 모드 - 녹음 재생 버튼 없음")
                         }
-                    } else {
-                        // 영작테스트 모드일 때 머지된 파일 재생 버튼
-                        if (hasEnglishWritingTestMergedFile) {
-                            Button(
-                                onClick = {
-                                    if (isEnglishWritingTestMergedFilePlaying) {
-                                        viewModel.stopEnglishWritingTestMergedFile()
-                                    } else {
-                                        viewModel.playEnglishWritingTestMergedFile()
-                                    }
-                                },
-                                enabled = hasEnglishWritingTestMergedFile,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = if (isEnglishWritingTestMergedFilePlaying) "재생 중..." else "영작테스트 녹음 재생",
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
+                        "영작 테스트" -> {
+                            // 영작테스트 모드에서 병합 파일이 있으면 재생 버튼
+                            if (hasEnglishWritingTestMergedFile) {
+                                Log.d("MainScreen", "영작테스트 재생 버튼 표시")
+                                Button(
+                                    onClick = {
+                                        if (isEnglishWritingTestMergedFilePlaying) {
+                                            viewModel.stopEnglishWritingTestMergedFile()
+                                        } else {
+                                            viewModel.playEnglishWritingTestMergedFile()
+                                        }
+                                    },
+                                    enabled = hasEnglishWritingTestMergedFile,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = if (isEnglishWritingTestMergedFilePlaying) "재생 중..." else "영작테스트 녹음 재생",
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                            } else {
+                                Log.d("MainScreen", "영작테스트 모드이지만 녹음 파일 없음")
                             }
+                        }
+                        "통암기" -> {
+                            // 통암기 모드에서 녹음 파일이 있으면 재생 버튼
+                            if (hasFullMemorizationRecording) {
+                                Log.d("MainScreen", "통암기 재생 버튼 표시")
+                                Button(
+                                    onClick = {
+                                        if (isFullMemorizationRecordingPlaying) {
+                                            memorizationViewModel.stopFullMemorizationPlaying()
+                                        } else {
+                                            memorizationViewModel.playFullMemorizationRecording()
+                                        }
+                                    },
+                                    enabled = hasFullMemorizationRecording,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = if (isFullMemorizationRecordingPlaying) "재생 중..." else "통암기 녹음 재생",
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                            } else {
+                                Log.d("MainScreen", "통암기 모드이지만 녹음 파일 없음")
+                            }
+                        }
+                        else -> {
+                            Log.d("MainScreen", "알 수 없는 암기 레벨: '$selectedLevel'")
                         }
                     }
                 }

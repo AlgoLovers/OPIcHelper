@@ -167,4 +167,30 @@ class TtsOrchestrator @Inject constructor(
         val endTime = System.currentTimeMillis()
         return if (success) (endTime - startTime) else 0L
     }
+    
+    /**
+     * TTS 재생 완료까지 기다린 후 재생 시간 반환
+     */
+    suspend fun speakAndWaitForCompletion(text: String, isKorean: Boolean, rate: Float): Long {
+        val startTime = System.currentTimeMillis()
+        val isKoreanText = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
+        
+        val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
+        
+        val success = if (isKoreanText) {
+            speakKorean(text) { completionDeferred.complete(Unit) }
+        } else {
+            speakEnglish(text) { completionDeferred.complete(Unit) }
+        }
+        
+        if (success) {
+            // TTS 재생 완료까지 대기
+            completionDeferred.await()
+            val endTime = System.currentTimeMillis()
+            return endTime - startTime
+        } else {
+            completionDeferred.complete(Unit)
+            return 0L
+        }
+    }
 } 

@@ -21,6 +21,7 @@ fun QuestionCard(
     highlightIndex: Int?,
     currentIndex: Int,
     totalCount: Int,
+    isFlipped: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Log.d("QuestionCard", "Rendering with index=$currentIndex/$totalCount, highlightIndex=$highlightIndex")
@@ -63,6 +64,7 @@ fun QuestionCard(
         
         // 플립 카드로 질문 표시
         FlipCard(
+            isFlipped = isFlipped,
             frontContent = {
                 Card(
                     modifier = Modifier.fillMaxWidth(),

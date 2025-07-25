@@ -107,4 +107,6 @@ interface AudioFileManager {
      * @return 머지 파일 (없으면 null)
      */
     suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File?
+    suspend fun hasFullMemorizationRecording(category: String, scriptIndex: Int): Boolean
+    suspend fun getFullMemorizationRecording(category: String, scriptIndex: Int): File?
 } 

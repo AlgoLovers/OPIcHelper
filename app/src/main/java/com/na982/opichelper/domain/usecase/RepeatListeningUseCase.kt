@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.TtsPlayer
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import android.util.Log
@@ -15,7 +16,8 @@ import javax.inject.Singleton
 @Singleton
 class RepeatListeningService @Inject constructor(
     private val ttsPlayer: TtsPlayer,
-    private val progressTracker: MemorizeTestProgressTracker
+    private val progressTracker: MemorizeTestProgressTracker,
+    private val recordingTimeManager: RecordingTimeManager
 ) {
     /**
      * 반복 듣기 테스트 실행
@@ -104,6 +106,13 @@ class RepeatListeningService @Inject constructor(
                 delay(100) // 카드 뒤집기 애니메이션 대기
                 onHighlight(i) // 영문 하이라이트
                 val enDuration = ttsPlayer.speakAndGetDuration(enSentences[i], isKorean = false, rate = 0.75f)
+                
+                // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
+                if (j == 1) {
+                    recordingTimeManager.saveRecordingTime(category, scriptIndex, i, enDuration)
+                    Log.d("RepeatListeningService", "문장 $i 영문 TTS 시간 저장: ${enDuration}ms")
+                }
+                
                 delay((enDuration * 1.0).toLong())
             }
             onHighlight(null) // 하이라이트 제거

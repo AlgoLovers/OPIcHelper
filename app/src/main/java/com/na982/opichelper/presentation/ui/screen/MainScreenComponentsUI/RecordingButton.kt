@@ -32,7 +32,7 @@ fun FullMemorizationRecordingButton(
         modifier = modifier
     ) {
         Text(
-            text = if (isRecording) "녹음중" else "답변 녹음",
+            text = if (isRecording) "녹음 종료" else "답변 녹음", // "녹음중" → "녹음 종료"로 변경
             color = MaterialTheme.colorScheme.onPrimary
         )
     }

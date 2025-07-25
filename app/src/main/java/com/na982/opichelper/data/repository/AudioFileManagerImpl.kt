@@ -386,4 +386,50 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             result
         }
     }
+
+    override suspend fun hasFullMemorizationRecording(category: String, scriptIndex: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            val recordingsDir = File(context.filesDir, "recordings")
+            if (!recordingsDir.exists()) {
+                Log.d("AudioFileManager", "통암기 파일 확인: recordings 디렉토리가 존재하지 않음")
+                return@withContext false
+            }
+
+            val pattern = Regex("통암기_${category}_${scriptIndex}_.*")
+            Log.d("AudioFileManager", "통암기 파일 확인: 패턴=${pattern.pattern}")
+
+            val files = recordingsDir.listFiles { file ->
+                val matches = file.name.matches(pattern)
+                Log.d("AudioFileManager", "통암기 파일 확인: 파일=${file.name}, 매치=${matches}")
+                matches
+            }
+
+            val hasFile = files?.isNotEmpty() == true
+            Log.d("AudioFileManager", "통암기 파일 확인: category=$category, scriptIndex=$scriptIndex, 결과=$hasFile")
+            hasFile
+        }
+    }
+
+    override suspend fun getFullMemorizationRecording(category: String, scriptIndex: Int): File? {
+        return withContext(Dispatchers.IO) {
+            val recordingsDir = File(context.filesDir, "recordings")
+            if (!recordingsDir.exists()) {
+                Log.d("AudioFileManager", "통암기 파일 조회: recordings 디렉토리가 존재하지 않음")
+                return@withContext null
+            }
+
+            val pattern = Regex("통암기_${category}_${scriptIndex}_.*")
+            Log.d("AudioFileManager", "통암기 파일 조회: 패턴=${pattern.pattern}")
+
+            val files = recordingsDir.listFiles { file ->
+                val matches = file.name.matches(pattern)
+                Log.d("AudioFileManager", "통암기 파일 조회: 파일=${file.name}, 매치=${matches}")
+                matches
+            }
+
+            val result = files?.maxByOrNull { it.lastModified() }
+            Log.d("AudioFileManager", "통암기 파일 조회: category=$category, scriptIndex=$scriptIndex, 결과=${result?.absolutePath}")
+            result
+        }
+    }
 } 
