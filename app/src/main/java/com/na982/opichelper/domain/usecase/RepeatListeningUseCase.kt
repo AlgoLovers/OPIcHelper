@@ -22,7 +22,8 @@ class RepeatListeningService @Inject constructor(
      * - answerKo: 한글 답변 텍스트
      * - answerEn: 영문 답변 텍스트
      * - repeatCount: 반복 횟수 (기본 5회)
-     * - onHighlight: 문장별 하이라이트 콜백
+     * - onHighlight: 영문 하이라이트 콜백
+     * - onKoreanHighlight: 한글 하이라이트 콜백
      * - onCardFlip: 카드 뒤집기 콜백 (true: 한글, false: 영문)
      * - category: 카테고리
      * - scriptIndex: 스크립트 인덱스
@@ -33,6 +34,7 @@ class RepeatListeningService @Inject constructor(
         answerKo: String,
         answerEn: String,
         onHighlight: (Int?) -> Unit,
+        onKoreanHighlight: (Int?) -> Unit,
         onCardFlip: (Boolean) -> Unit, // true: 한글, false: 영문
         category: String,
         scriptIndex: Int,
@@ -80,7 +82,7 @@ class RepeatListeningService @Inject constructor(
             // 1. 한글 문장 1회 TTS (카드를 한글로 뒤집고 하이라이트)
             onCardFlip(true) // 카드를 한글로 뒤집기
             delay(100) // 카드 뒤집기 애니메이션 대기
-            onHighlight(i) // 한글 하이라이트
+            onKoreanHighlight(i) // 한글 하이라이트
             val koDuration = ttsPlayer.speakAndGetDuration(koSentences[i], isKorean = true, rate = 0.8f)
             delay((koDuration * 0.5).toLong())
             

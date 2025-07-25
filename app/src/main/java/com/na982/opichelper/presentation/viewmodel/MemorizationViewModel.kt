@@ -254,10 +254,19 @@ class MemorizationViewModel @Inject constructor(
                             onHighlight = { index ->
                                 if (index != null) {
                                     ttsPlaybackController.setAnswerHighlightIndex(index)
-                                    Log.d("MemorizationViewModel", "반복 듣기: 하이라이트 설정: $index")
+                                    Log.d("MemorizationViewModel", "반복 듣기: 영문 하이라이트 설정: $index")
                                 } else {
                                     ttsPlaybackController.clearHighlight()
-                                    Log.d("MemorizationViewModel", "반복 듣기: 하이라이트 제거")
+                                    Log.d("MemorizationViewModel", "반복 듣기: 영문 하이라이트 제거")
+                                }
+                            },
+                            onKoreanHighlight = { index ->
+                                if (index != null) {
+                                    ttsPlaybackController.setAnswerKoHighlightIndex(index)
+                                    Log.d("MemorizationViewModel", "반복 듣기: 한글 하이라이트 설정: $index")
+                                } else {
+                                    ttsPlaybackController.clearHighlight()
+                                    Log.d("MemorizationViewModel", "반복 듣기: 한글 하이라이트 제거")
                                 }
                             },
                             onCardFlip = { isKorean ->
