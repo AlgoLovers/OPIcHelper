@@ -484,13 +484,43 @@ class MainViewModel @Inject constructor(
     fun stopAllTts() {
         viewModelScope.launch {
             try {
+                Log.d("MainViewModel", "모든 TTS 중지 시작")
+                
+                // 1. TTS 재생 중지
                 ttsPlaybackController.stopTts()
-                ttsPlaybackController.clearHighlight()
+                
+                // 2. 영작테스트 관련 상태 초기화
                 _isEnglishWritingTestMergedFilePlaying.value = false
                 _englishWritingTestMergedFileHighlightIndex.value = null
-                Log.d("MainViewModel", "모든 TTS 및 재생 중지")
+                
+                // 3. 하이라이트 초기화
+                ttsPlaybackController.clearHighlight()
+                
+                Log.d("MainViewModel", "모든 TTS 중지 완료")
             } catch (e: Exception) {
                 Log.e("MainViewModel", "TTS 중지 실패", e)
+            }
+        }
+    }
+    
+    /**
+     * 완전한 TTS 정리 (앱 종료 시 사용)
+     */
+    fun cleanupAllTts() {
+        viewModelScope.launch {
+            try {
+                Log.d("MainViewModel", "완전한 TTS 정리 시작")
+                
+                // 1. TTS 완전 정리
+                ttsPlaybackController.cleanupTts()
+                
+                // 2. 모든 관련 상태 초기화
+                _isEnglishWritingTestMergedFilePlaying.value = false
+                _englishWritingTestMergedFileHighlightIndex.value = null
+                
+                Log.d("MainViewModel", "완전한 TTS 정리 완료")
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "완전한 TTS 정리 실패", e)
             }
         }
     }

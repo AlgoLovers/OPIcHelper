@@ -105,7 +105,7 @@ class RepeatListeningService @Inject constructor(
                 onCardFlip(false) // 카드를 영문으로 뒤집기
                 delay(100) // 카드 뒤집기 애니메이션 대기
                 onHighlight(i) // 영문 하이라이트
-                val enDuration = ttsPlayer.speakAndGetDuration(enSentences[i], isKorean = false, rate = 0.75f)
+                val enDuration = ttsPlayer.speakAndGetDuration(enSentences[i], isKorean = false, rate = 1.0f) // 0.75f에서 1.0f로 향상
                 
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {

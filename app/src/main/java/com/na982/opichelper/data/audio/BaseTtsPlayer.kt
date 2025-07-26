@@ -16,7 +16,7 @@ abstract class BaseTtsPlayer(
     protected val context: Context,
     private val locale: Locale,
     private val serviceName: String,
-    private val logTag: String
+    protected val logTag: String
 ) : TtsPlayer {
     
     protected var tts: TextToSpeech? = null
@@ -125,7 +125,7 @@ abstract class BaseTtsPlayer(
         return _isPlaying || (tts?.isSpeaking == true)
     }
     
-    fun release() {
+    override fun release() {
         try {
             tts?.stop()
             tts?.shutdown()

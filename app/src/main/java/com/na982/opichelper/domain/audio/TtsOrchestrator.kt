@@ -1,12 +1,14 @@
 package com.na982.opichelper.domain.audio
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import javax.inject.Inject
 
 /**
  * TTS 오케스트레이터 (TTS 서비스 조율 및 폴백 관리)
  * 클린 아키텍처 원칙에 따라 여러 TTS 서비스들을 조율하고 폴백 처리
+ * Android 버전별 TTS 성능 최적화 지원
  */
 class TtsOrchestrator @Inject constructor(
     private val context: Context,
@@ -22,6 +24,17 @@ class TtsOrchestrator @Inject constructor(
     )
     
     private var currentKoreanTtsIndex = 0
+    
+    init {
+        // Android 버전 정보 로깅
+        val androidVersion = when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> "Android 14+ (최신 기기)"
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> "Android 13 (중간 기기)"
+            else -> "Android 12 이하 (구형 기기)"
+        }
+        Log.d("TtsOrchestrator", "📱 Android 버전 감지: ${Build.VERSION.SDK_INT} ($androidVersion)")
+        Log.d("TtsOrchestrator", "📱 기기 정보: ${Build.MANUFACTURER} ${Build.MODEL}")
+    }
     
     /**
      * 텍스트 언어를 감지하여 적절한 TTS 플레이어로 재생
@@ -90,6 +103,33 @@ class TtsOrchestrator @Inject constructor(
             player.stop()
         }
         Log.d("TtsOrchestrator", "모든 TTS 중지")
+    }
+    
+    /**
+     * 모든 TTS 플레이어 완전 해제 (앱 종료 시 사용)
+     */
+    fun releaseAllPlayers() {
+        try {
+            Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제 시작")
+            
+            // 1. 모든 TTS 중지
+            stop()
+            
+            // 2. Google TTS 플레이어 해제
+            googleTtsPlayer.release()
+            
+            // 3. 모든 한글 TTS 플레이어 해제
+            for (player in koreanTtsPlayers) {
+                player.release()
+            }
+            
+            // 4. 인덱스 초기화
+            currentKoreanTtsIndex = 0
+            
+            Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제 완료")
+        } catch (e: Exception) {
+            Log.e("TtsOrchestrator", "TTS 플레이어 해제 중 오류", e)
+        }
     }
     
     /**

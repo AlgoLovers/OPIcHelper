@@ -392,56 +392,72 @@ class MemorizationViewModel @Inject constructor(
     }
 
     fun stopMemorization() {
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        _isRunning.value = false
-        
-        // 반복듣기 중단 시 현재 진행상황 저장
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    // 현재 진행상황을 가져와서 저장
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex())
-                    if (currentProgress != null && currentProgress.memorizeLevel == "반복 듣기") {
-                        // 현재 진행상황을 그대로 유지 (이미 updateCurrentSentenceIndex에서 업데이트됨)
-                        progressTracker.persistChangedProgress()
-                        Log.d("MemorizationViewModel", "반복듣기 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
+                Log.d("MemorizationViewModel", "암기 테스트 중단 시작")
+                
+                // 1. 현재 실행 중인 작업 중단
+                currentUseCaseJob?.cancel()
+                currentUseCaseJob = null
+                _isRunning.value = false
+                
+                // 2. TTS 완전 중지
+                ttsPlaybackController.stopTts()
+                ttsPlaybackController.clearHighlight()
+                
+                // 3. 진행상황 저장
+                try {
+                    val currentItem = qaDataManager.getCurrentQaItem()
+                    if (currentItem != null) {
+                        val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex())
+                        if (currentProgress != null && currentProgress.memorizeLevel == "반복 듣기") {
+                            progressTracker.persistChangedProgress()
+                            Log.d("MemorizationViewModel", "반복듣기 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.e("MemorizationViewModel", "진행상황 저장 실패", e)
                 }
+                
+                Log.d("MemorizationViewModel", "암기 테스트 중단 완료")
             } catch (e: Exception) {
-                Log.e("MemorizationViewModel", "진행상황 저장 실패", e)
+                Log.e("MemorizationViewModel", "암기 테스트 중단 실패", e)
             }
-            
-            ttsPlaybackController.stopTts()
-            ttsPlaybackController.clearHighlight()
         }
     }
 
     fun stopRepeatListening() {
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        _isRunning.value = false
-        
-        // 반복듣기 중단 시 현재 진행상황 저장
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    // 현재 진행상황을 가져와서 저장
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex())
-                    if (currentProgress != null && currentProgress.memorizeLevel == "반복 듣기") {
-                        // 현재 진행상황을 그대로 유지 (이미 updateCurrentSentenceIndex에서 업데이트됨)
-                        progressTracker.persistChangedProgress()
-                        Log.d("MemorizationViewModel", "반복듣기 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
+                Log.d("MemorizationViewModel", "반복듣기 중단 시작")
+                
+                // 1. 현재 실행 중인 작업 중단
+                currentUseCaseJob?.cancel()
+                currentUseCaseJob = null
+                _isRunning.value = false
+                
+                // 2. TTS 완전 중지
+                ttsPlaybackController.stopTts()
+                ttsPlaybackController.clearHighlight()
+                
+                // 3. 진행상황 저장
+                try {
+                    val currentItem = qaDataManager.getCurrentQaItem()
+                    if (currentItem != null) {
+                        val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex())
+                        if (currentProgress != null && currentProgress.memorizeLevel == "반복 듣기") {
+                            progressTracker.persistChangedProgress()
+                            Log.d("MemorizationViewModel", "반복듣기 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.e("MemorizationViewModel", "진행상황 저장 실패", e)
                 }
+                
+                Log.d("MemorizationViewModel", "반복듣기 중단 완료")
             } catch (e: Exception) {
-                Log.e("MemorizationViewModel", "진행상황 저장 실패", e)
+                Log.e("MemorizationViewModel", "반복듣기 중단 실패", e)
             }
-            
-            ttsPlaybackController.stopTts()
-            ttsPlaybackController.clearHighlight()
         }
     }
 

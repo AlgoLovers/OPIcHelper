@@ -60,6 +60,23 @@ class AudioPlayerImpl : AudioPlayer {
         player = null
     }
     
+    /**
+     * 완전한 리소스 해제 (앱 종료 시 사용)
+     */
+    override fun release() {
+        try {
+            Log.d("AudioPlayerImpl", "완전한 리소스 해제 시작")
+            
+            // 1. 재생 중지
+            stop()
+            
+            // 2. 추가 정리 작업 (필요시)
+            Log.d("AudioPlayerImpl", "완전한 리소스 해제 완료")
+        } catch (e: Exception) {
+            Log.e("AudioPlayerImpl", "완전한 리소스 해제 중 오류", e)
+        }
+    }
+    
     override fun stopAudio() {
         stop()
     }

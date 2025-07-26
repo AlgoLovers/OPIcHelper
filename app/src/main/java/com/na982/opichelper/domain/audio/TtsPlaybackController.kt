@@ -264,16 +264,63 @@ class TtsPlaybackController @Inject constructor(
      */
     suspend fun stopTts() {
         try {
-            Log.d("TtsPlaybackController", "TTS 재생 중지")
+            Log.d("TtsPlaybackController", "TTS 재생 중지 시작")
+            
+            // 1. TTS 오케스트레이터 중지
             ttsOrchestrator?.stop()
+            
+            // 2. 오디오 플레이어 중지
+            audioPlayer.stop()
+            
+            // 3. 상태 초기화
             _isPlaying.value = false
             _isQuestionPlaying.value = false
             _isAnswerPlaying.value = false
             _questionHighlightIndex.value = null
             _answerHighlightIndex.value = null
+            _answerKoHighlightIndex.value = null
+            _recordingHighlightIndex.value = null
+            
+            // 4. 하이라이트 초기화
+            clearHighlight()
+            
             Log.d("TtsPlaybackController", "TTS 재생 중지 완료")
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 중지 오류", e)
+        }
+    }
+    
+    /**
+     * 완전한 TTS 정리 (앱 종료 시 사용)
+     */
+    suspend fun cleanupTts() {
+        try {
+            Log.d("TtsPlaybackController", "TTS 완전 정리 시작")
+            
+            // 1. 모든 TTS 중지
+            stopTts()
+            
+            // 2. TTS 오케스트레이터 완전 정리
+            ttsOrchestrator?.let { orchestrator ->
+                // 각 TTS 플레이어의 release 호출
+                orchestrator.releaseAllPlayers()
+            }
+            
+            // 3. 오디오 플레이어 완전 정리
+            audioPlayer.release()
+            
+            // 4. 상태 완전 초기화
+            _isPlaying.value = false
+            _isQuestionPlaying.value = false
+            _isAnswerPlaying.value = false
+            _questionHighlightIndex.value = null
+            _answerHighlightIndex.value = null
+            _answerKoHighlightIndex.value = null
+            _recordingHighlightIndex.value = null
+            
+            Log.d("TtsPlaybackController", "TTS 완전 정리 완료")
+        } catch (e: Exception) {
+            Log.e("TtsPlaybackController", "TTS 완전 정리 오류", e)
         }
     }
     

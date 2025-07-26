@@ -157,6 +157,31 @@ class KakaoTtsPlayer(private val context: Context) : TtsPlayer {
         speak(text, null)
     }
     
+    /**
+     * TTS 플레이어 완전 해제 (앱 종료 시 사용)
+     */
+    override fun release() {
+        try {
+            Log.d("KakaoTtsPlayer", "카카오 TTS 플레이어 완전 해제 시작")
+            
+            // 1. MediaPlayer 해제
+            mediaPlayer?.apply {
+                if (isPlaying) {
+                    stop()
+                }
+                release()
+            }
+            mediaPlayer = null
+            
+            // 2. 상태 초기화
+            isPlaying = false
+            
+            Log.d("KakaoTtsPlayer", "카카오 TTS 플레이어 완전 해제 완료")
+        } catch (e: Exception) {
+            Log.e("KakaoTtsPlayer", "카카오 TTS 플레이어 해제 중 오류", e)
+        }
+    }
+    
     override suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long {
         val start = System.currentTimeMillis()
         val finished = kotlinx.coroutines.CompletableDeferred<Unit>()

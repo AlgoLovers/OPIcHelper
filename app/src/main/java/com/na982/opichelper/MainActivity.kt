@@ -17,9 +17,16 @@ import com.na982.opichelper.ui.theme.OPicHelperTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
+import com.na982.opichelper.domain.manager.WakeLockManager
+import javax.inject.Inject
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var wakeLockManager: WakeLockManager
     
     private var isFinishing = false // 앱이 실제로 종료되는지 추적
     private var viewModel: MainViewModel? = null // ViewModel 참조 저장
@@ -36,6 +43,10 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // WakeLock 획득 (앱 실행 중 화면 켜짐 유지)
+        wakeLockManager.acquireWakeLock()
+        Log.d("MainActivity", "앱 시작 - WakeLock 획득")
         
         // 권한 요청
         if (ContextCompat.checkSelfPermission(
@@ -64,6 +75,7 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         Log.d("MainActivity", "onPause() - 앱이 백그라운드로 이동")
         // 백그라운드로 이동 시에는 TTS와 하이라이트 유지
+        // WakeLock은 유지 (사용자가 다시 돌아올 수 있음)
         viewModel?.onBackgroundMove()
     }
 
@@ -71,6 +83,11 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         Log.d("MainActivity", "onResume() - 앱이 포그라운드로 복귀")
         // 포그라운드로 복귀 시 상태 확인
+        // WakeLock이 해제되었을 경우 다시 획득
+        if (!wakeLockManager.isWakeLockHeld()) {
+            wakeLockManager.acquireWakeLock()
+            Log.d("MainActivity", "포그라운드 복귀 - WakeLock 재획득")
+        }
         viewModel?.onForegroundReturn()
     }
 
@@ -78,6 +95,7 @@ class MainActivity : ComponentActivity() {
         super.onStop()
         Log.d("MainActivity", "onStop() - 앱이 완전히 숨겨짐")
         // onStop에서는 아직 정리하지 않음 (백그라운드에서 복귀 가능)
+        // WakeLock은 유지 (사용자가 다시 돌아올 수 있음)
     }
 
     override fun onDestroy() {
@@ -90,9 +108,24 @@ class MainActivity : ComponentActivity() {
 
     override fun onBackPressed() {
         Log.d("MainActivity", "onBackPressed() - 백버튼 눌림")
-        // 백버튼으로 앱 종료 시 모든 TTS와 하이라이트 즉시 정리
-        viewModel?.stopAllTts()
-        cleanupAllResources()
+        
+        // 백버튼으로 앱 종료 시 완전한 정리
+        lifecycleScope.launch {
+            try {
+                Log.d("MainActivity", "백버튼 종료 - 완전한 리소스 정리 시작")
+                
+                // 1. 완전한 TTS 정리
+                viewModel?.cleanupAllTts()
+                
+                // 2. 모든 리소스 정리
+                cleanupAllResources()
+                
+                Log.d("MainActivity", "백버튼 종료 - 완전한 리소스 정리 완료")
+            } catch (e: Exception) {
+                Log.e("MainActivity", "백버튼 종료 처리 중 오류", e)
+            }
+        }
+        
         super.onBackPressed()
     }
 
@@ -101,6 +134,7 @@ class MainActivity : ComponentActivity() {
      * - TTS 재생 중지
      * - 하이라이트 초기화
      * - 오디오 플레이어 중지
+     * - WakeLock 해제
      */
     private fun cleanupAllResources() {
         Log.d("MainActivity", "모든 리소스 정리 시작")
@@ -109,7 +143,9 @@ class MainActivity : ComponentActivity() {
             // ViewModel의 정리 함수 호출
             viewModel?.cleanupOnAppExit()
             
-                        // TTS 서비스는 TtsPlaybackController에서 관리하므로 별도 중지 불필요
+            // WakeLock 해제
+            wakeLockManager.releaseWakeLock()
+            Log.d("MainActivity", "WakeLock 해제 완료")
             
             Log.d("MainActivity", "모든 리소스 정리 완료")
         } catch (e: Exception) {

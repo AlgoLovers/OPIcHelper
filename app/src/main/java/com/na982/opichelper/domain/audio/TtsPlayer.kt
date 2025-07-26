@@ -44,4 +44,9 @@ interface TtsPlayer {
      * TTS 재생 후 재생 시간 반환
      */
     suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long
+    
+    /**
+     * TTS 플레이어 완전 해제 (앱 종료 시 사용)
+     */
+    fun release()
 } 
