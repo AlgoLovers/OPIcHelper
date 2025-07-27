@@ -13,6 +13,7 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaCodec
 import java.nio.ByteBuffer
+import kotlinx.coroutines.delay
 
 /**
  * AudioFileManager 구현체
@@ -337,7 +338,14 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             }
             
             Log.d("AudioFileManager", "오디오 파일 병합 완료: ${outputFile.absolutePath}, 크기: ${outputFile.length()} bytes")
+            waitForFileReady(outputFile)
             outputFile
+        }
+    }
+
+    private suspend fun waitForFileReady(file: File) {
+        while (!file.exists() || file.length() == 0L) {
+            delay(100L)
         }
     }
     

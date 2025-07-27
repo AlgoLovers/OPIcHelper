@@ -63,7 +63,7 @@ fun MainScreen(
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
 
     // ===== 영작 테스트 (English Writing) =====
-    val hasEnglishWritingTestMergedFile = currentMode == CurrentMode.ENGLISH_WRITING_WITH_FILE
+    val hasEnglishWritingTestMergedFile by viewModel.hasEnglishWritingTestMergedFile.collectAsState()
     val englishWritingTestCompleted by memorizationViewModel.englishWritingTestCompleted.collectAsState()
     val isEnglishWritingTestMergedFilePlaying = currentMode == CurrentMode.ENGLISH_WRITING_PLAYING
     val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
@@ -84,6 +84,7 @@ fun MainScreen(
 
     // 스크립트 변경 시 영작테스트 병합 파일 확인
     LaunchedEffect(uiState.currentQaItem) {
+        Log.d("MainScreen", "currentQaItem 변경 감지: ${uiState.currentQaItem?.category}")
         viewModel.checkEnglishWritingTestMergedFile()
     }
 

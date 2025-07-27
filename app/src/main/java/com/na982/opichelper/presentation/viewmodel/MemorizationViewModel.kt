@@ -513,7 +513,6 @@ class MemorizationViewModel @Inject constructor(
                         },
                         onMergedFileCreated = {
                             viewModelScope.launch {
-                                delay(1000L) // 파일 시스템 동기화 대기
                                 _englishWritingTestCompleted.value = true
                                 Log.d("MemorizationViewModel", "영작테스트 병합 파일 생성 완료 - 이벤트 발생")
                                 
