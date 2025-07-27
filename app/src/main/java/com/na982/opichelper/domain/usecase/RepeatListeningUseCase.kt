@@ -86,7 +86,27 @@ class RepeatListeningService @Inject constructor(
             delay(100) // 카드 뒤집기 애니메이션 대기
             onKoreanHighlight(i) // 한글 하이라이트
             val koDuration = ttsPlayer.speakAndGetDuration(koSentences[i], isKorean = true, rate = 0.8f)
-            delay((koDuration * 0.5).toLong())
+            
+            // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
+            val enSentence = enSentences[i]
+            val enWordCount = enSentence.split("\\s+".toRegex()).size
+            
+            // 방법 1: 단어 수 기반 적응형 딜레이
+            val baseDelay = enWordCount * 500 // 기본 딜레이
+            val lengthMultiplier = when {
+                enWordCount <= 5 -> 1.5f    // 짧은 문장: 1.5배
+                enWordCount <= 10 -> 1.2f   // 중간 문장: 1.2배
+                enWordCount <= 15 -> 1.0f   // 긴 문장: 1.0배
+                else -> 0.8f                // 매우 긴 문장: 0.8배
+            }
+            val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
+            
+            // 방법 2: 실제 영문 TTS 시간 예측 (선택적)
+            // val predictedEnDuration = ttsPlayer.speakAndGetDuration(enSentence, isKorean = false, rate = 1.0f)
+            // val predictedDelay = (predictedEnDuration * 0.3).toLong() // 예측된 영문 시간의 30%
+            
+            Log.d("RepeatListeningService", "문장 $i 딜레이 계산: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${adaptiveDelay}ms")
+            delay(adaptiveDelay)
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {

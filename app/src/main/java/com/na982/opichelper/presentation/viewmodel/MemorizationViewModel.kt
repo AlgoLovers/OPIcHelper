@@ -457,7 +457,10 @@ class MemorizationViewModel @Inject constructor(
                                 }
                             },
                             onCardFlip = { isKorean ->
-                                // 카드 뒤집기 상태는 currentMode로 관리
+                                // 반복듣기 카드 뒤집기 상태 업데이트
+                                _uiState.value = _uiState.value.copy(
+                                    isRepeatListeningCardFlipped = isKorean
+                                )
                                 Log.d("MemorizationViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
                             },
                             category = currentItem.category,
@@ -486,7 +489,9 @@ class MemorizationViewModel @Inject constructor(
                         scriptIndex = scriptIndex,
                         onCardFlip = { isKorean ->
                             // 영작테스트 카드 뒤집기 상태 업데이트
-                            // 카드 뒤집기 상태는 currentMode로 관리
+                            _uiState.value = _uiState.value.copy(
+                                isEnglishWritingTestCardFlipped = isKorean
+                            )
                             Log.d("MemorizationViewModel", "영작 테스트: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
                         },
                         onKoreanHighlight = { index ->
@@ -585,7 +590,12 @@ class MemorizationViewModel @Inject constructor(
         currentUseCaseJob = null
         stopMode()
         
-        // 2. TTS 완전 중지 및 하이라이트 정리
+        // 2. 카드 상태 초기화 (영문으로 복원)
+        _uiState.value = _uiState.value.copy(
+            isRepeatListeningCardFlipped = false
+        )
+        
+        // 3. TTS 완전 중지 및 하이라이트 정리
         viewModelScope.launch {
             ttsPlaybackController.stopTts()
             ttsPlaybackController.clearHighlight()
@@ -625,7 +635,12 @@ class MemorizationViewModel @Inject constructor(
         currentUseCaseJob = null
         stopMode()
         
-        // 2. TTS 및 하이라이트 정리
+        // 2. 카드 상태 초기화 (영문으로 복원)
+        _uiState.value = _uiState.value.copy(
+            isEnglishWritingTestCardFlipped = false
+        )
+        
+        // 3. TTS 및 하이라이트 정리
         viewModelScope.launch {
             ttsPlaybackController.stopTts()
             ttsPlaybackController.clearHighlight()
