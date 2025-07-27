@@ -571,6 +571,27 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+    
+    /**
+     * 동기적으로 TTS 정리 (백키 종료 시 사용)
+     */
+    fun cleanupAllTtsSync() {
+        try {
+            Log.d("MainViewModel", "동기적 TTS 정리 시작")
+            
+            // 1. TTS 강제 중지 (동기적으로)
+            ttsPlaybackController.forceStopTts()
+            ttsPlaybackController.clearHighlight()
+            
+            // 2. 모든 관련 상태 초기화
+            _isEnglishWritingTestMergedFilePlaying.value = false
+            _englishWritingTestMergedFileHighlightIndex.value = null
+            
+            Log.d("MainViewModel", "동기적 TTS 정리 완료")
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "동기적 TTS 정리 실패", e)
+        }
+    }
 
     fun checkFullMemorizationRecording() {
         // MemorizationViewModel로 기능 이동 - 여기서는 호출만

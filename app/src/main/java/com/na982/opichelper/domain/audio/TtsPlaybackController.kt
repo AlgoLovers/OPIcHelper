@@ -358,6 +358,34 @@ class TtsPlaybackController @Inject constructor(
     }
     
     /**
+     * TTS 강제 중지 (동기적, 백키 종료 시 사용)
+     */
+    fun forceStopTts() {
+        try {
+            Log.d("TtsPlaybackController", "TTS 강제 중지 시작")
+            
+            // 1. TTS 오케스트레이터 강제 중지
+            ttsOrchestrator?.stop()
+            
+            // 2. 오디오 플레이어 강제 중지
+            audioPlayer.stop()
+            
+            // 3. 모든 상태 즉시 초기화
+            _isPlaying.value = false
+            _isQuestionPlaying.value = false
+            _isAnswerPlaying.value = false
+            _questionHighlightIndex.value = null
+            _answerHighlightIndex.value = null
+            _answerKoHighlightIndex.value = null
+            _recordingHighlightIndex.value = null
+            
+            Log.d("TtsPlaybackController", "TTS 강제 중지 완료")
+        } catch (e: Exception) {
+            Log.e("TtsPlaybackController", "TTS 강제 중지 오류", e)
+        }
+    }
+    
+    /**
      * TTS 플레이어 반환 (UseCase에서 사용)
      */
     fun getTtsPlayer(): TtsPlayer {

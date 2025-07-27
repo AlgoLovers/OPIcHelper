@@ -109,24 +109,23 @@ class MainActivity : ComponentActivity() {
     override fun onBackPressed() {
         Log.d("MainActivity", "onBackPressed() - 백버튼 눌림")
         
-        // 백버튼으로 앱 종료 시 완전한 정리
-        lifecycleScope.launch {
-            try {
-                Log.d("MainActivity", "백버튼 종료 - 완전한 리소스 정리 시작")
-                
-                // 1. 완전한 TTS 정리
-                viewModel?.cleanupAllTts()
-                
-                // 2. 모든 리소스 정리
-                cleanupAllResources()
-                
-                Log.d("MainActivity", "백버튼 종료 - 완전한 리소스 정리 완료")
-            } catch (e: Exception) {
-                Log.e("MainActivity", "백버튼 종료 처리 중 오류", e)
-            }
+        // 백버튼으로 앱 종료 시 완전한 정리 (동기적으로 처리)
+        try {
+            Log.d("MainActivity", "백버튼 종료 - 완전한 리소스 정리 시작")
+            
+            // 1. 모든 TTS 강제 중지 (동기적으로)
+            viewModel?.cleanupAllTtsSync()
+            
+            // 2. 모든 리소스 정리
+            cleanupAllResources()
+            
+            Log.d("MainActivity", "백버튼 종료 - 완전한 리소스 정리 완료")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "백버튼 종료 처리 중 오류", e)
         }
         
-        super.onBackPressed()
+        // 앱 완전 종료
+        finish()
     }
 
     /**
