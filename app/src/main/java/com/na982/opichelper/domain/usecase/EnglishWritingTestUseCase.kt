@@ -108,8 +108,18 @@ class EnglishWritingTestService @Inject constructor(
             onRecordingHighlight(idx) // 녹음 하이라이트 추가 (한글 하이라이트와 함께)
             onRecordingStateChange(true) // 녹음 상태 활성화
             
-            // 영문 문장 길이에 비례한 녹음 시간 계산
-            val recordingDuration = (enSentences[idx].length * 100L).coerceAtLeast(3000L) // 최소 3초
+            // 1. 저장된 TTS 시간 확인 (반복듣기에서 저장한 영문 TTS 시간)
+            val savedTtsTime = recordingTimeManager.getRecordingTime(category, scriptIndex, idx)
+            
+            // 2. 폴백 로직: 저장된 TTS 시간이 있으면 사용, 없으면 문장 길이로 계산
+            val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
+                Log.d("EnglishWritingTestService", "문장 $idx 저장된 TTS 시간 사용: ${savedTtsTime}ms")
+                savedTtsTime
+            } else {
+                val calculatedTime = (enSentences[idx].length * 100L).coerceAtLeast(3000L)
+                Log.d("EnglishWritingTestService", "문장 $idx 저장된 TTS 시간 없음 - 문장 길이로 계산: ${calculatedTime}ms")
+                calculatedTime
+            }
             
             // 녹음 시작
             val recordingFile = audioRecorder.startRecording()

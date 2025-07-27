@@ -110,6 +110,9 @@ class MainViewModel @Inject constructor(
     private val _englishWritingTestMergedFileHighlightIndex = MutableStateFlow<Int?>(null)
     val englishWritingTestMergedFileHighlightIndex: StateFlow<Int?> = _englishWritingTestMergedFileHighlightIndex.asStateFlow()
 
+    // 영작테스트 하이라이트 재생을 위한 Job 관리
+    private var englishWritingTestHighlightJob: Job? = null
+
     private val _isQuestionCardFlipped = MutableStateFlow(false)
     val isQuestionCardFlipped: StateFlow<Boolean> = _isQuestionCardFlipped.asStateFlow()
 
@@ -280,41 +283,44 @@ class MainViewModel @Inject constructor(
     }
 
     fun playEnglishWritingTestMergedFile() {
-        viewModelScope.launch {
-            val currentItem = qaDataManager.currentQaItem.value
-            if (currentItem != null) {
-                val mergedFile = audioFileManager.getEnglishWritingTestMergedFile(
-                    currentItem.category, 
-                    qaDataManager.getCurrentIndex()
-                )
-                
-                if (mergedFile != null && mergedFile.exists()) {
-                    Log.d("MainViewModel", "영작테스트 병합 파일 재생: ${mergedFile.absolutePath}")
-                    
-                    // 녹음 시간 데이터 확인
+        // 이전 하이라이트 Job이 실행 중이면 취소
+        englishWritingTestHighlightJob?.cancel()
+        
+        englishWritingTestHighlightJob = viewModelScope.launch {
+            try {
+                val currentItem = qaDataManager.currentQaItem.value
+                if (currentItem != null) {
                     val category = currentItem.category
                     val scriptIndex = qaDataManager.getCurrentIndex()
                     
-                    Log.d("MainViewModel", "녹음 시간 데이터 확인: category='$category', scriptIndex=$scriptIndex, 키: ${category}_${scriptIndex}")
+                    Log.d("MainViewModel", "영작테스트 병합 파일 재생 시작: category='$category', scriptIndex=$scriptIndex")
                     
-                    if (!recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
-                        Log.d("MainViewModel", "녹음 시간 데이터가 없음 - 테스트 데이터 저장 후 기본 하이라이트 사용")
+                    val mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
+                    
+                    if (mergedFile != null && mergedFile.exists()) {
+                        Log.d("MainViewModel", "영작테스트 병합 파일 재생: ${mergedFile.absolutePath}")
                         
-                        // 테스트 데이터 저장 (디버깅용)
-                        recordingTimeManager.saveRecordingTime(category, scriptIndex, 0, 3000L)
-                        recordingTimeManager.saveRecordingTime(category, scriptIndex, 1, 4000L)
-                        recordingTimeManager.saveRecordingTime(category, scriptIndex, 2, 3500L)
+                        Log.d("MainViewModel", "녹음 시간 데이터 확인: category='$category', scriptIndex=$scriptIndex, 키: ${category}_${scriptIndex}")
                         
-                        // 기본 하이라이트 사용
-                        playEnglishWritingTestMergedFileWithDefaultHighlight(mergedFile, currentItem)
+                        if (!recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
+                            Log.d("MainViewModel", "녹음 시간 데이터가 없음 - 기본 하이라이트 사용")
+                            
+                            // 기본 하이라이트 사용 (처음부터)
+                            playEnglishWritingTestMergedFileWithDefaultHighlight(mergedFile, currentItem)
+                        } else {
+                            Log.d("MainViewModel", "녹음 시간 데이터 사용 - 정확한 하이라이트 동기화")
+                            // 저장된 녹음 시간 사용 (처음부터)
+                            playEnglishWritingTestMergedFileWithExactHighlight(mergedFile, currentItem, category, scriptIndex)
+                        }
                     } else {
-                        Log.d("MainViewModel", "녹음 시간 데이터 사용 - 정확한 하이라이트 동기화")
-                        // 저장된 녹음 시간 사용
-                        playEnglishWritingTestMergedFileWithExactHighlight(mergedFile, currentItem, category, scriptIndex)
+                        Log.d("MainViewModel", "영작테스트 병합 파일이 존재하지 않음")
                     }
-                } else {
-                    Log.d("MainViewModel", "영작테스트 병합 파일이 존재하지 않음")
                 }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "영작테스트 병합 파일 재생 실패", e)
+            } finally {
+                // Job 완료 후 null로 설정
+                englishWritingTestHighlightJob = null
             }
         }
     }
@@ -334,15 +340,24 @@ class MainViewModel @Inject constructor(
         
         // 각 문장에 대해 하이라이트 진행 (기본 시간)
         for (i in sentences.indices) {
+            // Job이 취소되었는지 확인
+            if (!currentCoroutineContext().isActive) {
+                Log.d("MainViewModel", "영작테스트 Job이 취소됨 - 루프 종료")
+                break
+            }
+            
             if (_isEnglishWritingTestMergedFilePlaying.value) {
+                Log.d("MainViewModel", "영작테스트 하이라이트 설정: 문장 $i")
                 _englishWritingTestMergedFileHighlightIndex.value = i
                 
                 // 기본 하이라이트 지속 시간
                 val sentenceLength = sentences[i].length
                 val highlightDuration = (sentenceLength * 50L).coerceAtLeast(1000L)
                 
+                Log.d("MainViewModel", "영작테스트 하이라이트 지속 시간: ${highlightDuration}ms")
                 delay(highlightDuration)
             } else {
+                Log.d("MainViewModel", "영작테스트 재생이 중단됨 - 루프 종료")
                 break
             }
         }
@@ -359,6 +374,7 @@ class MainViewModel @Inject constructor(
         
         // 재생 상태 설정
         _isEnglishWritingTestMergedFilePlaying.value = true
+        Log.d("MainViewModel", "영작테스트 재생 상태 설정: isEnglishWritingTestMergedFilePlaying=true")
         
         // 영문 카드로 설정
         setAnswerCardFlipped(false)
@@ -372,18 +388,26 @@ class MainViewModel @Inject constructor(
         
         // 각 문장에 대해 정확한 녹음 시간으로 하이라이트 진행
         for (i in recordingTimes.indices) {
-            if (_isEnglishWritingTestMergedFilePlaying.value) {
-                _englishWritingTestMergedFileHighlightIndex.value = i
-                
-                // 저장된 실제 녹음 시간 사용
-                val recordingTime = recordingTimes[i]
-                Log.d("MainViewModel", "문장 $i 하이라이트 지속 시간: ${recordingTime}ms")
-                
-                delay(recordingTime)
-            } else {
-                Log.d("MainViewModel", "재생이 중단됨 - 루프 종료")
+            // Job이 취소되었는지 확인
+            if (!currentCoroutineContext().isActive) {
+                Log.d("MainViewModel", "영작테스트 Job이 취소됨 - 루프 종료")
                 break
             }
+            
+            // 재생 상태 재확인 (중단된 경우 루프 종료)
+            if (!_isEnglishWritingTestMergedFilePlaying.value) {
+                Log.d("MainViewModel", "영작테스트 재생이 중단됨 - 루프 종료")
+                break
+            }
+            
+            Log.d("MainViewModel", "영작테스트 정확한 하이라이트 설정: 문장 $i")
+            _englishWritingTestMergedFileHighlightIndex.value = i
+            
+            // 저장된 실제 녹음 시간 사용
+            val recordingTime = recordingTimes[i]
+            Log.d("MainViewModel", "문장 $i 하이라이트 지속 시간: ${recordingTime}ms")
+            
+            delay(recordingTime)
         }
         
         // 재생 완료 후 상태 초기화
@@ -394,16 +418,20 @@ class MainViewModel @Inject constructor(
     }
 
     fun stopEnglishWritingTestMergedFile() {
-        viewModelScope.launch {
-            // 재생 상태 초기화
-            _isEnglishWritingTestMergedFilePlaying.value = false
-            _englishWritingTestMergedFileHighlightIndex.value = null
-            
-            // 오디오 재생 중지
-            audioPlayer.stop()
-            
-            Log.d("MainViewModel", "영작테스트 병합 파일 재생 중단")
-        }
+        Log.d("MainViewModel", "영작테스트 병합 파일 재생 중단 시작")
+        
+        // 하이라이트 Job 취소
+        englishWritingTestHighlightJob?.cancel()
+        englishWritingTestHighlightJob = null
+        
+        // 재생 상태 초기화
+        _isEnglishWritingTestMergedFilePlaying.value = false
+        _englishWritingTestMergedFileHighlightIndex.value = null
+        
+        // 오디오 재생 중지
+        audioPlayer.stop()
+        
+        Log.d("MainViewModel", "영작테스트 병합 파일 재생 중단 완료 - 하이라이트 인덱스 초기화")
     }
 
     fun checkEnglishWritingTestMergedFile() {

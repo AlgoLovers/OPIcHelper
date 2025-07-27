@@ -65,7 +65,7 @@ fun MainScreen(
     // ===== 영작 테스트 (English Writing) =====
     val hasEnglishWritingTestMergedFile by viewModel.hasEnglishWritingTestMergedFile.collectAsState()
     val englishWritingTestCompleted by memorizationViewModel.englishWritingTestCompleted.collectAsState()
-    val isEnglishWritingTestMergedFilePlaying = currentMode == CurrentMode.ENGLISH_WRITING_PLAYING
+    val isEnglishWritingTestMergedFilePlaying by viewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
     val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModel.stopEnglishWritingTestMergedFilePlaying.collectAsState()
     val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
@@ -335,10 +335,22 @@ fun MainScreen(
                         currentAnswer = qaItem.answerEn,
                         currentAnswerKo = qaItem.answerKo,
                         highlightIndex = when {
-                            isFullMemorizationMode && isFullMemorizationPlaying -> fullMemorizationHighlightIndex
-                            isFullMemorizationRecordingPlaying -> fullMemorizationHighlightIndex
-                            isEnglishWritingTestMergedFilePlaying -> englishWritingTestMergedFileHighlightIndex
-                            else -> uiState.answerHighlightIndex
+                            isFullMemorizationMode && isFullMemorizationPlaying -> {
+                                Log.d("MainScreen", "통암기 TTS 하이라이트: $fullMemorizationHighlightIndex")
+                                fullMemorizationHighlightIndex
+                            }
+                            isFullMemorizationRecordingPlaying -> {
+                                Log.d("MainScreen", "통암기 녹음 재생 하이라이트: $fullMemorizationHighlightIndex")
+                                fullMemorizationHighlightIndex
+                            }
+                            isEnglishWritingTestMergedFilePlaying -> {
+                                Log.d("MainScreen", "영작테스트 녹음 재생 하이라이트: $englishWritingTestMergedFileHighlightIndex")
+                                englishWritingTestMergedFileHighlightIndex
+                            }
+                            else -> {
+                                Log.d("MainScreen", "기본 하이라이트: ${uiState.answerHighlightIndex}")
+                                uiState.answerHighlightIndex
+                            }
                         },
                         answerKoHighlightIndex = uiState.answerKoHighlightIndex,
                         recordingHighlightIndex = uiState.recordingHighlightIndex,
@@ -383,7 +395,7 @@ fun MainScreen(
                     )
 
                     // 암기 레벨별 조건부 녹음 재생 버튼
-                    Log.d("MainScreen", "암기 레벨별 재생 버튼 조건 확인: selectedLevel='$selectedLevel', hasFullMemorizationRecording=$hasFullMemorizationRecording, hasEnglishWritingTestMergedFile=$hasEnglishWritingTestMergedFile")
+                    Log.d("MainScreen", "암기 레벨별 재생 버튼 조건 확인: selectedLevel='$selectedLevel', hasFullMemorizationRecording=$hasFullMemorizationRecording, hasEnglishWritingTestMergedFile=$hasEnglishWritingTestMergedFile, isEnglishWritingTestMergedFilePlaying=$isEnglishWritingTestMergedFilePlaying, englishWritingTestMergedFileHighlightIndex=$englishWritingTestMergedFileHighlightIndex")
                     
                     when (selectedLevel) {
                         "반복 듣기" -> {
