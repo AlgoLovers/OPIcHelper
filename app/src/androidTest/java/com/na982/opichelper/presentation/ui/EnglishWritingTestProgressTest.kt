@@ -24,7 +24,7 @@ class EnglishWritingTestProgressTest {
     fun `4-2-1_영작테스트_진행상황_실시간_저장_테스트`() {
         // 1. 카테고리 선택 (첫 번째 카테고리)
         composeTestRule.onNodeWithText("카테고리 선택").performClick()
-        composeTestRule.onNodeWithText("qa_bank").performClick()
+        composeTestRule.onNodeWithText("은행").performClick()
         
         // 2. 영작테스트 모드 선택
         composeTestRule.onNodeWithText("영작 테스트").performClick()
@@ -67,7 +67,7 @@ class EnglishWritingTestProgressTest {
     fun `4-2-2_영작테스트_카테고리별_독립적_진행상황_테스트`() {
         // 1. 첫 번째 카테고리에서 영작테스트 진행
         composeTestRule.onNodeWithText("카테고리 선택").performClick()
-        composeTestRule.onNodeWithText("qa_bank").performClick()
+        composeTestRule.onNodeWithText("은행").performClick()
         composeTestRule.onNodeWithText("영작 테스트").performClick()
         composeTestRule.onNodeWithText("부분암기 테스트").performClick()
         
@@ -77,7 +77,7 @@ class EnglishWritingTestProgressTest {
         
         // 3. 두 번째 카테고리로 변경
         composeTestRule.onNodeWithText("카테고리 선택").performClick()
-        composeTestRule.onNodeWithText("qa_beach").performClick()
+        composeTestRule.onNodeWithText("해변").performClick()
         
         // 4. 두 번째 카테고리에서 영작테스트 진행
         composeTestRule.onNodeWithText("영작 테스트").performClick()
@@ -90,7 +90,7 @@ class EnglishWritingTestProgressTest {
         // 6. 각 카테고리별 진행상황이 독립적으로 저장되었는지 확인
         // 첫 번째 카테고리로 돌아가서 진행상황 확인
         composeTestRule.onNodeWithText("카테고리 선택").performClick()
-        composeTestRule.onNodeWithText("qa_bank").performClick()
+        composeTestRule.onNodeWithText("은행").performClick()
         composeTestRule.onNodeWithText("영작 테스트").performClick()
         composeTestRule.onNodeWithText("부분암기 테스트").performClick()
         
@@ -110,7 +110,7 @@ class EnglishWritingTestProgressTest {
     fun `4-2-3_영작테스트_스크립트별_독립적_진행상황_테스트`() {
         // 1. 첫 번째 스크립트에서 영작테스트 진행
         composeTestRule.onNodeWithText("카테고리 선택").performClick()
-        composeTestRule.onNodeWithText("qa_bank").performClick()
+        composeTestRule.onNodeWithText("은행").performClick()
         composeTestRule.onNodeWithText("영작 테스트").performClick()
         composeTestRule.onNodeWithText("부분암기 테스트").performClick()
         
@@ -151,6 +151,7 @@ class EnglishWritingTestProgressTest {
     fun `4-2-4_영작테스트_앱_재시작_후_진행상황_복원_테스트`() {
         // 1. 영작테스트 시작
         composeTestRule.onNodeWithText("카테고리 선택").performClick()
+        composeTestRule.onNodeWithText("은행").performClick()
         composeTestRule.onNodeWithText("qa_bank").performClick()
         composeTestRule.onNodeWithText("영작 테스트").performClick()
         composeTestRule.onNodeWithText("부분암기 테스트").performClick()

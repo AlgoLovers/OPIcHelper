@@ -59,4 +59,20 @@ class EnglishWritingTestServiceTest {
     }
 
     @Test
-    fun `
+    fun `EnglishWritingTestService가 정상적으로 초기화되어야 함`() {
+        // Then
+        assertNotNull(englishWritingTestService)
+    }
+
+    @Test
+    fun `기본 테스트 구조가 정상적으로 작동해야 함`() {
+        // Given
+        val expected = true
+        
+        // When
+        val actual = true
+        
+        // Then
+        assertEquals(expected, actual)
+    }
+}

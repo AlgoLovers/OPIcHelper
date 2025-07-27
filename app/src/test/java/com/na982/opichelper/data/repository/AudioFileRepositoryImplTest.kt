@@ -189,5 +189,15 @@ class AudioFileRepositoryImplTest {
             val testFile = File("영작테스트_${category}_${scriptIndex}_test.m4a")
             return if (testFile.exists()) testFile else null
         }
+        
+        override suspend fun getFullMemorizationRecording(category: String, scriptIndex: Int): File? {
+            val testFile = File("전체암기_${category}_${scriptIndex}_test.m4a")
+            return if (testFile.exists()) testFile else null
+        }
+        
+        override suspend fun hasFullMemorizationRecording(category: String, scriptIndex: Int): Boolean {
+            val testFile = File("전체암기_${category}_${scriptIndex}_test.m4a")
+            return testFile.exists()
+        }
     }
 } 

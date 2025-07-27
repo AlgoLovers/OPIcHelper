@@ -14,7 +14,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.After
@@ -31,14 +30,14 @@ class MemorizationViewModelTest {
     @Before
     fun setup() {
         // 테스트 설정 - 간단한 설정만 수행
-        resetMain()
-        setMain(StandardTestDispatcher())
+        Dispatchers.resetMain()
+        Dispatchers.setMain(StandardTestDispatcher())
     }
 
     @After
     fun tearDown() {
         // 테스트 정리 - 간단한 정리만 수행
-        resetMain()
+        Dispatchers.resetMain()
     }
 
     @Test

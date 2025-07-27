@@ -35,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.na982.opichelper.presentation.viewmodel.CurrentMode
 
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -43,30 +44,43 @@ fun MainScreen(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
+    // ===== 공통 모드 (기본 UI 상태) =====
     val uiState by viewModel.uiState.collectAsState()
     val memorizationViewModel: MemorizationViewModel = hiltViewModel()
     val memorizeLevels by memorizationViewModel.memorizeLevels.collectAsState()
     val selectedLevel = uiState.selectedMemorizeLevel
-    val isMemorizeTestRunning by memorizationViewModel.isRunning.collectAsState() // 이 값만 사용
-    val isFullMemorizationMode by memorizationViewModel.isFullMemorizationMode.collectAsState()
-    val isEnglishWritingTestMode by memorizationViewModel.isEnglishWritingTestMode.collectAsState()
-    val isEnglishWritingTestCardFlipped by memorizationViewModel.isEnglishWritingTestCardFlipped.collectAsState()
-    val isFullMemorizationRecording by memorizationViewModel.isFullMemorizationRecording.collectAsState()
-    val isFullMemorizationPlaying by memorizationViewModel.isFullMemorizationPlaying.collectAsState()
-    val hasFullMemorizationRecording by memorizationViewModel.hasFullMemorizationRecording.collectAsState()
-    val isFullMemorizationRecordingPlaying by memorizationViewModel.isFullMemorizationPlaying.collectAsState()
-    val fullMemorizationRecordingHighlightIndex by memorizationViewModel.fullMemorizationHighlightIndex.collectAsState()
     val currentQaItemState = uiState.currentQaItem
     val categories = uiState.categories
     val currentCategoryState = uiState.currentCategory
-    val context = LocalContext.current
-    val hasEnglishWritingTestMergedFile by viewModel.hasEnglishWritingTestMergedFile.collectAsState()
+    // ===== 공통 상태 (모든 모드에서 사용) =====
+    val currentMode by memorizationViewModel.currentMode.collectAsState()
+    val isQuestionCardFlipped by viewModel.isQuestionCardFlipped.collectAsState()
+
+    // ===== MemorizationViewModel UI 상태 =====
+    val memorizationUiState by memorizationViewModel.uiState.collectAsState()
+
+    // ===== 반복 듣기 (Repeat Listening) =====
+    val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
+
+    // ===== 영작 테스트 (English Writing) =====
+    val hasEnglishWritingTestMergedFile = currentMode == CurrentMode.ENGLISH_WRITING_WITH_FILE
     val englishWritingTestCompleted by memorizationViewModel.englishWritingTestCompleted.collectAsState()
-    val isEnglishWritingTestMergedFilePlaying by viewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
+    val isEnglishWritingTestMergedFilePlaying = currentMode == CurrentMode.ENGLISH_WRITING_PLAYING
     val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModel.stopEnglishWritingTestMergedFilePlaying.collectAsState()
-    val isRepeatListeningCardFlipped by memorizationViewModel.isRepeatListeningCardFlipped.collectAsState()
-    val isQuestionCardFlipped by viewModel.isQuestionCardFlipped.collectAsState()
+    val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
+
+    // ===== 통암기 (Full Memorization) =====
+    val fullMemorizationHighlightIndex by memorizationViewModel.fullMemorizationHighlightIndex.collectAsState()
+    val isFullMemorizationRecording = memorizationUiState.isFullMemorizationRecording
+    val isFullMemorizationPlaying = memorizationUiState.isFullMemorizationPlaying
+    val hasFullMemorizationRecording = memorizationUiState.hasFullMemorizationRecording
+    val isFullMemorizationRecordingPlaying = memorizationUiState.isFullMemorizationRecordingPlaying
+
+    // ===== 편의 변수들 =====
+    val isMemorizeTestRunning = memorizationUiState.isMemorizeTestRunning
+    val isFullMemorizationMode = memorizationUiState.isFullMemorizationMode
+    val isEnglishWritingTestMode = memorizationUiState.isEnglishWritingTestMode
 
     // 스크립트 변경 시 영작테스트 병합 파일 확인
     LaunchedEffect(uiState.currentQaItem) {
@@ -100,6 +114,8 @@ fun MainScreen(
             Log.d("MainScreen", "영작테스트 녹음 파일 재생 중단 처리 완료")
         }
     }
+
+
 
     // 암기레벨 변경 감지 및 상태 초기화
     LaunchedEffect(selectedLevel) {
@@ -317,8 +333,8 @@ fun MainScreen(
                         currentAnswer = qaItem.answerEn,
                         currentAnswerKo = qaItem.answerKo,
                         highlightIndex = when {
-                            isFullMemorizationMode && isFullMemorizationPlaying -> fullMemorizationRecordingHighlightIndex
-                            isFullMemorizationRecordingPlaying -> fullMemorizationRecordingHighlightIndex
+                            isFullMemorizationMode && isFullMemorizationPlaying -> fullMemorizationHighlightIndex
+                            isFullMemorizationRecordingPlaying -> fullMemorizationHighlightIndex
                             isEnglishWritingTestMergedFilePlaying -> englishWritingTestMergedFileHighlightIndex
                             else -> uiState.answerHighlightIndex
                         },

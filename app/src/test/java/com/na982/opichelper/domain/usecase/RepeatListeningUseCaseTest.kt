@@ -1,8 +1,8 @@
 package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.ScriptProgress
+import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.launch
 import org.junit.Before
@@ -20,6 +20,9 @@ class RepeatListeningServiceTest {
     @Mock
     private lateinit var mockProgressTracker: MemorizeTestProgressTracker
 
+    @Mock
+    private lateinit var mockRecordingTimeManager: RecordingTimeManager
+
     private lateinit var repeatListeningService: RepeatListeningService
 
     @Before
@@ -27,7 +30,8 @@ class RepeatListeningServiceTest {
         MockitoAnnotations.openMocks(this)
         repeatListeningService = RepeatListeningService(
             ttsPlayer = mockTtsPlayer,
-            progressTracker = mockProgressTracker
+            progressTracker = mockProgressTracker,
+            recordingTimeManager = mockRecordingTimeManager
         )
     }
 
@@ -55,6 +59,7 @@ class RepeatListeningServiceTest {
             answerKo = answerKo,
             answerEn = answerEn,
             onHighlight = { index -> highlightIndex = index },
+            onKoreanHighlight = { index -> highlightIndex = index },
             onCardFlip = { isKorean -> cardFlipped = isKorean },
             category = category,
             scriptIndex = scriptIndex
@@ -94,6 +99,7 @@ class RepeatListeningServiceTest {
             answerKo = answerKo,
             answerEn = answerEn,
             onHighlight = { index -> highlightIndex = index },
+            onKoreanHighlight = { index -> highlightIndex = index },
             onCardFlip = { isKorean -> cardFlipped = isKorean },
             category = category,
             scriptIndex = scriptIndex
@@ -133,6 +139,7 @@ class RepeatListeningServiceTest {
             answerKo = answerKo,
             answerEn = answerEn,
             onHighlight = { index -> highlightIndex = index },
+            onKoreanHighlight = { index -> highlightIndex = index },
             onCardFlip = { isKorean -> cardFlipped = isKorean },
             category = category,
             scriptIndex = scriptIndex
@@ -164,6 +171,7 @@ class RepeatListeningServiceTest {
                 answerKo = answerKo,
                 answerEn = answerEn,
                 onHighlight = { index -> highlightIndex = index },
+                onKoreanHighlight = { index -> highlightIndex = index },
                 onCardFlip = { isKorean -> cardFlipped = isKorean },
                 category = category,
                 scriptIndex = scriptIndex
@@ -207,6 +215,7 @@ class RepeatListeningServiceTest {
             answerKo = answerKo,
             answerEn = answerEn,
             onHighlight = { index -> highlightIndex = index },
+            onKoreanHighlight = { index -> highlightIndex = index },
             onCardFlip = { isKorean -> cardFlipped = isKorean },
             category = category,
             scriptIndex = scriptIndex
