@@ -89,11 +89,11 @@ class ProgressPersistenceService @Inject constructor(
     }
     
     /**
-     * 카테고리별 진행 상황 로드
+     * 카테고리별 진행 상황 로드 (암기레벨별)
      */
-    suspend fun loadCategoryProgress(category: String, scriptIndex: Int): CategoryProgress? {
+    suspend fun loadCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String): CategoryProgress? {
         return try {
-            val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}"
+            val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}_${memorizeLevel}"
             val json = prefs.getString(key, null)
             if (json != null) {
                 val progress = gson.fromJson(json, CategoryProgress::class.java)
@@ -138,11 +138,11 @@ class ProgressPersistenceService @Inject constructor(
     }
     
     /**
-     * 특정 카테고리 진행 상황 삭제
+     * 특정 카테고리 진행 상황 삭제 (암기레벨별)
      */
-    suspend fun clearCategoryProgress(category: String, scriptIndex: Int) {
+    suspend fun clearCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String) {
         try {
-            val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}"
+            val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}_${memorizeLevel}"
             prefs.edit().remove(key).apply()
             Log.d("ProgressPersistenceService", "진행 상황 삭제: $key")
         } catch (e: Exception) {

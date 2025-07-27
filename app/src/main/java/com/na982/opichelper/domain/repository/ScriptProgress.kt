@@ -16,9 +16,9 @@ data class ScriptProgress(
     val needsSave: Boolean = false
 ) {
     /**
-     * 카테고리와 스크립트 인덱스로 고유 키 생성
+     * 카테고리, 스크립트 인덱스, 암기레벨로 고유 키 생성
      */
-    fun getKey(): String = "${category}_${scriptIndex}"
+    fun getKey(): String = "${category}_${scriptIndex}_${memorizeLevel}"
     
     /**
      * 저장용 복사본 생성 (needsSave 플래그 제거)

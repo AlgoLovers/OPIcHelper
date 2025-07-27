@@ -54,8 +54,8 @@ class EnglishWritingTestService @Inject constructor(
         val enSentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         val count = minOf(koSentences.size, enSentences.size)
         
-        // 복원된 앱 상태에서 시작 인덱스 가져오기
-        val currentProgress = progressTracker.getScriptProgress(category, scriptIndex)
+        // 복원된 앱 상태에서 시작 인덱스 가져오기 (암기레벨별)
+        val currentProgress = progressTracker.getScriptProgress(category, scriptIndex, "영작 테스트")
         
         val startIndex = if (currentProgress?.isMemorizeTestRunning == true) {
             currentProgress.currentSentenceIndex
@@ -162,8 +162,8 @@ class EnglishWritingTestService @Inject constructor(
             onMergedFileCreated()
         }
         
-        // 테스트 완료 - 현재 스크립트 진행 상황 삭제
-        progressTracker.clearScriptProgress(category, scriptIndex)
+        // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
+        progressTracker.clearScriptProgress(category, scriptIndex, "영작 테스트")
         
         Log.d("EnglishWritingTestService", "영작 테스트 완료")
     }

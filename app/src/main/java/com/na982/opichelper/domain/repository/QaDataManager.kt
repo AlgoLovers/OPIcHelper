@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import com.na982.opichelper.domain.entity.QaItem
+import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,9 @@ import java.io.InputStreamReader
  * 책임: QA 데이터 상태 관리, 카테고리 관리, 인덱스 관리, UI 상태 관리
  */
 @Singleton
-class QaDataManager @Inject constructor() {
+class QaDataManager @Inject constructor(
+    private val progressTracker: MemorizeTestProgressTracker
+) {
     
     private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
     private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
@@ -44,7 +47,7 @@ class QaDataManager @Inject constructor() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
     
-    fun init(application: Application) {
+    suspend fun init(application: Application) {
         prefs = application.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
         loadQaItemsFromAssets(application)
         restoreLastCategory()
@@ -132,8 +135,11 @@ class QaDataManager @Inject constructor() {
         return itemsByCategory[category] ?: emptyList()
     }
     
-    fun selectCategory(category: String) {
+    suspend fun selectCategory(category: String) {
         if (itemsByCategory.containsKey(category)) {
+            // 현재 스크립트의 진행상황 저장
+            saveCurrentProgress()
+            
             _currentCategory.value = category
             itemIndexByCategory[category] = 0
             updateCurrentQaItem()
@@ -144,13 +150,16 @@ class QaDataManager @Inject constructor() {
         }
     }
     
-    fun nextQaItem() {
+    suspend fun nextQaItem() {
         val category = _currentCategory.value
         if (category != null) {
             val items = itemsByCategory[category] ?: emptyList()
             val currentIndex = itemIndexByCategory[category] ?: 0
             
             if (currentIndex < items.size - 1) {
+                // 현재 스크립트의 진행상황 저장
+                saveCurrentProgress()
+                
                 itemIndexByCategory[category] = currentIndex + 1
                 updateCurrentQaItem()
                 saveLastIndex(currentIndex + 1)
@@ -161,12 +170,15 @@ class QaDataManager @Inject constructor() {
         }
     }
     
-    fun previousQaItem() {
+    suspend fun previousQaItem() {
         val category = _currentCategory.value
         if (category != null) {
             val currentIndex = itemIndexByCategory[category] ?: 0
             
             if (currentIndex > 0) {
+                // 현재 스크립트의 진행상황 저장
+                saveCurrentProgress()
+                
                 itemIndexByCategory[category] = currentIndex - 1
                 updateCurrentQaItem()
                 saveLastIndex(currentIndex - 1)
@@ -195,7 +207,7 @@ class QaDataManager @Inject constructor() {
         }
     }
     
-    private fun restoreLastCategory() {
+    private suspend fun restoreLastCategory() {
         val lastCategory = prefs?.getString(PREF_KEY_LAST_CATEGORY, null)
         if (lastCategory != null && itemsByCategory.containsKey(lastCategory)) {
             _currentCategory.value = lastCategory
@@ -223,6 +235,28 @@ class QaDataManager @Inject constructor() {
     
     fun clearError() {
         _error.value = null
+    }
+
+    /**
+     * 현재 스크립트의 진행상황 저장
+     * @param memorizeLevel 현재 활성화된 암기레벨
+     */
+    suspend fun saveCurrentProgress(memorizeLevel: String? = null) {
+        val category = _currentCategory.value
+        val currentIndex = itemIndexByCategory[category] ?: 0
+        
+        if (category != null) {
+            // 현재 진행상황 확인
+            val currentProgress = progressTracker.getScriptProgress(category, currentIndex, memorizeLevel ?: "반복 듣기")
+            
+            if (currentProgress != null) {
+                // 진행상황이 있으면 저장
+                progressTracker.persistChangedProgress()
+                Log.d("QaDataManager", "현재 진행상황 저장: $category (인덱스: $currentIndex, 레벨: ${memorizeLevel ?: "반복 듣기"})")
+            } else {
+                Log.d("QaDataManager", "저장할 진행상황 없음: $category (인덱스: $currentIndex)")
+            }
+        }
     }
     
     // Asset 데이터 클래스

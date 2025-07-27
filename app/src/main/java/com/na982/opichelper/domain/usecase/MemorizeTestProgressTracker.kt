@@ -61,18 +61,18 @@ class MemorizeTestProgressTracker @Inject constructor(
     }
     
     /**
-     * 특정 스크립트의 진행 상황 가져오기
+     * 특정 스크립트의 진행 상황 가져오기 (암기레벨별)
      */
-    fun getScriptProgress(category: String, scriptIndex: Int): ScriptProgress? {
-        val key = "${category}_${scriptIndex}"
+    fun getScriptProgress(category: String, scriptIndex: Int, memorizeLevel: String): ScriptProgress? {
+        val key = "${category}_${scriptIndex}_${memorizeLevel}"
         return _progressMap.value[key]
     }
     
     /**
-     * 특정 스크립트의 진행 상황 존재 여부 확인
+     * 특정 스크립트의 진행 상황 존재 여부 확인 (암기레벨별)
      */
-    fun hasScriptProgress(category: String, scriptIndex: Int): Boolean {
-        return getScriptProgress(category, scriptIndex) != null
+    fun hasScriptProgress(category: String, scriptIndex: Int, memorizeLevel: String): Boolean {
+        return getScriptProgress(category, scriptIndex, memorizeLevel) != null
     }
     
     /**
@@ -86,7 +86,7 @@ class MemorizeTestProgressTracker @Inject constructor(
         totalSentences: Int,
         isMemorizeTestRunning: Boolean
     ) {
-        val key = "${category}_${scriptIndex}"
+        val key = "${category}_${scriptIndex}_${memorizeLevel}"
         val currentMap = _progressMap.value.toMutableMap()
         
         currentMap[key] = ScriptProgress(
@@ -106,10 +106,10 @@ class MemorizeTestProgressTracker @Inject constructor(
     }
     
     /**
-     * 현재 문장 인덱스만 업데이트
+     * 현재 문장 인덱스만 업데이트 (암기레벨별)
      */
-    fun updateCurrentSentenceIndex(category: String, scriptIndex: Int, sentenceIndex: Int) {
-        val key = "${category}_${scriptIndex}"
+    fun updateCurrentSentenceIndex(category: String, scriptIndex: Int, memorizeLevel: String, sentenceIndex: Int) {
+        val key = "${category}_${scriptIndex}_${memorizeLevel}"
         val currentProgress = _progressMap.value[key]
         
         if (currentProgress != null) {
@@ -165,18 +165,18 @@ class MemorizeTestProgressTracker @Inject constructor(
     }
     
     /**
-     * 특정 스크립트의 진행 상황 삭제
+     * 특정 스크립트의 진행 상황 삭제 (암기레벨별)
      */
-    suspend fun clearScriptProgress(category: String, scriptIndex: Int) {
+    suspend fun clearScriptProgress(category: String, scriptIndex: Int, memorizeLevel: String) {
         try {
-            val key = "${category}_${scriptIndex}"
+            val key = "${category}_${scriptIndex}_${memorizeLevel}"
             val currentMap = _progressMap.value.toMutableMap()
             currentMap.remove(key)
             _progressMap.value = currentMap
             _hasProgress.value = currentMap.isNotEmpty()
             
             // 저장소에서도 삭제
-            progressPersistenceService.clearCategoryProgress(category, scriptIndex)
+            progressPersistenceService.clearCategoryProgress(category, scriptIndex, memorizeLevel)
             
             Log.d("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제: $key")
         } catch (e: Exception) {

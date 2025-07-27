@@ -139,9 +139,6 @@ class MainViewModel @Inject constructor(
         try {
             prefs = getApplication<Application>().getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
             
-            // QA 데이터 매니저 초기화
-            qaDataManager.init(getApplication())
-            
             // TTS 오케스트레이터 설정
             val app = getApplication<Application>() as com.na982.opichelper.OPicHelperApplication
             ttsPlaybackController.setTtsOrchestrator(app.ttsOrchestrator)
@@ -149,9 +146,10 @@ class MainViewModel @Inject constructor(
             // 암기 레벨 로드
             loadMemorizeLevel()
             
-            // 진행상황 복원
+            // QA 데이터 매니저 초기화 및 진행상황 복원
             viewModelScope.launch {
                 try {
+                    qaDataManager.init(getApplication())
                     progressTracker.restoreAllProgress()
                     Log.d("MainViewModel", "진행상황 복원 완료")
                 } catch (e: Exception) {
@@ -430,15 +428,21 @@ class MainViewModel @Inject constructor(
     // ===== QA 데이터 관련 메서드들 (QaDataManager에 직접 위임) =====
     
     fun selectCategory(category: String) {
-        qaDataManager.selectCategory(category)
+        viewModelScope.launch {
+            qaDataManager.selectCategory(category)
+        }
     }
 
     fun nextQaItem() {
-        qaDataManager.nextQaItem()
+        viewModelScope.launch {
+            qaDataManager.nextQaItem()
+        }
     }
 
     fun previousQaItem() {
-        qaDataManager.previousQaItem()
+        viewModelScope.launch {
+            qaDataManager.previousQaItem()
+        }
     }
 
     fun clearError() {
@@ -558,9 +562,9 @@ class MainViewModel @Inject constructor(
                 if (currentItem != null) {
                     val totalSentences = currentItem.answerEn.split(".").size
                     
-                    // 현재 진행상황을 가져와서 저장
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex())
-                    val currentSentenceIndex = if (currentProgress != null && currentProgress.memorizeLevel == selectedMemorizeLevel) {
+                    // 현재 진행상황을 가져와서 저장 (암기레벨별)
+                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)
+                    val currentSentenceIndex = if (currentProgress != null) {
                         currentProgress.currentSentenceIndex
                     } else {
                         0

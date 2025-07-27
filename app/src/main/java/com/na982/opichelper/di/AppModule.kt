@@ -73,8 +73,8 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQaDataManager(): QaDataManager {
-        return QaDataManager()
+    fun provideQaDataManager(progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker): QaDataManager {
+        return QaDataManager(progressTracker)
     }
     
     @Provides

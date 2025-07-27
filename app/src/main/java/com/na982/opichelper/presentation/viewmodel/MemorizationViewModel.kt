@@ -430,7 +430,6 @@ class MemorizationViewModel @Inject constructor(
     private fun startRepeatListening() {
         viewModelScope.launch {
             try {
-                startMode(CurrentMode.REPEAT_LISTENING)
                 val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
                     Log.d("MemorizationViewModel", "반복 듣기 Service 실행")
@@ -533,81 +532,72 @@ class MemorizationViewModel @Inject constructor(
     }
 
     fun stopMemorization() {
+        Log.d("MemorizationViewModel", "암기 테스트 전체 중단 시작")
+        
+        // 현재 실행 중인 모드에 따라 적절한 중단 함수 호출
+        when {
+            _uiState.value.isRepeatListeningRunning -> {
+                Log.d("MemorizationViewModel", "반복듣기 모드 중단")
+                stopRepeatListening()
+            }
+            _uiState.value.isEnglishWritingTestRunning -> {
+                Log.d("MemorizationViewModel", "영작테스트 모드 중단")
+                stopEnglishWritingTest()
+            }
+            _uiState.value.isFullMemorizationMode -> {
+                Log.d("MemorizationViewModel", "통암기 모드 중단")
+                // 통암기는 진행상황 저장하지 않음
+                currentUseCaseJob?.cancel()
+                currentUseCaseJob = null
+                stopMode()
+                viewModelScope.launch {
+                    ttsPlaybackController.stopTts()
+                    ttsPlaybackController.clearHighlight()
+                }
+            }
+            else -> {
+                Log.d("MemorizationViewModel", "실행 중인 암기 모드 없음")
+                currentUseCaseJob?.cancel()
+                currentUseCaseJob = null
+                stopMode()
+                viewModelScope.launch {
+                    ttsPlaybackController.stopTts()
+                    ttsPlaybackController.clearHighlight()
+                }
+            }
+        }
+        
+        Log.d("MemorizationViewModel", "암기 테스트 전체 중단 완료")
+    }
+
+    fun stopRepeatListening() {
+        Log.d("MemorizationViewModel", "반복듣기 중단 시작")
+        
+        // 1. 현재 실행 중인 작업 중단
         currentUseCaseJob?.cancel()
         currentUseCaseJob = null
         stopMode()
         
-        // 영작테스트 모드도 중단
-        if (_uiState.value.isEnglishWritingTestRunning) {
-            // 카드 뒤집기 상태는 currentMode로 관리
+        // 2. TTS 완전 중지 및 하이라이트 정리
+        viewModelScope.launch {
+            ttsPlaybackController.stopTts()
+            ttsPlaybackController.clearHighlight()
         }
         
-        // 반복듣기 중단 시 현재 진행상황 저장
+        // 3. 반복듣기 진행상황 저장
         viewModelScope.launch {
             try {
                 val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
-                    // 현재 진행상황을 가져와서 저장
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex())
+                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), "반복 듣기")
                     if (currentProgress != null) {
-                        when (currentProgress.memorizeLevel) {
-                            "반복 듣기" -> {
-                                // 현재 진행상황을 그대로 유지 (이미 updateCurrentSentenceIndex에서 업데이트됨)
-                                progressTracker.persistChangedProgress()
-                                Log.d("MemorizationViewModel", "반복듣기 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
-                            }
-                            "영작 테스트" -> {
-                                // 현재 진행상황을 그대로 유지
-                                progressTracker.persistChangedProgress()
-                                Log.d("MemorizationViewModel", "영작테스트 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
-                            }
-                        }
+                        progressTracker.persistChangedProgress()
+                        Log.d("MemorizationViewModel", "반복듣기 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
                     }
                 }
-                
-                Log.d("MemorizationViewModel", "암기 테스트 중단 완료")
-            } catch (e: Exception) {
-                Log.e("MemorizationViewModel", "진행상황 저장 실패", e)
-            }
-        }
-    }
-
-    fun stopRepeatListening() {
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        stopMode()
-        
-        // 반복듣기 중단 시 현재 진행상황 저장
-        viewModelScope.launch {
-            try {
-                Log.d("MemorizationViewModel", "반복듣기 중단 시작")
-                
-                // 1. 현재 실행 중인 작업 중단
-                currentUseCaseJob?.cancel()
-                currentUseCaseJob = null
-                _isRunning.value = false
-                
-                // 2. TTS 완전 중지
-                ttsPlaybackController.stopTts()
-                ttsPlaybackController.clearHighlight()
-                
-                // 3. 진행상황 저장
-                try {
-                    val currentItem = qaDataManager.getCurrentQaItem()
-                    if (currentItem != null) {
-                        val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex())
-                        if (currentProgress != null && currentProgress.memorizeLevel == "반복 듣기") {
-                            progressTracker.persistChangedProgress()
-                            Log.d("MemorizationViewModel", "반복듣기 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("MemorizationViewModel", "진행상황 저장 실패", e)
-                }
-                
                 Log.d("MemorizationViewModel", "반복듣기 중단 완료")
             } catch (e: Exception) {
-                Log.e("MemorizationViewModel", "반복듣기 중단 실패", e)
+                Log.e("MemorizationViewModel", "반복듣기 진행상황 저장 실패", e)
             }
         }
     }
@@ -623,46 +613,66 @@ class MemorizationViewModel @Inject constructor(
     fun stopEnglishWritingTest() {
         Log.d("MemorizationViewModel", "영작테스트 중단 시작")
         
-        // 현재 실행 중인 영작테스트 작업 중단
+        // 1. 현재 실행 중인 영작테스트 작업 중단
         currentUseCaseJob?.cancel()
         currentUseCaseJob = null
-        
-        // 영작테스트 상태 초기화
         stopMode()
-        // 카드 뒤집기 상태는 currentMode로 관리
         
-        // 영작테스트 중단 시 현재 진행상황 저장
+        // 2. TTS 및 하이라이트 정리
+        viewModelScope.launch {
+            ttsPlaybackController.stopTts()
+            ttsPlaybackController.clearHighlight()
+        }
+        
+        // 3. 영작테스트 진행상황 저장
         viewModelScope.launch {
             try {
                 val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
-                    // 현재 진행상황을 가져와서 저장
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex())
-                    if (currentProgress != null && currentProgress.memorizeLevel == "영작 테스트") {
-                        // 현재 진행상황을 그대로 유지
+                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), "영작 테스트")
+                    if (currentProgress != null) {
                         progressTracker.persistChangedProgress()
                         Log.d("MemorizationViewModel", "영작테스트 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
                     }
                 }
+                Log.d("MemorizationViewModel", "영작테스트 중단 완료")
             } catch (e: Exception) {
-                Log.e("MemorizationViewModel", "진행상황 저장 실패", e)
+                Log.e("MemorizationViewModel", "영작테스트 진행상황 저장 실패", e)
             }
-            
-            // TTS 및 하이라이트 정리
-            ttsPlaybackController.stopTts()
-            ttsPlaybackController.clearHighlight()
-            
-            Log.d("MemorizationViewModel", "영작테스트 중단 완료")
         }
     }
 
     /**
-     * 암기레벨 변경 시 상태 초기화
+     * 암기레벨 변경 시 상태 초기화 및 새로운 암기레벨 진행상황 확인
      */
     fun onMemorizeLevelChanged() {
         viewModelScope.launch {
             try {
                 Log.d("MemorizationViewModel", "암기레벨 변경 감지 - 상태 초기화")
+                
+                // 현재 스크립트의 진행상황 저장
+                val currentItem = qaDataManager.getCurrentQaItem()
+                if (currentItem != null) {
+                    // 현재 활성화된 암기레벨 확인
+                    val currentLevel = when {
+                        _uiState.value.isRepeatListeningMode -> "반복 듣기"
+                        _uiState.value.isEnglishWritingTestMode -> "영작 테스트"
+                        _uiState.value.isFullMemorizationMode -> "통암기"
+                        else -> "반복 듣기" // 기본값
+                    }
+                    
+                    // 현재 진행상황 저장
+                    val currentProgress = progressTracker.getScriptProgress(
+                        currentItem.category, 
+                        qaDataManager.getCurrentIndex(), 
+                        currentLevel
+                    )
+                    
+                    if (currentProgress != null) {
+                        progressTracker.persistChangedProgress()
+                        Log.d("MemorizationViewModel", "암기레벨 변경 시 진행상황 저장: $currentLevel - 문장 ${currentProgress.currentSentenceIndex}/${currentProgress.totalSentences}")
+                    }
+                }
                 
                 // 현재 실행 중인 작업 중단
                 currentUseCaseJob?.cancel()
@@ -670,13 +680,6 @@ class MemorizationViewModel @Inject constructor(
                 
                 // 기본 상태 초기화 (통암기 모드는 유지)
                 stopMode()
-                // _isFullMemorizationMode.value = false  // ← 통암기 모드는 유지
-                // 카드 뒤집기 상태는 currentMode로 관리
-                // _isFullMemorizationRecording.value = false // ← 통암기 모드는 유지
-                // _isFullMemorizationPlaying.value = false // ← 통암기 모드는 유지
-                
-                // hasFullMemorizationRecording은 초기화하지 않음 (파일 존재 여부는 유지)
-                // _hasFullMemorizationRecording.value = false  // ← 이 줄 제거
                 
                 _englishWritingTestCompleted.value = false
                 _stopEnglishWritingTestMergedFilePlaying.value = false
@@ -684,6 +687,29 @@ class MemorizationViewModel @Inject constructor(
                 // TTS 중단
                 ttsPlaybackController.stopTts()
                 ttsPlaybackController.clearHighlight()
+                
+                // 새로운 암기레벨의 진행상황 확인 및 로드
+                if (currentItem != null) {
+                    // 현재 활성화된 암기레벨 확인
+                    val selectedLevel = when {
+                        _uiState.value.isRepeatListeningMode -> "반복 듣기"
+                        _uiState.value.isEnglishWritingTestMode -> "영작 테스트"
+                        _uiState.value.isFullMemorizationMode -> "통암기"
+                        else -> "반복 듣기" // 기본값
+                    }
+                    
+                    val currentProgress = progressTracker.getScriptProgress(
+                        currentItem.category, 
+                        qaDataManager.getCurrentIndex(), 
+                        selectedLevel
+                    )
+                    
+                    if (currentProgress != null) {
+                        Log.d("MemorizationViewModel", "새로운 암기레벨 진행상황 발견: $selectedLevel - 문장 ${currentProgress.currentSentenceIndex}/${currentProgress.totalSentences}")
+                    } else {
+                        Log.d("MemorizationViewModel", "새로운 암기레벨 진행상황 없음: $selectedLevel")
+                    }
+                }
                 
                 Log.d("MemorizationViewModel", "암기레벨 변경으로 인한 상태 초기화 완료")
             } catch (e: Exception) {
