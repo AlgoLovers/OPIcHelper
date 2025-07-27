@@ -415,12 +415,27 @@ class MainViewModel @Inject constructor(
                 
                 Log.d("MainViewModel", "영작테스트 병합 파일 확인: category='$category', scriptIndex=$scriptIndex")
                 
-                val hasFile = audioFileManager.hasEnglishWritingTestMergedFile(category, scriptIndex)
-                val mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
+                // 파일 존재 여부 확인 (최대 3회 재시도)
+                var hasFile = false
+                var mergedFile: File? = null
                 
-                Log.d("MainViewModel", "영작테스트 병합 파일 확인 결과: hasFile=$hasFile, mergedFile=${mergedFile?.absolutePath}")
+                for (attempt in 1..3) {
+                    hasFile = audioFileManager.hasEnglishWritingTestMergedFile(category, scriptIndex)
+                    mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
+                    
+                    Log.d("MainViewModel", "영작테스트 병합 파일 확인 시도 $attempt: hasFile=$hasFile, mergedFile=${mergedFile?.absolutePath}")
+                    
+                    if (hasFile && mergedFile != null && mergedFile.exists()) {
+                        Log.d("MainViewModel", "영작테스트 병합 파일 확인 성공")
+                        break
+                    } else if (attempt < 3) {
+                        Log.d("MainViewModel", "영작테스트 병합 파일 확인 실패 - 재시도 대기")
+                        delay(500L) // 재시도 전 대기
+                    }
+                }
                 
-                _hasEnglishWritingTestMergedFile.value = hasFile
+                _hasEnglishWritingTestMergedFile.value = hasFile && mergedFile != null && mergedFile.exists()
+                Log.d("MainViewModel", "영작테스트 병합 파일 최종 확인 결과: hasFile=${_hasEnglishWritingTestMergedFile.value}")
             }
         }
     }

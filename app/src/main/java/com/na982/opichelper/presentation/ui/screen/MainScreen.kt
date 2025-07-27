@@ -91,6 +91,7 @@ fun MainScreen(
     LaunchedEffect(englishWritingTestCompleted) {
         if (englishWritingTestCompleted) {
             Log.d("MainScreen", "영작테스트 완료 이벤트 감지 - 병합 파일 확인 시작")
+            delay(500L) // 파일 시스템 동기화 추가 대기
             viewModel.checkEnglishWritingTestMergedFile()
             memorizationViewModel.resetEnglishWritingTestCompleted()
             Log.d("MainScreen", "영작테스트 완료 이벤트 처리 완료")

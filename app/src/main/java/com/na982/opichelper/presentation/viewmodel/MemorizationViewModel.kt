@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 
 /**
  * 현재 실행 중인 모드를 나타내는 enum
@@ -512,9 +513,16 @@ class MemorizationViewModel @Inject constructor(
                         },
                         onMergedFileCreated = {
                             viewModelScope.launch {
-                                // delay(500L) // 파일 시스템 동기화 대기 - Removed as per new_code
+                                delay(1000L) // 파일 시스템 동기화 대기
                                 _englishWritingTestCompleted.value = true
                                 Log.d("MemorizationViewModel", "영작테스트 병합 파일 생성 완료 - 이벤트 발생")
+                                
+                                // 영작테스트 모드 종료
+                                stopMode()
+                                _uiState.value = _uiState.value.copy(
+                                    isEnglishWritingTestRunning = false,
+                                    isEnglishWritingTestMode = false
+                                )
                                 
                                 // 녹음 시간 데이터 확인
                                 // mainViewModel.checkRecordingTimesAfterEnglishWritingTest() // Removed MainViewModel dependency
