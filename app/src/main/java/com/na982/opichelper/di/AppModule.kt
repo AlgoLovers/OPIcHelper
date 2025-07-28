@@ -12,6 +12,8 @@ import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataLoader
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
+import com.na982.opichelper.data.repository.LeveledQaDataLoader
+import com.na982.opichelper.data.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import android.content.SharedPreferences
 import dagger.Module
@@ -74,8 +76,12 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQaDataManager(progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker): QaDataManager {
-        return QaDataManager(progressTracker)
+    fun provideQaDataManager(
+        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
+        leveledQaDataLoader: LeveledQaDataLoader,
+        userPreferencesRepository: UserPreferencesRepository
+    ): QaDataManager {
+        return QaDataManager(progressTracker, leveledQaDataLoader, userPreferencesRepository)
     }
     
     @Provides
@@ -101,6 +107,18 @@ object AppModule {
     @Singleton
     fun provideAuthRepository(@ApplicationContext context: Context): AuthRepository {
         return AuthRepository(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideUserPreferencesRepository(@ApplicationContext context: Context): UserPreferencesRepository {
+        return UserPreferencesRepository(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideLeveledQaDataLoader(@ApplicationContext context: Context): LeveledQaDataLoader {
+        return LeveledQaDataLoader(context)
     }
     
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요

@@ -435,9 +435,9 @@ class MemorizationViewModel @Inject constructor(
                 if (currentItem != null) {
                     Log.d("MemorizationViewModel", "반복 듣기 Service 실행")
                     currentUseCaseJob = launch {
-                        repeatListeningService.executeRepeatListeningTest(
-                            answerKo = currentItem.answerKo,
-                            answerEn = currentItem.answerEn,
+                                            repeatListeningService.executeRepeatListeningTest(
+                        answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
+                        answerEn = qaDataManager.getCurrentAnswer(currentItem),
                             onHighlight = { index ->
                                 if (index != null) {
                                     ttsPlaybackController.setAnswerHighlightIndex(index)
@@ -488,8 +488,8 @@ class MemorizationViewModel @Inject constructor(
             currentUseCaseJob = viewModelScope.launch {
                 try {
                     englishWritingTestService.executeEnglishWritingTest(
-                        answerKo = currentItem.answerKo,
-                        answerEn = currentItem.answerEn,
+                        answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
+                        answerEn = qaDataManager.getCurrentAnswer(currentItem),
                         category = currentItem.category,
                         scriptIndex = scriptIndex,
                         onCardFlip = { isKorean ->

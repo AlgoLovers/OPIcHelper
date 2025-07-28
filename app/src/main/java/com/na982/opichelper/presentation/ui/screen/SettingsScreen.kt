@@ -1,6 +1,8 @@
 package com.na982.opichelper.presentation.ui.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
@@ -12,20 +14,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.na982.opichelper.data.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.entity.UserLevel
 
 @Composable
 fun SettingsScreen(
     onBackPressed: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    userPreferencesRepository: UserPreferencesRepository
 ) {
     var isDarkMode by remember { mutableStateOf(false) }
     var isAutoPlay by remember { mutableStateOf(true) }
     var selectedTtsService by remember { mutableStateOf("Google TTS") }
+    val userLevel by userPreferencesRepository.userLevel.collectAsState()
+    val scrollState = rememberScrollState()
     
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(scrollState)
     ) {
         // 헤더
         Row(
@@ -83,6 +91,53 @@ fun SettingsScreen(
                 ) {
                     Text("로그인 방식")
                     Text("게스트 로그인", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // 학습 레벨 설정
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "학습 레벨",
+                    fontSize = 18.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                UserLevel.values().forEach { level ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = level.displayName,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                            )
+                            Text(
+                                text = level.description,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                        
+                        RadioButton(
+                            selected = userLevel == level,
+                            onClick = { userPreferencesRepository.setUserLevel(level) }
+                        )
+                    }
                 }
             }
         }

@@ -14,6 +14,9 @@ import javax.inject.Singleton
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
+import com.na982.opichelper.data.repository.LeveledQaDataLoader
+import com.na982.opichelper.data.repository.UserPreferencesRepository
+import kotlinx.coroutines.launch
 
 /**
  * QA 데이터 관리 전담 클래스 (Manager 패턴)
@@ -21,13 +24,16 @@ import java.io.InputStreamReader
  */
 @Singleton
 class QaDataManager @Inject constructor(
-    private val progressTracker: MemorizeTestProgressTracker
+    private val progressTracker: MemorizeTestProgressTracker,
+    private val leveledQaDataLoader: LeveledQaDataLoader,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) {
     
     private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
     private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
     
     private var prefs: SharedPreferences? = null
+    private var application: Application? = null
     private val PREF_KEY_LAST_CATEGORY = "last_category"
     private val PREF_KEY_LAST_INDEX = "last_index"
     
@@ -48,19 +54,42 @@ class QaDataManager @Inject constructor(
     val error: StateFlow<String?> = _error.asStateFlow()
     
     suspend fun init(application: Application) {
+        this.application = application
         prefs = application.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
         loadQaItemsFromAssets(application)
         restoreLastCategory()
+        
+        // 사용자 레벨 변경 감지 및 데이터 재로드
+        setupUserLevelObserver()
     }
     
-    fun loadQaItemsFromAssets(application: Application) {
+    /**
+     * 사용자 레벨 변경 감지 및 데이터 재로드
+     */
+    private fun setupUserLevelObserver() {
+        // 코루틴 스코프에서 사용자 레벨 변경 감지
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+            userPreferencesRepository.userLevel.collect { newLevel ->
+                Log.d("QaDataManager", "사용자 레벨 변경 감지: $newLevel")
+                // 레벨이 변경되면 데이터를 다시 로드
+                application?.let { app ->
+                    loadQaItemsFromAssets(app)
+                    restoreLastCategory()
+                }
+            }
+        }
+    }
+    
+    suspend fun loadQaItemsFromAssets(application: Application) {
         val context = application
         val gson = Gson()
+        
         // Define the desired category order and display names
         val categoryDisplayNames = listOf(
             "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
         )
-        // Map display names to asset file names (for 레스토랑, use restaurants asset)
+        
+        // Map display names to asset file names
         val categoryAssetMap = mapOf(
             "집" to "home",
             "음악" to "music",
@@ -78,40 +107,36 @@ class QaDataManager @Inject constructor(
             "예약" to "reservation",
             "명절" to "holiday"
         )
+        
         val categories = categoryDisplayNames
+        
+        // 현재 사용자 레벨 가져오기
+        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        
+        // 현재 레벨에 맞는 데이터 로드
+        val allLeveledItems = leveledQaDataLoader.loadQaItemsForLevel(currentUserLevel)
+        
+        // 카테고리별로 아이템 분류
         for (displayName in categoryDisplayNames) {
             val assetKey = categoryAssetMap[displayName] ?: displayName
-            val fileName = "qa_${assetKey}.json"
-            try {
-                val assetList = context.assets.list("")?.toList() ?: emptyList()
-                if (assetList.contains(fileName)) {
-                    val inputStream = context.assets.open(fileName)
-                    val reader = InputStreamReader(inputStream)
-                    val type = object : TypeToken<List<QaItemAsset>>() {}.type
-                    val assetItems: List<QaItemAsset> = gson.fromJson(reader, type)
-                    val items = assetItems.map {
-                        QaItem(
-                            id = it.id ?: "",
-                            category = displayName,
-                            questionEn = it.question_en,
-                            questionKo = it.question_ko,
-                            answerEn = it.answer_en,
-                            answerKo = it.answer_ko
-                        )
-                    }
-                    itemsByCategory[displayName] = items
-                    itemIndexByCategory[displayName] = 0
-                    Log.d("QaDataManager", "카테고리 로드 완료: $displayName (${items.size}개 항목)")
-                } else {
-                    Log.w("QaDataManager", "파일을 찾을 수 없음: $fileName")
-                }
-            } catch (e: Exception) {
-                Log.e("QaDataManager", "카테고리 로드 실패: $displayName", e)
+            val categoryItems = allLeveledItems.filter { item ->
+                // 파일명에서 카테고리 추출 (예: qa_bank.json -> bank)
+                item.id.contains(assetKey) || item.category == displayName
+            }
+            
+            if (categoryItems.isNotEmpty()) {
+                itemsByCategory[displayName] = categoryItems
+                itemIndexByCategory[displayName] = 0
+                Log.d("QaDataManager", "카테고리 로드 완료: $displayName (${categoryItems.size}개 항목, 레벨: $currentUserLevel)")
+            } else {
+                Log.w("QaDataManager", "카테고리에 항목 없음: $displayName (레벨: $currentUserLevel)")
+                itemsByCategory[displayName] = emptyList()
+                itemIndexByCategory[displayName] = 0
             }
         }
         
         _categories.value = categories
-        Log.d("QaDataManager", "모든 카테고리 로드 완료: ${categories.size}개 카테고리")
+        Log.d("QaDataManager", "모든 카테고리 로드 완료: ${categories.size}개 카테고리 (레벨: $currentUserLevel)")
     }
     
     fun getCurrentIndex(): Int {
@@ -129,6 +154,30 @@ class QaDataManager @Inject constructor(
     
     fun getCurrentQaItem(): QaItem? {
         return _currentQaItem.value
+    }
+    
+    /**
+     * 현재 사용자 레벨에 맞는 답변을 가져오기
+     */
+    fun getCurrentAnswer(qaItem: QaItem?): String {
+        if (qaItem == null) return ""
+        
+        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        val leveledAnswer = qaItem.answers[currentUserLevel]
+        
+        return leveledAnswer?.answerEn ?: qaItem.answers.values.firstOrNull()?.answerEn ?: ""
+    }
+    
+    /**
+     * 현재 사용자 레벨에 맞는 한국어 답변을 가져오기
+     */
+    fun getCurrentAnswerKo(qaItem: QaItem?): String {
+        if (qaItem == null) return ""
+        
+        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        val leveledAnswer = qaItem.answers[currentUserLevel]
+        
+        return leveledAnswer?.answerKo ?: qaItem.answers.values.firstOrNull()?.answerKo ?: ""
     }
     
     fun getItemsInCategory(category: String): List<QaItem> {

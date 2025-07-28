@@ -336,7 +336,8 @@ class MainViewModel @Inject constructor(
         audioPlayer.playAudio(mergedFile.absolutePath)
         
         // 영문 텍스트를 문장 단위로 분리
-        val sentences = currentItem.answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        val answerText = getCurrentAnswer(currentItem)
+        val sentences = answerText.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         
         // 각 문장에 대해 하이라이트 진행 (기본 시간)
         for (i in sentences.indices) {
@@ -527,6 +528,20 @@ class MainViewModel @Inject constructor(
             ttsPlaybackController.playAnswer(answer)
         }
     }
+    
+    /**
+     * 현재 사용자 레벨에 맞는 답변을 가져오기
+     */
+    fun getCurrentAnswer(qaItem: QaItem?): String {
+        return qaDataManager.getCurrentAnswer(qaItem)
+    }
+    
+    /**
+     * 현재 사용자 레벨에 맞는 한국어 답변을 가져오기
+     */
+    fun getCurrentAnswerKo(qaItem: QaItem?): String {
+        return qaDataManager.getCurrentAnswerKo(qaItem)
+    }
 
     fun stopAllTts() {
         viewModelScope.launch {
@@ -624,7 +639,8 @@ class MainViewModel @Inject constructor(
                 // 현재 활성화된 스크립트의 진행 상황 업데이트
                 val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
-                    val totalSentences = currentItem.answerEn.split(".").size
+                    val answerText = getCurrentAnswer(currentItem)
+                    val totalSentences = answerText.split(".").size
                     
                     // 현재 진행상황을 가져와서 저장 (암기레벨별)
                     val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)

@@ -368,8 +368,8 @@ fun MainScreen(
                 // 답변 카드 (통암기 모드가 아니거나 녹음 중이 아닐 때만 표시)
                 if (!isFullMemorizationMode || !isFullMemorizationRecording) {
                     AnswerCard(
-                        currentAnswer = qaItem.answerEn,
-                        currentAnswerKo = qaItem.answerKo,
+                        currentAnswer = viewModel.getCurrentAnswer(qaItem),
+                        currentAnswerKo = viewModel.getCurrentAnswerKo(qaItem),
                         highlightIndex = when {
                             isFullMemorizationMode && isFullMemorizationPlaying -> {
                                 Log.d("MainScreen", "통암기 TTS 하이라이트: $fullMemorizationHighlightIndex")
@@ -417,12 +417,12 @@ fun MainScreen(
                 ) {
                     // 답변 1회 재생 버튼 (항상 표시)
                     AnswerPlayButton(
-                        currentAnswer = qaItem?.answerEn ?: "",
+                        currentAnswer = viewModel.getCurrentAnswer(qaItem),
                         isPlaying = uiState.isAnswerPlaying,
                         onPlayClick = {
                             // 반복듣기 등 중단 후 답변 재생
                             memorizationViewModel.stopMemorization()
-                            qaItem?.let { viewModel.playAnswer(it.answerEn) }
+                            qaItem?.let { viewModel.playAnswer(viewModel.getCurrentAnswer(it)) }
                         },
                         onStopClick = {
                             viewModel.stopAllTts()

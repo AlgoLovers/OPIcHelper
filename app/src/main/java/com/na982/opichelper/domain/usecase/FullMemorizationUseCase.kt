@@ -243,7 +243,8 @@ class FullMemorizationService @Inject constructor(
                     } else {
                         // 3순위: 기본 하이라이트 (텍스트 길이 기반)
                         Log.d("FullMemorizationUseCase", "3순위: 문자열 길이 기반 시간 사용")
-                        val answerSentences = qaItem.answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+                        val answerText = qaDataManager.getCurrentAnswer(qaItem)
+                        val answerSentences = answerText.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
                         
                         for (i in answerSentences.indices) {
                             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
