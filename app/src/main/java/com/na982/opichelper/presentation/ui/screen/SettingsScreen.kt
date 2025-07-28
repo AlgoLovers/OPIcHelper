@@ -115,7 +115,8 @@ fun SettingsScreen(
                         Icon(
                             Icons.Default.Settings,
                             contentDescription = "다크 모드",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("다크 모드")
@@ -138,7 +139,8 @@ fun SettingsScreen(
                         Icon(
                             Icons.Default.PlayArrow,
                             contentDescription = "자동 재생",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("자동 재생")
@@ -178,7 +180,8 @@ fun SettingsScreen(
                         Icon(
                             Icons.Default.Settings,
                             contentDescription = "TTS 서비스",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("TTS 서비스")

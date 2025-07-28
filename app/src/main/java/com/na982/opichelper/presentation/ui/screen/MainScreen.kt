@@ -200,16 +200,39 @@ fun MainScreen(
         }
 
         // 앱 제목과 설정 버튼
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)  // horizontal 패딩 제거
         ) {
-            AppTitle()
-            
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = "설정")
+            // 설정 버튼 (우측 끝)
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(48.dp)
+                    .padding(end = 2.dp)  // 화면 끝에서 16dp 안쪽
+            ) {
+                Surface(
+                    modifier = Modifier.size(32.dp),    
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Icon(
+                        Icons.Default.Settings, 
+                        contentDescription = "설정",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(6.dp)
+                    )
+                }
             }
+            
+            // 앱 제목 (가운데 정렬)
+            AppTitle(
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
 
         // 카테고리/암기레벨 선택 영역 (1:1 비율 Row)
