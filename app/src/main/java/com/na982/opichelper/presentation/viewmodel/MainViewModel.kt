@@ -662,6 +662,12 @@ class MainViewModel @Inject constructor(
                     )
                 }
                 
+                // 현재 인덱스 저장 추가
+                val currentIndex = qaDataManager.getCurrentIndex()
+                Log.d("MainViewModel", "앱 종료 시 현재 인덱스 저장: $currentIndex")
+                // QaDataManager를 통해 인덱스 저장 (SharedPreferences에 저장됨)
+                qaDataManager.saveCurrentIndex(currentIndex)
+                
                 progressTracker.persistChangedProgress()
                 
                 // 카드 상태 초기화

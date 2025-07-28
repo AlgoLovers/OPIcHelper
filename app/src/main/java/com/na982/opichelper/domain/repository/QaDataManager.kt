@@ -81,47 +81,28 @@ class QaDataManager @Inject constructor(
     }
     
     suspend fun loadQaItemsFromAssets(application: Application) {
-        val context = application
-        val gson = Gson()
+        // application 매개변수는 향후 확장을 위해 유지
         
         // Define the desired category order and display names
         val categoryDisplayNames = listOf(
             "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
         )
         
-        // Map display names to asset file names
-        val categoryAssetMap = mapOf(
-            "집" to "home",
-            "음악" to "music",
-            "집에서 보내는 휴가" to "home_vacation",
-            "영화" to "movie",
-            "레스토랑" to "restaurants",
-            "해변" to "beach",
-            "인터넷" to "internet",
-            "산업,커리어" to "industry_career",
-            "은행" to "bank",
-            "교통" to "transportation",
-            "패션" to "fashion",
-            "가족,친구" to "family_friends",
-            "가구" to "furniture",
-            "예약" to "reservation",
-            "명절" to "holiday"
-        )
-        
         val categories = categoryDisplayNames
         
         // 현재 사용자 레벨 가져오기
         val currentUserLevel = userPreferencesRepository.getUserLevel()
+        Log.d("QaDataManager", "데이터 로딩 시작 - 현재 사용자 레벨: $currentUserLevel")
         
         // 현재 레벨에 맞는 데이터 로드
         val allLeveledItems = leveledQaDataLoader.loadQaItemsForLevel(currentUserLevel)
+        Log.d("QaDataManager", "레벨별 데이터 로드 완료 - 총 ${allLeveledItems.size}개 항목")
         
         // 카테고리별로 아이템 분류
         for (displayName in categoryDisplayNames) {
-            val assetKey = categoryAssetMap[displayName] ?: displayName
             val categoryItems = allLeveledItems.filter { item ->
-                // 파일명에서 카테고리 추출 (예: qa_bank.json -> bank)
-                item.id.contains(assetKey) || item.category == displayName
+                // 카테고리명으로 정확히 필터링
+                item.category == displayName
             }
             
             if (categoryItems.isNotEmpty()) {
@@ -193,7 +174,8 @@ class QaDataManager @Inject constructor(
             itemIndexByCategory[category] = 0
             updateCurrentQaItem()
             saveLastCategory(category)
-            Log.d("QaDataManager", "카테고리 선택: $category")
+            saveLastIndex(0)  // 카테고리 선택 시 인덱스 0 저장
+            Log.d("QaDataManager", "카테고리 선택: $category (인덱스: 0)")
         } else {
             Log.e("QaDataManager", "존재하지 않는 카테고리: $category")
         }
@@ -244,12 +226,16 @@ class QaDataManager @Inject constructor(
             val items = itemsByCategory[category] ?: emptyList()
             val currentIndex = itemIndexByCategory[category] ?: 0
             
-            if (currentIndex < items.size) {
+            if (items.isNotEmpty() && currentIndex < items.size) {
                 _currentQaItem.value = items[currentIndex]
                 Log.d("QaDataManager", "현재 QA 항목 업데이트: ${items[currentIndex].questionEn}")
             } else {
                 _currentQaItem.value = null
-                Log.w("QaDataManager", "인덱스가 범위를 벗어남: $currentIndex >= ${items.size}")
+                if (items.isEmpty()) {
+                    Log.w("QaDataManager", "카테고리에 항목이 없음: $category")
+                } else {
+                    Log.w("QaDataManager", "인덱스가 범위를 벗어남: $currentIndex >= ${items.size}")
+                }
             }
         } else {
             _currentQaItem.value = null
@@ -280,6 +266,14 @@ class QaDataManager @Inject constructor(
     
     private fun saveLastIndex(index: Int) {
         prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, index)?.apply()
+        Log.d("QaDataManager", "인덱스 저장: $index (SharedPreferences: opic_prefs)")
+    }
+    
+    /**
+     * 현재 인덱스를 저장 (외부에서 호출 가능)
+     */
+    fun saveCurrentIndex(index: Int) {
+        saveLastIndex(index)
     }
     
     fun clearError() {
