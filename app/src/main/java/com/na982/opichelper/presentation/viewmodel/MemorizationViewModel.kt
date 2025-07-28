@@ -463,6 +463,11 @@ class MemorizationViewModel @Inject constructor(
                                 )
                                 Log.d("MemorizationViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
                             },
+                            onComplete = {
+                                // 반복듣기 완료 시 상태 초기화
+                                stopMode()
+                                Log.d("MemorizationViewModel", "반복 듣기 완료 - 상태 초기화")
+                            },
                             category = currentItem.category,
                             scriptIndex = qaDataManager.getCurrentIndex()
                         )

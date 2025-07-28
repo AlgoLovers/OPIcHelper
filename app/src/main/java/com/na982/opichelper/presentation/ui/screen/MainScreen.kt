@@ -36,13 +36,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.na982.opichelper.presentation.viewmodel.CurrentMode
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSettingsClick: () -> Unit = {}
 ) {
     // ===== 공통 모드 (기본 UI 상태) =====
     val uiState by viewModel.uiState.collectAsState()
@@ -196,8 +199,18 @@ fun MainScreen(
             }
         }
 
-        // 앱 제목
-        AppTitle()
+        // 앱 제목과 설정 버튼
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AppTitle()
+            
+            IconButton(onClick = onSettingsClick) {
+                Icon(Icons.Default.Settings, contentDescription = "설정")
+            }
+        }
 
         // 카테고리/암기레벨 선택 영역 (1:1 비율 Row)
         Row(

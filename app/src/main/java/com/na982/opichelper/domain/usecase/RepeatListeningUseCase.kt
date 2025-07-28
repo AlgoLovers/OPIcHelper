@@ -38,6 +38,7 @@ class RepeatListeningService @Inject constructor(
         onHighlight: (Int?) -> Unit,
         onKoreanHighlight: (Int?) -> Unit,
         onCardFlip: (Boolean) -> Unit, // true: 한글, false: 영문
+        onComplete: () -> Unit, // 완료 콜백 추가
         category: String,
         scriptIndex: Int,
         repeatCount: Int = 5
@@ -144,6 +145,9 @@ class RepeatListeningService @Inject constructor(
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
         progressTracker.clearScriptProgress(category, scriptIndex, "반복 듣기")
+        
+        // 완료 콜백 호출
+        onComplete()
         
         Log.d("RepeatListeningService", "반복 듣기 완료")
     }

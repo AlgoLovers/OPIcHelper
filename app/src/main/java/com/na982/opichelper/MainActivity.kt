@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.ui.screen.MainScreen
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.ui.theme.OPicHelperTheme
@@ -63,9 +64,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val vm: MainViewModel = viewModel()
-                    viewModel = vm // ViewModel 참조 저장
-                    MainScreen(viewModel = vm)
+                    AppNavigation()
                 }
             }
         }

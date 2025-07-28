@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+
 }
 
 android {
@@ -98,6 +99,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("androidx.compose.ui:ui:1.0.0")
+    
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("androidx.compose.material3:material3:1.0.0")
 
     // MockK (mock 객체 생성)
