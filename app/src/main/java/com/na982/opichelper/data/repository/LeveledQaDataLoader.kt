@@ -19,6 +19,7 @@ class LeveledQaDataLoader(private val context: Context) {
     private val levelFolderMapping = mapOf(
         UserLevel.AL to "al",
         UserLevel.IH to "ih", 
+        UserLevel.IH_RAW to "ih_raw",
         UserLevel.IM to "im"
     )
     
