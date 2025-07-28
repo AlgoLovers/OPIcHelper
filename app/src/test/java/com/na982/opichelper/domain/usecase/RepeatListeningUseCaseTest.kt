@@ -48,7 +48,7 @@ class RepeatListeningServiceTest {
         val category = "test_category"
         val scriptIndex = 0
         
-        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex)).thenReturn(null)
+        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")).thenReturn(null)
         whenever(mockTtsPlayer.speakAndGetDuration(any(), any(), any())).thenReturn(1000L)
         
         var highlightIndex: Int? = null
@@ -61,14 +61,15 @@ class RepeatListeningServiceTest {
             onHighlight = { index -> highlightIndex = index },
             onKoreanHighlight = { index -> highlightIndex = index },
             onCardFlip = { isKorean -> cardFlipped = isKorean },
+            onComplete = { },
             category = category,
             scriptIndex = scriptIndex
         )
         
         // Then
-        verify(mockProgressTracker).getScriptProgress(category, scriptIndex)
-        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, 0)
-        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex)
+        verify(mockProgressTracker).getScriptProgress(category, scriptIndex, "반복 듣기")
+        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, "반복 듣기", 0)
+        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex, "반복 듣기")
     }
 
     @Test
@@ -88,7 +89,7 @@ class RepeatListeningServiceTest {
             isMemorizeTestRunning = true
         )
         
-        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex)).thenReturn(existingProgress)
+        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")).thenReturn(existingProgress)
         whenever(mockTtsPlayer.speakAndGetDuration(any(), any(), any())).thenReturn(1000L)
         
         var highlightIndex: Int? = null
@@ -101,14 +102,15 @@ class RepeatListeningServiceTest {
             onHighlight = { index -> highlightIndex = index },
             onKoreanHighlight = { index -> highlightIndex = index },
             onCardFlip = { isKorean -> cardFlipped = isKorean },
+            onComplete = { },
             category = category,
             scriptIndex = scriptIndex
         )
         
         // Then
-        verify(mockProgressTracker).getScriptProgress(category, scriptIndex)
-        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, 1)
-        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex)
+        verify(mockProgressTracker).getScriptProgress(category, scriptIndex, "반복 듣기")
+        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, "반복 듣기", 1)
+        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex, "반복 듣기")
     }
 
     @Test
@@ -128,7 +130,7 @@ class RepeatListeningServiceTest {
             isMemorizeTestRunning = true
         )
         
-        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex)).thenReturn(existingProgress)
+        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")).thenReturn(existingProgress)
         whenever(mockTtsPlayer.speakAndGetDuration(any(), any(), any())).thenReturn(1000L)
         
         var highlightIndex: Int? = null
@@ -141,14 +143,15 @@ class RepeatListeningServiceTest {
             onHighlight = { index -> highlightIndex = index },
             onKoreanHighlight = { index -> highlightIndex = index },
             onCardFlip = { isKorean -> cardFlipped = isKorean },
+            onComplete = { },
             category = category,
             scriptIndex = scriptIndex
         )
         
         // Then - 다른 레벨이므로 0부터 시작해야 함
-        verify(mockProgressTracker).getScriptProgress(category, scriptIndex)
-        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, 0)
-        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex)
+        verify(mockProgressTracker).getScriptProgress(category, scriptIndex, "반복 듣기")
+        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, "반복 듣기", 0)
+        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex, "반복 듣기")
     }
 
     @Test
@@ -159,7 +162,7 @@ class RepeatListeningServiceTest {
         val category = "test_category"
         val scriptIndex = 0
         
-        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex)).thenReturn(null)
+        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")).thenReturn(null)
         whenever(mockTtsPlayer.speakAndGetDuration(any(), any(), any())).thenReturn(1000L)
         
         var highlightIndex: Int? = null
@@ -173,6 +176,7 @@ class RepeatListeningServiceTest {
                 onHighlight = { index -> highlightIndex = index },
                 onKoreanHighlight = { index -> highlightIndex = index },
                 onCardFlip = { isKorean -> cardFlipped = isKorean },
+                onComplete = { },
                 category = category,
                 scriptIndex = scriptIndex
             )
@@ -182,9 +186,9 @@ class RepeatListeningServiceTest {
         job.cancel()
         
         // Then
-        verify(mockProgressTracker).getScriptProgress(category, scriptIndex)
+        verify(mockProgressTracker).getScriptProgress(category, scriptIndex, "반복 듣기")
         // 취소되었으므로 clearScriptProgress는 호출되지 않아야 함
-        verify(mockProgressTracker, never()).clearScriptProgress(category, scriptIndex)
+        verify(mockProgressTracker, never()).clearScriptProgress(category, scriptIndex, "반복 듣기")
     }
 
     @Test
@@ -204,7 +208,7 @@ class RepeatListeningServiceTest {
             isMemorizeTestRunning = true
         )
         
-        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex)).thenReturn(existingProgress)
+        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")).thenReturn(existingProgress)
         whenever(mockTtsPlayer.speakAndGetDuration(any(), any(), any())).thenReturn(1000L)
         
         var highlightIndex: Int? = null
@@ -217,13 +221,14 @@ class RepeatListeningServiceTest {
             onHighlight = { index -> highlightIndex = index },
             onKoreanHighlight = { index -> highlightIndex = index },
             onCardFlip = { isKorean -> cardFlipped = isKorean },
+            onComplete = { },
             category = category,
             scriptIndex = scriptIndex
         )
         
         // Then - 다른 레벨이므로 0부터 시작해야 함
-        verify(mockProgressTracker).getScriptProgress(category, scriptIndex)
-        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, 0)
-        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex)
+        verify(mockProgressTracker).getScriptProgress(category, scriptIndex, "반복 듣기")
+        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, "반복 듣기", 0)
+        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex, "반복 듣기")
     }
 } 

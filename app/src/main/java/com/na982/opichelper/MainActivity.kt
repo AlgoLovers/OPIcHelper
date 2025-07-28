@@ -106,6 +106,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onBackPressed() {
+        super.onBackPressed()
         Log.d("MainActivity", "onBackPressed() - 백버튼 눌림")
         
         // 백버튼으로 앱 종료 시 완전한 정리 (동기적으로 처리)

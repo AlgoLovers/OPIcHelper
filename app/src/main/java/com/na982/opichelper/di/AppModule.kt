@@ -3,6 +3,7 @@ package com.na982.opichelper.di
 import android.content.Context
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
+import com.na982.opichelper.data.repository.AuthRepository
 import com.na982.opichelper.data.repository.QaDataLoaderImpl
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.domain.audio.*
@@ -94,6 +95,12 @@ object AppModule {
     @Singleton
     fun provideWakeLockManager(@ApplicationContext context: Context): WakeLockManager {
         return WakeLockManager(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideAuthRepository(@ApplicationContext context: Context): AuthRepository {
+        return AuthRepository(context)
     }
     
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요

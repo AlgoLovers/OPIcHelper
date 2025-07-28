@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -15,12 +16,24 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.na982.opichelper.data.repository.AuthRepository
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    authRepository: AuthRepository
 ) {
     val context = LocalContext.current
+    
+    // 로그인 상태 확인
+    val isLoggedIn by authRepository.isLoggedIn.collectAsState()
+    
+    // 이미 로그인되어 있으면 자동으로 메인 화면으로 이동
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            onLoginSuccess()
+        }
+    }
     
     // Google Sign-In 클라이언트 설정
     val gso = remember {
@@ -41,7 +54,8 @@ fun LoginScreen(
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
             val account = task.getResult(ApiException::class.java)
-            // 로그인 성공
+            // 로그인 성공 - 세션 저장
+            authRepository.saveLoginState(account)
             onLoginSuccess()
         } catch (e: ApiException) {
             // 로그인 실패
@@ -76,6 +90,7 @@ fun LoginScreen(
         Button(
             onClick = {
                 // 게스트 로그인 (주요 로그인 방식)
+                authRepository.saveGuestLogin()
                 onLoginSuccess()
             },
             modifier = Modifier
