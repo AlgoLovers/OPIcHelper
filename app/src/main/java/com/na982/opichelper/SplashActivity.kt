@@ -51,37 +51,37 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // 앱 아이콘 (나중에 drawable에 아이콘 추가 필요)
+            // 앱 아이콘 (더 큰 크기로 조정)
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 contentDescription = "앱 아이콘",
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier.size(160.dp)
             )
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             
             // 앱 이름
             Text(
                 text = "OPic Helper",
-                fontSize = 28.sp,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.primary
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
             // 앱 설명
             Text(
                 text = "영어 학습을 위한 스마트 도우미",
-                fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.8f)
+                fontSize = 18.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
         }
     }

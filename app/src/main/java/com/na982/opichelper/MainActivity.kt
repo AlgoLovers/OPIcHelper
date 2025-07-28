@@ -15,6 +15,7 @@ import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.ui.screen.MainScreen
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.ui.theme.OPicHelperTheme
+import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,6 +23,13 @@ import com.na982.opichelper.domain.manager.WakeLockManager
 import javax.inject.Inject
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -31,6 +39,7 @@ class MainActivity : ComponentActivity() {
     
     private var isFinishing = false // 앱이 실제로 종료되는지 추적
     private var viewModel: MainViewModel? = null // ViewModel 참조 저장
+    private var navController: NavHostController? = null // 네비게이션 컨트롤러 참조
     
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -59,12 +68,24 @@ class MainActivity : ComponentActivity() {
         }
         
         setContent {
-            OPicHelperTheme {
+            val navController = rememberNavController()
+            this@MainActivity.navController = navController
+            
+            // 다크 테마 감지
+            val isDarkTheme = isSystemInDarkTheme()
+            
+            // 디버깅 로그
+            Log.d("MainActivity", "다크테마: $isDarkTheme")
+            
+            OPicHelperThemeWithMemorizeLevel(
+                darkTheme = isDarkTheme,
+                memorizeLevel = "" // 기본값, 실제 값은 각 Composable에서 관리
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation()
+                    AppNavigation(navController = navController)
                 }
             }
         }
@@ -106,26 +127,38 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()
         Log.d("MainActivity", "onBackPressed() - 백버튼 눌림")
         
-        // 백버튼으로 앱 종료 시 완전한 정리 (동기적으로 처리)
-        try {
-            Log.d("MainActivity", "백버튼 종료 - 완전한 리소스 정리 시작")
-            
-            // 1. 모든 TTS 강제 중지 (동기적으로)
-            viewModel?.cleanupAllTtsSync()
-            
-            // 2. 모든 리소스 정리
-            cleanupAllResources()
-            
-            Log.d("MainActivity", "백버튼 종료 - 완전한 리소스 정리 완료")
-        } catch (e: Exception) {
-            Log.e("MainActivity", "백버튼 종료 처리 중 오류", e)
+        // 네비게이션 컨트롤러를 통해 현재 화면 확인
+        navController?.let { controller ->
+            try {
+                // 이전 백스택 엔트리가 있는지 확인
+                if (controller.previousBackStackEntry != null) {
+                    Log.d("MainActivity", "설정 화면에서 백키 - 메인 화면으로 이동")
+                    // 네비게이션 컨트롤러가 자동으로 이전 화면으로 이동
+                    super.onBackPressed()
+                } else {
+                    Log.d("MainActivity", "메인 화면에서 백키 - 앱 종료")
+                    
+                    // 1. 모든 TTS 강제 중지 (동기적으로)
+                    viewModel?.cleanupAllTtsSync()
+                    
+                    // 2. 모든 리소스 정리
+                    cleanupAllResources()
+                    
+                    // 3. 앱 완전 종료
+                    finish()
+                }
+                
+            } catch (e: Exception) {
+                Log.e("MainActivity", "백버튼 처리 중 오류", e)
+                super.onBackPressed()
+            }
+        } ?: run {
+            // 네비게이션 컨트롤러가 없는 경우 기본 동작
+            Log.d("MainActivity", "네비게이션 컨트롤러 없음 - 기본 백키 동작")
+            super.onBackPressed()
         }
-        
-        // 앱 완전 종료
-        finish()
     }
 
     /**

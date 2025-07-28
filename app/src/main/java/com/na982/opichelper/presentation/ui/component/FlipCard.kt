@@ -20,6 +20,7 @@ import android.util.Log
 fun FlipCard(
     modifier: Modifier = Modifier,
     isFlipped: Boolean = false,
+    onCardClick: () -> Unit = {},
     frontContent: @Composable () -> Unit,
     backContent: @Composable () -> Unit
 ) {
@@ -42,6 +43,7 @@ fun FlipCard(
             .fillMaxWidth()
             .clickable { 
                 flipped = !flipped
+                onCardClick()
                 Log.d("FlipCard", "Card flipped to: $flipped")
             }
             .graphicsLayer {

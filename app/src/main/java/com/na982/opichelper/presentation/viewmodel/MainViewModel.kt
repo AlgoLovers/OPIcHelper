@@ -36,6 +36,8 @@ import com.na982.opichelper.domain.repository.AppExitState
 import kotlinx.coroutines.Job
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.RecordingTimeManager
+import com.na982.opichelper.data.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.entity.UserLevel
 import java.io.File
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
@@ -75,7 +77,10 @@ data class AppState(
     
     // 기타 상태
     val hasProgress: Boolean = false,
-    val currentKoreanTtsService: String = ""
+    val currentKoreanTtsService: String = "",
+    
+    // 사용자 레벨 상태
+    val currentUserLevel: String = ""
 )
 
 /**
@@ -94,6 +99,7 @@ class MainViewModel @Inject constructor(
     private val repeatListeningService: RepeatListeningService,
     private val englishWritingTestService: EnglishWritingTestService,
     private val recordingTimeManager: RecordingTimeManager,
+    private val userPreferencesRepository: UserPreferencesRepository,
     application: Application
 ) : AndroidViewModel(application) {
     
@@ -182,7 +188,7 @@ class MainViewModel @Inject constructor(
                 qaDataManager.categories,
                 qaDataManager.isLoading,
                 qaDataManager.error
-            ) { currentQaItem, currentCategory, categories, isLoading, error ->
+            ) { currentQaItem: QaItem?, currentCategory: String?, categories: List<String>, isLoading: Boolean, error: String? ->
                 _uiState.value = _uiState.value.copy(
                     currentQaItem = currentQaItem,
                     currentCategory = currentCategory,
@@ -191,6 +197,15 @@ class MainViewModel @Inject constructor(
                     error = error
                 )
             }.collect { }
+        }
+        
+        viewModelScope.launch {
+            // 사용자 레벨 상태 동기화
+            userPreferencesRepository.userLevel.collect { userLevel ->
+                _uiState.value = _uiState.value.copy(
+                    currentUserLevel = userLevel.name
+                )
+            }
         }
         
         viewModelScope.launch {

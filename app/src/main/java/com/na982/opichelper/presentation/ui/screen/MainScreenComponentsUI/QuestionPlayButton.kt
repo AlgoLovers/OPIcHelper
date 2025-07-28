@@ -37,7 +37,7 @@ fun QuestionPlayButton(
         modifier = modifier
     ) {
         Text(
-            text = if (isPlaying) "질문 일시정지" else "질문 재생",
+            text = if (isPlaying) "질문 재생 중" else "질문 1회 재생",
             color = MaterialTheme.colorScheme.onPrimary
         )
     }
