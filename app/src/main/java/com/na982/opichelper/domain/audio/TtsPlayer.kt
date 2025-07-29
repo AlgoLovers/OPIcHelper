@@ -21,6 +21,16 @@ interface TtsPlayer {
     fun stop()
     
     /**
+     * TTS 일시 중지
+     */
+    fun pause()
+    
+    /**
+     * TTS 재개
+     */
+    fun resume()
+    
+    /**
      * 현재 재생 중인지 확인
      */
     fun isPlaying(): Boolean

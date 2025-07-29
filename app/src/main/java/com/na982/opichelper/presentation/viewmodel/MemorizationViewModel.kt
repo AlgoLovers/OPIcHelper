@@ -3,6 +3,8 @@ package com.na982.opichelper.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.TtsPlaybackController
+import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,6 +54,8 @@ data class MemorizationUiState(
     val isRepeatListeningCardFlipped: Boolean = false,
     val isRepeatListeningRunning: Boolean = false,
     val isRepeatListeningMode: Boolean = false,
+    val repeatListeningCurrentRepeat: Int = 0, // 현재 반복 횟수
+    val repeatListeningTotalRepeats: Int = 5, // 총 반복 횟수
     
     // 영작테스트 상태
     val isEnglishWritingTestCardFlipped: Boolean = false,
@@ -84,7 +88,7 @@ class MemorizationViewModel @Inject constructor(
     private val englishWritingTestService: EnglishWritingTestService,
     private val fullMemorizationService: FullMemorizationService,
     private val progressTracker: MemorizeTestProgressTracker
-) : ViewModel() {
+) : ViewModel(), RepeatListeningUiCallback {
     // 상태 StateFlow들
     private val _memorizeLevels = MutableStateFlow(listOf("반복 듣기", "영작 테스트", "통암기"))
     val memorizeLevels: StateFlow<List<String>> = _memorizeLevels.asStateFlow()
@@ -127,6 +131,8 @@ class MemorizationViewModel @Inject constructor(
             isRepeatListeningCardFlipped = _currentMode.value == CurrentMode.REPEAT_LISTENING && _isRunning.value,
             isRepeatListeningRunning = _currentMode.value == CurrentMode.REPEAT_LISTENING && _isRunning.value,
             isRepeatListeningMode = _currentMode.value == CurrentMode.REPEAT_LISTENING,
+            repeatListeningCurrentRepeat = 0,
+            repeatListeningTotalRepeats = 5,
             
             // 영작테스트 상태
             isEnglishWritingTestCardFlipped = _currentMode.value == CurrentMode.ENGLISH_WRITING && _isRunning.value,
@@ -435,41 +441,15 @@ class MemorizationViewModel @Inject constructor(
                 if (currentItem != null) {
                     Log.d("MemorizationViewModel", "반복 듣기 Service 실행")
                     currentUseCaseJob = launch {
-                                            repeatListeningService.executeRepeatListeningTest(
-                        answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
-                        answerEn = qaDataManager.getCurrentAnswer(currentItem),
-                            onHighlight = { index ->
-                                if (index != null) {
-                                    ttsPlaybackController.setAnswerHighlightIndex(index)
-                                    Log.d("MemorizationViewModel", "반복 듣기: 영문 하이라이트 설정: $index")
-                                } else {
-                                    ttsPlaybackController.clearHighlight()
-                                    Log.d("MemorizationViewModel", "반복 듣기: 영문 하이라이트 제거")
-                                }
-                            },
-                            onKoreanHighlight = { index ->
-                                if (index != null) {
-                                    ttsPlaybackController.setAnswerKoHighlightIndex(index)
-                                    Log.d("MemorizationViewModel", "반복 듣기: 한글 하이라이트 설정: $index")
-                                } else {
-                                    ttsPlaybackController.clearHighlight()
-                                    Log.d("MemorizationViewModel", "반복 듣기: 한글 하이라이트 제거")
-                                }
-                            },
-                            onCardFlip = { isKorean ->
-                                // 반복듣기 카드 뒤집기 상태 업데이트
-                                _uiState.value = _uiState.value.copy(
-                                    isRepeatListeningCardFlipped = isKorean
-                                )
-                                Log.d("MemorizationViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
-                            },
-                            onComplete = {
-                                // 반복듣기 완료 시 상태 초기화
-                                stopMode()
-                                Log.d("MemorizationViewModel", "반복 듣기 완료 - 상태 초기화")
-                            },
+                        val repeatListeningData = RepeatListeningData(
                             category = currentItem.category,
-                            scriptIndex = qaDataManager.getCurrentIndex()
+                            scriptIndex = qaDataManager.getCurrentIndex(),
+                            koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
+                            englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
+                        )
+                        repeatListeningService.startRepeatListening(
+                            data = repeatListeningData,
+                            uiCallback = this@MemorizationViewModel
                         )
                     }
                 }
@@ -755,5 +735,40 @@ class MemorizationViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    // === RepeatListeningUiCallback 인터페이스 구현 ===
+    override fun onCardFlip(isKorean: Boolean) {
+        // 반복듣기 카드 뒤집기 상태 업데이트
+        _uiState.value = _uiState.value.copy(
+            isRepeatListeningCardFlipped = isKorean
+        )
+        Log.d("MemorizationViewModel", "반복 듣기: 카드 뒤집기 - ${if (isKorean) "한글" else "영문"}")
+    }
+
+    override fun onHighlight(index: Int?) {
+        if (index != null) {
+            ttsPlaybackController.setAnswerHighlightIndex(index)
+            Log.d("MemorizationViewModel", "반복 듣기: 영문 하이라이트 설정: $index")
+        } else {
+            ttsPlaybackController.clearHighlight()
+            Log.d("MemorizationViewModel", "반복 듣기: 영문 하이라이트 제거")
+        }
+    }
+
+    override fun onKoreanHighlight(index: Int?) {
+        if (index != null) {
+            ttsPlaybackController.setAnswerKoHighlightIndex(index)
+            Log.d("MemorizationViewModel", "반복 듣기: 한글 하이라이트 설정: $index")
+        } else {
+            ttsPlaybackController.clearHighlight()
+            Log.d("MemorizationViewModel", "반복 듣기: 한글 하이라이트 제거")
+        }
+    }
+
+    override fun onComplete() {
+        // 반복듣기 완료 시 상태 초기화
+        stopMode()
+        Log.d("MemorizationViewModel", "반복 듣기 완료 - 상태 초기화")
     }
 } 

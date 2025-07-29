@@ -1,6 +1,8 @@
 package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.delay
@@ -20,35 +22,23 @@ class RepeatListeningService @Inject constructor(
     private val recordingTimeManager: RecordingTimeManager
 ) {
     /**
-     * 반복 듣기 테스트 실행
-     * - answerKo: 한글 답변 텍스트
-     * - answerEn: 영문 답변 텍스트
-     * - repeatCount: 반복 횟수 (기본 5회)
-     * - onHighlight: 영문 하이라이트 콜백
-     * - onKoreanHighlight: 한글 하이라이트 콜백
-     * - onCardFlip: 카드 뒤집기 콜백 (true: 한글, false: 영문)
-     * - category: 카테고리
-     * - scriptIndex: 스크립트 인덱스
-     *
-     * 한글 문장 1회 → 1/2 쉬고 → 영문 문장 1회 → 1.0배 쉬고 → 영문 문장 2회 ... 5회까지 → 다음 한글 문장 ...
+     * 반복 듣기 서비스 실행
+     * 
+     * @param data 반복 듣기 데이터
+     * @param uiCallback UI 콜백 인터페이스
+     * @param repeatCount 반복 횟수 (기본 5회)
      */
-    suspend fun executeRepeatListeningTest(
-        answerKo: String,
-        answerEn: String,
-        onHighlight: (Int?) -> Unit,
-        onKoreanHighlight: (Int?) -> Unit,
-        onCardFlip: (Boolean) -> Unit, // true: 한글, false: 영문
-        onComplete: () -> Unit, // 완료 콜백 추가
-        category: String,
-        scriptIndex: Int,
+    suspend fun startRepeatListening(
+        data: RepeatListeningData,
+        uiCallback: RepeatListeningUiCallback,
         repeatCount: Int = 5
     ) {
-        val koSentences = answerKo.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-        val enSentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        val koSentences = data.koreanAnswer.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        val enSentences = data.englishAnswer.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         val count = minOf(koSentences.size, enSentences.size)
         
         // 복원된 앱 상태에서 시작 인덱스 가져오기 (암기레벨별)
-        val currentProgress = progressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")
+        val currentProgress = progressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
         
         val startIndex = if (currentProgress != null) {
             currentProgress.currentSentenceIndex
@@ -58,7 +48,7 @@ class RepeatListeningService @Inject constructor(
         
         Log.d("RepeatListeningService", "반복 듣기 시작: 총 $count 문장, 시작 인덱스: $startIndex")
         Log.d("RepeatListeningService", "현재 스크립트 진행 상황: $currentProgress")
-        Log.d("RepeatListeningService", "검색한 카테고리: $category, 스크립트 인덱스: $scriptIndex")
+        Log.d("RepeatListeningService", "검색한 카테고리: ${data.category}, 스크립트 인덱스: ${data.scriptIndex}")
         
         for (i in startIndex until count) {
             // 코루틴이 취소되었는지 확인
@@ -71,8 +61,8 @@ class RepeatListeningService @Inject constructor(
             
             // 진행 상황 업데이트 및 실시간 저장
             progressTracker.updateProgress(
-                category = category,
-                scriptIndex = scriptIndex,
+                category = data.category,
+                scriptIndex = data.scriptIndex,
                 memorizeLevel = "반복 듣기",
                 currentSentenceIndex = i,
                 totalSentences = count,
@@ -83,10 +73,20 @@ class RepeatListeningService @Inject constructor(
             Log.d("RepeatListeningService", "문장 $i 진행상황 실시간 저장 완료")
             
             // 1. 한글 문장 1회 TTS (카드를 한글로 뒤집고 하이라이트)
-            onCardFlip(true) // 카드를 한글로 뒤집기
+            uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
             delay(100) // 카드 뒤집기 애니메이션 대기
-            onKoreanHighlight(i) // 한글 하이라이트
-            val koDuration = ttsOrchestrator.speakAndGetDuration(koSentences[i], isKorean = true, rate = 0.8f)
+            uiCallback.onKoreanHighlight(i) // 한글 하이라이트
+            
+            // 한글 TTS 재생 완료까지 기다리기
+            val koCompletionDeferred = kotlinx.coroutines.CompletableDeferred<Long>()
+            ttsOrchestrator.speak(koSentences[i]) {
+                koCompletionDeferred.complete(System.currentTimeMillis())
+            }
+            
+            // 한글 TTS 재생 완료까지 대기
+            val koStartTime = System.currentTimeMillis()
+            koCompletionDeferred.await()
+            val koDuration = System.currentTimeMillis() - koStartTime
             
             // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
             val enSentence = enSentences[i]
@@ -107,7 +107,7 @@ class RepeatListeningService @Inject constructor(
             // val predictedDelay = (predictedEnDuration * 0.3).toLong() // 예측된 영문 시간의 30%
             
             Log.d("RepeatListeningService", "문장 $i 딜레이 계산: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${adaptiveDelay}ms")
-            delay(adaptiveDelay)
+            kotlinx.coroutines.delay(adaptiveDelay)
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
@@ -123,31 +123,52 @@ class RepeatListeningService @Inject constructor(
                     break
                 }
                 
-                onCardFlip(false) // 카드를 영문으로 뒤집기
+                Log.d("RepeatListeningService", "문장 ${i + 1} 영문 TTS 반복 ${j}/${repeatCount}")
+                
+                uiCallback.onCardFlip(false) // 카드를 영문으로 뒤집기
                 delay(100) // 카드 뒤집기 애니메이션 대기
-                onHighlight(i) // 영문 하이라이트
-                val enDuration = ttsOrchestrator.speakAndGetDuration(enSentences[i], isKorean = false, rate = 1.0f) // 0.75f에서 1.0f로 향상
+                uiCallback.onHighlight(i) // 영문 하이라이트
+                
+                // TTS 재생 완료까지 기다리기
+                val completionDeferred = kotlinx.coroutines.CompletableDeferred<Long>()
+                ttsOrchestrator.speak(enSentences[i]) {
+                    completionDeferred.complete(System.currentTimeMillis())
+                }
+                
+                // TTS 재생 완료까지 대기
+                val startTime = System.currentTimeMillis()
+                completionDeferred.await()
+                val enDuration = System.currentTimeMillis() - startTime
                 
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {
-                    recordingTimeManager.saveRecordingTime(category, scriptIndex, i, enDuration)
+                    recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)
                     Log.d("RepeatListeningService", "문장 $i 영문 TTS 시간 저장: ${enDuration}ms")
                 }
                 
-                delay((enDuration * 1.0).toLong())
+                // 코루틴이 취소되었는지 다시 확인 (TTS 재생 후)
+                if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
+                    Log.d("RepeatListeningService", "TTS 재생 후 코루틴이 취소됨 - Service 중단")
+                    break
+                }
+                
+                // 충분한 쉬는 시간 (사용자가 혼자 말해볼 시간)
+                val restTime = (enDuration * 1.2).toLong() // TTS 시간의 2배
+                Log.d("RepeatListeningService", "문장 ${i + 1} 반복 ${j} 쉬는 시간: ${restTime}ms")
+                delay(restTime)
             }
-            onHighlight(null) // 하이라이트 제거
+            uiCallback.onHighlight(null) // 하이라이트 제거
         }
         
         // 마지막에 카드를 원래 상태(영문)로 복원
-        onCardFlip(false)
-        onHighlight(null)
+        uiCallback.onCardFlip(false)
+        uiCallback.onHighlight(null)
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
-        progressTracker.clearScriptProgress(category, scriptIndex, "반복 듣기")
+        progressTracker.clearScriptProgress(data.category, data.scriptIndex, "반복 듣기")
         
         // 완료 콜백 호출
-        onComplete()
+        uiCallback.onComplete()
         
         Log.d("RepeatListeningService", "반복 듣기 완료")
     }

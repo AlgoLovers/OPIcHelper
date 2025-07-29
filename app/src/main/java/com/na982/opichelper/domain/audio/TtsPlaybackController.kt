@@ -54,6 +54,9 @@ class TtsPlaybackController @Inject constructor(
     // TTS 오케스트레이터 설정
     private var ttsOrchestrator: TtsOrchestrator? = null
     
+    // 다른 암기 모드 중단을 위한 콜백
+    private var onStopOtherMemorizationMode: (() -> Unit)? = null
+    
     // TTS 서비스 바인딩 관련
     private var serviceConnection: ServiceConnection? = null
     private var isServiceBound = false
@@ -61,6 +64,11 @@ class TtsPlaybackController @Inject constructor(
     fun setTtsOrchestrator(orchestrator: TtsOrchestrator) {
         ttsOrchestrator = orchestrator
         Log.d("TtsPlaybackController", "TTS 오케스트레이터 설정 완료")
+    }
+    
+    fun setOnStopOtherMemorizationMode(callback: () -> Unit) {
+        onStopOtherMemorizationMode = callback
+        Log.d("TtsPlaybackController", "다른 암기 모드 중단 콜백 설정")
     }
     
     /**
@@ -132,21 +140,25 @@ class TtsPlaybackController @Inject constructor(
      */
     fun playQuestion(question: String) {
         coroutineScope.launch {
-            // 1단계: 다른 TTS가 재생 중이면 먼저 중지하고 완료 대기
-            if (_isAnswerPlaying.value || (_isPlaying.value && !_isQuestionPlaying.value)) {
-                Log.d("TtsPlaybackController", "다른 TTS 재생 중 - 먼저 중지")
-                stopTts()
-                Log.d("TtsPlaybackController", "다른 TTS 중지 완료")
-            }
-            
-            // 2단계: 이미 질문 재생 중이면 토글(멈춤)
+            // 1단계: 이미 질문 재생 중이면 토글(멈춤)
             if (_isQuestionPlaying.value) {
                 Log.d("TtsPlaybackController", "질문 재생 중 - 토글하여 중지")
                 stopTts()
                 return@launch
             }
             
-            // 3단계: 새 질문 재생 시작
+            // 2단계: 다른 TTS가 재생 중이면 먼저 중지하고 완료 대기
+            if (_isAnswerPlaying.value || (_isPlaying.value && !_isQuestionPlaying.value)) {
+                Log.d("TtsPlaybackController", "다른 TTS 재생 중 - 먼저 중지")
+                stopTts()
+                Log.d("TtsPlaybackController", "다른 TTS 중지 완료")
+            }
+            
+            // 3단계: 다른 암기 모드 중단 (MemorizationViewModel 이벤트 발생)
+            // MainViewModel에서 처리하던 부분을 여기서 처리
+            Log.d("TtsPlaybackController", "다른 암기 모드 중단 요청 - MainViewModel에서 처리 필요")
+            
+            // 4단계: 새 질문 재생 시작
             try {
                 Log.d("TtsPlaybackController", "질문 TTS 재생 시작: $question")
                 _isPlaying.value = true
@@ -172,21 +184,24 @@ class TtsPlaybackController @Inject constructor(
      */
     fun playAnswer(answer: String) {
         coroutineScope.launch {
-            // 1단계: 다른 TTS가 재생 중이면 먼저 중지하고 완료 대기
-            if (_isQuestionPlaying.value || (_isPlaying.value && !_isAnswerPlaying.value)) {
-                Log.d("TtsPlaybackController", "다른 TTS 재생 중 - 먼저 중지")
-                stopTts()
-                Log.d("TtsPlaybackController", "다른 TTS 중지 완료")
-            }
-            
-            // 2단계: 이미 답변 재생 중이면 토글(멈춤)
+            // 1단계: 이미 답변 재생 중이면 토글(멈춤)
             if (_isAnswerPlaying.value) {
                 Log.d("TtsPlaybackController", "답변 재생 중 - 토글하여 중지")
                 stopTts()
                 return@launch
             }
             
-            // 3단계: 새 답변 재생 시작
+            // 2단계: 다른 TTS가 재생 중이면 먼저 중지하고 완료 대기
+            if (_isQuestionPlaying.value || (_isPlaying.value && !_isAnswerPlaying.value)) {
+                Log.d("TtsPlaybackController", "다른 TTS 재생 중 - 먼저 중지")
+                stopTts()
+                Log.d("TtsPlaybackController", "다른 TTS 중지 완료")
+            }
+            
+            // 3단계: 다른 암기 모드 중단
+            Log.d("TtsPlaybackController", "다른 암기 모드 중단 요청 - MainViewModel에서 처리 필요")
+            
+            // 4단계: 새 답변 재생 시작
             try {
                 Log.d("TtsPlaybackController", "답변 TTS 재생 시작: $answer")
                 _isPlaying.value = true
@@ -259,67 +274,128 @@ class TtsPlaybackController @Inject constructor(
     }
     
     /**
-     * TTS 재생 중지 (suspend 함수로 변경)
+     * TTS 재생 중지
      */
-    suspend fun stopTts() {
-        try {
-            Log.d("TtsPlaybackController", "TTS 재생 중지 시작")
-            
-            // 1. TTS 오케스트레이터 중지
-            ttsOrchestrator?.stop()
-            
-            // 2. 오디오 플레이어 중지
-            audioPlayer.stop()
-            
-            // 3. 상태 초기화
-            _isPlaying.value = false
-            _isQuestionPlaying.value = false
-            _isAnswerPlaying.value = false
-            _questionHighlightIndex.value = null
-            _answerHighlightIndex.value = null
-            _answerKoHighlightIndex.value = null
-            _recordingHighlightIndex.value = null
-            
-            // 4. 하이라이트 초기화
-            clearHighlight()
-            
-            Log.d("TtsPlaybackController", "TTS 재생 중지 완료")
-        } catch (e: Exception) {
-            Log.e("TtsPlaybackController", "TTS 중지 오류", e)
+    fun stopTts() {
+        coroutineScope.launch {
+            try {
+                Log.d("TtsPlaybackController", "TTS 재생 중지 시작")
+                
+                // 1. TTS 오케스트레이터 중지
+                ttsOrchestrator?.stop()
+                
+                // 2. 오디오 플레이어 중지
+                audioPlayer.stop()
+                
+                // 3. 상태 초기화
+                _isPlaying.value = false
+                _isQuestionPlaying.value = false
+                _isAnswerPlaying.value = false
+                _questionHighlightIndex.value = null
+                _answerHighlightIndex.value = null
+                _answerKoHighlightIndex.value = null
+                _recordingHighlightIndex.value = null
+                
+                // 4. 하이라이트 초기화
+                clearHighlight()
+                
+                Log.d("TtsPlaybackController", "TTS 재생 중지 완료")
+            } catch (e: Exception) {
+                Log.e("TtsPlaybackController", "TTS 재생 중지 실패", e)
+            }
         }
     }
     
     /**
-     * 완전한 TTS 정리 (앱 종료 시 사용)
+     * TTS 일시 중지 (설정화면 진입 시)
      */
-    suspend fun cleanupTts() {
+    fun pauseTts() {
+        Log.d("TtsPlaybackController", "TTS 일시 중지")
         try {
-            Log.d("TtsPlaybackController", "TTS 완전 정리 시작")
-            
-            // 1. 모든 TTS 중지
-            stopTts()
-            
-            // 2. TTS 오케스트레이터 완전 정리
-            ttsOrchestrator?.let { orchestrator ->
-                // 각 TTS 플레이어의 release 호출
-                orchestrator.releaseAllPlayers()
+            // 현재 재생 중인 TTS만 일시 중지
+            if (_isPlaying.value) {
+                ttsOrchestrator?.pause()
+                Log.d("TtsPlaybackController", "TTS 일시 중지 완료")
             }
-            
-            // 3. 오디오 플레이어 완전 정리
-            audioPlayer.release()
-            
-            // 4. 상태 완전 초기화
-            _isPlaying.value = false
+        } catch (e: Exception) {
+            Log.e("TtsPlaybackController", "TTS 일시 중지 실패", e)
+        }
+    }
+    
+    /**
+     * TTS 재개 (설정화면에서 복귀 시)
+     */
+    fun resumeTts() {
+        Log.d("TtsPlaybackController", "TTS 재개")
+        try {
+            // 이전에 재생 중이었던 TTS 재개
+            if (_isPlaying.value) {
+                ttsOrchestrator?.resume()
+                Log.d("TtsPlaybackController", "TTS 재개 완료")
+            }
+        } catch (e: Exception) {
+            Log.e("TtsPlaybackController", "TTS 재개 실패", e)
+        }
+    }
+    
+    /**
+     * 질문 TTS만 중지
+     */
+    fun stopQuestion() {
+        Log.d("TtsPlaybackController", "질문 TTS만 중지")
+        if (_isQuestionPlaying.value) {
+            stopTts()
             _isQuestionPlaying.value = false
-            _isAnswerPlaying.value = false
             _questionHighlightIndex.value = null
+        }
+    }
+    
+    /**
+     * 답변 TTS만 중지
+     */
+    fun stopAnswer() {
+        Log.d("TtsPlaybackController", "답변 TTS만 중지")
+        if (_isAnswerPlaying.value) {
+            stopTts()
+            _isAnswerPlaying.value = false
             _answerHighlightIndex.value = null
             _answerKoHighlightIndex.value = null
-            _recordingHighlightIndex.value = null
+        }
+    }
+    
+    /**
+     * 모든 TTS 중지 (다른 TTS 시작 전)
+     */
+    fun stopAllTts() {
+        Log.d("TtsPlaybackController", "모든 TTS 중지")
+        stopTts()
+        _isPlaying.value = false
+        _isQuestionPlaying.value = false
+        _isAnswerPlaying.value = false
+        _questionHighlightIndex.value = null
+        _answerHighlightIndex.value = null
+        _answerKoHighlightIndex.value = null
+        _recordingHighlightIndex.value = null
+    }
+    
+    /**
+     * TTS 완전 정리 (앱 종료 시)
+     */
+    fun cleanupTts() {
+        Log.d("TtsPlaybackController", "TTS 완전 정리 시작")
+        try {
+            // 1. 모든 TTS 중지
+            stopAllTts()
+            
+            // 2. TTS 오케스트레이터 완전 해제
+            ttsOrchestrator?.releaseAllPlayers()
+            
+            // 3. 오디오 플레이어 정리
+            audioPlayer.stop()
             
             Log.d("TtsPlaybackController", "TTS 완전 정리 완료")
         } catch (e: Exception) {
-            Log.e("TtsPlaybackController", "TTS 완전 정리 오류", e)
+            Log.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
         }
     }
     
@@ -424,13 +500,13 @@ class TtsPlaybackController @Inject constructor(
     }
     
     /**
-     * 모든 하이라이트 제거
+     * 하이라이트 상태 초기화
      */
     fun clearHighlight() {
+        Log.d("TtsPlaybackController", "하이라이트 상태 초기화")
         _questionHighlightIndex.value = null
         _answerHighlightIndex.value = null
         _answerKoHighlightIndex.value = null
         _recordingHighlightIndex.value = null
-        Log.d("TtsPlaybackController", "모든 하이라이트 제거")
     }
 } 

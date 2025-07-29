@@ -116,9 +116,40 @@ abstract class BaseTtsPlayer(
     }
     
     override fun stop() {
-        tts?.stop()
-        _isPlaying = false
         Log.d(logTag, "$serviceName 중지")
+        try {
+            tts?.stop()
+            _isPlaying = false
+            Log.d(logTag, "$serviceName 중지 완료")
+        } catch (e: Exception) {
+            Log.e(logTag, "$serviceName 중지 실패", e)
+        }
+    }
+    
+    override fun pause() {
+        Log.d(logTag, "$serviceName 일시 중지")
+        try {
+            // Android TTS는 pause 기능이 없으므로 stop으로 대체
+            // 실제로는 현재 재생 위치를 저장하고 나중에 재개할 수 있지만
+            // 현재 구현에서는 단순히 중지
+            tts?.stop()
+            _isPlaying = false
+            Log.d(logTag, "$serviceName 일시 중지 완료")
+        } catch (e: Exception) {
+            Log.e(logTag, "$serviceName 일시 중지 실패", e)
+        }
+    }
+    
+    override fun resume() {
+        Log.d(logTag, "$serviceName 재개")
+        try {
+            // Android TTS는 resume 기능이 없으므로
+            // 현재 구현에서는 재개할 수 없음
+            // 사용자에게 알림
+            Log.w(logTag, "$serviceName 재개 불가 - Android TTS 제한")
+        } catch (e: Exception) {
+            Log.e(logTag, "$serviceName 재개 실패", e)
+        }
     }
     
     override fun isPlaying(): Boolean {

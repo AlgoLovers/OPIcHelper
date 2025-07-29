@@ -102,37 +102,30 @@ class TtsOrchestrator @Inject constructor(
      * TTS 재생 중지
      */
     fun stop() {
-        googleTtsPlayer.stop()
-        for (player in koreanTtsPlayers) {
-            player.stop()
+        Log.d("TtsOrchestrator", "TTS 중지")
+        try {
+            // 모든 TTS 플레이어 중지
+            googleTtsPlayer.stop()
+            for (player in koreanTtsPlayers) {
+                player.stop()
+            }
+            Log.d("TtsOrchestrator", "TTS 중지 완료")
+        } catch (e: Exception) {
+            Log.e("TtsOrchestrator", "TTS 중지 실패", e)
         }
-        Log.d("TtsOrchestrator", "모든 TTS 중지")
     }
     
     /**
-     * 모든 TTS 플레이어 완전 해제 (앱 종료 시 사용)
+     * 모든 TTS 플레이어 해제 (앱 종료 시 사용)
      */
     fun releaseAllPlayers() {
+        Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제")
         try {
-            Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제 시작")
-            
-            // 1. 모든 TTS 중지
-            stop()
-            
-            // 2. Google TTS 플레이어 해제
             googleTtsPlayer.release()
-            
-            // 3. 모든 한글 TTS 플레이어 해제
-            for (player in koreanTtsPlayers) {
-                player.release()
-            }
-            
-            // 4. 인덱스 초기화
-            currentKoreanTtsIndex = 0
-            
+            samsungTtsPlayer.release()
             Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제 완료")
         } catch (e: Exception) {
-            Log.e("TtsOrchestrator", "TTS 플레이어 해제 중 오류", e)
+            Log.e("TtsOrchestrator", "TTS 플레이어 해제 실패", e)
         }
     }
     
@@ -246,6 +239,36 @@ class TtsOrchestrator @Inject constructor(
         } else {
             completionDeferred.complete(Unit)
             return 0L
+        }
+    }
+    
+    /**
+     * TTS 일시 중지
+     */
+    fun pause() {
+        Log.d("TtsOrchestrator", "TTS 일시 중지")
+        try {
+            // 현재 활성화된 TTS 플레이어 일시 중지
+            googleTtsPlayer.pause()
+            samsungTtsPlayer.pause()
+            Log.d("TtsOrchestrator", "TTS 일시 중지 완료")
+        } catch (e: Exception) {
+            Log.e("TtsOrchestrator", "TTS 일시 중지 실패", e)
+        }
+    }
+    
+    /**
+     * TTS 재개
+     */
+    fun resume() {
+        Log.d("TtsOrchestrator", "TTS 재개")
+        try {
+            // 현재 활성화된 TTS 플레이어 재개
+            googleTtsPlayer.resume()
+            samsungTtsPlayer.resume()
+            Log.d("TtsOrchestrator", "TTS 재개 완료")
+        } catch (e: Exception) {
+            Log.e("TtsOrchestrator", "TTS 재개 실패", e)
         }
     }
 } 

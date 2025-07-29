@@ -371,7 +371,7 @@ class MainViewModel @Inject constructor(
                 val highlightDuration = (sentenceLength * 50L).coerceAtLeast(1000L)
                 
                 Log.d("MainViewModel", "영작테스트 하이라이트 지속 시간: ${highlightDuration}ms")
-                delay(highlightDuration)
+                kotlinx.coroutines.delay(highlightDuration)
             } else {
                 Log.d("MainViewModel", "영작테스트 재생이 중단됨 - 루프 종료")
                 break
@@ -423,7 +423,7 @@ class MainViewModel @Inject constructor(
             val recordingTime = recordingTimes[i]
             Log.d("MainViewModel", "문장 $i 하이라이트 지속 시간: ${recordingTime}ms")
             
-            delay(recordingTime)
+            kotlinx.coroutines.delay(recordingTime)
         }
         
         // 재생 완료 후 상태 초기화
@@ -526,9 +526,8 @@ class MainViewModel @Inject constructor(
             // 영작테스트 녹음 파일 재생 중단
             stopEnglishWritingTestMergedFile()
             
-            // 반복듣기 등 중단 - MemorizationViewModel의 stopMemorization 호출
-            // MemorizationViewModel 참조가 필요하므로 이벤트 기반으로 처리
-            ttsPlaybackController.stopTts()
+            // 다른 TTS 중지 후 새 질문 재생
+            ttsPlaybackController.stopAllTts()
             ttsPlaybackController.playQuestion(question)
         }
     }
@@ -538,33 +537,32 @@ class MainViewModel @Inject constructor(
             // 영작테스트 녹음 파일 재생 중단
             stopEnglishWritingTestMergedFile()
             
-            // 반복듣기 등 중단 - MemorizationViewModel의 stopMemorization 호출
-            ttsPlaybackController.stopTts()
+            // 다른 TTS 중지 후 새 답변 재생
+            ttsPlaybackController.stopAllTts()
             ttsPlaybackController.playAnswer(answer)
         }
     }
     
     /**
-     * 현재 사용자 레벨에 맞는 답변을 가져오기
+     * 현재 재생 중인 TTS만 중지 (토글)
      */
-    fun getCurrentAnswer(qaItem: QaItem?): String {
-        return qaDataManager.getCurrentAnswer(qaItem)
+    fun stopCurrentTts() {
+        viewModelScope.launch {
+            Log.d("MainViewModel", "현재 TTS 중지")
+            ttsPlaybackController.stopAllTts()
+        }
     }
     
     /**
-     * 현재 사용자 레벨에 맞는 한국어 답변을 가져오기
+     * 모든 TTS 중지 및 정리 (백키 등)
      */
-    fun getCurrentAnswerKo(qaItem: QaItem?): String {
-        return qaDataManager.getCurrentAnswerKo(qaItem)
-    }
-
     fun stopAllTts() {
         viewModelScope.launch {
             try {
                 Log.d("MainViewModel", "모든 TTS 중지 시작")
                 
                 // 1. TTS 재생 중지
-                ttsPlaybackController.stopTts()
+                ttsPlaybackController.stopAllTts()
                 
                 // 2. 영작테스트 관련 상태 초기화
                 _isEnglishWritingTestMergedFilePlaying.value = false
@@ -697,11 +695,49 @@ class MainViewModel @Inject constructor(
     }
 
     fun onBackgroundMove() {
-        Log.d("MainViewModel", "백그라운드로 이동 - UseCase 중단")
+        Log.d("MainViewModel", "백그라운드로 이동 - TTS 일시 중지")
+        viewModelScope.launch {
+            try {
+                // 1. 현재 TTS 상태 저장
+                val wasPlaying = _uiState.value.isPlaying
+                val wasQuestionPlaying = _uiState.value.isQuestionPlaying
+                val wasAnswerPlaying = _uiState.value.isAnswerPlaying
+                
+                Log.d("MainViewModel", "백그라운드 이동 시 TTS 상태: playing=$wasPlaying, question=$wasQuestionPlaying, answer=$wasAnswerPlaying")
+                
+                // 2. TTS 일시 중지 (하지만 완전히 정리하지는 않음)
+                if (wasPlaying) {
+                    ttsPlaybackController.pauseTts()
+                    Log.d("MainViewModel", "백그라운드 이동 - TTS 일시 중지 완료")
+                }
+                
+                // 3. 하이라이트 상태 초기화 (설정화면에서는 보이지 않으므로)
+                ttsPlaybackController.clearHighlight()
+                
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "백그라운드 이동 처리 실패", e)
+            }
+        }
     }
 
     fun onForegroundReturn() {
-        Log.d("MainViewModel", "포그라운드로 복귀 - 상태 확인")
+        Log.d("MainViewModel", "포그라운드로 복귀 - TTS 상태 복원")
+        viewModelScope.launch {
+            try {
+                // 1. TTS 재개 (일시 중지된 경우)
+                val wasPlaying = _uiState.value.isPlaying
+                if (wasPlaying) {
+                    ttsPlaybackController.resumeTts()
+                    Log.d("MainViewModel", "포그라운드 복귀 - TTS 재개 완료")
+                }
+                
+                // 2. 상태 동기화
+                Log.d("MainViewModel", "포그라운드 복귀 - 상태 동기화 완료")
+                
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "포그라운드 복귀 처리 실패", e)
+            }
+        }
     }
 
     // ===== 내부 헬퍼 메서드들 =====
@@ -715,6 +751,20 @@ class MainViewModel @Inject constructor(
         } else {
             setSelectedMemorizeLevel(levels.first())
         }
+    }
+
+    /**
+     * 현재 사용자 레벨에 맞는 답변을 가져오기
+     */
+    fun getCurrentAnswer(qaItem: QaItem?): String {
+        return qaDataManager.getCurrentAnswer(qaItem)
+    }
+    
+    /**
+     * 현재 사용자 레벨에 맞는 한국어 답변을 가져오기
+     */
+    fun getCurrentAnswerKo(qaItem: QaItem?): String {
+        return qaDataManager.getCurrentAnswerKo(qaItem)
     }
 
     // 영작테스트 완료 후 녹음 시간 데이터 확인
