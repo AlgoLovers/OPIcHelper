@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.na982.opichelper.domain.audio.TtsOrchestrator
 
 /**
  * 영작 테스트용 Service
@@ -20,7 +21,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class EnglishWritingTestService @Inject constructor(
-    private val ttsPlayer: TtsPlayer,
+    private val ttsOrchestrator: TtsOrchestrator,
     private val audioRecorder: AudioRecorder,
     private val audioFileManager: AudioFileManager,
     private val progressTracker: MemorizeTestProgressTracker,
@@ -95,7 +96,7 @@ class EnglishWritingTestService @Inject constructor(
             onKoreanHighlight(idx) // 한글 하이라이트
             
             // 한글 문장 TTS 재생
-            ttsPlayer.speakAndGetDuration(koSentences[idx], isKorean = true, rate = 0.8f)
+            ttsOrchestrator.speakAndGetDuration(koSentences[idx], isKorean = true, rate = 0.8f)
             // delay((koDuration * 0.5).toLong()) // 쉬는 시간 제거
 
             // 코루틴이 취소되었는지 다시 확인

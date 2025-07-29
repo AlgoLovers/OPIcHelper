@@ -1,6 +1,6 @@
 package com.na982.opichelper.domain.usecase
 
-import com.na982.opichelper.domain.audio.TtsPlayer
+import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.delay
@@ -15,7 +15,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class RepeatListeningService @Inject constructor(
-    private val ttsPlayer: TtsPlayer,
+    private val ttsOrchestrator: TtsOrchestrator,
     private val progressTracker: MemorizeTestProgressTracker,
     private val recordingTimeManager: RecordingTimeManager
 ) {
@@ -86,7 +86,7 @@ class RepeatListeningService @Inject constructor(
             onCardFlip(true) // 카드를 한글로 뒤집기
             delay(100) // 카드 뒤집기 애니메이션 대기
             onKoreanHighlight(i) // 한글 하이라이트
-            val koDuration = ttsPlayer.speakAndGetDuration(koSentences[i], isKorean = true, rate = 0.8f)
+            val koDuration = ttsOrchestrator.speakAndGetDuration(koSentences[i], isKorean = true, rate = 0.8f)
             
             // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
             val enSentence = enSentences[i]
@@ -126,7 +126,7 @@ class RepeatListeningService @Inject constructor(
                 onCardFlip(false) // 카드를 영문으로 뒤집기
                 delay(100) // 카드 뒤집기 애니메이션 대기
                 onHighlight(i) // 영문 하이라이트
-                val enDuration = ttsPlayer.speakAndGetDuration(enSentences[i], isKorean = false, rate = 1.0f) // 0.75f에서 1.0f로 향상
+                val enDuration = ttsOrchestrator.speakAndGetDuration(enSentences[i], isKorean = false, rate = 1.0f) // 0.75f에서 1.0f로 향상
                 
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {

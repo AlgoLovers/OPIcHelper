@@ -22,6 +22,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import javax.inject.Named
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -46,20 +47,29 @@ object AppModule {
         return AudioFileManagerImpl(context)
     }
     
-    // TTS Player (Google TTS를 기본으로 사용)
+    // TTS Players
     @Provides
     @Singleton
-    fun provideTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
+    @Named("google")
+    fun provideGoogleTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
         return GoogleTtsPlayer(context)
+    }
+    
+    @Provides
+    @Singleton
+    @Named("samsung")
+    fun provideSamsungTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
+        return SamsungTtsPlayer(context)
     }
     
     @Provides
     @Singleton
     fun provideTtsOrchestrator(
         @ApplicationContext context: Context,
-        ttsPlayer: TtsPlayer
+        @Named("google") googleTtsPlayer: TtsPlayer,
+        @Named("samsung") samsungTtsPlayer: TtsPlayer
     ): TtsOrchestrator {
-        return TtsOrchestrator(context, ttsPlayer, ttsPlayer)
+        return TtsOrchestrator(context, googleTtsPlayer, samsungTtsPlayer)
     }
     
     @Provides

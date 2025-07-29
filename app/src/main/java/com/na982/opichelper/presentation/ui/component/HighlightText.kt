@@ -42,8 +42,8 @@ fun HighlightText(
             }
             val fontSize = when {
                 isRecordingHighlighted -> 20.sp
-                isHighlighted -> 18.sp
-                else -> 16.sp
+                isHighlighted -> 20.sp
+                else -> 18.sp
             }
             val fontWeight = when {
                 isRecordingHighlighted -> FontWeight.Bold

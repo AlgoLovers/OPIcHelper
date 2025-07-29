@@ -45,9 +45,13 @@ class TtsOrchestrator @Inject constructor(
     suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
         val isKorean = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
         
+        Log.d("TtsOrchestrator", "🔍 언어 감지: 텍스트='${text.take(20)}...', 한글여부=$isKorean")
+        
         return if (isKorean) {
+            Log.d("TtsOrchestrator", "🇰🇷 한글 텍스트 감지 - 한글 TTS로 전달")
             speakKorean(text, onComplete)
         } else {
+            Log.d("TtsOrchestrator", "🇺🇸 영문 텍스트 감지 - 영문 TTS로 전달")
             speakEnglish(text, onComplete)
         }
     }
@@ -172,23 +176,34 @@ class TtsOrchestrator @Inject constructor(
      * 문장별 하이라이트와 함께 TTS 재생
      */
     suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
+        Log.d("TtsOrchestrator", "🎯 speakWithHighlight 호출됨: '${text.take(30)}...'")
+        
         val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        Log.d("TtsOrchestrator", "📝 문장 분리 완료: ${sentences.size}개 문장")
         
         for ((idx, sentence) in sentences.withIndex()) {
+            Log.d("TtsOrchestrator", "🔤 문장 ${idx + 1}/${sentences.size}: '${sentence.take(20)}...'")
+            
             onHighlight(idx)
             val isKorean = sentence.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
+            
+            Log.d("TtsOrchestrator", "🔍 문장 ${idx + 1} 언어 감지: 한글여부=$isKorean")
+            
             val finished = kotlinx.coroutines.CompletableDeferred<Unit>()
             if (isKorean) {
+                Log.d("TtsOrchestrator", "🇰🇷 문장 ${idx + 1} 한글 TTS로 재생")
                 // 한글 TTS가 모두 실패하면 안내만 하고 넘어감
                 val success = speakKorean(sentence) { finished.complete(Unit) }
                 if (!success) finished.complete(Unit)
             } else {
+                Log.d("TtsOrchestrator", "🇺🇸 문장 ${idx + 1} 영문 TTS로 재생")
                 speakEnglish(sentence) { finished.complete(Unit) }
             }
             finished.await()
             kotlinx.coroutines.delay(400L)
         }
         onHighlight(null)
+        Log.d("TtsOrchestrator", "✅ speakWithHighlight 완료")
     }
     
     /**

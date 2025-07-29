@@ -24,7 +24,6 @@ import javax.inject.Singleton
  */
 @Singleton
 class TtsPlaybackController @Inject constructor(
-    private val ttsPlayer: TtsPlayer,
     private val audioPlayer: AudioPlayer
 ) {
     private val coroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
@@ -383,13 +382,6 @@ class TtsPlaybackController @Inject constructor(
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 강제 중지 오류", e)
         }
-    }
-    
-    /**
-     * TTS 플레이어 반환 (UseCase에서 사용)
-     */
-    fun getTtsPlayer(): TtsPlayer {
-        return ttsPlayer
     }
     
     /**
