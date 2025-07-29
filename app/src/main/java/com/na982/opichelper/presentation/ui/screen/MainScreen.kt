@@ -474,6 +474,12 @@ fun MainScreen(
                                             }
                                         },
                                         enabled = hasEnglishWritingTestMergedFile,
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isEnglishWritingTestMergedFilePlaying)
+                                                MaterialTheme.colorScheme.error
+                                            else
+                                                MaterialTheme.colorScheme.primary
+                                        ),
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         Text(
@@ -498,6 +504,12 @@ fun MainScreen(
                                             }
                                         },
                                         enabled = hasFullMemorizationRecording,
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isFullMemorizationRecordingPlaying)
+                                                MaterialTheme.colorScheme.error
+                                            else
+                                                MaterialTheme.colorScheme.primary
+                                        ),
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         Text(
