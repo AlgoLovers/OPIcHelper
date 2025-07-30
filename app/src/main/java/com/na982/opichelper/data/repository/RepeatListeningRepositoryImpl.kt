@@ -77,16 +77,8 @@ class RepeatListeningRepositoryImpl @Inject constructor(
             delay(100) // 카드 뒤집기 애니메이션 대기
             uiCallback.onKoreanHighlight(i) // 한글 하이라이트
             
-            // 한글 TTS 재생 완료까지 기다리기
-            val koCompletionDeferred = kotlinx.coroutines.CompletableDeferred<Long>()
-            ttsOrchestrator.speak(koSentences[i]) {
-                koCompletionDeferred.complete(System.currentTimeMillis())
-            }
-            
-            // 한글 TTS 재생 완료까지 대기
-            val koStartTime = System.currentTimeMillis()
-            koCompletionDeferred.await()
-            val koDuration = System.currentTimeMillis() - koStartTime
+            // 한글 TTS 재생 완료까지 기다리기 (표준화된 방식 사용)
+            ttsOrchestrator.speakAndWaitForCompletion(koSentences[i], isKorean = true, rate = 1.0f)
             
             // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
             val enSentence = enSentences[i]
@@ -125,16 +117,8 @@ class RepeatListeningRepositoryImpl @Inject constructor(
                 delay(100) // 카드 뒤집기 애니메이션 대기
                 uiCallback.onHighlight(i) // 영문 하이라이트
                 
-                // TTS 재생 완료까지 기다리기
-                val completionDeferred = kotlinx.coroutines.CompletableDeferred<Long>()
-                ttsOrchestrator.speak(enSentences[i]) {
-                    completionDeferred.complete(System.currentTimeMillis())
-                }
-                
-                // TTS 재생 완료까지 대기
-                val startTime = System.currentTimeMillis()
-                completionDeferred.await()
-                val enDuration = System.currentTimeMillis() - startTime
+                // TTS 재생 완료까지 기다리기 (표준화된 방식 사용)
+                val enDuration = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i], isKorean = false, rate = 1.0f)
                 
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {

@@ -13,9 +13,7 @@ interface FullMemorizationRepository {
     /**
      * 질문을 TTS로 재생하고 하이라이트 처리
      */
-    suspend fun playQuestionWithHighlight(
-        onHighlight: (Int?) -> Unit
-    )
+    suspend fun playQuestionWithHighlight()
     
     /**
      * 녹음 시작

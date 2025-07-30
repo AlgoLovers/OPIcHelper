@@ -23,33 +23,16 @@ class FullMemorizationRepositoryImpl @Inject constructor(
 
     private var currentRecordingPath: String? = null
 
-    override suspend fun playQuestionWithHighlight(
-        onHighlight: (Int?) -> Unit
-    ) {
+    override suspend fun playQuestionWithHighlight() {
         try {
             val qaItem = qaDataManager.getCurrentQaItem()
-            if (qaItem == null) {
-                Log.e("FullMemorizationRepositoryImpl", "QA 아이템을 찾을 수 없음")
-                return
+            if (qaItem != null) {
+                // 영어 질문 TTS 재생 (표준화된 방식 사용)
+                val questionDuration = ttsOrchestrator.speakAndWaitForCompletion(qaItem.questionEn, isKorean = false, rate = 1.0f)
+                Log.d("FullMemorizationRepositoryImpl", "영어 질문 TTS 재생 완료: ${questionDuration}ms")
             }
-
-            Log.d("FullMemorizationRepositoryImpl", "영어 질문 TTS 시작")
-            Log.d("FullMemorizationRepositoryImpl", "질문 내용: ${qaItem.questionEn}")
-
-            // 기존 질문 재생 기능 사용 (문장별 하이라이트 포함)
-            ttsOrchestrator.speakWithHighlight(qaItem.questionEn) { index ->
-                onHighlight(index)
-                Log.d("FullMemorizationRepositoryImpl", "영어 질문 하이라이트: $index")
-            }
-
-            Log.d("FullMemorizationRepositoryImpl", "영어 질문 TTS 재생 완료")
-            
-            // 하이라이트 제거
-            onHighlight(null)
-            Log.d("FullMemorizationRepositoryImpl", "영어 질문 하이라이트 제거")
-
         } catch (e: Exception) {
-            Log.e("FullMemorizationRepositoryImpl", "질문 재생 실패", e)
+            Log.e("FullMemorizationRepositoryImpl", "영어 질문 TTS 재생 실패", e)
         }
     }
 

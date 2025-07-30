@@ -39,8 +39,7 @@ class FullMemorizationUseCase @Inject constructor(
         category: String,
         scriptIndex: Int,
         onRecordingStateChange: (Boolean) -> Unit,
-        onPlayingStateChange: (Boolean) -> Unit,
-        onHighlight: (Int?) -> Unit
+        onPlayingStateChange: (Boolean) -> Unit
     ) {
         try {
             Log.d("FullMemorizationUseCase", "통암기 테스트 시작: $category, $scriptIndex")
@@ -51,16 +50,10 @@ class FullMemorizationUseCase @Inject constructor(
             
             val qaItem = qaDataManager.getCurrentQaItem()
             if (qaItem != null) {
-                ttsOrchestrator.speakWithHighlight(qaItem.questionEn) { index ->
-                    onHighlight(index)
-                    Log.d("FullMemorizationUseCase", "영어 질문 하이라이트: $index")
-                }
+                // 영어 질문 TTS 재생 (표준화된 방식 사용)
+                val questionDuration = ttsOrchestrator.speakAndWaitForCompletion(qaItem.questionEn, isKorean = false, rate = 1.0f)
                 
-                Log.d("FullMemorizationUseCase", "영어 질문 TTS 재생 완료")
-                
-                // 하이라이트 제거
-                onHighlight(null)
-                Log.d("FullMemorizationUseCase", "영어 질문 하이라이트 제거")
+                Log.d("FullMemorizationUseCase", "영어 질문 TTS 재생 완료: ${questionDuration}ms")
                 
                 // TTS 완료 후 약간의 지연 (GUI 업데이트 대기)
                 delay(500L)

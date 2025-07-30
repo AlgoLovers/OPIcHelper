@@ -28,8 +28,7 @@ class ExecuteFullMemorizationUseCase @Inject constructor(
         category: String,
         scriptIndex: Int,
         onRecordingStateChange: (Boolean) -> Unit,
-        onPlayingStateChange: (Boolean) -> Unit,
-        onHighlight: (Int?) -> Unit
+        onPlayingStateChange: (Boolean) -> Unit
     ) {
         try {
             Log.d("ExecuteFullMemorizationUseCase", "통암기 테스트 시작: $category, $scriptIndex")
@@ -39,9 +38,7 @@ class ExecuteFullMemorizationUseCase @Inject constructor(
             Log.d("ExecuteFullMemorizationUseCase", "onPlayingStateChange(true) 호출")
             onPlayingStateChange(true)
             
-            fullMemorizationRepository.playQuestionWithHighlight { index ->
-                onHighlight(index)
-            }
+            fullMemorizationRepository.playQuestionWithHighlight()
             
             Log.d("ExecuteFullMemorizationUseCase", "onPlayingStateChange(false) 호출")
             onPlayingStateChange(false)

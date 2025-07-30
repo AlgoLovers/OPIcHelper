@@ -274,8 +274,11 @@ class MemorizationViewModel @Inject constructor(
                     onRecordingStateChange = { isRecording ->
                         if (isRecording) {
                             startMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
+                        } else {
+                            Log.d("MemorizationViewModel", "FULL_MEMORIZATION_RECORDING 모드로 전환")
+                            // 질문 재생 완료 후 녹음 시작
+                            startMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
                         }
-                        // 녹음 종료 시에는 상태 업데이트 불필요 (녹음 파일이 생성되기 전)
                     },
                     onPlayingStateChange = { isPlaying ->
                         Log.d("MemorizationViewModel", "onPlayingStateChange 콜백 호출: isPlaying=$isPlaying")
@@ -286,18 +289,6 @@ class MemorizationViewModel @Inject constructor(
                             Log.d("MemorizationViewModel", "FULL_MEMORIZATION_RECORDING 모드로 전환")
                             // 질문 재생 완료 후 녹음 시작
                             startMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
-                        }
-                    },
-                    onHighlight = { index ->
-                        // 통암기 하이라이트를 질문 하이라이트로 연결
-                        if (index != null) {
-                            Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 설정 요청: $index")
-                            ttsPlaybackController.setQuestionHighlightIndex(index)
-                            Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 설정 완료: $index")
-                        } else {
-                            Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 제거 요청")
-                            ttsPlaybackController.clearHighlight()
-                            Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 제거 완료")
                         }
                     }
                 )

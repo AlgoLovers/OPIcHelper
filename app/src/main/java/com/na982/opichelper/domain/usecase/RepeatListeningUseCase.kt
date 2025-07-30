@@ -77,16 +77,8 @@ class RepeatListeningService @Inject constructor(
             delay(100) // 카드 뒤집기 애니메이션 대기
             uiCallback.onKoreanHighlight(i) // 한글 하이라이트
             
-            // 한글 TTS 재생 완료까지 기다리기
-            val koCompletionDeferred = kotlinx.coroutines.CompletableDeferred<Long>()
-            ttsOrchestrator.speak(koSentences[i]) {
-                koCompletionDeferred.complete(System.currentTimeMillis())
-            }
-            
-            // 한글 TTS 재생 완료까지 대기
-            val koStartTime = System.currentTimeMillis()
-            koCompletionDeferred.await()
-            val koDuration = System.currentTimeMillis() - koStartTime
+            // 한글 TTS 재생 완료까지 기다리기 (표준화된 방식 사용)
+            ttsOrchestrator.speakAndWaitForCompletion(koSentences[i], isKorean = true, rate = 1.0f)
             
             // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
             val enSentence = enSentences[i]
@@ -101,10 +93,6 @@ class RepeatListeningService @Inject constructor(
                 else -> 0.8f                // 매우 긴 문장: 0.8배
             }
             val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
-            
-            // 방법 2: 실제 영문 TTS 시간 예측 (선택적)
-            // val predictedEnDuration = ttsPlayer.speakAndGetDuration(enSentence, isKorean = false, rate = 1.0f)
-            // val predictedDelay = (predictedEnDuration * 0.3).toLong() // 예측된 영문 시간의 30%
             
             Log.d("RepeatListeningService", "문장 $i 딜레이 계산: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${adaptiveDelay}ms")
             kotlinx.coroutines.delay(adaptiveDelay)
@@ -129,16 +117,8 @@ class RepeatListeningService @Inject constructor(
                 delay(100) // 카드 뒤집기 애니메이션 대기
                 uiCallback.onHighlight(i) // 영문 하이라이트
                 
-                // TTS 재생 완료까지 기다리기
-                val completionDeferred = kotlinx.coroutines.CompletableDeferred<Long>()
-                ttsOrchestrator.speak(enSentences[i]) {
-                    completionDeferred.complete(System.currentTimeMillis())
-                }
-                
-                // TTS 재생 완료까지 대기
-                val startTime = System.currentTimeMillis()
-                completionDeferred.await()
-                val enDuration = System.currentTimeMillis() - startTime
+                // TTS 재생 완료까지 기다리기 (표준화된 방식 사용)
+                val enDuration = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i], isKorean = false, rate = 1.0f)
                 
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {
@@ -153,7 +133,7 @@ class RepeatListeningService @Inject constructor(
                 }
                 
                 // 충분한 쉬는 시간 (사용자가 혼자 말해볼 시간)
-                val restTime = (enDuration * 1.2).toLong() // TTS 시간의 2배
+                val restTime = (enDuration * 1.2).toLong() // TTS 시간의 1.2배
                 Log.d("RepeatListeningService", "문장 ${i + 1} 반복 ${j} 쉬는 시간: ${restTime}ms")
                 delay(restTime)
             }
