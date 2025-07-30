@@ -27,7 +27,6 @@ class TtsPlaybackControllerTest {
     @Before
     fun setUp() {
         ttsPlaybackController = TtsPlaybackController(
-            ttsPlayer = mockTtsPlayer,
             audioPlayer = mockAudioPlayer
         )
         ttsPlaybackController.setTtsOrchestrator(mockTtsOrchestrator)
@@ -217,14 +216,7 @@ class TtsPlaybackControllerTest {
         assertEquals("Samsung TTS", serviceName)
     }
 
-    @Test
-    fun `TTS 플레이어가 올바르게 반환되어야 함`() {
-        // When
-        val ttsPlayer = ttsPlaybackController.getTtsPlayer()
 
-        // Then
-        assertEquals(mockTtsPlayer, ttsPlayer)
-    }
 
     @Test
     fun `합쳐진 오디오 재생 시 순서가 올바르게 작동해야 함`() = runTest {

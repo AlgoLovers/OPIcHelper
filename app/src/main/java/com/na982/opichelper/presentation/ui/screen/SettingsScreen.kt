@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.na982.opichelper.data.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.entity.UserLevel
 
 @Composable

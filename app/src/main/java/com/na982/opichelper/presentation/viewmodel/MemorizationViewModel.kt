@@ -10,6 +10,7 @@ import com.na982.opichelper.domain.usecase.*
 import com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
 import com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
+import com.na982.opichelper.domain.entity.QaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,11 +93,12 @@ data class MemorizationUiState(
 
 @HiltViewModel
 class MemorizationViewModel @Inject constructor(
-    private val ttsPlaybackController: TtsPlaybackController,
-    private val qaDataManager: QaDataManager,
     private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
     private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
     private val executeFullMemorizationUseCase: FullMemorizationUseCase,
+    private val qaDataManager: QaDataManager,
+    private val ttsPlaybackController: TtsPlaybackController,
+    private val getCurrentAnswerUseCase: GetCurrentAnswerUseCase,
     private val progressTracker: MemorizeTestProgressTracker
 ) : ViewModel(), RepeatListeningUiCallback {
     // 상태 StateFlow들
@@ -444,8 +446,8 @@ class MemorizationViewModel @Inject constructor(
                         val repeatListeningData = RepeatListeningData(
                             category = currentItem.category,
                             scriptIndex = qaDataManager.getCurrentIndex(),
-                            koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
-                            englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
+                            koreanAnswer = getCurrentAnswerKo(currentItem),
+                            englishAnswer = getCurrentAnswer(currentItem)
                         )
                         executeRepeatListeningUseCase.execute(
                             data = repeatListeningData,
@@ -468,8 +470,8 @@ class MemorizationViewModel @Inject constructor(
             currentUseCaseJob = viewModelScope.launch {
                 try {
                     executeEnglishWritingTestUseCase.execute(
-                        answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
-                        answerEn = qaDataManager.getCurrentAnswer(currentItem),
+                        answerKo = getCurrentAnswerKo(currentItem),
+                        answerEn = getCurrentAnswer(currentItem),
                         category = currentItem.category,
                         scriptIndex = scriptIndex,
                         onCardFlip = { isKorean ->
@@ -735,6 +737,20 @@ class MemorizationViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * 현재 사용자 레벨에 맞는 영어 답변을 가져오기
+     */
+    private fun getCurrentAnswer(qaItem: QaItem?): String {
+        return getCurrentAnswerUseCase.getCurrentAnswer(qaItem)
+    }
+    
+    /**
+     * 현재 사용자 레벨에 맞는 한국어 답변을 가져오기
+     */
+    private fun getCurrentAnswerKo(qaItem: QaItem?): String {
+        return getCurrentAnswerUseCase.getCurrentAnswerKo(qaItem)
     }
 
     // === RepeatListeningUiCallback 인터페이스 구현 ===

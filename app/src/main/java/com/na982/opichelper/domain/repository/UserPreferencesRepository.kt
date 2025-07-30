@@ -1,6 +1,7 @@
 package com.na982.opichelper.domain.repository
 
 import com.na982.opichelper.domain.entity.UserLevel
+import com.na982.opichelper.domain.entity.DataSource
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -22,6 +23,21 @@ interface UserPreferencesRepository {
      * 사용자 레벨 StateFlow
      */
     val userLevel: StateFlow<UserLevel>
+    
+    /**
+     * 데이터 소스 가져오기
+     */
+    fun getDataSource(): DataSource
+    
+    /**
+     * 데이터 소스 설정
+     */
+    fun setDataSource(dataSource: DataSource)
+    
+    /**
+     * 데이터 소스 StateFlow
+     */
+    val selectedDataSource: StateFlow<DataSource>
     
     /**
      * 영문 TTS 속도 가져오기

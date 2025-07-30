@@ -12,7 +12,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.na982.opichelper.domain.entity.QuestionCategory
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
-import com.na982.opichelper.presentation.viewmodel.AppState
+import com.na982.opichelper.domain.state.AppState
 import androidx.compose.ui.platform.LocalContext
 import com.na982.opichelper.domain.entity.QaItem
 import androidx.compose.ui.text.font.FontWeight
@@ -40,28 +40,38 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import com.na982.opichelper.ui.theme.*
 import androidx.compose.foundation.isSystemInDarkTheme
-
+import com.na982.opichelper.presentation.ui.component.*
+import com.na982.opichelper.domain.entity.*
+import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(
+fun MainScreenRefactored(
     viewModel: MainViewModel,
     memorizationViewModel: MemorizationViewModel? = null,
     modifier: Modifier = Modifier,
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
 ) {
-    // ===== 공통 모드 (기본 UI 상태) =====
-    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    
+    // 앱 초기화 (한 번만 실행)
+    LaunchedEffect(Unit) {
+        Log.d("MainScreen", "앱 초기화 시작")
+        viewModel.initializeApp(context.applicationContext as android.app.Application)
+    }
+    
+    // ===== 새로운 아키텍처 상태 =====
+    val appState by viewModel.appState.collectAsState()
     val memorizationViewModelInstance = memorizationViewModel ?: hiltViewModel<MemorizationViewModel>()
     val memorizeLevels by memorizationViewModelInstance.memorizeLevels.collectAsState()
-    val selectedLevel = uiState.selectedMemorizeLevel
-    val currentQaItemState = uiState.currentQaItem
-    val categories = uiState.categories
-    val currentCategoryState = uiState.currentCategory
+    val selectedLevel = appState.selectedMemorizeLevel
+    val currentQaItemState = appState.currentQaItem
+    val currentCategoryState = appState.currentCategory
 
     // ===== 공통 상태 (모든 모드에서 사용) =====
     val currentMode by memorizationViewModelInstance.currentMode.collectAsState()
-    val isQuestionCardFlipped by viewModel.isQuestionCardFlipped.collectAsState()
+    val isQuestionCardFlipped by viewModel.isQuestionCardFlipped().collectAsState()
 
     // ===== MemorizationViewModel UI 상태 =====
     val memorizationUiState by memorizationViewModelInstance.uiState.collectAsState()
@@ -70,10 +80,10 @@ fun MainScreen(
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
 
     // ===== 영작 테스트 (English Writing) =====
-    val hasEnglishWritingTestMergedFile by viewModel.hasEnglishWritingTestMergedFile.collectAsState()
+    val hasEnglishWritingTestMergedFile by viewModel.hasEnglishWritingTestMergedFile().collectAsState()
     val englishWritingTestCompleted by memorizationViewModelInstance.englishWritingTestCompleted.collectAsState()
-    val isEnglishWritingTestMergedFilePlaying by viewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
-    val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
+    val isEnglishWritingTestMergedFilePlaying by viewModel.isEnglishWritingTestMergedFilePlaying().collectAsState()
+    val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex().collectAsState()
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModelInstance.stopEnglishWritingTestMergedFilePlaying.collectAsState()
     val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
 
@@ -90,33 +100,47 @@ fun MainScreen(
     val isFullMemorizationMode = memorizationUiState.isFullMemorizationMode
     val isEnglishWritingTestMode = memorizationUiState.isEnglishWritingTestMode
 
+    // ===== 새로운 스마트 버튼 시스템 =====
+    val questionButtonConfig = viewModel.getButtonConfig(ButtonFunction.QuestionPlay)
+    val answerButtonConfig = viewModel.getButtonConfig(ButtonFunction.AnswerPlay)
+    val memorizeTestButtonConfig = viewModel.getButtonConfig(ButtonFunction.MemorizeTest)
+    val recordingPlayButtonConfig = viewModel.getButtonConfig(ButtonFunction.RecordingPlay)
+    
+    // ===== 편의 변수들 =====
+    val qaItem = currentQaItemState
+    val category = currentCategoryState
+    val currentIndex = appState.currentIndex
+    val totalCount = appState.totalCount
+
     // 앱 재시작 시 MemorizationViewModel 상태 초기화
     LaunchedEffect(Unit) {
-        Log.d("MainScreen", "MainScreen 시작 - MemorizationViewModel 상태 초기화")
+        Log.d("MainScreenRefactored", "MainScreen 시작 - MemorizationViewModel 상태 초기화")
         memorizationViewModelInstance.resetStateOnAppRestart()
     }
     
     // 스크립트 변경 시 영작테스트 병합 파일 확인
-    LaunchedEffect(uiState.currentQaItem) {
-        Log.d("MainScreen", "currentQaItem 변경 감지: ${uiState.currentQaItem?.category}")
-        viewModel.checkEnglishWritingTestMergedFile()
+    LaunchedEffect(appState.currentQaItem) {
+        if (appState.currentQaItem != null) {
+            Log.d("MainScreenRefactored", "스크립트 변경 감지 - 영작테스트 병합 파일 확인")
+            viewModel.checkEnglishWritingTestMergedFile()
+        }
     }
 
     // 영작테스트 완료 시 병합 파일 확인
     LaunchedEffect(englishWritingTestCompleted) {
         if (englishWritingTestCompleted) {
-            Log.d("MainScreen", "영작테스트 완료 이벤트 감지 - 병합 파일 확인 시작")
+            Log.d("MainScreenRefactored", "영작테스트 완료 이벤트 감지 - 병합 파일 확인 시작")
             delay(500L) // 파일 시스템 동기화 추가 대기
             viewModel.checkEnglishWritingTestMergedFile()
             memorizationViewModelInstance.resetEnglishWritingTestCompleted()
-            Log.d("MainScreen", "영작테스트 완료 이벤트 처리 완료")
+            Log.d("MainScreenRefactored", "영작테스트 완료 이벤트 처리 완료")
         }
     }
 
     // 영작테스트 모드 종료 시 병합 파일 확인
     LaunchedEffect(isEnglishWritingTestMode) {
         if (!isEnglishWritingTestMode) {
-            Log.d("MainScreen", "영작테스트 모드 종료 - 병합 파일 확인")
+            Log.d("MainScreenRefactored", "영작테스트 모드 종료 - 병합 파일 확인")
             viewModel.checkEnglishWritingTestMergedFile()
         }
     }
@@ -124,18 +148,16 @@ fun MainScreen(
     // 영작테스트 녹음 파일 재생 중단 이벤트 처리
     LaunchedEffect(stopEnglishWritingTestMergedFilePlaying) {
         if (stopEnglishWritingTestMergedFilePlaying) {
-            Log.d("MainScreen", "영작테스트 녹음 파일 재생 중단 이벤트 감지")
-            viewModel.stopEnglishWritingTestMergedFile()
+            Log.d("MainScreenRefactored", "영작테스트 녹음 파일 재생 중단 이벤트 감지")
+            viewModel.handleStopClick(com.na982.opichelper.domain.entity.ButtonFunction.RecordingPlay)
             memorizationViewModelInstance.resetStopEnglishWritingTestMergedFilePlaying()
-            Log.d("MainScreen", "영작테스트 녹음 파일 재생 중단 처리 완료")
+            Log.d("MainScreenRefactored", "영작테스트 녹음 파일 재생 중단 처리 완료")
         }
     }
 
-
-
     // 암기레벨 변경 감지 및 상태 초기화
     LaunchedEffect(selectedLevel) {
-        Log.d("MainScreen", "암기레벨 변경 감지: $selectedLevel")
+        Log.d("MainScreenRefactored", "암기레벨 변경 감지: $selectedLevel")
         memorizationViewModelInstance.onMemorizeLevelChanged()
     }
 
@@ -147,76 +169,24 @@ fun MainScreen(
         darkTheme = isDarkTheme,
         memorizeLevel = selectedLevel
     ) {
-        // 백버튼 시 녹음 종료 (녹음 상태는 RecordingButton에서 관리)
-        BackHandler(enabled = false) {
-            // 녹음 중지 로직은 RecordingButton에서 처리
+        // 백키 처리
+        BackHandler {
+            Log.d("MainScreenRefactored", "백키 감지 - 인터럽트 처리")
+            viewModel.handleBackPress()
         }
 
-        // 현재 카테고리, 인덱스, 전체 개수 계산
-        val qaItem = currentQaItemState
-        val category = currentCategoryState
-        val itemsInCategory = remember(category) {
-            category?.let { viewModel.getItemsInCategory(it) } ?: emptyList()
-        }
-        val currentIndex = remember(category to qaItem) {
-            if (category != null && qaItem != null) {
-                val index = itemsInCategory.indexOfFirst { it.id == qaItem.id }
-                if (index >= 0) index + 1 else 0 // 1-based
-            } else 0
-        }
-        val totalCount = itemsInCategory.size
-
-        Log.d("MainScreen", "Current index: $currentIndex/$totalCount, category: $category")
-
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-            // 한글 TTS 서비스 정보 표시
-            if (uiState.currentKoreanTtsService.isNotEmpty()) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "한글 TTS",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = uiState.currentKoreanTtsService,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-
             // 앱 제목 (설정 버튼 포함)
             AppTitle(
-                currentLevel = uiState.currentUserLevel,
+                currentLevel = userPreferencesRepository.getUserLevel().displayName,
                 onSettingsClick = {
-                    Log.d("MainScreen", "AppTitle 내 설정 버튼 클릭됨")
+                    Log.d("MainScreenRefactored", "AppTitle 내 설정 버튼 클릭됨")
+                    viewModel.handleSettingsEnter()
                     onSettingsClick()
                 },
                 modifier = Modifier
@@ -240,10 +210,9 @@ fun MainScreen(
                     ) {
                         CategorySelector(
                             selectedCategory = category ?: "",
-                            categories = categories,
+                            categories = listOf("은행", "해변", "가족친구", "패션", "가구", "휴일", "집휴가", "집", "산업직업", "인터넷", "영화", "음악", "예약", "레스토랑", "교통"),
                             onCategorySelected = {
-                                viewModel.stopAllTts()
-                                viewModel.selectCategory(it)
+                                viewModel.handleCategoryChange(it)
                             }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -262,13 +231,15 @@ fun MainScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         MemorizeLevelSelector(
-                            levels = memorizeLevels,
                             selectedLevel = selectedLevel,
-                            onLevelSelected = { viewModel.setSelectedMemorizeLevel(it) }
+                            levels = memorizeLevels,
+                            onLevelSelected = {
+                                viewModel.handleMemorizeLevelChange(it)
+                            }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "🎯 학습 난이도를 선택하세요",
+                            text = "🎯 학습 방법을 선택하세요",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp,
@@ -279,33 +250,28 @@ fun MainScreen(
                 }
             }
 
-            // 질문과 답변 표시
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 메인 콘텐츠 영역
             when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-                uiState.error != null -> {
-                    Card(
+                currentQaItemState == null -> {
+                    // 로딩 상태
+                    Box(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        )
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = uiState.error!!,
-                            modifier = Modifier.padding(16.dp),
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
+                        CircularProgressIndicator()
                     }
                 }
                 qaItem != null -> {
-                    // 질문 카드
+                    // 질문 카드 (기존 아름다운 디자인 복원)
                     QuestionCard(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
-                        highlightIndex = fullMemorizationHighlightIndex,
+                        highlightIndex = when {
+                            selectedLevel == "통암기" -> fullMemorizationHighlightIndex
+                            else -> appState.questionHighlightIndex
+                        },
                         currentIndex = currentIndex,
                         totalCount = totalCount,
                         isFlipped = isQuestionCardFlipped,
@@ -313,247 +279,182 @@ fun MainScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Log.d("MainScreen", "질문 카드 상태: isFlipped=$isQuestionCardFlipped, isFullMemorizationMode=$isFullMemorizationMode")
+                    Log.d("MainScreenRefactored", "질문 카드 상태: isFlipped=$isQuestionCardFlipped, isFullMemorizationMode=$isFullMemorizationMode")
 
                     // 질문 카드 바로 아래 버튼들
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 질문 재생 버튼
-                        QuestionPlayButton(
-                            currentQuestion = qaItem.questionEn,
-                            isPlaying = uiState.isQuestionPlaying,
+                        // 질문 재생 스마트 버튼
+                        QuestionPlaySmartButton(
+                            buttonConfig = questionButtonConfig,
                             onPlayClick = {
-                                // 통암기 모드일 때는 통암기 서비스 시작
-                                if (isFullMemorizationMode) {
-                                    Log.d("MainScreen", "통암기 답변 녹음 버튼 클릭: 현재 질문 카드 상태=$isQuestionCardFlipped")
-                                    // 질문 카드를 영어로 뒤집기 (TTS 시작 전에 확실히)
-                                    viewModel.setQuestionCardFlipped(false)
-                                    Log.d("MainScreen", "통암기 답변 녹음: 질문 카드를 영어로 설정")
-                                    // 약간의 지연 후 TTS 시작 (카드 뒤집기 애니메이션 완료 대기)
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        delay(300L) // 카드 뒤집기 애니메이션 대기
-                                        Log.d("MainScreen", "통암기: TTS 시작")
-                                        memorizationViewModelInstance.startFullMemorizationMode()
-                                    }
-                                } else {
-                                    // 기존 질문 재생 로직
-                                    memorizationViewModelInstance.stopMemorization()
-                                    viewModel.playQuestion(qaItem.questionEn)
-                                }
+                                // 현재 선택된 암기레벨에 따라 모드 결정
+                                val isFullMemorizationModeSelected = selectedLevel == "통암기"
+                                viewModel.handleQuestionPlayClick()
                             },
                             onStopClick = {
-                                viewModel.stopAllTts()
+                                viewModel.handleStopClick(ButtonFunction.QuestionPlay)
                             },
                             modifier = Modifier.weight(1f)
                         )
 
-                        // 암기 테스트 버튼
-                        if (isFullMemorizationMode) {
-                            // 통암기 모드일 때는 전용 녹음 버튼 사용
-                            FullMemorizationRecordingButton(
-                                isQuestionPlaying = isFullMemorizationQuestionPlaying,
-                                isRecording = isFullMemorizationRecording,
-                                onStartRecording = {
-                                    memorizationViewModelInstance.startFullMemorizationMode()
-                                },
-                                onStopRecording = {
-                                    memorizationViewModelInstance.stopFullMemorizationRecording()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            // 일반 암기 테스트 버튼 (선택된 레벨에 따라 텍스트 변경)
-                            Button(
-                                onClick = {
-                                    Log.d("MainScreen", "암기 테스트 버튼 클릭 - selectedLevel: '$selectedLevel'")
-                                    // 통암기 모드가 아닐 때만 TTS 중지
-                                    if (selectedLevel != "통암기") {
-                                        viewModel.stopAllTts()
-                                    }
-                                    memorizationViewModelInstance.onMemorizeTestButtonClick(selectedLevel)
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isMemorizeTestRunning)
-                                        MaterialTheme.colorScheme.error
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                ),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = when {
-                                        isMemorizeTestRunning -> "${selectedLevel} 종료"
-                                        selectedLevel == "영작 테스트" -> "부분암기 테스트"
-                                        selectedLevel == "통암기" -> "통암기"
-                                        else -> selectedLevel.ifEmpty { "암기 테스트" }
-                                    },
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        }
+                        // 암기 테스트 스마트 버튼
+                        MemorizeTestSmartButton(
+                            buttonConfig = memorizeTestButtonConfig,
+                            onPlayClick = {
+                                val memorizeLevel = when (selectedLevel) {
+                                    "반복 듣기" -> MemorizeLevel.REPEAT_LISTENING
+                                    "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
+                                    "통암기" -> MemorizeLevel.FULL_MEMORIZATION
+                                    else -> MemorizeLevel.REPEAT_LISTENING
+                                }
+                                viewModel.handleMemorizeTestClick()
+                            },
+                            onStopClick = {
+                                viewModel.handleStopClick(ButtonFunction.MemorizeTest)
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // 답변 카드 (통암기 모드에서 질문 재생 중이거나 녹음 중일 때는 숨김)
                     if (!isFullMemorizationMode || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
+                        // 답변 카드 (기존 아름다운 디자인 복원)
+                        // 하이라이트 상태 로깅
+                        val finalHighlightIndex = when {
+                            selectedLevel == "반복듣기" && appState.isAnswerCardFlipped -> appState.answerKoHighlightIndex
+                            selectedLevel == "반복듣기" -> appState.answerHighlightIndex
+                            isRepeatListeningCardFlipped -> memorizationUiState.answerKoHighlightIndex
+                            else -> memorizationUiState.answerHighlightIndex
+                        }
+                        val finalAnswerKoHighlightIndex = when {
+                            selectedLevel == "반복듣기" -> appState.answerKoHighlightIndex
+                            else -> memorizationUiState.answerKoHighlightIndex
+                        }
+                        val finalRecordingHighlightIndex = when {
+                            selectedLevel == "반복듣기" -> appState.recordingHighlightIndex
+                            else -> memorizationUiState.recordingHighlightIndex
+                        }
+                        
+                        Log.d("MainScreenRefactored", "하이라이트 상태 - selectedLevel: $selectedLevel, isAnswerCardFlipped: ${appState.isAnswerCardFlipped}")
+                        Log.d("MainScreenRefactored", "하이라이트 상태 - finalHighlightIndex: $finalHighlightIndex, finalAnswerKoHighlightIndex: $finalAnswerKoHighlightIndex")
+                        
                         AnswerCard(
                             currentAnswer = viewModel.getCurrentAnswer(qaItem),
                             currentAnswerKo = viewModel.getCurrentAnswerKo(qaItem),
-                            highlightIndex = when {
-                                isFullMemorizationMode && isFullMemorizationPlaying -> {
-                                    Log.d("MainScreen", "통암기 TTS 하이라이트: $fullMemorizationHighlightIndex")
-                                    fullMemorizationHighlightIndex
-                                }
-                                isFullMemorizationRecordingPlaying -> {
-                                    Log.d("MainScreen", "통암기 녹음 재생 하이라이트: $fullMemorizationHighlightIndex")
-                                    fullMemorizationHighlightIndex
-                                }
-                                isEnglishWritingTestMergedFilePlaying -> {
-                                    Log.d("MainScreen", "영작테스트 녹음 재생 하이라이트: $englishWritingTestMergedFileHighlightIndex")
-                                    englishWritingTestMergedFileHighlightIndex
-                                }
-                                else -> {
-                                    Log.d("MainScreen", "기본 하이라이트: ${uiState.answerHighlightIndex}")
-                                    uiState.answerHighlightIndex
-                                }
-                            },
-                            answerKoHighlightIndex = uiState.answerKoHighlightIndex,
-                            recordingHighlightIndex = uiState.recordingHighlightIndex,
+                            highlightIndex = finalHighlightIndex,
+                            answerKoHighlightIndex = finalAnswerKoHighlightIndex,
+                            recordingHighlightIndex = finalRecordingHighlightIndex,
                             isFlipped = when {
-                                isEnglishWritingTestMode -> isEnglishWritingTestCardFlipped
-                                isEnglishWritingTestMergedFilePlaying -> false // 영작테스트 녹음 재생 시에는 영문 카드
-                                isRepeatListeningCardFlipped -> isRepeatListeningCardFlipped // 반복듣기 카드 상태
-                                else -> uiState.isAnswerCardFlipped
+                                isRepeatListeningCardFlipped -> true
+                                isEnglishWritingTestCardFlipped -> true
+                                else -> appState.isAnswerCardFlipped
                             },
                             isRepeatListeningCardFlipped = isRepeatListeningCardFlipped,
                             modifier = Modifier.fillMaxWidth()
                         )
-                    } else {
-                        // 통암기 모드에서 녹음 중일 때 녹음 애니메이션 표시
-                        RecordingAnimation(
-                            isRecording = isFullMemorizationRecording,
-                            onStopRecording = {
-                                memorizationViewModelInstance.stopFullMemorizationRecording()
-                            }
-                        )
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    // 답변 아래 버튼들
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // 답변 1회 재생 버튼 (항상 표시)
-                        AnswerPlayButton(
-                            currentAnswer = viewModel.getCurrentAnswer(qaItem),
-                            isPlaying = uiState.isAnswerPlaying,
-                            onPlayClick = {
-                                // 반복듣기 등 중단 후 답변 재생
-                                memorizationViewModelInstance.stopMemorization()
-                                qaItem?.let { viewModel.playAnswer(viewModel.getCurrentAnswer(it)) }
+                        // 답변 카드 아래 버튼들
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // 답변 재생 스마트 버튼
+                            AnswerPlaySmartButton(
+                                buttonConfig = answerButtonConfig,
+                                                            onPlayClick = {
+                                viewModel.handleAnswerPlayClick()
                             },
-                            onStopClick = {
-                                viewModel.stopAllTts()
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
+                                onStopClick = {
+                                    viewModel.handleStopClick(ButtonFunction.AnswerPlay)
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
 
-                        // 암기 레벨별 조건부 녹음 재생 버튼
-                        Log.d("MainScreen", "암기 레벨별 재생 버튼 조건 확인: selectedLevel='$selectedLevel', hasFullMemorizationRecording=$hasFullMemorizationRecording, hasEnglishWritingTestMergedFile=$hasEnglishWritingTestMergedFile, isEnglishWritingTestMergedFilePlaying=$isEnglishWritingTestMergedFilePlaying, englishWritingTestMergedFileHighlightIndex=$englishWritingTestMergedFileHighlightIndex")
-
-                        when (selectedLevel) {
-                            "반복 듣기" -> {
-                                // 반복듣기는 녹음 재생 버튼 없음 - 답변 버튼이 전체 차지
-                                Log.d("MainScreen", "반복듣기 모드 - 녹음 재생 버튼 없음")
-                            }
-                            "영작 테스트" -> {
-                                // 영작테스트 모드에서 병합 파일이 있으면 재생 버튼
-                                if (hasEnglishWritingTestMergedFile) {
-                                    Log.d("MainScreen", "영작테스트 재생 버튼 표시")
-                                    Button(
-                                        onClick = {
-                                            if (isEnglishWritingTestMergedFilePlaying) {
-                                                viewModel.stopEnglishWritingTestMergedFile()
-                                            } else {
-                                                viewModel.playEnglishWritingTestMergedFile()
-                                            }
-                                        },
-                                        enabled = hasEnglishWritingTestMergedFile,
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isEnglishWritingTestMergedFilePlaying)
-                                                MaterialTheme.colorScheme.error
-                                            else
-                                                MaterialTheme.colorScheme.primary
-                                        ),
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(
-                                            text = if (isEnglishWritingTestMergedFilePlaying) "재생 중..." else "영작테스트 녹음 재생",
-                                            color = MaterialTheme.colorScheme.onPrimary
-                                        )
+                            // 녹음 재생 스마트 버튼 (조건부 표시)
+                            RecordingPlaySmartButton(
+                                buttonConfig = recordingPlayButtonConfig,
+                                onPlayClick = {
+                                    val memorizeLevel = when (selectedLevel) {
+                                        "반복 듣기" -> MemorizeLevel.REPEAT_LISTENING
+                                        "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
+                                        "통암기" -> MemorizeLevel.FULL_MEMORIZATION
+                                        else -> MemorizeLevel.REPEAT_LISTENING
                                     }
-                                } else {
-                                    Log.d("MainScreen", "영작테스트 모드이지만 녹음 파일 없음")
-                                }
-                            }
-                            "통암기" -> {
-                                // 통암기 모드에서 녹음 파일이 있으면 재생 버튼
-                                if (hasFullMemorizationRecording) {
-                                    Log.d("MainScreen", "통암기 재생 버튼 표시")
-                                    Button(
-                                        onClick = {
-                                            if (isFullMemorizationRecordingPlaying) {
-                                                memorizationViewModelInstance.stopFullMemorizationPlaying()
-                                            } else {
-                                                memorizationViewModelInstance.playFullMemorizationRecording()
-                                            }
-                                        },
-                                        enabled = hasFullMemorizationRecording,
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isFullMemorizationRecordingPlaying)
-                                                MaterialTheme.colorScheme.error
-                                            else
-                                                MaterialTheme.colorScheme.primary
-                                        ),
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(
-                                            text = if (isFullMemorizationRecordingPlaying) "재생 중..." else "통암기 녹음 재생",
-                                            color = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    }
-                                } else {
-                                    Log.d("MainScreen", "통암기 모드이지만 녹음 파일 없음")
-                                }
-                            }
-                            else -> {
-                                Log.d("MainScreen", "알 수 없는 암기 레벨: '$selectedLevel'")
-                            }
+                                    viewModel.handleRecordingPlayClick()
+                                },
+                                onStopClick = {
+                                    viewModel.handleStopClick(ButtonFunction.RecordingPlay)
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 네비게이션 섹션
-                    NavigationSection(
-                        onPreviousQuestion = {
-                            viewModel.stopAllTts()
-                            viewModel.previousQaItem()
-                        },
-                        onNextQuestion = {
-                            viewModel.stopAllTts()
-                            viewModel.nextQaItem()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    // 통암기 모드에서 녹음 중일 때 표시할 UI
+                    if (isFullMemorizationMode && isFullMemorizationRecording) {
+                        // 통암기 녹음 중 UI (기존 디자인 복원)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "통암기 녹음 중",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Text(
+                                        text = "답변을 녹음하고 있습니다...",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                                    )
+                                }
+                                Button(
+                                    onClick = {
+                                        memorizationViewModelInstance.stopFullMemorizationRecording()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) {
+                                    Text("중지")
+                                }
+                            }
+                        }
+                    }
                 }
             }
+
+            // 스크립트 네비게이션 (기존 아름다운 디자인 복원) - 맨 아래로 이동
+            NavigationSection(
+                onPreviousQuestion = {
+                    viewModel.handleScriptChange()
+                    viewModel.previousQaItem()
+                },
+                onNextQuestion = {
+                    viewModel.handleScriptChange()
+                    viewModel.nextQaItem()
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
-}
-}
+} 

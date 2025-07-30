@@ -19,7 +19,7 @@ class LeveledQaDataLoader(private val context: Context) {
     private val levelFolderMapping = mapOf(
         UserLevel.AL to "al",
         UserLevel.IH to "ih", 
-        UserLevel.IH_RAW to "ih_raw",
+        UserLevel.IH_RAW to "ih_raw",  // hi_raw에서 ih_raw로 다시 변경
         UserLevel.IM to "im"
     )
     
@@ -94,7 +94,7 @@ class LeveledQaDataLoader(private val context: Context) {
                 val categoryName = fileName.removePrefix("qa_").removeSuffix(".json")
                 // 언더스코어를 공백으로 변경하고 첫 글자 대문자로
                 categoryName.replace("_", " ").split(" ").joinToString("") { 
-                    it.capitalize() 
+                    it.replaceFirstChar { char -> char.uppercase() }
                 }
             }
         }

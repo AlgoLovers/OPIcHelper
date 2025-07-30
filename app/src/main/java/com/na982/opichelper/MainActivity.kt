@@ -11,8 +11,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
-import com.na982.opichelper.presentation.ui.screen.MainScreen
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
@@ -38,7 +38,6 @@ class MainActivity : ComponentActivity() {
     lateinit var wakeLockManager: WakeLockManager
     
     private var isFinishing = false // 앱이 실제로 종료되는지 추적
-    private var viewModel: MainViewModel? = null // ViewModel 참조 저장
     private var navController: NavHostController? = null // 네비게이션 컨트롤러 참조
     
     private val requestPermissionLauncher = registerForActivityResult(
@@ -96,7 +95,6 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "onPause() - 앱이 백그라운드로 이동")
         // 백그라운드로 이동 시에는 TTS와 하이라이트 유지
         // WakeLock은 유지 (사용자가 다시 돌아올 수 있음)
-        viewModel?.onBackgroundMove()
     }
 
     override fun onResume() {
@@ -116,7 +114,6 @@ class MainActivity : ComponentActivity() {
             wakeLockManager.acquireWakeLock()
             Log.d("MainActivity", "포그라운드 복귀 - WakeLock 재획득")
         }
-        viewModel?.onForegroundReturn()
     }
 
     override fun onStop() {
@@ -148,9 +145,6 @@ class MainActivity : ComponentActivity() {
                 } else {
                     Log.d("MainActivity", "메인 화면에서 백키 - 앱 종료")
                     
-                    // 1. 모든 TTS 강제 중지 (동기적으로)
-                    viewModel?.cleanupAllTtsSync()
-                    
                     // 2. 모든 리소스 정리
                     cleanupAllResources()
                     
@@ -180,9 +174,6 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "모든 리소스 정리 시작")
         
         try {
-            // ViewModel의 정리 함수 호출
-            viewModel?.cleanupOnAppExit()
-            
             // WakeLock 해제
             wakeLockManager.releaseWakeLock()
             Log.d("MainActivity", "WakeLock 해제 완료")

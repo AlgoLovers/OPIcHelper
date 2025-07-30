@@ -113,16 +113,41 @@ class ButtonEventHandler @Inject constructor(
                     data = repeatListeningData,
                     uiCallback = object : com.na982.opichelper.domain.audio.RepeatListeningUiCallback {
                         override fun onCardFlip(isKorean: Boolean) {
-                            // 카드 뒤집기 처리
+                            Log.d("ButtonEventHandler", "반복듣기 카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
+                            // 카드 뒤집기 상태 업데이트
+                            appStateManager.updateCardState(
+                                isAnswerCardFlipped = isKorean
+                            )
                         }
                         override fun onHighlight(index: Int?) {
-                            // 하이라이트 처리
+                            Log.d("ButtonEventHandler", "반복듣기 영문 하이라이트: $index")
+                            // 영문 하이라이트 상태 업데이트
+                            appStateManager.updateHighlightState(
+                                answerHighlightIndex = index
+                            )
+                            Log.d("ButtonEventHandler", "반복듣기 영문 하이라이트 상태 업데이트 완료: $index")
                         }
                         override fun onKoreanHighlight(index: Int?) {
-                            // 한글 하이라이트 처리
+                            Log.d("ButtonEventHandler", "반복듣기 한글 하이라이트: $index")
+                            // 한글 하이라이트 상태 업데이트
+                            appStateManager.updateHighlightState(
+                                answerKoHighlightIndex = index
+                            )
+                            Log.d("ButtonEventHandler", "반복듣기 한글 하이라이트 상태 업데이트 완료: $index")
                         }
                         override fun onComplete() {
-                            // 완료 처리
+                            Log.d("ButtonEventHandler", "반복듣기 완료")
+                            // 완료 시 버튼 상태를 Idle로 변경
+                            appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
+                            // 하이라이트 초기화
+                            appStateManager.updateHighlightState(
+                                answerHighlightIndex = null,
+                                answerKoHighlightIndex = null
+                            )
+                            // 카드 상태 초기화
+                            appStateManager.updateCardState(
+                                isAnswerCardFlipped = false
+                            )
                         }
                     }
                 )

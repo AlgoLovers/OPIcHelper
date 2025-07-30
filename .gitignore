@@ -34,7 +34,6 @@ captures/
 *.temp
 *.hprof
 proguard/
-navigation/
 freeline.py
 freeline/
 freeline_project_description.json

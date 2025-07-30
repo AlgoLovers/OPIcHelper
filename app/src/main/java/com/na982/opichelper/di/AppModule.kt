@@ -19,7 +19,7 @@ import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
 import com.na982.opichelper.data.repository.LeveledQaDataLoader
-import com.na982.opichelper.data.repository.UserPreferencesRepository
+import com.na982.opichelper.data.repository.UserPreferencesRepositoryImpl
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
@@ -33,6 +33,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import javax.inject.Named
+import com.na982.opichelper.domain.usecase.InitializeAppUseCase
+import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
+import com.na982.opichelper.domain.state.AppStateManager
+import com.na982.opichelper.domain.repository.UserPreferencesRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -90,8 +94,11 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
-        return QaDataLoaderImpl(context)
+    fun provideQaDataLoader(
+        @ApplicationContext context: Context,
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): QaDataLoader {
+        return QaDataLoaderImpl(context, userPreferencesRepository)
     }
     
     @Provides
@@ -105,9 +112,10 @@ object AppModule {
     fun provideQaDataManager(
         progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
         leveledQaDataLoader: LeveledQaDataLoader,
-        userPreferencesRepository: UserPreferencesRepository
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+        qaDataLoader: com.na982.opichelper.domain.repository.QaDataLoader
     ): QaDataManager {
-        return QaDataManager(progressTracker, leveledQaDataLoader, userPreferencesRepository)
+        return QaDataManager(progressTracker, leveledQaDataLoader, userPreferencesRepository, qaDataLoader)
     }
     
     @Provides
@@ -148,8 +156,8 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideUserPreferencesRepository(@ApplicationContext context: Context): UserPreferencesRepository {
-        return UserPreferencesRepository(context)
+    fun provideUserPreferencesRepository(@ApplicationContext context: Context): com.na982.opichelper.domain.repository.UserPreferencesRepository {
+        return UserPreferencesRepositoryImpl(context)
     }
     
     @Provides
@@ -285,6 +293,24 @@ object AppModule {
             executeRepeatListeningUseCase,
             executeEnglishWritingTestUseCase
         )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideInitializeAppUseCase(
+        qaDataManager: QaDataManager,
+        userPreferencesRepository: UserPreferencesRepository,
+        appStateManager: AppStateManager
+    ): InitializeAppUseCase {
+        return InitializeAppUseCase(qaDataManager, userPreferencesRepository, appStateManager)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideGetCurrentAnswerUseCase(
+        userPreferencesRepository: UserPreferencesRepository
+    ): GetCurrentAnswerUseCase {
+        return GetCurrentAnswerUseCase(userPreferencesRepository)
     }
     
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요

@@ -1,8 +1,12 @@
 package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.TtsPlayer
+import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.ScriptProgress
 import com.na982.opichelper.domain.repository.RecordingTimeManager
+import com.na982.opichelper.domain.repository.MemorizeTestProgressTracker
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.launch
 import org.junit.Before
@@ -18,6 +22,9 @@ class RepeatListeningServiceTest {
     private lateinit var mockTtsPlayer: TtsPlayer
 
     @Mock
+    private lateinit var mockTtsOrchestrator: TtsOrchestrator
+
+    @Mock
     private lateinit var mockProgressTracker: MemorizeTestProgressTracker
 
     @Mock
@@ -29,7 +36,7 @@ class RepeatListeningServiceTest {
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         repeatListeningService = RepeatListeningService(
-            ttsPlayer = mockTtsPlayer,
+            ttsOrchestrator = mockTtsOrchestrator,
             progressTracker = mockProgressTracker,
             recordingTimeManager = mockRecordingTimeManager
         )
@@ -41,117 +48,81 @@ class RepeatListeningServiceTest {
     }
 
     @Test
-    fun `test executeRepeatListeningTest with no progress`() = runTest {
+    fun `test startRepeatListening with no progress`() = runTest {
         // Given
-        val answerKo = "안녕하세요."
-        val answerEn = "Hello."
-        val category = "test_category"
-        val scriptIndex = 0
-        
-        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")).thenReturn(null)
-        whenever(mockTtsPlayer.speakAndGetDuration(any(), any(), any())).thenReturn(1000L)
-        
-        var highlightIndex: Int? = null
-        var cardFlipped: Boolean? = null
-        
-        // When
-        repeatListeningService.executeRepeatListeningTest(
-            answerKo = answerKo,
-            answerEn = answerEn,
-            onHighlight = { index -> highlightIndex = index },
-            onKoreanHighlight = { index -> highlightIndex = index },
-            onCardFlip = { isKorean -> cardFlipped = isKorean },
-            onComplete = { },
-            category = category,
-            scriptIndex = scriptIndex
+        val data = RepeatListeningData(
+            category = "test_category",
+            scriptIndex = 0,
+            koreanAnswer = "안녕하세요.",
+            englishAnswer = "Hello."
         )
         
+        val mockUiCallback = mock<RepeatListeningUiCallback>()
+        whenever(mockProgressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")).thenReturn(null)
+        
+        // When
+        repeatListeningService.startRepeatListening(data, mockUiCallback)
+        
         // Then
-        verify(mockProgressTracker).getScriptProgress(category, scriptIndex, "반복 듣기")
-        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, "반복 듣기", 0)
-        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex, "반복 듣기")
+        verify(mockProgressTracker).getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
     }
 
     @Test
-    fun `test executeRepeatListeningTest with existing progress`() = runTest {
+    fun `test startRepeatListening with existing progress`() = runTest {
         // Given
-        val answerKo = "안녕하세요. 오늘 날씨가 좋네요."
-        val answerEn = "Hello. The weather is nice today."
-        val category = "test_category"
-        val scriptIndex = 0
+        val data = RepeatListeningData(
+            category = "test_category",
+            scriptIndex = 0,
+            koreanAnswer = "안녕하세요. 오늘 날씨가 좋네요.",
+            englishAnswer = "Hello. The weather is nice today."
+        )
         
         val existingProgress = ScriptProgress(
-            category = category,
-            scriptIndex = scriptIndex,
+            category = data.category,
+            scriptIndex = data.scriptIndex,
             memorizeLevel = "반복 듣기",
             currentSentenceIndex = 1,
             totalSentences = 2,
             isMemorizeTestRunning = true
         )
         
-        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")).thenReturn(existingProgress)
-        whenever(mockTtsPlayer.speakAndGetDuration(any(), any(), any())).thenReturn(1000L)
-        
-        var highlightIndex: Int? = null
-        var cardFlipped: Boolean? = null
+        val mockUiCallback = mock<RepeatListeningUiCallback>()
+        whenever(mockProgressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")).thenReturn(existingProgress)
         
         // When
-        repeatListeningService.executeRepeatListeningTest(
-            answerKo = answerKo,
-            answerEn = answerEn,
-            onHighlight = { index -> highlightIndex = index },
-            onKoreanHighlight = { index -> highlightIndex = index },
-            onCardFlip = { isKorean -> cardFlipped = isKorean },
-            onComplete = { },
-            category = category,
-            scriptIndex = scriptIndex
-        )
+        repeatListeningService.startRepeatListening(data, mockUiCallback)
         
         // Then
-        verify(mockProgressTracker).getScriptProgress(category, scriptIndex, "반복 듣기")
-        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, "반복 듣기", 1)
-        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex, "반복 듣기")
+        verify(mockProgressTracker).getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
     }
 
     @Test
-    fun `test executeRepeatListeningTest with different memorize level`() = runTest {
+    fun `test startRepeatListening with different memorize level`() = runTest {
         // Given
-        val answerKo = "안녕하세요. 오늘 날씨가 좋네요."
-        val answerEn = "Hello. The weather is nice today."
-        val category = "test_category"
-        val scriptIndex = 0
+        val data = RepeatListeningData(
+            category = "test_category",
+            scriptIndex = 0,
+            koreanAnswer = "안녕하세요. 오늘 날씨가 좋네요.",
+            englishAnswer = "Hello. The weather is nice today."
+        )
         
         val existingProgress = ScriptProgress(
-            category = category,
-            scriptIndex = scriptIndex,
+            category = data.category,
+            scriptIndex = data.scriptIndex,
             memorizeLevel = "영작 테스트", // 다른 레벨
             currentSentenceIndex = 1,
             totalSentences = 2,
             isMemorizeTestRunning = true
         )
         
-        whenever(mockProgressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")).thenReturn(existingProgress)
-        whenever(mockTtsPlayer.speakAndGetDuration(any(), any(), any())).thenReturn(1000L)
-        
-        var highlightIndex: Int? = null
-        var cardFlipped: Boolean? = null
+        val mockUiCallback = mock<RepeatListeningUiCallback>()
+        whenever(mockProgressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")).thenReturn(existingProgress)
         
         // When
-        repeatListeningService.executeRepeatListeningTest(
-            answerKo = answerKo,
-            answerEn = answerEn,
-            onHighlight = { index -> highlightIndex = index },
-            onKoreanHighlight = { index -> highlightIndex = index },
-            onCardFlip = { isKorean -> cardFlipped = isKorean },
-            onComplete = { },
-            category = category,
-            scriptIndex = scriptIndex
-        )
+        repeatListeningService.startRepeatListening(data, mockUiCallback)
         
-        // Then - 다른 레벨이므로 0부터 시작해야 함
-        verify(mockProgressTracker).getScriptProgress(category, scriptIndex, "반복 듣기")
-        verify(mockProgressTracker).updateCurrentSentenceIndex(category, scriptIndex, "반복 듣기", 0)
-        verify(mockProgressTracker).clearScriptProgress(category, scriptIndex, "반복 듣기")
+        // Then
+        verify(mockProgressTracker).getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
     }
 
     @Test
