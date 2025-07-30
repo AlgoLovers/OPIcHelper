@@ -210,5 +210,82 @@ object AppModule {
         )
     }
     
+    // 새로운 버튼 관리 클래스들
+    @Provides
+    @Singleton
+    fun provideButtonStateManager(): com.na982.opichelper.domain.audio.ButtonStateManager {
+        return com.na982.opichelper.domain.audio.ButtonStateManager()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideInterruptManager(
+        buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
+        ttsPlaybackController: TtsPlaybackController
+    ): com.na982.opichelper.domain.audio.InterruptManager {
+        return com.na982.opichelper.domain.audio.InterruptManager(buttonStateManager, ttsPlaybackController)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideButtonStateObserver(ttsPlaybackController: TtsPlaybackController): com.na982.opichelper.domain.audio.ButtonStateObserver {
+        return ttsPlaybackController
+    }
+    
+    @Provides
+    @Singleton
+    fun provideButtonStateCoordinator(
+        buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
+        buttonStateObserver: com.na982.opichelper.domain.audio.ButtonStateObserver
+    ): com.na982.opichelper.domain.audio.ButtonStateCoordinator {
+        return com.na982.opichelper.domain.audio.ButtonStateCoordinator(buttonStateManager, buttonStateObserver)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideAppStateManager(): com.na982.opichelper.domain.state.AppStateManager {
+        return com.na982.opichelper.domain.state.AppStateManager()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideButtonEventHandler(
+        appStateManager: com.na982.opichelper.domain.state.AppStateManager,
+        ttsPlaybackController: TtsPlaybackController,
+        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
+        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
+        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
+    ): com.na982.opichelper.domain.event.ButtonEventHandler {
+        return com.na982.opichelper.domain.event.ButtonEventHandler(
+            appStateManager,
+            ttsPlaybackController,
+            executeFullMemorizationUseCase,
+            executeRepeatListeningUseCase,
+            executeEnglishWritingTestUseCase
+        )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideButtonActionHandler(
+        buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
+        ttsPlaybackController: TtsPlaybackController,
+        interruptManager: com.na982.opichelper.domain.audio.InterruptManager,
+        qaDataManager: QaDataManager,
+        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
+        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
+        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
+    ): com.na982.opichelper.domain.audio.ButtonActionHandler {
+        return com.na982.opichelper.domain.audio.ButtonActionHandler(
+            buttonStateManager, 
+            ttsPlaybackController, 
+            interruptManager, 
+            qaDataManager,
+            executeFullMemorizationUseCase,
+            executeRepeatListeningUseCase,
+            executeEnglishWritingTestUseCase
+        )
+    }
+    
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
 } 

@@ -25,7 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class TtsPlaybackController @Inject constructor(
     private val audioPlayer: AudioPlayer
-) {
+) : ButtonStateObserver {
     private val coroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
     
     // 재생 상태 관리
@@ -33,10 +33,10 @@ class TtsPlaybackController @Inject constructor(
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
     private val _isQuestionPlaying = MutableStateFlow(false)
-    val isQuestionPlaying: StateFlow<Boolean> = _isQuestionPlaying.asStateFlow()
+    override val isQuestionPlaying: StateFlow<Boolean> = _isQuestionPlaying.asStateFlow()
 
     private val _isAnswerPlaying = MutableStateFlow(false)
-    val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
+    override val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
     
     // 하이라이트 상태 관리
     private val _questionHighlightIndex = MutableStateFlow<Int?>(null)
@@ -69,6 +69,15 @@ class TtsPlaybackController @Inject constructor(
     fun setOnStopOtherMemorizationMode(callback: () -> Unit) {
         onStopOtherMemorizationMode = callback
         Log.d("TtsPlaybackController", "다른 암기 모드 중단 콜백 설정")
+    }
+    
+    // ButtonStateObserver 인터페이스 구현
+    override fun onQuestionPlaybackCompleted(callback: () -> Unit) {
+        // 현재는 사용하지 않지만, 필요시 구현 가능
+    }
+    
+    override fun onAnswerPlaybackCompleted(callback: () -> Unit) {
+        // 현재는 사용하지 않지만, 필요시 구현 가능
     }
     
     /**

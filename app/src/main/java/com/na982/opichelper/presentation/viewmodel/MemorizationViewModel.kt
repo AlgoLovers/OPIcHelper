@@ -80,6 +80,11 @@ data class MemorizationUiState(
     // 편의 변수들
     val isMemorizeTestRunning: Boolean = false,
     
+    // 하이라이트 인덱스들
+    val answerHighlightIndex: Int? = null,
+    val answerKoHighlightIndex: Int? = null,
+    val recordingHighlightIndex: Int? = null,
+    
     // 이벤트 상태들
     val englishWritingTestCompleted: Boolean = false,
     val stopEnglishWritingTestMergedFilePlaying: Boolean = false
@@ -171,6 +176,11 @@ class MemorizationViewModel @Inject constructor(
             
             // 편의 변수들
             isMemorizeTestRunning = _isRunning.value,
+            
+            // 하이라이트 인덱스들 (TtsPlaybackController에서 가져옴)
+            answerHighlightIndex = ttsPlaybackController.answerHighlightIndex.value,
+            answerKoHighlightIndex = ttsPlaybackController.answerKoHighlightIndex.value,
+            recordingHighlightIndex = ttsPlaybackController.recordingHighlightIndex.value,
             
             // 이벤트 상태들
             englishWritingTestCompleted = _englishWritingTestCompleted.value,

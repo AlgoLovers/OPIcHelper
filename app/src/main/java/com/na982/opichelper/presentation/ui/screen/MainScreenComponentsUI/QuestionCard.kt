@@ -104,7 +104,7 @@ fun QuestionCard(
                                 )
                             }
                             Text(
-                                text = "$currentIndex / $totalCount",
+                                text = "${currentIndex + 1} / $totalCount",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,

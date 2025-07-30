@@ -87,16 +87,21 @@ data class AppState(
  * Composition Pattern을 사용한 MainViewModel
  * 여러 개의 작은 ViewModel을 조합하여 복잡성을 관리합니다.
  */
-@HiltViewModel
+// @HiltViewModel
 class MainViewModel @Inject constructor(
     private val audioRecorder: AudioRecorder,
     private val audioPlayer: AudioPlayer,
     private val audioFileManager: AudioFileManager,
-    private val qaDataManager: QaDataManager,
+    val qaDataManager: QaDataManager,
     private val ttsPlaybackController: TtsPlaybackController,
     private val progressTracker: MemorizeTestProgressTracker,
-
     private val repeatListeningService: RepeatListeningService,
+    private val buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
+    private val interruptManager: com.na982.opichelper.domain.audio.InterruptManager,
+    private val buttonActionHandler: com.na982.opichelper.domain.audio.ButtonActionHandler,
+    private val buttonStateCoordinator: com.na982.opichelper.domain.audio.ButtonStateCoordinator,
+    private val appStateManager: com.na982.opichelper.domain.state.AppStateManager,
+    private val buttonEventHandler: com.na982.opichelper.domain.event.ButtonEventHandler,
 
     private val recordingTimeManager: RecordingTimeManager,
     private val userPreferencesRepository: UserPreferencesRepository,
@@ -783,5 +788,113 @@ class MainViewModel @Inject constructor(
                 Log.d("MainViewModel", "영작테스트 완료 후 결과: hasData=$hasData, allTimes=$allTimes")
             }
         }
+    }
+    
+    // ===== 새로운 버튼 관리 메서드들 =====
+    
+    /**
+     * 버튼 설정 가져오기
+     */
+    fun getButtonConfig(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction): com.na982.opichelper.domain.entity.ButtonConfig {
+        return buttonStateManager.getButtonConfig(buttonFunction)
+    }
+    
+    /**
+     * 질문 재생 버튼 클릭 처리
+     */
+    fun handleQuestionPlayClick(
+        question: String, 
+        isFullMemorizationMode: Boolean, 
+        category: String,
+        scriptIndex: Int,
+        onStateChange: (Boolean, Boolean) -> Unit = { _, _ -> }
+    ) {
+        Log.d("MainViewModel", "질문 재생 버튼 클릭 처리")
+        buttonActionHandler.handleQuestionPlayClick(
+            question, 
+            isFullMemorizationMode,
+            category,
+            scriptIndex,
+            onStateChange
+        )
+    }
+    
+    /**
+     * 답변 재생 버튼 클릭 처리
+     */
+    fun handleAnswerPlayClick(answer: String) {
+        Log.d("MainViewModel", "답변 재생 버튼 클릭 처리")
+        buttonActionHandler.handleAnswerPlayClick(answer)
+    }
+    
+    /**
+     * 암기 테스트 버튼 클릭 처리
+     */
+    fun handleMemorizeTestClick(
+        memorizeLevel: com.na982.opichelper.domain.entity.MemorizeLevel, 
+        category: String,
+        scriptIndex: Int,
+        answerKo: String = "",
+        answerEn: String = "",
+        onStateChange: (Boolean, Boolean) -> Unit = { _, _ -> }
+    ) {
+        Log.d("MainViewModel", "암기 테스트 버튼 클릭 처리")
+        buttonActionHandler.handleMemorizeTestClick(
+            memorizeLevel,
+            category,
+            scriptIndex,
+            answerKo,
+            answerEn,
+            onStateChange
+        )
+    }
+    
+    /**
+     * 녹음 재생 버튼 클릭 처리
+     */
+    fun handleRecordingPlayClick(memorizeLevel: com.na982.opichelper.domain.entity.MemorizeLevel) {
+        Log.d("MainViewModel", "녹음 재생 버튼 클릭 처리")
+        buttonActionHandler.handleRecordingPlayClick(memorizeLevel)
+    }
+    
+    /**
+     * 버튼 중지 처리
+     */
+    fun handleStopClick(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction) {
+        Log.d("MainViewModel", "버튼 중지 처리")
+        buttonActionHandler.handleStopClick(buttonFunction)
+    }
+    
+    /**
+     * 인터럽트 처리 메서드들
+     */
+    fun handleCategoryChange() {
+        Log.d("MainViewModel", "카테고리 변경 인터럽트 처리")
+        interruptManager.handleCategoryChange()
+    }
+    
+    fun handleMemorizeLevelChange() {
+        Log.d("MainViewModel", "암기 레벨 변경 인터럽트 처리")
+        interruptManager.handleMemorizeLevelChange()
+    }
+    
+    fun handleScriptChange() {
+        Log.d("MainViewModel", "스크립트 변경 인터럽트 처리")
+        interruptManager.handleScriptChange()
+    }
+    
+    fun handleSettingsEnter() {
+        Log.d("MainViewModel", "설정 진입 인터럽트 처리")
+        interruptManager.handleSettingsEnter()
+    }
+    
+    fun handleAppExit() {
+        Log.d("MainViewModel", "앱 종료 인터럽트 처리")
+        interruptManager.handleAppExit()
+    }
+    
+    fun handleBackPress() {
+        Log.d("MainViewModel", "백키 인터럽트 처리")
+        interruptManager.handleBackPress()
     }
 } 
