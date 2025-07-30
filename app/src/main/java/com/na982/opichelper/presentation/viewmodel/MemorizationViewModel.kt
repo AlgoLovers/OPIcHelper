@@ -7,6 +7,9 @@ import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.usecase.*
+import com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
+import com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase
+import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +41,7 @@ enum class CurrentMode {
     
     // 통암기 모드들 (세부 상태 포함)
     FULL_MEMORIZATION,             // 통암기 모드 (기본)
+    FULL_MEMORIZATION_QUESTION_PLAYING, // 통암기 질문 재생 중
     FULL_MEMORIZATION_RECORDING,   // 통암기 녹음 중
     FULL_MEMORIZATION_PLAYING,     // 통암기 재생 중
     FULL_MEMORIZATION_WITH_FILE    // 통암기 (녹음 파일 존재)
@@ -67,6 +71,7 @@ data class MemorizationUiState(
     
     // 통암기 상태
     val isFullMemorizationMode: Boolean = false,
+    val isFullMemorizationQuestionPlaying: Boolean = false, // 질문 재생 중 상태 추가
     val isFullMemorizationRecording: Boolean = false,
     val isFullMemorizationPlaying: Boolean = false,
     val hasFullMemorizationRecording: Boolean = false,
@@ -84,9 +89,9 @@ data class MemorizationUiState(
 class MemorizationViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val qaDataManager: QaDataManager,
-    private val repeatListeningService: RepeatListeningService,
-    private val englishWritingTestService: EnglishWritingTestService,
-    private val fullMemorizationService: FullMemorizationService,
+    private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
+    private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
+    private val executeFullMemorizationUseCase: FullMemorizationUseCase,
     private val progressTracker: MemorizeTestProgressTracker
 ) : ViewModel(), RepeatListeningUiCallback {
     // 상태 StateFlow들
@@ -115,15 +120,15 @@ class MemorizationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MemorizationUiState())
     val uiState: StateFlow<MemorizationUiState> = _uiState.asStateFlow()
 
-    // 하이라이트 인덱스는 별도 관리 필요 (문장별 하이라이트)
-    private val _fullMemorizationHighlightIndex = MutableStateFlow<Int?>(null)
-    val fullMemorizationHighlightIndex: StateFlow<Int?> = _fullMemorizationHighlightIndex.asStateFlow()
+    // 하이라이트 인덱스는 UseCase의 StateFlow만 구독
+    val fullMemorizationHighlightIndex: StateFlow<Int?> = executeFullMemorizationUseCase.highlightIndex
 
     private var currentUseCaseJob: Job? = null
 
     // UI 상태 업데이트 함수
     private fun updateUiState() {
-        _uiState.value = MemorizationUiState(
+        Log.d("MemorizationViewModel", "updateUiState 호출: currentMode=${_currentMode.value}, isRunning=${_isRunning.value}")
+        val newState = MemorizationUiState(
             isRunning = _isRunning.value,
             currentMode = _currentMode.value,
             
@@ -150,13 +155,18 @@ class MemorizationViewModel @Inject constructor(
             // 통암기 상태
             isFullMemorizationMode = _currentMode.value in listOf(
                 CurrentMode.FULL_MEMORIZATION,
+                CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
                 CurrentMode.FULL_MEMORIZATION_RECORDING,
                 CurrentMode.FULL_MEMORIZATION_PLAYING,
                 CurrentMode.FULL_MEMORIZATION_WITH_FILE
             ),
+            isFullMemorizationQuestionPlaying = _currentMode.value == CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
             isFullMemorizationRecording = _currentMode.value == CurrentMode.FULL_MEMORIZATION_RECORDING,
             isFullMemorizationPlaying = _currentMode.value == CurrentMode.FULL_MEMORIZATION_PLAYING,
-            hasFullMemorizationRecording = _currentMode.value == CurrentMode.FULL_MEMORIZATION_WITH_FILE,
+            hasFullMemorizationRecording = _currentMode.value in listOf(
+                CurrentMode.FULL_MEMORIZATION_WITH_FILE,
+                CurrentMode.FULL_MEMORIZATION_PLAYING
+            ),
             isFullMemorizationRecordingPlaying = _currentMode.value == CurrentMode.FULL_MEMORIZATION_PLAYING,
             
             // 편의 변수들
@@ -166,13 +176,18 @@ class MemorizationViewModel @Inject constructor(
             englishWritingTestCompleted = _englishWritingTestCompleted.value,
             stopEnglishWritingTestMergedFilePlaying = _stopEnglishWritingTestMergedFilePlaying.value
         )
+        
+        Log.d("MemorizationViewModel", "updateUiState 완료: isFullMemorizationMode=${newState.isFullMemorizationMode}, hasFullMemorizationRecording=${newState.hasFullMemorizationRecording}")
+        _uiState.value = newState
     }
 
     // 편의 함수들
     private fun startMode(mode: CurrentMode) {
+        Log.d("MemorizationViewModel", "startMode 호출: $mode")
         _currentMode.value = mode
         _isRunning.value = true
         updateUiState()
+        Log.d("MemorizationViewModel", "startMode 완료: currentMode=${_currentMode.value}, isRunning=${_isRunning.value}")
     }
 
     private fun stopMode() {
@@ -221,18 +236,12 @@ class MemorizationViewModel @Inject constructor(
                     }
                     "통암기" -> {
                         Log.d("MemorizationViewModel", "통암기 모드 선택됨 - 진입 시작")
-                        viewModelScope.launch {
-                            Log.d("MemorizationViewModel", "통암기 모드 진입 시작")
-                            updateFullMemorizationRecordingStatus()
-                            Log.d("MemorizationViewModel", "통암기 모드 진입 전 녹음 파일 상태: ${_uiState.value.hasFullMemorizationRecording}")
-                            
-                            startMode(CurrentMode.FULL_MEMORIZATION)
-                            ttsPlaybackController.stopTts()
-                            ttsPlaybackController.clearHighlight()
-                            startFullMemorizationMode()
-                            
-                            Log.d("MemorizationViewModel", "통암기 모드 진입 완료")
-                        }
+                        Log.d("MemorizationViewModel", "통암기 모드 진입 시작")
+                        
+                        startMode(CurrentMode.FULL_MEMORIZATION)
+                        startFullMemorizationMode()
+                        
+                        Log.d("MemorizationViewModel", "통암기 모드 진입 완료")
                     }
                     else -> {
                         Log.w("MemorizationViewModel", "알 수 없는 암기 레벨: '$selectedLevel'")
@@ -250,49 +259,49 @@ class MemorizationViewModel @Inject constructor(
             try {
                 Log.d("MemorizationViewModel", "startFullMemorizationMode 호출됨")
                 currentUseCaseJob?.cancel()
-                startMode(CurrentMode.FULL_MEMORIZATION)
-                ttsPlaybackController.stopTts()
                 
-                // 통암기 모드 진입 시 녹음 파일 상태 확인
-                Log.d("MemorizationViewModel", "통암기 모드 진입 시 녹음 파일 상태 확인 시작")
-                updateFullMemorizationRecordingStatus()
-                Log.d("MemorizationViewModel", "통암기 모드 진입 시 녹음 파일 상태 확인 완료")
+                // 통암기 모드 진입 시 녹음 파일 상태 즉시 확인
+                Log.d("MemorizationViewModel", "통암기 모드 진입 시 녹음 파일 상태 즉시 확인")
+                checkFullMemorizationRecordingStatus()
                 
-                currentUseCaseJob = viewModelScope.launch {
-                    val category = qaDataManager.getCurrentCategory() ?: ""
-                    val scriptIndex = qaDataManager.getCurrentIndex()
-                    Log.d("MemorizationViewModel", "통암기 서비스 시작: category=$category, scriptIndex=$scriptIndex")
-                    fullMemorizationService.startFullMemorization(
-                        category = category,
-                        scriptIndex = scriptIndex,
-                        onRecordingStateChange = { isRecording ->
-                            if (!isRecording) {
-                                viewModelScope.launch {
-                                    updateFullMemorizationRecordingStatus()
-                                }
-                            }
-                        },
-                        onPlayingStateChange = { isPlaying ->
-                            if (!isPlaying) {
-                                viewModelScope.launch {
-                                    updateFullMemorizationRecordingStatus()
-                                }
-                            }
-                        },
-                        onHighlight = { index ->
-                            // 통암기 하이라이트를 질문 하이라이트로 연결
-                            if (index != null) {
-                                Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 설정 요청: $index")
-                                ttsPlaybackController.setQuestionHighlightIndex(index)
-                                Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 설정 완료: $index")
-                            } else {
-                                Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 제거 요청")
-                                ttsPlaybackController.clearHighlight()
-                                Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 제거 완료")
-                            }
+                val category = qaDataManager.getCurrentCategory() ?: ""
+                val scriptIndex = qaDataManager.getCurrentIndex()
+                Log.d("MemorizationViewModel", "통암기 서비스 시작: category=$category, scriptIndex=$scriptIndex")
+                
+                executeFullMemorizationUseCase.startFullMemorization(
+                    category = category,
+                    scriptIndex = scriptIndex,
+                    onRecordingStateChange = { isRecording ->
+                        if (isRecording) {
+                            startMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
                         }
-                    )
-                }
+                        // 녹음 종료 시에는 상태 업데이트 불필요 (녹음 파일이 생성되기 전)
+                    },
+                    onPlayingStateChange = { isPlaying ->
+                        Log.d("MemorizationViewModel", "onPlayingStateChange 콜백 호출: isPlaying=$isPlaying")
+                        if (isPlaying) {
+                            Log.d("MemorizationViewModel", "FULL_MEMORIZATION_QUESTION_PLAYING 모드로 전환")
+                            startMode(CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING)
+                        } else {
+                            Log.d("MemorizationViewModel", "FULL_MEMORIZATION_RECORDING 모드로 전환")
+                            // 질문 재생 완료 후 녹음 시작
+                            startMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
+                        }
+                    },
+                    onHighlight = { index ->
+                        // 통암기 하이라이트를 질문 하이라이트로 연결
+                        if (index != null) {
+                            Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 설정 요청: $index")
+                            ttsPlaybackController.setQuestionHighlightIndex(index)
+                            Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 설정 완료: $index")
+                        } else {
+                            Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 제거 요청")
+                            ttsPlaybackController.clearHighlight()
+                            Log.d("MemorizationViewModel", "통암기: 질문 하이라이트 제거 완료")
+                        }
+                    }
+                )
+                
                 Log.d("MemorizationViewModel", "통암기 모드 시작")
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 모드 시작 실패", e)
@@ -304,9 +313,8 @@ class MemorizationViewModel @Inject constructor(
     fun stopFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                fullMemorizationService.stopRecording()
+                executeFullMemorizationUseCase.stopRecording()
                 updateFullMemorizationRecordingStatus()
-                
                 Log.d("MemorizationViewModel", "통암기 녹음 종료")
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 녹음 종료 실패", e)
@@ -317,44 +325,23 @@ class MemorizationViewModel @Inject constructor(
     fun playFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                // 다른 TTS 중단
-                ttsPlaybackController.stopTts()
-                
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    val recordingFile = fullMemorizationService.getRecordingFile(
-                        currentItem.category,
-                        qaDataManager.getCurrentIndex()
-                    )
-                    
-                    if (recordingFile != null) {
-                        startMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
-                        Log.d("MemorizationViewModel", "통암기 녹음 재생 시작: ${recordingFile.absolutePath}")
-                        
-                        // FullMemorizationService를 통해 재생
-                        fullMemorizationService.playRecordingWithCustomTiming(
-                            onPlayingStateChange = { isPlaying ->
-                                if (!isPlaying) {
-                                    viewModelScope.launch {
-                                        updateFullMemorizationRecordingStatus()
-                                    }
-                                }
-                            },
-                            onHighlight = { index ->
-                                _fullMemorizationHighlightIndex.value = index
-                                Log.d("MemorizationViewModel", "통암기 하이라이트 변경: $index")
-                            }
-                        )
-                        
-                        Log.d("MemorizationViewModel", "통암기 녹음 재생 완료")
-                    } else {
-                        Log.d("MemorizationViewModel", "통암기 녹음 파일이 존재하지 않음")
+                if (executeFullMemorizationUseCase.hasRecording()) {
+                    startMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
+                    Log.d("MemorizationViewModel", "통암기 녹음 재생 시작")
+                    executeFullMemorizationUseCase.playRecordingWithHighlight { isPlaying ->
+                        Log.d("MemorizationViewModel", "통암기 녹음 재생 상태 변경: isPlaying=$isPlaying")
+                        if (!isPlaying) {
+                            startMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
+                            Log.d("MemorizationViewModel", "통암기 녹음 재생 완료 - 모드 복원")
+                        }
                     }
+                    Log.d("MemorizationViewModel", "통암기 녹음 재생 완료")
+                } else {
+                    Log.d("MemorizationViewModel", "통암기 녹음 파일이 존재하지 않음")
                 }
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 녹음 재생 실패", e)
-                startMode(CurrentMode.FULL_MEMORIZATION) // 재생 실패 시 통암기 모드로 복귀
-                _fullMemorizationHighlightIndex.value = null
+                startMode(CurrentMode.FULL_MEMORIZATION)
             }
         }
     }
@@ -362,13 +349,13 @@ class MemorizationViewModel @Inject constructor(
     fun stopFullMemorizationPlaying() {
         viewModelScope.launch {
             try {
-                fullMemorizationService.stopPlaying()
+                // 재생 중지 기능은 UseCase에서 제거되었으므로 단순히 모드만 변경
+                startMode(CurrentMode.FULL_MEMORIZATION)
                 updateFullMemorizationRecordingStatus()
                 Log.d("MemorizationViewModel", "통암기 재생 중지")
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 재생 중지 실패", e)
                 startMode(CurrentMode.FULL_MEMORIZATION) // 재생 중지 실패 시 통암기 모드로 복귀
-                _fullMemorizationHighlightIndex.value = null
             }
         }
     }
@@ -380,52 +367,64 @@ class MemorizationViewModel @Inject constructor(
     fun updateFullMemorizationRecordingStatus() {
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem == null) {
-                    Log.d("MemorizationViewModel", "현재 QA 아이템이 null - 녹음 파일 상태를 false로 설정")
-                    // 통암기 모드가 아니면 녹음 파일 상태를 false로 설정
-                    if (!_uiState.value.isFullMemorizationMode) {
-                        // 녹음 파일 상태는 currentMode로 관리
-                    }
+                val hasRecording = executeFullMemorizationUseCase.hasRecording()
+                Log.d("MemorizationViewModel", "통암기 녹음 파일 상태 확인: hasRecording=$hasRecording")
+                
+                if (hasRecording) {
+                    _currentMode.value = CurrentMode.FULL_MEMORIZATION_WITH_FILE
+                    Log.d("MemorizationViewModel", "통암기 녹음 파일 발견 - FULL_MEMORIZATION_WITH_FILE 모드로 변경")
                 } else {
-                    val category = currentItem.category
-                    val scriptIndex = qaDataManager.getCurrentIndex()
-                    
-                    Log.d("MemorizationViewModel", "통암기 녹음 파일 상태 확인: category=$category, scriptIndex=$scriptIndex")
-                    
-                    // AudioFileManager를 직접 사용하여 파일 존재 여부 확인
-                    val hasRecording = fullMemorizationService.hasRecordingFile() // Assuming AudioFileManager is replaced by fullMemorizationService
-                    Log.d("MemorizationViewModel", "audioFileManager.hasFullMemorizationRecording() 결과: $hasRecording")
-                    
-                    // 추가 확인: 실제 파일 존재 여부
-                    val recordingFile = fullMemorizationService.getRecordingFile(category, scriptIndex) // Assuming AudioFileManager is replaced by fullMemorizationService
-                    val fileExists = recordingFile?.exists() == true
-                    Log.d("MemorizationViewModel", "실제 파일 존재 여부: $fileExists, 파일 경로: ${recordingFile?.absolutePath}")
-                    
-                    // 통암기 모드가 아니면 녹음 파일 상태를 false로 설정
-                    if (!_uiState.value.isFullMemorizationMode) {
-                        // 녹음 파일 상태는 currentMode로 관리
-                    } else {
-                        // 녹음 파일이 있으면 FULL_MEMORIZATION_WITH_FILE로 변경
-                        if (hasRecording) {
-                            _currentMode.value = CurrentMode.FULL_MEMORIZATION_WITH_FILE
-                        } else {
-                            _currentMode.value = CurrentMode.FULL_MEMORIZATION
-                        }
-                        updateUiState()
-                    }
-                    Log.d("MemorizationViewModel", "통암기 녹음 파일 존재 여부 업데이트: $hasRecording")
+                    _currentMode.value = CurrentMode.FULL_MEMORIZATION
+                    Log.d("MemorizationViewModel", "통암기 녹음 파일 없음 - FULL_MEMORIZATION 모드로 변경")
                 }
+                updateUiState()
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 녹음 파일 상태 확인 실패", e)
             }
         }
     }
+    
+    /**
+     * 통암기 모드 진입 시 즉시 녹음 파일 상태 확인 (동기)
+     */
+    private suspend fun checkFullMemorizationRecordingStatus() {
+        try {
+            val hasRecording = executeFullMemorizationUseCase.hasRecording()
+            Log.d("MemorizationViewModel", "통암기 녹음 파일 상태 즉시 확인: hasRecording=$hasRecording")
+            
+            if (hasRecording) {
+                _currentMode.value = CurrentMode.FULL_MEMORIZATION_WITH_FILE
+                Log.d("MemorizationViewModel", "통암기 녹음 파일 발견 - 즉시 FULL_MEMORIZATION_WITH_FILE 모드로 변경")
+            } else {
+                _currentMode.value = CurrentMode.FULL_MEMORIZATION
+                Log.d("MemorizationViewModel", "통암기 녹음 파일 없음 - 즉시 FULL_MEMORIZATION 모드로 변경")
+            }
+            updateUiState()
+        } catch (e: Exception) {
+            Log.e("MemorizationViewModel", "통암기 녹음 파일 상태 즉시 확인 실패", e)
+        }
+    }
+    
+    /**
+     * 앱 재시작 시 상태 초기화
+     */
+    fun resetStateOnAppRestart() {
+        Log.d("MemorizationViewModel", "앱 재시작 시 상태 초기화")
+        
+        // 모든 상태를 초기값으로 리셋
+        _currentMode.value = CurrentMode.NONE
+        _isRunning.value = false
+        
+        // UI 상태 업데이트
+        updateUiState()
+        
+        Log.d("MemorizationViewModel", "상태 초기화 완료: currentMode=${_currentMode.value}, isRunning=${_isRunning.value}")
+    }
 
     fun deleteFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                fullMemorizationService.deleteRecordingFile()
+                executeFullMemorizationUseCase.clearRecording()
                 updateFullMemorizationRecordingStatus()
                 Log.d("MemorizationViewModel", "통암기 녹음 파일 삭제")
             } catch (e: Exception) {
@@ -447,7 +446,7 @@ class MemorizationViewModel @Inject constructor(
                             koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
                             englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
                         )
-                        repeatListeningService.startRepeatListening(
+                        executeRepeatListeningUseCase.execute(
                             data = repeatListeningData,
                             uiCallback = this@MemorizationViewModel
                         )
@@ -467,7 +466,7 @@ class MemorizationViewModel @Inject constructor(
             
             currentUseCaseJob = viewModelScope.launch {
                 try {
-                    englishWritingTestService.executeEnglishWritingTest(
+                    executeEnglishWritingTestUseCase.execute(
                         answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
                         answerEn = qaDataManager.getCurrentAnswer(currentItem),
                         category = currentItem.category,

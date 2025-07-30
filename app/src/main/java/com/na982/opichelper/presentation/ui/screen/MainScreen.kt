@@ -79,6 +79,7 @@ fun MainScreen(
 
     // ===== 통암기 (Full Memorization) =====
     val fullMemorizationHighlightIndex by memorizationViewModelInstance.fullMemorizationHighlightIndex.collectAsState()
+    val isFullMemorizationQuestionPlaying = memorizationUiState.isFullMemorizationQuestionPlaying
     val isFullMemorizationRecording = memorizationUiState.isFullMemorizationRecording
     val isFullMemorizationPlaying = memorizationUiState.isFullMemorizationPlaying
     val hasFullMemorizationRecording = memorizationUiState.hasFullMemorizationRecording
@@ -89,6 +90,12 @@ fun MainScreen(
     val isFullMemorizationMode = memorizationUiState.isFullMemorizationMode
     val isEnglishWritingTestMode = memorizationUiState.isEnglishWritingTestMode
 
+    // 앱 재시작 시 MemorizationViewModel 상태 초기화
+    LaunchedEffect(Unit) {
+        Log.d("MainScreen", "MainScreen 시작 - MemorizationViewModel 상태 초기화")
+        memorizationViewModelInstance.resetStateOnAppRestart()
+    }
+    
     // 스크립트 변경 시 영작테스트 병합 파일 확인
     LaunchedEffect(uiState.currentQaItem) {
         Log.d("MainScreen", "currentQaItem 변경 감지: ${uiState.currentQaItem?.category}")
@@ -298,7 +305,7 @@ fun MainScreen(
                     QuestionCard(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
-                        highlightIndex = uiState.questionHighlightIndex,
+                        highlightIndex = fullMemorizationHighlightIndex,
                         currentIndex = currentIndex,
                         totalCount = totalCount,
                         isFlipped = isQuestionCardFlipped,
@@ -346,6 +353,7 @@ fun MainScreen(
                         if (isFullMemorizationMode) {
                             // 통암기 모드일 때는 전용 녹음 버튼 사용
                             FullMemorizationRecordingButton(
+                                isQuestionPlaying = isFullMemorizationQuestionPlaying,
                                 isRecording = isFullMemorizationRecording,
                                 onStartRecording = {
                                     memorizationViewModelInstance.startFullMemorizationMode()
@@ -360,8 +368,10 @@ fun MainScreen(
                             Button(
                                 onClick = {
                                     Log.d("MainScreen", "암기 테스트 버튼 클릭 - selectedLevel: '$selectedLevel'")
-                                    // 반복듣기 시작 전에 현재 TTS를 중지하고 하이라이트를 제거
-                                    viewModel.stopAllTts()
+                                    // 통암기 모드가 아닐 때만 TTS 중지
+                                    if (selectedLevel != "통암기") {
+                                        viewModel.stopAllTts()
+                                    }
                                     memorizationViewModelInstance.onMemorizeTestButtonClick(selectedLevel)
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -387,8 +397,8 @@ fun MainScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 답변 카드 (통암기 모드가 아니거나 녹음 중이 아닐 때만 표시)
-                    if (!isFullMemorizationMode || !isFullMemorizationRecording) {
+                    // 답변 카드 (통암기 모드에서 질문 재생 중이거나 녹음 중일 때는 숨김)
+                    if (!isFullMemorizationMode || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
                         AnswerCard(
                             currentAnswer = viewModel.getCurrentAnswer(qaItem),
                             currentAnswerKo = viewModel.getCurrentAnswerKo(qaItem),

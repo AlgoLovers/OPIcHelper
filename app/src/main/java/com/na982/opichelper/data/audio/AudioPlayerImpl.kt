@@ -53,7 +53,13 @@ class AudioPlayerImpl : AudioPlayer {
 
     override fun stop() {
         try {
-            player?.release()
+            player?.let { mediaPlayer ->
+                if (mediaPlayer.isPlaying) {
+                    mediaPlayer.stop()
+                }
+                mediaPlayer.release()
+                Log.d("AudioPlayerImpl", "MediaPlayer 해제 완료")
+            }
         } catch (e: Exception) {
             Log.e("AudioPlayerImpl", "stop 중 오류 발생", e)
         }

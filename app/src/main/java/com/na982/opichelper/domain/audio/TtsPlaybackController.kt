@@ -284,8 +284,8 @@ class TtsPlaybackController @Inject constructor(
                 // 1. TTS 오케스트레이터 중지
                 ttsOrchestrator?.stop()
                 
-                // 2. 오디오 플레이어 중지
-                audioPlayer.stop()
+                // 2. AudioPlayer 중지 제거 - 녹음 재생과 충돌 방지
+                // audioPlayer.stop() // 이 라인 제거
                 
                 // 3. 상태 초기화
                 _isPlaying.value = false

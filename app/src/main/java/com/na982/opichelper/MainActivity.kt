@@ -102,6 +102,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         Log.d("MainActivity", "onResume() - 앱이 포그라운드로 복귀")
+        
+        // 앱이 완전히 종료되었다가 다시 시작된 경우 상태 초기화
+        if (isFinishing) {
+            Log.d("MainActivity", "앱 재시작 감지 - 상태 초기화")
+            // MemorizationViewModel 상태 초기화는 MainScreen에서 처리
+            isFinishing = false
+        }
+        
         // 포그라운드로 복귀 시 상태 확인
         // WakeLock이 해제되었을 경우 다시 획득
         if (!wakeLockManager.isWakeLockHeld()) {

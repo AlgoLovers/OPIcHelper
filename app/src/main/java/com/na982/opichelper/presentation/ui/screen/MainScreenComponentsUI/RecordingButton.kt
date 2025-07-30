@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
  */
 @Composable
 fun FullMemorizationRecordingButton(
+    isQuestionPlaying: Boolean,
     isRecording: Boolean,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
@@ -24,7 +25,7 @@ fun FullMemorizationRecordingButton(
             }
         },
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isRecording) 
+            containerColor = if (isQuestionPlaying || isRecording) 
                 MaterialTheme.colorScheme.error 
             else 
                 MaterialTheme.colorScheme.primary
@@ -32,7 +33,11 @@ fun FullMemorizationRecordingButton(
         modifier = modifier
     ) {
         Text(
-            text = if (isRecording) "녹음 종료" else "답변 녹음", // "녹음중" → "녹음 종료"로 변경
+            text = when {
+                isQuestionPlaying -> "질문재생중"
+                isRecording -> "녹음 중"
+                else -> "답변 녹음"
+            },
             color = MaterialTheme.colorScheme.onPrimary
         )
     }

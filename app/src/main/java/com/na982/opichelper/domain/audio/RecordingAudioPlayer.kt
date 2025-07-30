@@ -1,0 +1,34 @@
+package com.na982.opichelper.domain.audio
+
+/**
+ * 녹음 재생 전용 AudioPlayer 인터페이스
+ * TTS와 분리된 독립적인 녹음 재생 시스템
+ */
+interface RecordingAudioPlayer {
+    /**
+     * 녹음 파일 재생
+     * @param filePath 재생할 파일 경로
+     * @param onCompletion 재생 완료 콜백
+     */
+    fun playRecording(filePath: String, onCompletion: () -> Unit)
+    
+    /**
+     * 재생 중지
+     */
+    fun stopRecording()
+    
+    /**
+     * 현재 재생 상태
+     */
+    val isPlaying: Boolean
+    
+    /**
+     * 파일 재생 시간 가져오기 (밀리초)
+     */
+    fun getDuration(filePath: String): Int
+    
+    /**
+     * 녹음 재생 시작 (동기적)
+     */
+    fun startRecordingPlayback(filePath: String)
+} 

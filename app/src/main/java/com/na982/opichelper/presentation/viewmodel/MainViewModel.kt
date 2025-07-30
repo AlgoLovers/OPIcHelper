@@ -21,8 +21,8 @@ import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
 
 import com.na982.opichelper.domain.usecase.RepeatListeningService
-import com.na982.opichelper.domain.usecase.EnglishWritingTestService
-import com.na982.opichelper.domain.usecase.FullMemorizationService
+
+
 import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
@@ -95,9 +95,9 @@ class MainViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
     private val ttsPlaybackController: TtsPlaybackController,
     private val progressTracker: MemorizeTestProgressTracker,
-    private val fullMemorizationService: FullMemorizationService,
+
     private val repeatListeningService: RepeatListeningService,
-    private val englishWritingTestService: EnglishWritingTestService,
+
     private val recordingTimeManager: RecordingTimeManager,
     private val userPreferencesRepository: UserPreferencesRepository,
     application: Application
