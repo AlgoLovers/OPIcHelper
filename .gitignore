@@ -34,6 +34,7 @@ captures/
 *.temp
 *.hprof
 proguard/
+# navigation/  # Android Studio Navigation Editor 임시 파일 (소스코드 네비게이션은 제외)
 freeline.py
 freeline/
 freeline_project_description.json

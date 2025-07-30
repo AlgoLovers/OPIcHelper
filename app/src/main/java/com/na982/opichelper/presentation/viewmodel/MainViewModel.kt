@@ -784,4 +784,18 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+    
+    /**
+     * 사용자 레벨 설정
+     */
+    fun setUserLevel(level: UserLevel) {
+        viewModelScope.launch {
+            try {
+                userPreferencesRepository.setUserLevel(level)
+                Log.d("MainViewModel", "사용자 레벨 설정 완료: $level")
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "사용자 레벨 설정 실패", e)
+            }
+        }
+    }
 } 

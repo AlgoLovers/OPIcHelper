@@ -14,19 +14,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.na982.opichelper.data.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.entity.UserLevel
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.na982.opichelper.presentation.viewmodel.MainViewModel
 
 @Composable
 fun SettingsScreen(
-    onBackPressed: () -> Unit,
-    onLogout: () -> Unit,
-    userPreferencesRepository: UserPreferencesRepository
+    onNavigateBack: () -> Unit,
+    onLogout: () -> Unit = {},
+    viewModel: MainViewModel = hiltViewModel()
 ) {
     var isDarkMode by remember { mutableStateOf(false) }
     var isAutoPlay by remember { mutableStateOf(true) }
     var selectedTtsService by remember { mutableStateOf("Google TTS") }
-    val userLevel by userPreferencesRepository.userLevel.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val userLevel = uiState.currentUserLevel
     val scrollState = rememberScrollState()
     
     Column(
@@ -40,7 +42,7 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBackPressed) {
+            IconButton(onClick = onNavigateBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
             }
             
@@ -134,8 +136,8 @@ fun SettingsScreen(
                         }
                         
                         RadioButton(
-                            selected = userLevel == level,
-                            onClick = { userPreferencesRepository.setUserLevel(level) }
+                            selected = userLevel == level.name,
+                            onClick = { viewModel.setUserLevel(level) }
                         )
                     }
                 }

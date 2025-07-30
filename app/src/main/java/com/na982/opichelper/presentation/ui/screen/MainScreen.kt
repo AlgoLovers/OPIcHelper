@@ -45,10 +45,10 @@ import androidx.compose.foundation.isSystemInDarkTheme
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel,
+    viewModel: MainViewModel = hiltViewModel(),
     memorizationViewModel: MemorizationViewModel? = null,
     modifier: Modifier = Modifier,
-    onSettingsClick: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {}
 ) {
     // ===== 공통 모드 (기본 UI 상태) =====
     val uiState by viewModel.uiState.collectAsState()
@@ -217,7 +217,7 @@ fun MainScreen(
                 currentLevel = uiState.currentUserLevel,
                 onSettingsClick = {
                     Log.d("MainScreen", "AppTitle 내 설정 버튼 클릭됨")
-                    onSettingsClick()
+                    onNavigateToSettings()
                 },
                 modifier = Modifier
                     .fillMaxWidth()

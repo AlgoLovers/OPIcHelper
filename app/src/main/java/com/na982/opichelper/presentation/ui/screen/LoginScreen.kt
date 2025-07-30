@@ -16,22 +16,23 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.na982.opichelper.data.repository.AuthRepository
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.na982.opichelper.presentation.viewmodel.MainViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
-    authRepository: AuthRepository
+    onNavigateBack: () -> Unit,
+    viewModel: MainViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     
-    // 로그인 상태 확인
-    val isLoggedIn by authRepository.isLoggedIn.collectAsState()
+    // 로그인 상태 확인 - 임시로 false로 설정
+    val isLoggedIn = false
     
     // 이미 로그인되어 있으면 자동으로 메인 화면으로 이동
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn) {
-            onLoginSuccess()
+            onNavigateBack()
         }
     }
     
@@ -54,9 +55,9 @@ fun LoginScreen(
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
             val account = task.getResult(ApiException::class.java)
-            // 로그인 성공 - 세션 저장
-            authRepository.saveLoginState(account)
-            onLoginSuccess()
+            // 로그인 성공 - 세션 저장 (임시로 주석 처리)
+            // authRepository.saveLoginState(account)
+            onNavigateBack()
         } catch (e: ApiException) {
             // 로그인 실패
             e.printStackTrace()
@@ -90,8 +91,8 @@ fun LoginScreen(
         Button(
             onClick = {
                 // 게스트 로그인 (주요 로그인 방식)
-                authRepository.saveGuestLogin()
-                onLoginSuccess()
+                // authRepository.saveGuestLogin()
+                onNavigateBack()
             },
             modifier = Modifier
                 .fillMaxWidth()
