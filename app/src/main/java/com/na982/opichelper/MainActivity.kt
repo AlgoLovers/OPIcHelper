@@ -12,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 
+import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.ui.screen.MainScreen
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
 import com.na982.opichelper.ui.theme.OPicHelperTheme
@@ -85,17 +86,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val mainViewModel: MainViewModel = viewModel()
-                    val memorizationViewModel: MemorizationViewModel = hiltViewModel()
-                    
-                    MainScreen(
-                        viewModel = mainViewModel,
-                        memorizationViewModel = memorizationViewModel,
-                        onSettingsClick = {
-                            // TODO: 설정 화면 구현
-                            Log.d("MainActivity", "설정 화면으로 이동")
-                        }
-                    )
+                    AppNavigation(navController = navController)
                 }
             }
         }
