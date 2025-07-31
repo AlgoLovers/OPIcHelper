@@ -6,8 +6,6 @@ import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
-import com.na982.opichelper.domain.usecase.FullMemorizationService
-import com.na982.opichelper.domain.usecase.RepeatListeningService
 import android.app.Application
 import io.mockk.coEvery
 import io.mockk.mockk
