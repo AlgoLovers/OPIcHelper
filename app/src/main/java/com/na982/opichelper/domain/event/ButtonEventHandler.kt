@@ -129,7 +129,7 @@ class ButtonEventHandler @Inject constructor(
             com.na982.opichelper.domain.entity.MemorizeLevel.ENGLISH_WRITING -> {
                 Log.d("ButtonEventHandler", "영작 테스트 모드 시작 - 카테고리: ${event.category}, 스크립트: ${event.scriptIndex}")
                 Log.d("ButtonEventHandler", "영작 테스트 데이터 - 한글: ${event.answerKo.take(50)}..., 영문: ${event.answerEn.take(50)}...")
-                
+                stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
                 executeEnglishWritingTestUseCase.execute(
                     answerKo = event.answerKo,
                     answerEn = event.answerEn,
@@ -156,8 +156,9 @@ class ButtonEventHandler @Inject constructor(
                         // 녹음 하이라이트 상태 업데이트
                         stateManager.updateHighlightState(
                             questionHighlightIndex = -1,
-                            answerHighlightIndex = index ?: -1,
-                            answerKoHighlightIndex = -1
+                            answerHighlightIndex = -1,
+                            answerKoHighlightIndex = -1,
+                            recordingHighlightIndex = index ?: -1
                         )
                     },
                     onRecordingStateChange = { isRecording ->
@@ -169,6 +170,7 @@ class ButtonEventHandler @Inject constructor(
                         Log.d("ButtonEventHandler", "영작테스트 병합 파일 생성 완료")
                         // 병합 파일 생성 완료 처리
                         stateManager.updateMergedFileCreated(true)
+                        stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
                     }
                 )
             }
