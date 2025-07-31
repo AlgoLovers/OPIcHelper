@@ -222,11 +222,24 @@ class ButtonEventHandler @Inject constructor(
             
             Log.d("ButtonEventHandler", "병합된 녹음 파일 재생 시도: $recordingFilePath")
             
-            recordingAudioPlayer.playRecording(recordingFilePath) {
-                Log.d("ButtonEventHandler", "병합된 녹음 재생 완료")
-                // 재생 완료 시 버튼 상태를 Idle로 변경
-                stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
-            }
+            recordingAudioPlayer.playRecording(
+                filePath = recordingFilePath,
+                onHighlight = { index ->
+                    Log.d("ButtonEventHandler", "녹음 재생 하이라이트: $index")
+                    // 영문 하이라이트 상태 업데이트
+                    stateManager.updateHighlightState(
+                        questionHighlightIndex = -1,
+                        answerHighlightIndex = index ?: -1,
+                        answerKoHighlightIndex = -1,
+                        recordingHighlightIndex = -1
+                    )
+                },
+                onCompletion = {
+                    Log.d("ButtonEventHandler", "병합된 녹음 재생 완료")
+                    // 재생 완료 시 버튼 상태를 Idle로 변경
+                    stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+                }
+            )
             
             // 3. 버튼 상태를 Playing으로 변경
             stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)

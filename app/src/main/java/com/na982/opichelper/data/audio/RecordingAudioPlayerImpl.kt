@@ -15,6 +15,68 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
     override val isPlaying: Boolean
         get() = player?.isPlaying == true
 
+    override fun playRecording(filePath: String, onHighlight: (Int?) -> Unit, onCompletion: () -> Unit) {
+        Log.d("RecordingAudioPlayerImpl", "녹음 재생 시작 (하이라이트 포함): $filePath")
+        
+        // 기존 재생 중지
+        stopRecording()
+        
+        val file = File(filePath)
+        if (!file.exists()) {
+            Log.e("RecordingAudioPlayerImpl", "녹음 파일이 존재하지 않음: $filePath")
+            onCompletion()
+            return
+        }
+        
+        player = MediaPlayer().apply {
+            try {
+                setDataSource(file.absolutePath)
+                Log.d("RecordingAudioPlayerImpl", "setDataSource 완료")
+                
+                prepare()
+                Log.d("RecordingAudioPlayerImpl", "prepare 완료")
+                
+                // 재생 시작 시 하이라이트 시작
+                onHighlight(0) // 첫 번째 문장부터 시작
+                
+                start()
+                Log.d("RecordingAudioPlayerImpl", "start 완료")
+                
+                // 재생 진행률에 따른 하이라이트 업데이트 (간단한 구현)
+                setOnSeekCompleteListener {
+                    val currentPosition = currentPosition
+                    val duration = this.duration
+                    val progress = currentPosition.toFloat() / duration
+                    
+                    // 진행률에 따라 문장 인덱스 계산 (간단한 구현)
+                    val sentenceIndex = (progress * 6).toInt().coerceIn(0, 5) // 6개 문장 가정
+                    onHighlight(sentenceIndex)
+                }
+                
+                setOnCompletionListener {
+                    Log.d("RecordingAudioPlayerImpl", "녹음 재생 완료")
+                    onHighlight(null) // 하이라이트 제거
+                    stopRecording()
+                    onCompletion()
+                }
+                
+                setOnErrorListener { _, what, extra ->
+                    Log.e("RecordingAudioPlayerImpl", "녹음 재생 오류: what=$what, extra=$extra")
+                    onHighlight(null) // 하이라이트 제거
+                    stopRecording()
+                    onCompletion()
+                    true
+                }
+                
+            } catch (e: Exception) {
+                Log.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
+                onHighlight(null) // 하이라이트 제거
+                stopRecording()
+                onCompletion()
+            }
+        }
+    }
+
     override fun playRecording(filePath: String, onCompletion: () -> Unit) {
         Log.d("RecordingAudioPlayerImpl", "녹음 재생 시작: $filePath")
         

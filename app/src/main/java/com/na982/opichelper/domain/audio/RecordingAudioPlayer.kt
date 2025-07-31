@@ -6,7 +6,15 @@ package com.na982.opichelper.domain.audio
  */
 interface RecordingAudioPlayer {
     /**
-     * 녹음 파일 재생
+     * 녹음 파일 재생 (하이라이트 포함)
+     * @param filePath 재생할 파일 경로
+     * @param onHighlight 하이라이트 콜백 (문장 인덱스)
+     * @param onCompletion 재생 완료 콜백
+     */
+    fun playRecording(filePath: String, onHighlight: (Int?) -> Unit, onCompletion: () -> Unit)
+    
+    /**
+     * 녹음 파일 재생 (기본)
      * @param filePath 재생할 파일 경로
      * @param onCompletion 재생 완료 콜백
      */
