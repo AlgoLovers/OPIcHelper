@@ -16,7 +16,7 @@ import javax.inject.Singleton
 @Singleton
 class InterruptManager @Inject constructor(
     private val buttonStateManager: ButtonStateManager,
-    private val ttsPlaybackController: TtsPlaybackController
+    private val ttsOrchestrator: TtsOrchestrator
 ) : InterruptHandler {
     
     private val coroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
@@ -30,7 +30,7 @@ class InterruptManager @Inject constructor(
         coroutineScope.launch {
             try {
                 // 1. 모든 TTS 중지
-                ttsPlaybackController.stopAllTts()
+                ttsOrchestrator.stop()
                 
                 // 2. 모든 버튼 상태 초기화
                 buttonStateManager.updateButtonState(ButtonFunction.Stop, ButtonState.Idle)
@@ -54,7 +54,7 @@ class InterruptManager @Inject constructor(
         coroutineScope.launch {
             try {
                 // 1. 모든 TTS 중지
-                ttsPlaybackController.stopAllTts()
+                ttsOrchestrator.stop()
                 
                 // 2. 모든 버튼 상태 초기화
                 buttonStateManager.updateButtonState(ButtonFunction.Stop, ButtonState.Idle)
@@ -78,7 +78,7 @@ class InterruptManager @Inject constructor(
         coroutineScope.launch {
             try {
                 // 1. 모든 TTS 중지
-                ttsPlaybackController.stopAllTts()
+                ttsOrchestrator.stop()
                 
                 // 2. 모든 버튼 상태 초기화
                 buttonStateManager.updateButtonState(ButtonFunction.Stop, ButtonState.Idle)
@@ -102,7 +102,7 @@ class InterruptManager @Inject constructor(
         coroutineScope.launch {
             try {
                 // 1. TTS 일시 중지 (설정에서 복귀 시 재개 가능)
-                ttsPlaybackController.pauseTts()
+                ttsOrchestrator.pauseTts()
                 
                 // 2. 버튼 상태는 유지 (설정에서 복귀 시 동일한 상태로 복원)
                 
@@ -122,7 +122,7 @@ class InterruptManager @Inject constructor(
         coroutineScope.launch {
             try {
                 // 1. 모든 TTS 중지
-                ttsPlaybackController.stopAllTts()
+                ttsOrchestrator.stopAllTts()
                 
                 // 2. 모든 버튼 상태 초기화
                 buttonStateManager.updateButtonState(ButtonFunction.Stop, ButtonState.Idle)
@@ -146,7 +146,7 @@ class InterruptManager @Inject constructor(
         coroutineScope.launch {
             try {
                 // 1. 모든 TTS 중지
-                ttsPlaybackController.stopAllTts()
+                ttsOrchestrator.stopAllTts()
                 
                 // 2. 모든 버튼 상태 초기화
                 buttonStateManager.updateButtonState(ButtonFunction.Stop, ButtonState.Idle)
@@ -170,7 +170,7 @@ class InterruptManager @Inject constructor(
         coroutineScope.launch {
             try {
                 // 1. 모든 TTS 즉시 중지
-                ttsPlaybackController.stopAllTts()
+                ttsOrchestrator.stopAllTts()
                 
                 // 2. 모든 버튼 상태 즉시 초기화
                 buttonStateManager.updateButtonState(ButtonFunction.Stop, ButtonState.Idle)

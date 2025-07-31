@@ -3,6 +3,9 @@ package com.na982.opichelper.domain.audio
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 /**
@@ -14,7 +17,7 @@ class TtsOrchestrator @Inject constructor(
     private val context: Context,
     private val googleTtsPlayer: TtsPlayer,
     private val samsungTtsPlayer: TtsPlayer
-) {
+) : ButtonStateObserver {
     
     // 한글 TTS 플레이어들 (폴백 순서)
     private val koreanTtsPlayers = listOf(
@@ -24,6 +27,23 @@ class TtsOrchestrator @Inject constructor(
     )
     
     private var currentKoreanTtsIndex = 0
+    
+    // ButtonStateObserver 구현
+    private val _isQuestionPlaying = kotlinx.coroutines.flow.MutableStateFlow(false)
+    private val _isAnswerPlaying = kotlinx.coroutines.flow.MutableStateFlow(false)
+    private var questionPlaybackCompletedCallback: (() -> Unit)? = null
+    private var answerPlaybackCompletedCallback: (() -> Unit)? = null
+    
+    override val isQuestionPlaying: kotlinx.coroutines.flow.StateFlow<Boolean> = _isQuestionPlaying.asStateFlow()
+    override val isAnswerPlaying: kotlinx.coroutines.flow.StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
+    
+    override fun onQuestionPlaybackCompleted(callback: () -> Unit) {
+        questionPlaybackCompletedCallback = callback
+    }
+    
+    override fun onAnswerPlaybackCompleted(callback: () -> Unit) {
+        answerPlaybackCompletedCallback = callback
+    }
     
     init {
         // Android 버전 정보 로깅
@@ -109,10 +129,63 @@ class TtsOrchestrator @Inject constructor(
             for (player in koreanTtsPlayers) {
                 player.stop()
             }
+            
+            // 상태 초기화
+            _isQuestionPlaying.value = false
+            _isAnswerPlaying.value = false
+            
             Log.d("TtsOrchestrator", "TTS 중지 완료")
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 중지 실패", e)
         }
+    }
+    
+    /**
+     * TTS 일시정지
+     */
+    fun pauseTts() {
+        Log.d("TtsOrchestrator", "TTS 일시정지")
+        stop()
+    }
+    
+    /**
+     * 모든 TTS 중지
+     */
+    fun stopAllTts() {
+        Log.d("TtsOrchestrator", "모든 TTS 중지")
+        stop()
+    }
+    
+    /**
+     * 하이라이트 초기화
+     */
+    fun clearHighlight() {
+        Log.d("TtsOrchestrator", "하이라이트 초기화")
+        // 하이라이트 관련 상태는 AppStateManager에서 관리
+    }
+    
+    /**
+     * 답변 하이라이트 인덱스 설정
+     */
+    fun setAnswerHighlightIndex(index: Int?) {
+        Log.d("TtsOrchestrator", "답변 하이라이트 인덱스 설정: $index")
+        // 하이라이트 관련 상태는 AppStateManager에서 관리
+    }
+    
+    /**
+     * 답변 한글 하이라이트 인덱스 설정
+     */
+    fun setAnswerKoHighlightIndex(index: Int?) {
+        Log.d("TtsOrchestrator", "답변 한글 하이라이트 인덱스 설정: $index")
+        // 하이라이트 관련 상태는 AppStateManager에서 관리
+    }
+    
+    /**
+     * 녹음 하이라이트 인덱스 설정
+     */
+    fun setRecordingHighlightIndex(index: Int?) {
+        Log.d("TtsOrchestrator", "녹음 하이라이트 인덱스 설정: $index")
+        // 하이라이트 관련 상태는 AppStateManager에서 관리
     }
     
     /**
@@ -269,6 +342,126 @@ class TtsOrchestrator @Inject constructor(
             Log.d("TtsOrchestrator", "TTS 재개 완료")
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 재개 실패", e)
+        }
+    }
+    
+    /**
+     * 통합 TTS 재생 함수 - 모든 TTS 재생에서 사용
+     * @param text 재생할 텍스트
+     * @param isKorean 한글 여부 (null이면 자동 감지)
+     * @param rate 재생 속도 (1.0f가 기본)
+     * @param onHighlight 하이라이트 콜백 (null이면 하이라이트 없음)
+     * @param waitForCompletion 완료까지 대기 여부
+     * @return 재생 시간 (밀리초)
+     */
+    suspend fun speakUnified(
+        text: String,
+        isKorean: Boolean? = null,
+        rate: Float = 1.0f,
+        onHighlight: ((Int?) -> Unit)? = null,
+        waitForCompletion: Boolean = true
+    ): Long {
+        Log.d("TtsOrchestrator", "🎯 speakUnified 호출: '${text.take(30)}...', isKorean=$isKorean, rate=$rate, hasHighlight=${onHighlight != null}")
+        
+        val startTime = System.currentTimeMillis()
+        val detectedKorean = isKorean ?: text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
+        
+        return if (onHighlight != null) {
+            // 하이라이트가 있는 경우 - 문장별 분리 재생
+            speakWithHighlightUnified(text, detectedKorean, rate, onHighlight)
+        } else {
+            // 하이라이트가 없는 경우 - 단일 텍스트 재생
+            speakSingleTextUnified(text, detectedKorean, rate, waitForCompletion)
+        }
+    }
+    
+    /**
+     * 하이라이트가 있는 통합 TTS 재생
+     */
+    private suspend fun speakWithHighlightUnified(
+        text: String,
+        isKorean: Boolean,
+        rate: Float,
+        onHighlight: (Int?) -> Unit
+    ): Long {
+        val startTime = System.currentTimeMillis()
+        val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        
+        Log.d("TtsOrchestrator", "📝 문장 분리 완료: ${sentences.size}개 문장")
+        
+        for ((idx, sentence) in sentences.withIndex()) {
+            Log.d("TtsOrchestrator", "🔤 문장 ${idx + 1}/${sentences.size}: '${sentence.take(20)}...'")
+            
+            onHighlight(idx)
+            
+            val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
+            val success = if (isKorean) {
+                Log.d("TtsOrchestrator", "🇰🇷 문장 ${idx + 1} 한글 TTS로 재생")
+                speakKorean(sentence) { completionDeferred.complete(Unit) }
+            } else {
+                Log.d("TtsOrchestrator", "🇺🇸 문장 ${idx + 1} 영문 TTS로 재생")
+                speakEnglish(sentence) { completionDeferred.complete(Unit) }
+            }
+            
+            if (success) {
+                completionDeferred.await()
+            } else {
+                completionDeferred.complete(Unit)
+            }
+            
+            kotlinx.coroutines.delay(400L)
+        }
+        
+        onHighlight(null)
+        val endTime = System.currentTimeMillis()
+        Log.d("TtsOrchestrator", "✅ speakWithHighlightUnified 완료")
+        return endTime - startTime
+    }
+    
+    /**
+     * 단일 텍스트 통합 TTS 재생
+     */
+    private suspend fun speakSingleTextUnified(
+        text: String,
+        isKorean: Boolean,
+        rate: Float,
+        waitForCompletion: Boolean
+    ): Long {
+        val startTime = System.currentTimeMillis()
+        
+        return if (waitForCompletion) {
+            val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
+            
+            val success = if (isKorean) {
+                Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 재생: '${text.take(20)}...'")
+                speakKorean(text) { completionDeferred.complete(Unit) }
+            } else {
+                Log.d("TtsOrchestrator", "🇺🇸 영문 TTS 재생: '${text.take(20)}...'")
+                speakEnglish(text) { completionDeferred.complete(Unit) }
+            }
+            
+            if (success) {
+                completionDeferred.await()
+                val endTime = System.currentTimeMillis()
+                endTime - startTime
+            } else {
+                completionDeferred.complete(Unit)
+                0L
+            }
+        } else {
+            // 완료 대기 없이 즉시 반환
+            val success = if (isKorean) {
+                speakKorean(text, null)
+            } else {
+                speakEnglish(text, null)
+            }
+            
+            if (success) {
+                val endTime = System.currentTimeMillis()
+                endTime - startTime
+            } else {
+                0L
+            }
         }
     }
 } 

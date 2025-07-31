@@ -219,23 +219,25 @@ object AppModule {
     // 새로운 버튼 관리 클래스들
     @Provides
     @Singleton
-    fun provideButtonStateManager(): com.na982.opichelper.domain.audio.ButtonStateManager {
-        return com.na982.opichelper.domain.audio.ButtonStateManager()
+    fun provideButtonStateManager(
+        appStateManager: com.na982.opichelper.domain.state.AppStateManager
+    ): com.na982.opichelper.domain.audio.ButtonStateManager {
+        return com.na982.opichelper.domain.audio.ButtonStateManager(appStateManager)
     }
     
     @Provides
     @Singleton
     fun provideInterruptManager(
         buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
-        ttsPlaybackController: TtsPlaybackController
+        ttsOrchestrator: TtsOrchestrator
     ): com.na982.opichelper.domain.audio.InterruptManager {
-        return com.na982.opichelper.domain.audio.InterruptManager(buttonStateManager, ttsPlaybackController)
+        return com.na982.opichelper.domain.audio.InterruptManager(buttonStateManager, ttsOrchestrator)
     }
     
     @Provides
     @Singleton
-    fun provideButtonStateObserver(ttsPlaybackController: TtsPlaybackController): com.na982.opichelper.domain.audio.ButtonStateObserver {
-        return ttsPlaybackController
+    fun provideButtonStateObserver(ttsOrchestrator: TtsOrchestrator): com.na982.opichelper.domain.audio.ButtonStateObserver {
+        return ttsOrchestrator
     }
     
     @Provides
@@ -267,24 +269,16 @@ object AppModule {
         )
     }
     
-    @Provides
-    @Singleton
-    fun provideTtsPlaybackController(
-        audioPlayer: AudioPlayer,
-        appStateManager: com.na982.opichelper.domain.state.AppStateManager,
-        highlightManagementUseCase: com.na982.opichelper.domain.usecase.HighlightManagementUseCase
-    ): TtsPlaybackController {
-        return TtsPlaybackController(audioPlayer, appStateManager, highlightManagementUseCase)
-    }
+
     
     @Provides
     @Singleton
     fun provideTtsController(
-        ttsPlaybackController: TtsPlaybackController,
+        ttsOrchestrator: TtsOrchestrator,
         appStateManager: com.na982.opichelper.domain.state.AppStateManager
     ): com.na982.opichelper.domain.audio.TtsController {
         return com.na982.opichelper.data.audio.TtsControllerImpl(
-            ttsPlaybackController = ttsPlaybackController,
+            ttsOrchestrator = ttsOrchestrator,
             appStateManager = appStateManager
         )
     }
@@ -293,7 +287,6 @@ object AppModule {
     @Singleton
     fun provideButtonEventHandler(
         appStateManager: com.na982.opichelper.domain.state.AppStateManager,
-        ttsPlaybackController: TtsPlaybackController,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
         executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
         executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
@@ -301,7 +294,6 @@ object AppModule {
         ttsController: com.na982.opichelper.domain.audio.TtsController
     ): com.na982.opichelper.domain.event.ButtonEventHandler {
         return com.na982.opichelper.domain.event.ButtonEventHandler(
-            ttsPlaybackController,
             appStateManager,
             executeRepeatListeningUseCase,
             executeEnglishWritingTestUseCase,
@@ -315,7 +307,7 @@ object AppModule {
     @Singleton
     fun provideButtonActionHandler(
         buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
-        ttsPlaybackController: TtsPlaybackController,
+        ttsOrchestrator: TtsOrchestrator,
         interruptManager: com.na982.opichelper.domain.audio.InterruptManager,
         qaDataManager: QaDataManager,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
@@ -324,7 +316,7 @@ object AppModule {
     ): com.na982.opichelper.domain.audio.ButtonActionHandler {
         return com.na982.opichelper.domain.audio.ButtonActionHandler(
             buttonStateManager, 
-            ttsPlaybackController, 
+            ttsOrchestrator, 
             interruptManager, 
             qaDataManager,
             executeFullMemorizationUseCase,

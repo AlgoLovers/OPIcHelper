@@ -22,6 +22,7 @@ import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import android.app.Application
+import com.na982.opichelper.domain.entity.ButtonFunction
 
 /**
  * 새로운 아키텍처에 맞는 MainViewModel
@@ -153,10 +154,35 @@ class MainViewModel @Inject constructor(
     }
     
     /**
+     * 카테고리 변경
+     */
+    fun changeCategory(category: String) {
+        Log.d("MainViewModelRefactored", "카테고리 변경: $category")
+        
+        // 기존 작업 중단
+        stopAllOperations()
+        
+        // 새로운 카테고리로 변경
+        viewModelScope.launch {
+            qaDataManager.selectCategory(category)
+            val qaItem = qaDataManager.getCurrentQaItem()
+            if (qaItem != null) {
+                val currentIndex = qaDataManager.getCurrentIndex()
+                val itemsInCategory = qaDataManager.getItemsInCategory(category)
+                updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
+            }
+        }
+    }
+    
+    /**
      * 암기 레벨 선택
      */
     fun selectMemorizeLevel(level: String) {
         Log.d("MainViewModelRefactored", "암기 레벨 선택: $level")
+        
+        // 기존 작업 중단
+        stopAllOperations()
+        
         appStateManager.updateSelectedMemorizeLevel(level)
         
         // 암기 모드 상태 업데이트
@@ -169,6 +195,33 @@ class MainViewModel @Inject constructor(
             isEnglishWritingTestMode = isEnglishWritingTestMode,
             isFullMemorizationMode = isFullMemorizationMode
         )
+    }
+    
+    /**
+     * 모든 작업을 중단하는 헬퍼 메서드
+     */
+    private fun stopAllOperations() {
+        viewModelScope.launch {
+            try {
+                Log.d("MainViewModelRefactored", "모든 작업 중단")
+                
+                // 모든 버튼에 대해 중지 이벤트 발생
+                val stopEvents = listOf(
+                    ButtonEvent.StopClick(ButtonFunction.QuestionPlay),
+                    ButtonEvent.StopClick(ButtonFunction.AnswerPlay),
+                    ButtonEvent.StopClick(ButtonFunction.MemorizeTest),
+                    ButtonEvent.StopClick(ButtonFunction.RecordingPlay)
+                )
+                
+                for (event in stopEvents) {
+                    buttonEventHandler.handleEvent(event)
+                }
+                
+                Log.d("MainViewModelRefactored", "모든 작업 중단 완료")
+            } catch (e: Exception) {
+                Log.e("MainViewModelRefactored", "작업 중단 실패", e)
+            }
+        }
     }
     
     /**
@@ -344,7 +397,7 @@ class MainViewModel @Inject constructor(
     // UI에서 필요한 메서드들
     fun getButtonConfig(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction): com.na982.opichelper.domain.entity.ButtonConfig {
         val currentState = appState.value
-        val buttonState = currentState.getButtonState(buttonFunction)
+        val buttonState = currentState.buttonStates[buttonFunction] ?: com.na982.opichelper.domain.entity.ButtonState.Idle
         
         Log.d("MainViewModel", "getButtonConfig: $buttonFunction -> $buttonState")
         

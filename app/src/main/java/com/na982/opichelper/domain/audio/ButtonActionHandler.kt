@@ -15,7 +15,7 @@ import javax.inject.Singleton
 @Singleton
 class ButtonActionHandler @Inject constructor(
     private val buttonStateManager: ButtonStateManager,
-    private val ttsPlaybackController: TtsPlaybackController,
+    private val ttsOrchestrator: TtsOrchestrator,
     private val interruptManager: InterruptManager,
     private val qaDataManager: QaDataManager,
     private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
@@ -62,7 +62,7 @@ class ButtonActionHandler @Inject constructor(
                 } else {
                     Log.d("ButtonActionHandler", "일반 모드 - 질문 TTS 재생")
                     // 일반 모드에서는 TTS 재생
-                    ttsPlaybackController.playQuestion(question)
+                    ttsOrchestrator.speak(question, null)
                     
                     // TTS 완료 후 버튼 상태를 Idle로 변경
                     // TTS 재생이 완료되면 자동으로 상태가 변경됨
@@ -94,7 +94,7 @@ class ButtonActionHandler @Inject constructor(
                 interruptManager.handleEmergencyStop()
                 
                 // 3. 답변 TTS 재생
-                ttsPlaybackController.playAnswer(answer)
+                ttsOrchestrator.speak(answer, null)
                 
                 // 4. 버튼 상태를 Playing으로 변경
                 buttonStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
@@ -262,11 +262,11 @@ class ButtonActionHandler @Inject constructor(
                 // 1. 해당 버튼의 작업 중단
                 when (buttonType) {
                     is ButtonFunction.QuestionPlay -> {
-                        ttsPlaybackController.stopTts()
+                        ttsOrchestrator.stop()
                         buttonStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
                     }
                     is ButtonFunction.AnswerPlay -> {
-                        ttsPlaybackController.stopTts()
+                        ttsOrchestrator.stop()
                         buttonStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
                     }
                     is ButtonFunction.MemorizeTest -> {

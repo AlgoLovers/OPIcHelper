@@ -1,6 +1,6 @@
 package com.na982.opichelper.domain.event
 
-import com.na982.opichelper.domain.audio.TtsPlaybackController
+
 import com.na982.opichelper.domain.entity.*
 import com.na982.opichelper.domain.usecase.*
 import com.na982.opichelper.domain.state.AppStateManager
@@ -15,7 +15,6 @@ import com.na982.opichelper.domain.audio.TtsController
  */
 @Singleton
 class ButtonEventHandler @Inject constructor(
-    private val ttsPlaybackController: TtsPlaybackController,
     private val appStateManager: AppStateManager,
     private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
     private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
@@ -40,13 +39,16 @@ class ButtonEventHandler @Inject constructor(
     private suspend fun handleQuestionPlayClick(event: ButtonEvent.QuestionPlayClick): ButtonEventResult {
         Log.d("ButtonEventHandler", "질문 재생 이벤트 처리")
         
-        // 1. 버튼 상태를 Loading으로 변경
+        // 1. 다른 작업 중단 (다른 버튼이 실행 중이면 중단)
+        stopOtherOperations()
+        
+        // 2. 버튼 상태를 Loading으로 변경
         appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Loading)
         
-        // 2. TTS 재생 (하이라이트 포함)
+        // 3. TTS 재생 (하이라이트 포함)
         ttsController.playQuestion(event.question)
         
-        // 3. 버튼 상태를 Playing으로 변경
+        // 4. 버튼 상태를 Playing으로 변경
         appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Playing)
         
         return ButtonEventResult.Success
@@ -55,13 +57,16 @@ class ButtonEventHandler @Inject constructor(
     private suspend fun handleAnswerPlayClick(event: ButtonEvent.AnswerPlayClick): ButtonEventResult {
         Log.d("ButtonEventHandler", "답변 재생 이벤트 처리")
         
-        // 1. 버튼 상태를 Loading으로 변경
+        // 1. 다른 작업 중단 (다른 버튼이 실행 중이면 중단)
+        stopOtherOperations()
+        
+        // 2. 버튼 상태를 Loading으로 변경
         appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Loading)
         
-        // 2. TTS 재생 (하이라이트 포함)
+        // 3. TTS 재생 (하이라이트 포함)
         ttsController.playAnswer(event.answer)
         
-        // 3. 버튼 상태를 Playing으로 변경
+        // 4. 버튼 상태를 Playing으로 변경
         appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
         
         return ButtonEventResult.Success
@@ -206,5 +211,32 @@ class ButtonEventHandler @Inject constructor(
         appStateManager.updateButtonState(event.buttonFunction, ButtonState.Idle)
         
         return ButtonEventResult.Success
+    }
+
+    /**
+     * 다른 작업들을 중단하는 헬퍼 메서드
+     */
+    private suspend fun stopOtherOperations() {
+        Log.d("ButtonEventHandler", "다른 작업들 중단")
+        
+        // 1. TTS 중지
+        ttsController.stopTts()
+        
+        // 2. 반복듣기 중지
+        repeatListeningService.stopRepeatListening()
+        
+        // 3. 모든 버튼 상태를 Idle로 변경
+        appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
+        appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
+        appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
+        appStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+        
+        // 4. 카드 상태 초기화
+        appStateManager.updateCardState(
+            isQuestionCardFlipped = false,
+            isAnswerCardFlipped = false
+        )
+        
+        Log.d("ButtonEventHandler", "다른 작업들 중단 완료")
     }
 } 

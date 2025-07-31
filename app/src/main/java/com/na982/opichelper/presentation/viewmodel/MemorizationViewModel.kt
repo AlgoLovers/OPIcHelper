@@ -2,7 +2,7 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.audio.TtsPlaybackController
+import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.QaDataManager
@@ -97,7 +97,7 @@ class MemorizationViewModel @Inject constructor(
     private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
     private val executeFullMemorizationUseCase: FullMemorizationUseCase,
     private val qaDataManager: QaDataManager,
-    private val ttsPlaybackController: TtsPlaybackController,
+    private val ttsOrchestrator: TtsOrchestrator,
     private val getCurrentAnswerUseCase: GetCurrentAnswerUseCase,
     private val progressTracker: MemorizeTestProgressTracker,
     private val appStateManager: com.na982.opichelper.domain.state.AppStateManager
@@ -227,8 +227,8 @@ class MemorizationViewModel @Inject constructor(
                         } else {
                             Log.d("MemorizationViewModel", "반복 듣기 모드 선택됨")
                             startMode(CurrentMode.REPEAT_LISTENING)
-                            ttsPlaybackController.stopTts()
-                            ttsPlaybackController.clearHighlight()
+                            ttsOrchestrator.stop()
+                            ttsOrchestrator.clearHighlight()
                             clearHighlightAndSync() // AppState와 동기화
                             startRepeatListening()
                         }
@@ -241,8 +241,8 @@ class MemorizationViewModel @Inject constructor(
                         } else {
                             Log.d("MemorizationViewModel", "영작 테스트 모드 선택됨")
                             startMode(CurrentMode.ENGLISH_WRITING)
-                            ttsPlaybackController.stopTts()
-                            ttsPlaybackController.clearHighlight()
+                            ttsOrchestrator.stop()
+                            ttsOrchestrator.clearHighlight()
                             clearHighlightAndSync() // AppState와 동기화
                             // 영작테스트 녹음 파일 재생 중단 이벤트 발생
                             _stopEnglishWritingTestMergedFilePlaying.value = true
@@ -486,16 +486,16 @@ class MemorizationViewModel @Inject constructor(
                         },
                         onKoreanHighlight = { index ->
                             if (index != null) {
-                                ttsPlaybackController.setAnswerKoHighlightIndex(index)
+                                ttsOrchestrator.setAnswerKoHighlightIndex(index)
                             } else {
-                                ttsPlaybackController.clearHighlight()
+                                ttsOrchestrator.clearHighlight()
                             }
                         },
                         onRecordingHighlight = { index ->
                             if (index != null) {
-                                ttsPlaybackController.setRecordingHighlightIndex(index)
+                                ttsOrchestrator.setRecordingHighlightIndex(index)
                             } else {
-                                ttsPlaybackController.clearHighlight()
+                                ttsOrchestrator.clearHighlight()
                             }
                         },
                         onRecordingStateChange = { isRecording ->
@@ -553,8 +553,8 @@ class MemorizationViewModel @Inject constructor(
                 currentUseCaseJob = null
                 stopMode()
                 viewModelScope.launch {
-                    ttsPlaybackController.stopTts()
-                    ttsPlaybackController.clearHighlight()
+                    ttsOrchestrator.stop()
+                    ttsOrchestrator.clearHighlight()
                 }
             }
             else -> {
@@ -563,8 +563,8 @@ class MemorizationViewModel @Inject constructor(
                 currentUseCaseJob = null
                 stopMode()
                 viewModelScope.launch {
-                    ttsPlaybackController.stopTts()
-                    ttsPlaybackController.clearHighlight()
+                    ttsOrchestrator.stop()
+                    ttsOrchestrator.clearHighlight()
                 }
             }
         }
@@ -587,8 +587,8 @@ class MemorizationViewModel @Inject constructor(
         
         // 3. TTS 완전 중지 및 하이라이트 정리
         viewModelScope.launch {
-            ttsPlaybackController.stopTts()
-            ttsPlaybackController.clearHighlight()
+            ttsOrchestrator.stop()
+            ttsOrchestrator.clearHighlight()
         }
         
         // 3. 반복듣기 진행상황 저장
@@ -632,8 +632,8 @@ class MemorizationViewModel @Inject constructor(
         
         // 3. TTS 및 하이라이트 정리
         viewModelScope.launch {
-            ttsPlaybackController.stopTts()
-            ttsPlaybackController.clearHighlight()
+            ttsOrchestrator.stop()
+            ttsOrchestrator.clearHighlight()
         }
         
         // 3. 영작테스트 진행상황 저장
@@ -697,8 +697,8 @@ class MemorizationViewModel @Inject constructor(
                 _stopEnglishWritingTestMergedFilePlaying.value = false
                 
                 // TTS 중단
-                ttsPlaybackController.stopTts()
-                ttsPlaybackController.clearHighlight()
+                ttsOrchestrator.stop()
+                ttsOrchestrator.clearHighlight()
                 
                 // 새로운 암기레벨의 진행상황 확인 및 로드
                 if (currentItem != null) {
@@ -793,20 +793,20 @@ class MemorizationViewModel @Inject constructor(
 
     override fun onHighlight(index: Int?) {
         if (index != null) {
-            ttsPlaybackController.setAnswerHighlightIndex(index)
+            ttsOrchestrator.setAnswerHighlightIndex(index)
             Log.d("MemorizationViewModel", "반복 듣기: 영문 하이라이트 설정: $index")
         } else {
-            ttsPlaybackController.clearHighlight()
+            ttsOrchestrator.clearHighlight()
             Log.d("MemorizationViewModel", "반복 듣기: 영문 하이라이트 제거")
         }
     }
 
     override fun onKoreanHighlight(index: Int?) {
         if (index != null) {
-            ttsPlaybackController.setAnswerKoHighlightIndex(index)
+            ttsOrchestrator.setAnswerKoHighlightIndex(index)
             Log.d("MemorizationViewModel", "반복 듣기: 한글 하이라이트 설정: $index")
         } else {
-            ttsPlaybackController.clearHighlight()
+            ttsOrchestrator.clearHighlight()
             Log.d("MemorizationViewModel", "반복 듣기: 한글 하이라이트 제거")
         }
     }

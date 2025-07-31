@@ -26,11 +26,12 @@ data class AppState(
         ButtonFunction.RecordingPlay to ButtonState.Idle
     ),
     
-    // TTS 재생 상태
+    // TTS 재생 상태 (통합)
     val isQuestionPlaying: Boolean = false,
     val isAnswerPlaying: Boolean = false,
+    val isPlaying: Boolean = false,
     
-    // 하이라이트 상태
+    // 하이라이트 상태 (통합)
     val questionHighlightIndex: Int? = null,
     val answerHighlightIndex: Int? = null,
     val answerKoHighlightIndex: Int? = null,
@@ -45,28 +46,79 @@ data class AppState(
     val isEnglishWritingTestMode: Boolean = false,
     val isFullMemorizationMode: Boolean = false,
     
+    // TTS 서비스 상태
+    val currentKoreanTtsService: String = "",
+    
+    // 암기 테스트 진행 상태
+    val isMemorizeTestRunning: Boolean = false,
+    val currentMemorizeMode: String = "NONE",
+    
+    // 영작 테스트 상태
+    val englishWritingTestCompleted: Boolean = false,
+    val stopEnglishWritingTestMergedFilePlaying: Boolean = false,
+    
     // 로딩 및 에러 상태
     val isLoading: Boolean = false,
     val error: String? = null
 ) {
     /**
-     * 특정 버튼의 상태를 가져오는 함수
+     * 버튼 상태 업데이트 헬퍼 메서드
      */
-    fun getButtonState(buttonFunction: ButtonFunction): ButtonState {
-        return buttonStates[buttonFunction] ?: ButtonState.Idle
+    fun updateButtonState(buttonFunction: ButtonFunction, newState: ButtonState): AppState {
+        val updatedButtonStates = buttonStates.toMutableMap()
+        updatedButtonStates[buttonFunction] = newState
+        return copy(buttonStates = updatedButtonStates)
     }
     
     /**
-     * 버튼 상태를 업데이트하는 함수
+     * TTS 재생 상태 업데이트 헬퍼 메서드
      */
-    fun updateButtonState(buttonFunction: ButtonFunction, newState: ButtonState): AppState {
+    fun updateTtsPlayingState(
+        isQuestionPlaying: Boolean = this.isQuestionPlaying,
+        isAnswerPlaying: Boolean = this.isAnswerPlaying,
+        isPlaying: Boolean = this.isPlaying
+    ): AppState {
         return copy(
-            buttonStates = buttonStates + (buttonFunction to newState)
+            isQuestionPlaying = isQuestionPlaying,
+            isAnswerPlaying = isAnswerPlaying,
+            isPlaying = isPlaying
         )
     }
     
     /**
-     * 현재 암기 모드가 통암기인지 확인
+     * 하이라이트 상태 업데이트 헬퍼 메서드
+     */
+    fun updateHighlightState(
+        questionHighlightIndex: Int? = this.questionHighlightIndex,
+        answerHighlightIndex: Int? = this.answerHighlightIndex,
+        answerKoHighlightIndex: Int? = this.answerKoHighlightIndex,
+        recordingHighlightIndex: Int? = this.recordingHighlightIndex
+    ): AppState {
+        return copy(
+            questionHighlightIndex = questionHighlightIndex,
+            answerHighlightIndex = answerHighlightIndex,
+            answerKoHighlightIndex = answerKoHighlightIndex,
+            recordingHighlightIndex = recordingHighlightIndex
+        )
+    }
+    
+    /**
+     * 암기 모드 상태 업데이트 헬퍼 메서드
+     */
+    fun updateMemorizationModeState(
+        isRepeatListeningMode: Boolean = this.isRepeatListeningMode,
+        isEnglishWritingTestMode: Boolean = this.isEnglishWritingTestMode,
+        isFullMemorizationMode: Boolean = this.isFullMemorizationMode
+    ): AppState {
+        return copy(
+            isRepeatListeningMode = isRepeatListeningMode,
+            isEnglishWritingTestMode = isEnglishWritingTestMode,
+            isFullMemorizationMode = isFullMemorizationMode
+        )
+    }
+    
+    /**
+     * 암기 테스트 실행 상태 확인
      */
     fun isFullMemorizationModeSelected(): Boolean {
         return selectedMemorizeLevel == "통암기"

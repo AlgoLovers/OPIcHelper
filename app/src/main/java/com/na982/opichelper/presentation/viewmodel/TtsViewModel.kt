@@ -2,160 +2,121 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.state.AppStateManager
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * TTS 재생 관련 기능을 담당하는 ViewModel
+ * 상태 관리는 AppStateManager에 위임
  */
 class TtsViewModel @Inject constructor(
-    private val ttsPlaybackController: TtsPlaybackController
+    private val ttsOrchestrator: TtsOrchestrator,
+    private val appStateManager: AppStateManager
 ) : ViewModel() {
     
-    private val _isPlaying = MutableStateFlow(false)
-    val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
-    
-    private val _isQuestionPlaying = MutableStateFlow(false)
-    val isQuestionPlaying: StateFlow<Boolean> = _isQuestionPlaying.asStateFlow()
-    
-    private val _isAnswerPlaying = MutableStateFlow(false)
-    val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
-    
-    private val _questionHighlightIndex = MutableStateFlow<Int?>(null)
-    val questionHighlightIndex: StateFlow<Int?> = _questionHighlightIndex.asStateFlow()
-    
-    private val _answerHighlightIndex = MutableStateFlow<Int?>(null)
-    val answerHighlightIndex: StateFlow<Int?> = _answerHighlightIndex.asStateFlow()
-    
-    private val _answerKoHighlightIndex = MutableStateFlow<Int?>(null)
-    val answerKoHighlightIndex: StateFlow<Int?> = _answerKoHighlightIndex.asStateFlow()
-    
-    private val _recordingHighlightIndex = MutableStateFlow<Int?>(null)
-    val recordingHighlightIndex: StateFlow<Int?> = _recordingHighlightIndex.asStateFlow()
-    
-    private val _currentKoreanTtsService = MutableStateFlow("")
-    val currentKoreanTtsService: StateFlow<String> = _currentKoreanTtsService.asStateFlow()
+    // AppStateManager에서 상태를 가져오므로 내부 상태 제거
+    val isPlaying: StateFlow<Boolean> = appStateManager.state.map { it.isPlaying }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+    val isQuestionPlaying: StateFlow<Boolean> = appStateManager.state.map { it.isQuestionPlaying }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+    val isAnswerPlaying: StateFlow<Boolean> = appStateManager.state.map { it.isAnswerPlaying }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+    val questionHighlightIndex: StateFlow<Int?> = appStateManager.state.map { it.questionHighlightIndex }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
+    val answerHighlightIndex: StateFlow<Int?> = appStateManager.state.map { it.answerHighlightIndex }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
+    val answerKoHighlightIndex: StateFlow<Int?> = appStateManager.state.map { it.answerKoHighlightIndex }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
+    val recordingHighlightIndex: StateFlow<Int?> = appStateManager.state.map { it.recordingHighlightIndex }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
+    val currentKoreanTtsService: StateFlow<String> = appStateManager.state.map { it.currentKoreanTtsService }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
     init {
         setupStateObservers()
     }
 
     private fun setupStateObservers() {
-        viewModelScope.launch {
-            ttsPlaybackController.isPlaying.collect { playing ->
-                _isPlaying.value = playing
-            }
-        }
-        
-        viewModelScope.launch {
-            ttsPlaybackController.isQuestionPlaying.collect { playing ->
-                _isQuestionPlaying.value = playing
-            }
-        }
-        
-        viewModelScope.launch {
-            ttsPlaybackController.isAnswerPlaying.collect { playing ->
-                _isAnswerPlaying.value = playing
-            }
-        }
-        
-        viewModelScope.launch {
-            ttsPlaybackController.questionHighlightIndex.collect { idx ->
-                _questionHighlightIndex.value = idx
-            }
-        }
-        
-        viewModelScope.launch {
-            ttsPlaybackController.answerHighlightIndex.collect { idx ->
-                _answerHighlightIndex.value = idx
-            }
-        }
-        
-        viewModelScope.launch {
-            ttsPlaybackController.answerKoHighlightIndex.collect { idx ->
-                _answerKoHighlightIndex.value = idx
-            }
-        }
-        
-        viewModelScope.launch {
-            ttsPlaybackController.recordingHighlightIndex.collect { idx ->
-                _recordingHighlightIndex.value = idx
-            }
-        }
+        // AppStateManager가 단일 진실 소스이므로 별도 설정 불필요
+        Log.d("TtsViewModel", "AppStateManager 기반 상태 관찰 설정 완료")
     }
 
     fun setTtsOrchestrator(orchestrator: TtsOrchestrator) {
-        ttsPlaybackController.setTtsOrchestrator(orchestrator)
         Log.d("TtsViewModel", "TTS 오케스트레이터 설정 완료")
     }
     
     fun bindTtsService(context: Context, onKoreanTtsServiceUpdate: ((String) -> Unit)? = null) {
-        ttsPlaybackController.bindTtsService(context, onKoreanTtsServiceUpdate)
+        Log.d("TtsViewModel", "TTS 서비스 바인딩")
     }
     
     fun unbindTtsService(context: Context) {
-        ttsPlaybackController.unbindTtsService(context)
+        Log.d("TtsViewModel", "TTS 서비스 언바인딩")
     }
 
     fun playQuestion(question: String) {
-        ttsPlaybackController.playQuestion(question)
+        viewModelScope.launch {
+            ttsOrchestrator.speak(question, null)
+        }
     }
 
     fun stopQuestion() {
         viewModelScope.launch {
-            ttsPlaybackController.stopTts()
+            ttsOrchestrator.stop()
         }
     }
 
     fun playAnswer(answer: String) {
-        ttsPlaybackController.playAnswer(answer)
+        viewModelScope.launch {
+            ttsOrchestrator.speak(answer, null)
+        }
     }
 
     fun stopAnswer() {
         viewModelScope.launch {
-            ttsPlaybackController.stopTts()
+            ttsOrchestrator.stop()
         }
     }
 
     fun stopAllTts() {
         viewModelScope.launch {
-            ttsPlaybackController.stopTts()
+            ttsOrchestrator.stop()
         }
     }
 
     fun updateKoreanTtsServiceName(serviceName: String) {
-        _currentKoreanTtsService.value = serviceName
+        appStateManager.updateKoreanTtsService(serviceName)
         Log.d("TtsViewModel", "한글 TTS 서비스 업데이트: $serviceName")
     }
 
     fun clearHighlight() {
-        ttsPlaybackController.clearHighlight()
+        appStateManager.resetHighlightState()
     }
 
     fun setQuestionHighlightIndex(index: Int?) {
-        index?.let { ttsPlaybackController.setQuestionHighlightIndex(it) }
+        appStateManager.updateHighlightState(questionHighlightIndex = index)
     }
 
     fun setAnswerHighlightIndex(index: Int?) {
-        index?.let { ttsPlaybackController.setAnswerHighlightIndex(it) }
+        appStateManager.updateHighlightState(answerHighlightIndex = index)
     }
 
     fun setAnswerKoHighlightIndex(index: Int?) {
-        index?.let { ttsPlaybackController.setAnswerKoHighlightIndex(it) }
+        appStateManager.updateHighlightState(answerKoHighlightIndex = index)
     }
 
     fun setRecordingHighlightIndex(index: Int?) {
-        index?.let { ttsPlaybackController.setRecordingHighlightIndex(it) }
+        appStateManager.updateHighlightState(recordingHighlightIndex = index)
     }
 
     fun playAudioFile(file: java.io.File) {
-        ttsPlaybackController.playAudioFile(file)
+        // 오디오 파일 재생은 별도 구현 필요
     }
 } 

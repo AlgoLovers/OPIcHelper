@@ -32,26 +32,29 @@ class AppStateManager @Inject constructor() {
     fun updateButtonState(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction, newState: com.na982.opichelper.domain.entity.ButtonState) {
         Log.d("AppStateManager", "버튼 상태 업데이트: $buttonFunction -> $newState")
         updateState { currentState ->
-            val updatedState = currentState.updateButtonState(buttonFunction, newState)
-            Log.d("AppStateManager", "버튼 상태 업데이트 완료: $buttonFunction = $newState")
-            updatedState
+            currentState.updateButtonState(buttonFunction, newState)
         }
     }
     
     /**
-     * TTS 재생 상태 업데이트
+     * TTS 재생 상태 업데이트 (통합)
      */
-    fun updateTtsPlayingState(isQuestionPlaying: Boolean, isAnswerPlaying: Boolean) {
+    fun updateTtsPlayingState(
+        isQuestionPlaying: Boolean? = null,
+        isAnswerPlaying: Boolean? = null,
+        isPlaying: Boolean? = null
+    ) {
         updateState { currentState ->
-            currentState.copy(
-                isQuestionPlaying = isQuestionPlaying,
-                isAnswerPlaying = isAnswerPlaying
+            currentState.updateTtsPlayingState(
+                isQuestionPlaying = isQuestionPlaying ?: currentState.isQuestionPlaying,
+                isAnswerPlaying = isAnswerPlaying ?: currentState.isAnswerPlaying,
+                isPlaying = isPlaying ?: currentState.isPlaying
             )
         }
     }
     
     /**
-     * 하이라이트 상태 업데이트
+     * 하이라이트 상태 업데이트 (통합)
      */
     fun updateHighlightState(
         questionHighlightIndex: Int? = null,
@@ -60,7 +63,7 @@ class AppStateManager @Inject constructor() {
         recordingHighlightIndex: Int? = null
     ) {
         updateState { currentState ->
-            currentState.copy(
+            currentState.updateHighlightState(
                 questionHighlightIndex = questionHighlightIndex ?: currentState.questionHighlightIndex,
                 answerHighlightIndex = answerHighlightIndex ?: currentState.answerHighlightIndex,
                 answerKoHighlightIndex = answerKoHighlightIndex ?: currentState.answerKoHighlightIndex,
@@ -93,7 +96,7 @@ class AppStateManager @Inject constructor() {
         isFullMemorizationMode: Boolean? = null
     ) {
         updateState { currentState ->
-            currentState.copy(
+            currentState.updateMemorizationModeState(
                 isRepeatListeningMode = isRepeatListeningMode ?: currentState.isRepeatListeningMode,
                 isEnglishWritingTestMode = isEnglishWritingTestMode ?: currentState.isEnglishWritingTestMode,
                 isFullMemorizationMode = isFullMemorizationMode ?: currentState.isFullMemorizationMode
@@ -130,6 +133,45 @@ class AppStateManager @Inject constructor() {
     }
     
     /**
+     * TTS 서비스 상태 업데이트
+     */
+    fun updateKoreanTtsService(serviceName: String) {
+        updateState { currentState ->
+            currentState.copy(currentKoreanTtsService = serviceName)
+        }
+    }
+    
+    /**
+     * 암기 테스트 진행 상태 업데이트
+     */
+    fun updateMemorizeTestState(
+        isRunning: Boolean? = null,
+        currentMode: String? = null
+    ) {
+        updateState { currentState ->
+            currentState.copy(
+                isMemorizeTestRunning = isRunning ?: currentState.isMemorizeTestRunning,
+                currentMemorizeMode = currentMode ?: currentState.currentMemorizeMode
+            )
+        }
+    }
+    
+    /**
+     * 영작 테스트 상태 업데이트
+     */
+    fun updateEnglishWritingTestState(
+        completed: Boolean? = null,
+        stopMergedFilePlaying: Boolean? = null
+    ) {
+        updateState { currentState ->
+            currentState.copy(
+                englishWritingTestCompleted = completed ?: currentState.englishWritingTestCompleted,
+                stopEnglishWritingTestMergedFilePlaying = stopMergedFilePlaying ?: currentState.stopEnglishWritingTestMergedFilePlaying
+            )
+        }
+    }
+    
+    /**
      * 로딩 상태 업데이트
      */
     fun updateLoadingState(isLoading: Boolean) {
@@ -145,5 +187,37 @@ class AppStateManager @Inject constructor() {
         updateState { currentState ->
             currentState.copy(error = error)
         }
+    }
+    
+    /**
+     * 모든 상태 초기화
+     */
+    fun resetAllState() {
+        updateState { AppState() }
+    }
+    
+    /**
+     * TTS 관련 상태만 초기화
+     */
+    fun resetTtsState() {
+        updateTtsPlayingState(isQuestionPlaying = false, isAnswerPlaying = false, isPlaying = false)
+        updateHighlightState(
+            questionHighlightIndex = null,
+            answerHighlightIndex = null,
+            answerKoHighlightIndex = null,
+            recordingHighlightIndex = null
+        )
+    }
+    
+    /**
+     * 하이라이트 상태만 초기화
+     */
+    fun resetHighlightState() {
+        updateHighlightState(
+            questionHighlightIndex = null,
+            answerHighlightIndex = null,
+            answerKoHighlightIndex = null,
+            recordingHighlightIndex = null
+        )
     }
 } 

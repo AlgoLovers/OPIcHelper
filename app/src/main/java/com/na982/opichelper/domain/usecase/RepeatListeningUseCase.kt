@@ -117,8 +117,14 @@ class RepeatListeningService @Inject constructor(
             delay(100) // 카드 뒤집기 애니메이션 대기
             uiCallback.onKoreanHighlight(i) // 한글 하이라이트
             
-            // 한글 TTS 재생 완료까지 기다리기 (표준화된 방식 사용)
-            ttsOrchestrator.speakAndWaitForCompletion(koSentences[i], isKorean = true, rate = 1.0f)
+            // 통합 TTS 함수 사용 - 한글 재생
+            val koDuration = ttsOrchestrator.speakUnified(
+                text = koSentences[i],
+                isKorean = true,
+                rate = 1.0f,
+                onHighlight = null, // 반복듣기는 수동으로 하이라이트 관리
+                waitForCompletion = true
+            )
             
             // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
             val enSentence = enSentences[i]
@@ -157,8 +163,14 @@ class RepeatListeningService @Inject constructor(
                 delay(100) // 카드 뒤집기 애니메이션 대기
                 uiCallback.onHighlight(i) // 영문 하이라이트
                 
-                // TTS 재생 완료까지 기다리기 (표준화된 방식 사용)
-                val enDuration = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i], isKorean = false, rate = 1.0f)
+                // 통합 TTS 함수 사용 - 영문 재생
+                val enDuration = ttsOrchestrator.speakUnified(
+                    text = enSentences[i],
+                    isKorean = false,
+                    rate = 1.0f,
+                    onHighlight = null, // 반복듣기는 수동으로 하이라이트 관리
+                    waitForCompletion = true
+                )
                 
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {
