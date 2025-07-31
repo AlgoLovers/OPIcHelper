@@ -1,7 +1,7 @@
 package com.na982.opichelper.domain.repository
 
-import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.entity.DataSource
+import com.na982.opichelper.domain.entity.UserLevel
 import kotlinx.coroutines.flow.StateFlow
 
 /**

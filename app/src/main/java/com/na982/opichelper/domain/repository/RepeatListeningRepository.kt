@@ -1,7 +1,7 @@
 package com.na982.opichelper.domain.repository
 
-import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.entity.RepeatListeningData
 
 /**
  * 반복듣기 Repository 인터페이스

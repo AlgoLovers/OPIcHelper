@@ -5,8 +5,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
-import kotlinx.coroutines.*
-import java.util.*
+import java.util.Locale
 
 /**
  * TTS 플레이어들의 공통 로직을 담은 베이스 클래스

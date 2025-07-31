@@ -3,33 +3,23 @@ package com.na982.opichelper
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-
-import com.na982.opichelper.presentation.ui.navigation.AppNavigation
-import com.na982.opichelper.presentation.viewmodel.MainViewModel
-import com.na982.opichelper.ui.theme.OPicHelperTheme
-import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import android.util.Log
-import dagger.hilt.android.AndroidEntryPoint
-import com.na982.opichelper.domain.manager.WakeLockManager
-import javax.inject.Inject
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
+import com.na982.opichelper.domain.manager.WakeLockManager
+import com.na982.opichelper.presentation.ui.navigation.AppNavigation
+import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

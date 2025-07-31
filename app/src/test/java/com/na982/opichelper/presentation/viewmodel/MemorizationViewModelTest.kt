@@ -3,7 +3,6 @@ package com.na982.opichelper.presentation.viewmodel
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
-import com.na982.opichelper.domain.usecase.EnglishWritingTestService
 import com.na982.opichelper.domain.usecase.FullMemorizationService
 import com.na982.opichelper.domain.usecase.RepeatListeningService
 import io.mockk.coEvery

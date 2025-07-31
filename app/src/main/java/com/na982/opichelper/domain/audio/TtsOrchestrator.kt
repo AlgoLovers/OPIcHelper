@@ -3,8 +3,6 @@ package com.na982.opichelper.domain.audio
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
@@ -362,8 +360,8 @@ class TtsOrchestrator @Inject constructor(
         waitForCompletion: Boolean = true
     ): Long {
         Log.d("TtsOrchestrator", "🎯 speakUnified 호출: '${text.take(30)}...', isKorean=$isKorean, rate=$rate, hasHighlight=${onHighlight != null}")
-        
-        val startTime = System.currentTimeMillis()
+
+        System.currentTimeMillis()
         val detectedKorean = isKorean ?: text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
         
         return if (onHighlight != null) {

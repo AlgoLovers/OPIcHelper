@@ -1,7 +1,5 @@
 package com.na982.opichelper.domain.repository
 
-import kotlinx.coroutines.flow.Flow
-
 /**
  * 영작 테스트 Repository 인터페이스
  * 

@@ -1,25 +1,25 @@
 package com.na982.opichelper.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.QaDataManager
-import com.na982.opichelper.domain.usecase.*
 import com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
 import com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
-import com.na982.opichelper.domain.entity.QaItem
+import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
+import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import android.util.Log
 import javax.inject.Inject
-import kotlinx.coroutines.delay
 
 /**
  * 현재 실행 중인 모드를 나타내는 enum

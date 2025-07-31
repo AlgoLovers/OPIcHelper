@@ -1,8 +1,8 @@
 package com.na982.opichelper.domain.usecase
 
 import android.util.Log
-import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import javax.inject.Inject
 

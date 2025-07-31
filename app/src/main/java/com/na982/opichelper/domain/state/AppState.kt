@@ -1,8 +1,7 @@
 package com.na982.opichelper.domain.state
 
-import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.entity.ButtonFunction
-import com.na982.opichelper.domain.entity.MemorizeLevel
+import com.na982.opichelper.domain.entity.ButtonState
 
 /**
  * 앱의 전체 상태를 관리하는 데이터 클래스

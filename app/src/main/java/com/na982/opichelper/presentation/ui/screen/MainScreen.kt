@@ -1,48 +1,53 @@
 package com.na982.opichelper.presentation.ui.screen
 
-import androidx.compose.foundation.layout.*
+import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.na982.opichelper.domain.entity.QuestionCategory
-import com.na982.opichelper.presentation.viewmodel.MainViewModel
-import com.na982.opichelper.domain.state.AppState
 import androidx.compose.ui.platform.LocalContext
-import com.na982.opichelper.domain.entity.QaItem
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.activity.compose.BackHandler
-import android.util.Log
-import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
-import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.domain.audio.AudioPlayer
-import com.na982.opichelper.domain.entity.PlaybackState
-import com.na982.opichelper.domain.entity.PlayType
-import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.foundation.shape.RoundedCornerShape
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.na982.opichelper.domain.entity.ButtonFunction
+import com.na982.opichelper.domain.entity.MemorizeLevel
+import com.na982.opichelper.presentation.ui.component.AnswerPlaySmartButton
+import com.na982.opichelper.presentation.ui.component.MemorizeTestSmartButton
+import com.na982.opichelper.presentation.ui.component.QuestionPlaySmartButton
+import com.na982.opichelper.presentation.ui.component.RecordingPlaySmartButton
+import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.AnswerCard
+import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.AppTitle
+import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.CategorySelector
+import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.MemorizeLevelSelector
+import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.NavigationSection
+import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.QuestionCard
+import com.na982.opichelper.presentation.viewmodel.MainViewModel
+import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
+import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import com.na982.opichelper.presentation.viewmodel.CurrentMode
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import com.na982.opichelper.ui.theme.*
-import androidx.compose.foundation.isSystemInDarkTheme
-import com.na982.opichelper.presentation.ui.component.*
-import com.na982.opichelper.domain.entity.*
-import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +75,6 @@ fun MainScreenRefactored(
     val currentCategoryState = appState.currentCategory
 
     // ===== 공통 상태 (모든 모드에서 사용) =====
-    val currentMode by memorizationViewModelInstance.currentMode.collectAsState()
     val isQuestionCardFlipped by viewModel.isQuestionCardFlipped().collectAsState()
 
     // ===== MemorizationViewModel UI 상태 =====
@@ -80,23 +84,19 @@ fun MainScreenRefactored(
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
 
     // ===== 영작 테스트 (English Writing) =====
-    val hasEnglishWritingTestMergedFile by viewModel.hasEnglishWritingTestMergedFile().collectAsState()
     val englishWritingTestCompleted by memorizationViewModelInstance.englishWritingTestCompleted.collectAsState()
-    val isEnglishWritingTestMergedFilePlaying by viewModel.isEnglishWritingTestMergedFilePlaying().collectAsState()
-    val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex().collectAsState()
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModelInstance.stopEnglishWritingTestMergedFilePlaying.collectAsState()
     val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
 
     // ===== 통암기 (Full Memorization) =====
-    val fullMemorizationHighlightIndex by memorizationViewModelInstance.fullMemorizationHighlightIndex.collectAsState()
     val isFullMemorizationQuestionPlaying = memorizationUiState.isFullMemorizationQuestionPlaying
     val isFullMemorizationRecording = memorizationUiState.isFullMemorizationRecording
-    val isFullMemorizationPlaying = memorizationUiState.isFullMemorizationPlaying
-    val hasFullMemorizationRecording = memorizationUiState.hasFullMemorizationRecording
-    val isFullMemorizationRecordingPlaying = memorizationUiState.isFullMemorizationRecordingPlaying
+    memorizationUiState.isFullMemorizationPlaying
+    memorizationUiState.hasFullMemorizationRecording
+    memorizationUiState.isFullMemorizationRecordingPlaying
 
     // ===== 편의 변수들 =====
-    val isMemorizeTestRunning = memorizationUiState.isMemorizeTestRunning
+    memorizationUiState.isMemorizeTestRunning
     val isFullMemorizationMode = memorizationUiState.isFullMemorizationMode
     val isEnglishWritingTestMode = memorizationUiState.isEnglishWritingTestMode
 
@@ -149,7 +149,7 @@ fun MainScreenRefactored(
     LaunchedEffect(stopEnglishWritingTestMergedFilePlaying) {
         if (stopEnglishWritingTestMergedFilePlaying) {
             Log.d("MainScreenRefactored", "영작테스트 녹음 파일 재생 중단 이벤트 감지")
-            viewModel.handleStopClick(com.na982.opichelper.domain.entity.ButtonFunction.RecordingPlay)
+            viewModel.handleStopClick(ButtonFunction.RecordingPlay)
             memorizationViewModelInstance.resetStopEnglishWritingTestMergedFilePlaying()
             Log.d("MainScreenRefactored", "영작테스트 녹음 파일 재생 중단 처리 완료")
         }
@@ -291,7 +291,7 @@ fun MainScreenRefactored(
                             buttonConfig = questionButtonConfig,
                             onPlayClick = {
                                 // 현재 선택된 암기레벨에 따라 모드 결정
-                                val isFullMemorizationModeSelected = selectedLevel == "통암기"
+                                selectedLevel == "통암기"
                                 viewModel.handleQuestionPlayClick()
                             },
                             onStopClick = {
@@ -304,7 +304,7 @@ fun MainScreenRefactored(
                         MemorizeTestSmartButton(
                             buttonConfig = memorizeTestButtonConfig,
                             onPlayClick = {
-                                val memorizeLevel = when (selectedLevel) {
+                                when (selectedLevel) {
                                     "반복 듣기" -> MemorizeLevel.REPEAT_LISTENING
                                     "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
                                     "통암기" -> MemorizeLevel.FULL_MEMORIZATION
@@ -374,7 +374,7 @@ fun MainScreenRefactored(
                             RecordingPlaySmartButton(
                                 buttonConfig = recordingPlayButtonConfig,
                                 onPlayClick = {
-                                    val memorizeLevel = when (selectedLevel) {
+                                    when (selectedLevel) {
                                         "반복 듣기" -> MemorizeLevel.REPEAT_LISTENING
                                         "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
                                         "통암기" -> MemorizeLevel.FULL_MEMORIZATION

@@ -3,7 +3,7 @@ package com.na982.opichelper.data.audio
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import java.util.*
+import java.util.Locale
 
 /**
  * Google TTS 플레이어 (영문 전용)

@@ -1,19 +1,19 @@
 package com.na982.opichelper.data.repository
 
+import android.content.Context
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMuxer
+import android.util.Log
 import com.na982.opichelper.domain.repository.AudioFileManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import android.content.Context
-import android.media.MediaMuxer
-import android.media.MediaExtractor
-import android.media.MediaFormat
-import android.media.MediaCodec
 import java.nio.ByteBuffer
-import kotlinx.coroutines.delay
 
 /**
  * AudioFileManager 구현체
@@ -173,7 +173,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                 file.name.substringBeforeLast("_").substringBeforeLast("_")
             }
             
-            filesByScript?.forEach { (scriptId, files) ->
+            filesByScript?.forEach { (_, files) ->
                 val sortedFiles = files.sortedByDescending { it.lastModified() }
                 sortedFiles.drop(keepLatestCount).forEach { file ->
                     val deleted = file.delete()
@@ -244,7 +244,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
 
                         extractor.selectTrack(trackIndex)
                         val buffer = ByteBuffer.allocate(1024 * 1024)
-                        val bufferInfo = android.media.MediaCodec.BufferInfo()
+                        val bufferInfo = MediaCodec.BufferInfo()
 
                         while (true) {
                             val sampleSize = extractor.readSampleData(buffer, 0)

@@ -5,7 +5,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.entity.QaItem
-import com.na982.opichelper.domain.entity.DataSource
 import com.na982.opichelper.domain.repository.QaDataLoader
 import java.io.InputStreamReader
 import javax.inject.Inject

@@ -1,10 +1,12 @@
 package com.na982.opichelper.domain.audio
 
-import com.na982.opichelper.domain.entity.*
+import android.util.Log
+import com.na982.opichelper.domain.entity.ButtonFunction
+import com.na982.opichelper.domain.entity.ButtonState
+import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.repository.QaDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,7 +18,6 @@ import javax.inject.Singleton
 class ButtonActionHandler @Inject constructor(
     private val buttonStateManager: ButtonStateManager,
     private val ttsOrchestrator: TtsOrchestrator,
-    private val interruptManager: InterruptManager,
     private val qaDataManager: QaDataManager,
     private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
     private val executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
@@ -43,7 +44,6 @@ class ButtonActionHandler @Inject constructor(
                 buttonStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Loading)
                 
                 // 2. 다른 작업 중단 (질문 재생 시에는 긴급 중지하지 않음)
-                // interruptManager.handleEmergencyStop()
                 
                 // 3. 통암기 모드인지 확인
                 if (isFullMemorizationMode) {
@@ -91,7 +91,6 @@ class ButtonActionHandler @Inject constructor(
                 buttonStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Loading)
                 
                 // 2. 다른 작업 중단
-                interruptManager.handleEmergencyStop()
                 
                 // 3. 답변 TTS 재생
                 ttsOrchestrator.speak(answer, null)
@@ -126,7 +125,6 @@ class ButtonActionHandler @Inject constructor(
                 buttonStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Loading)
                 
                 // 2. 다른 작업 중단
-                interruptManager.handleEmergencyStop()
                 
                 // 3. 암기 레벨에 따른 처리
                 when (memorizeLevel) {
@@ -141,7 +139,7 @@ class ButtonActionHandler @Inject constructor(
                         )
                         executeRepeatListeningUseCase.execute(
                             data = repeatListeningData,
-                            uiCallback = object : com.na982.opichelper.domain.audio.RepeatListeningUiCallback {
+                            uiCallback = object : RepeatListeningUiCallback {
                                 override fun onCardFlip(isKorean: Boolean) {
                                     // 카드 뒤집기 처리
                                 }
@@ -221,7 +219,6 @@ class ButtonActionHandler @Inject constructor(
                 buttonStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Loading)
                 
                 // 2. 다른 작업 중단
-                interruptManager.handleEmergencyStop()
                 
                 // 3. 암기 레벨에 따른 녹음 재생
                 when (memorizeLevel) {
@@ -280,7 +277,7 @@ class ButtonActionHandler @Inject constructor(
                         buttonStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
                     }
                     is ButtonFunction.Stop -> {
-                        interruptManager.handleEmergencyStop()
+                        // 긴급 중지 기능은 제거됨
                     }
                 }
                 

@@ -1,14 +1,14 @@
 package com.na982.opichelper.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.na982.opichelper.domain.entity.LeveledAnswer
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
-import com.na982.opichelper.domain.entity.LeveledAnswer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import android.util.Log
 
 class LeveledQaDataLoader(private val context: Context) {
     

@@ -1,45 +1,52 @@
 package com.na982.opichelper.di
 
 import android.content.Context
-import com.na982.opichelper.data.audio.*
+import android.content.SharedPreferences
+import com.na982.opichelper.data.audio.AudioPlayerImpl
+import com.na982.opichelper.data.audio.AudioRecorderImpl
+import com.na982.opichelper.data.audio.GoogleTtsPlayer
+import com.na982.opichelper.data.audio.RecordingAudioPlayerImpl
+import com.na982.opichelper.data.audio.SamsungTtsPlayer
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import com.na982.opichelper.data.repository.AuthRepository
-import com.na982.opichelper.data.repository.QaDataLoaderImpl
-import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
-import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
 import com.na982.opichelper.data.repository.FullMemorizationRepositoryImpl
-import com.na982.opichelper.domain.audio.*
+import com.na982.opichelper.data.repository.LeveledQaDataLoader
+import com.na982.opichelper.data.repository.QaDataLoaderImpl
+import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
+import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
+import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
+import com.na982.opichelper.data.repository.UserPreferencesRepositoryImpl
+import com.na982.opichelper.domain.audio.AudioPlayer
+import com.na982.opichelper.domain.audio.AudioRecorder
+import com.na982.opichelper.domain.audio.RecordingAudioPlayer
+import com.na982.opichelper.domain.audio.TtsController
+import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsPlayer
+import com.na982.opichelper.domain.event.ButtonEventHandler
 import com.na982.opichelper.domain.manager.WakeLockManager
 import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
+import com.na982.opichelper.domain.repository.FullMemorizationRepository
+import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.QaDataLoader
 import com.na982.opichelper.domain.repository.QaDataManager
-import com.na982.opichelper.domain.repository.ProgressPersistenceService
-import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
-import com.na982.opichelper.domain.repository.RepeatListeningRepository
-import com.na982.opichelper.domain.repository.FullMemorizationRepository
-import com.na982.opichelper.data.repository.LeveledQaDataLoader
-import com.na982.opichelper.data.repository.UserPreferencesRepositoryImpl
-import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.RecordingFileRepository
-import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
-import com.na982.opichelper.domain.audio.RecordingAudioPlayer
-import com.na982.opichelper.data.audio.RecordingAudioPlayerImpl
-import android.content.SharedPreferences
+import com.na982.opichelper.domain.repository.RecordingTimeManager
+import com.na982.opichelper.domain.repository.RepeatListeningRepository
+import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.state.AppStateManager
+import com.na982.opichelper.domain.state.StateManager
+import com.na982.opichelper.domain.state.StateReader
+import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
+import com.na982.opichelper.domain.usecase.InitializeAppUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 import javax.inject.Named
-import com.na982.opichelper.domain.usecase.InitializeAppUseCase
-import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
-import com.na982.opichelper.domain.state.AppStateManager
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
-import com.na982.opichelper.domain.state.StateManager
-import com.na982.opichelper.domain.event.ButtonEventHandler
-import com.na982.opichelper.domain.state.StateReader
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -99,7 +106,7 @@ object AppModule {
     @Singleton
     fun provideQaDataLoader(
         @ApplicationContext context: Context,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+        userPreferencesRepository: UserPreferencesRepository
     ): QaDataLoader {
         return QaDataLoaderImpl(context, userPreferencesRepository)
     }
@@ -114,7 +121,7 @@ object AppModule {
     @Singleton
     fun provideQaDataManager(
         leveledQaDataLoader: LeveledQaDataLoader,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+        userPreferencesRepository: UserPreferencesRepository
     ): QaDataManager {
         return QaDataManager(leveledQaDataLoader, userPreferencesRepository)
     }
@@ -157,7 +164,7 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideUserPreferencesRepository(@ApplicationContext context: Context): com.na982.opichelper.domain.repository.UserPreferencesRepository {
+    fun provideUserPreferencesRepository(@ApplicationContext context: Context): UserPreferencesRepository {
         return UserPreferencesRepositoryImpl(context)
     }
     
@@ -220,46 +227,20 @@ object AppModule {
     // 새로운 버튼 관리 클래스들
     @Provides
     @Singleton
-    fun provideButtonStateManager(
-        appStateManager: com.na982.opichelper.domain.state.AppStateManager
-    ): com.na982.opichelper.domain.audio.ButtonStateManager {
-        return com.na982.opichelper.domain.audio.ButtonStateManager(appStateManager)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideInterruptManager(
-        buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
-        ttsOrchestrator: TtsOrchestrator
-    ): com.na982.opichelper.domain.audio.InterruptManager {
-        return com.na982.opichelper.domain.audio.InterruptManager(buttonStateManager, ttsOrchestrator)
-    }
-    
-    @Provides
-    @Singleton
     fun provideButtonStateObserver(ttsOrchestrator: TtsOrchestrator): com.na982.opichelper.domain.audio.ButtonStateObserver {
         return ttsOrchestrator
     }
     
     @Provides
     @Singleton
-    fun provideButtonStateCoordinator(
-        buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
-        buttonStateObserver: com.na982.opichelper.domain.audio.ButtonStateObserver
-    ): com.na982.opichelper.domain.audio.ButtonStateCoordinator {
-        return com.na982.opichelper.domain.audio.ButtonStateCoordinator(buttonStateManager, buttonStateObserver)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideAppStateManager(): com.na982.opichelper.domain.state.AppStateManager {
-        return com.na982.opichelper.domain.state.AppStateManager()
+    fun provideAppStateManager(): AppStateManager {
+        return AppStateManager()
     }
     
     @Provides
     @Singleton
     fun provideRepeatListeningService(
-        ttsController: com.na982.opichelper.domain.audio.TtsController,
+        ttsController: TtsController,
         progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
         recordingTimeManager: RecordingTimeManager
     ): com.na982.opichelper.domain.usecase.RepeatListeningService {
@@ -276,8 +257,8 @@ object AppModule {
     @Singleton
     fun provideTtsController(
         ttsOrchestrator: TtsOrchestrator,
-        appStateManager: com.na982.opichelper.domain.state.AppStateManager
-    ): com.na982.opichelper.domain.audio.TtsController {
+        appStateManager: AppStateManager
+    ): TtsController {
         return com.na982.opichelper.data.audio.TtsControllerImpl(
             ttsOrchestrator = ttsOrchestrator,
             appStateManager = appStateManager
@@ -325,7 +306,6 @@ object AppModule {
     fun provideButtonActionHandler(
         buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
         ttsOrchestrator: TtsOrchestrator,
-        interruptManager: com.na982.opichelper.domain.audio.InterruptManager,
         qaDataManager: QaDataManager,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
         executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
@@ -334,7 +314,6 @@ object AppModule {
         return com.na982.opichelper.domain.audio.ButtonActionHandler(
             buttonStateManager, 
             ttsOrchestrator, 
-            interruptManager, 
             qaDataManager,
             executeFullMemorizationUseCase,
             executeRepeatListeningUseCase,

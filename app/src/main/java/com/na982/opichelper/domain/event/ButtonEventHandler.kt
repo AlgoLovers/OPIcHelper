@@ -1,19 +1,16 @@
 package com.na982.opichelper.domain.event
 
 
-import com.na982.opichelper.domain.entity.*
-import com.na982.opichelper.domain.usecase.*
-import com.na982.opichelper.domain.state.AppStateManager
 import android.util.Log
+import com.na982.opichelper.domain.audio.RecordingAudioPlayer
+import com.na982.opichelper.domain.audio.TtsController
+import com.na982.opichelper.domain.entity.ButtonFunction
+import com.na982.opichelper.domain.entity.ButtonState
+import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.state.StateManager
+import com.na982.opichelper.domain.state.StateReader
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.na982.opichelper.domain.audio.TtsController
-import com.na982.opichelper.domain.state.StateManager
-import com.na982.opichelper.domain.audio.RecordingAudioPlayer
-import com.na982.opichelper.domain.repository.QaDataManager
-import com.na982.opichelper.domain.state.StateReader
-import java.io.File
-import com.na982.opichelper.domain.repository.AudioFileManager
 
 /**
  * 버튼 이벤트 핸들러

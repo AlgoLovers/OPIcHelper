@@ -1,7 +1,5 @@
 package com.na982.opichelper.domain.audio
 
-import kotlinx.coroutines.flow.Flow
-
 /**
  * TTS 플레이어 인터페이스
  * 모든 TTS 구현체가 따라야 하는 계약

@@ -1,13 +1,13 @@
 package com.na982.opichelper.data.repository
 
 import android.util.Log
-import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.AudioRecorder
+import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.repository.AudioFileManager
-import com.na982.opichelper.domain.repository.QaDataManager
-import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.ProgressData
+import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -92,7 +92,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             onKoreanHighlight(idx) // 한글 하이라이트
             
             // 한글 문장 TTS 재생 (완료까지 기다림)
-            val koDuration = ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx], isKorean = true, rate = 0.8f)
+            ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx], isKorean = true, rate = 0.8f)
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {

@@ -3,21 +3,14 @@ package com.na982.opichelper.domain.repository
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.na982.opichelper.domain.entity.QaItem
-import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import android.util.Log
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.io.InputStreamReader
-import com.na982.opichelper.data.repository.LeveledQaDataLoader
-import com.na982.opichelper.data.repository.UserPreferencesRepositoryImpl
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
-import kotlinx.coroutines.launch
 
 /**
  * QA 데이터 관리 전담 클래스 (Manager 패턴)
@@ -26,7 +19,7 @@ import kotlinx.coroutines.launch
 @Singleton
 class QaDataManager @Inject constructor(
     private val leveledQaDataLoader: com.na982.opichelper.data.repository.LeveledQaDataLoader,
-    private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository
 ) {
     
     private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()

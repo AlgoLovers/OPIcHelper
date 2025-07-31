@@ -1,7 +1,5 @@
 package com.na982.opichelper.domain.repository
 
-import com.google.gson.annotations.SerializedName
-
 /**
  * 앱 종료 시 상태 정보
  */

@@ -1,7 +1,5 @@
 package com.na982.opichelper.domain.entity
 
-import com.na982.opichelper.domain.entity.UserLevel
-
 data class QaItem(
     val id: String,
     val category: String,

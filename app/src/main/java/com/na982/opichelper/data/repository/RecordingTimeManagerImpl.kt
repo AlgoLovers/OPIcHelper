@@ -2,12 +2,12 @@ package com.na982.opichelper.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import javax.inject.Inject
 import javax.inject.Singleton
-import android.util.Log
 
 /**
  * SharedPreferences를 사용한 녹음 시간 관리 구현체

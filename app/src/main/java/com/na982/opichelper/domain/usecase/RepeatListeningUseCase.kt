@@ -1,17 +1,16 @@
 package com.na982.opichelper.domain.usecase
 
-import com.na982.opichelper.domain.audio.TtsController
+import android.util.Log
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.entity.RepeatListeningData
-import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.RecordingTimeManager
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -144,7 +143,7 @@ class RepeatListeningService @Inject constructor(
             val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
             
             Log.d("RepeatListeningService", "문장 $i 딜레이 계산: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${adaptiveDelay}ms")
-            kotlinx.coroutines.delay(adaptiveDelay)
+            delay(adaptiveDelay)
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {

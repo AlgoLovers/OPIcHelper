@@ -15,7 +15,7 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.junit.Assert.*
 
-class EnglishWritingTestServiceTest {
+class EnglishWritingTestUseCaseTest {
 
     @Mock
     private lateinit var mockAudioRecorder: AudioRecorder
@@ -44,24 +44,9 @@ class EnglishWritingTestServiceTest {
     @Mock
     private lateinit var mockRecordingTimeManager: com.na982.opichelper.domain.repository.RecordingTimeManager
 
-    private lateinit var englishWritingTestService: EnglishWritingTestService
-
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        englishWritingTestService = EnglishWritingTestService(
-            ttsPlayer = mockTtsPlayer,
-            audioRecorder = mockAudioRecorder,
-            audioFileManager = mockAudioFileManager,
-            progressTracker = mockProgressTracker,
-            recordingTimeManager = mockRecordingTimeManager
-        )
-    }
-
-    @Test
-    fun `EnglishWritingTestService가 정상적으로 초기화되어야 함`() {
-        // Then
-        assertNotNull(englishWritingTestService)
     }
 
     @Test

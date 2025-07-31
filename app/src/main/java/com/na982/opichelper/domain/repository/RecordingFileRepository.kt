@@ -1,7 +1,5 @@
 package com.na982.opichelper.domain.repository
 
-import java.io.File
-
 /**
  * 녹음 파일 관리를 전담하는 Repository
  * 책임: 녹음 파일의 존재 확인, 경로 관리, 재생 상태 관리

@@ -1,9 +1,9 @@
 package com.na982.opichelper.domain.state
 
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 

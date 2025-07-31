@@ -1,22 +1,22 @@
 package com.na982.opichelper.domain.usecase
 
-import com.na982.opichelper.domain.repository.RecordingFileRepository
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import android.util.Log
 import com.na982.opichelper.domain.audio.AudioRecorder
+import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.currentCoroutineContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import android.util.Log
 
 @Singleton
 class FullMemorizationUseCase @Inject constructor(

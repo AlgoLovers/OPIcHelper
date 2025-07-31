@@ -1,27 +1,27 @@
 package com.na982.opichelper.presentation.viewmodel
 
+import android.app.Application
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.state.AppStateManager
-import com.na982.opichelper.domain.event.ButtonEventHandler
-import com.na982.opichelper.domain.event.ButtonEvent
+import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.QaItem
+import com.na982.opichelper.domain.event.ButtonEvent
+import com.na982.opichelper.domain.event.ButtonEventHandler
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
-import com.na982.opichelper.domain.usecase.GetCategoriesUseCase
-import com.na982.opichelper.domain.usecase.LoadQaItemsUseCase
-import com.na982.opichelper.domain.usecase.InitializeAppUseCase
-import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
-import android.util.Log
-import javax.inject.Inject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
-import android.app.Application
-import com.na982.opichelper.domain.entity.ButtonFunction
+import com.na982.opichelper.domain.state.AppStateManager
+import com.na982.opichelper.domain.usecase.GetCategoriesUseCase
+import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
+import com.na982.opichelper.domain.usecase.InitializeAppUseCase
+import com.na982.opichelper.domain.usecase.LoadQaItemsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * 새로운 아키텍처에 맞는 MainViewModel
@@ -331,7 +331,7 @@ class MainViewModel @Inject constructor(
     /**
      * 중지 버튼 클릭
      */
-    fun handleStopClick(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction) {
+    fun handleStopClick(buttonFunction: ButtonFunction) {
         viewModelScope.launch {
             try {
                 val event = ButtonEvent.StopClick(buttonFunction = buttonFunction)
@@ -381,28 +381,28 @@ class MainViewModel @Inject constructor(
     }
     
     // UI에서 필요한 메서드들
-    fun getButtonConfig(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction): com.na982.opichelper.domain.entity.ButtonConfig {
+    fun getButtonConfig(buttonFunction: ButtonFunction): com.na982.opichelper.domain.entity.ButtonConfig {
         val currentState = appState.value
         val buttonState = currentState.buttonStates[buttonFunction] ?: com.na982.opichelper.domain.entity.ButtonState.Idle
         
         Log.d("MainViewModel", "getButtonConfig: $buttonFunction -> $buttonState")
         
         return when (buttonFunction) {
-            com.na982.opichelper.domain.entity.ButtonFunction.QuestionPlay -> {
+            ButtonFunction.QuestionPlay -> {
                 com.na982.opichelper.domain.entity.ButtonConfig(
                     function = buttonFunction,
                     state = buttonState,
                     text = "질문 재생"
                 )
             }
-            com.na982.opichelper.domain.entity.ButtonFunction.AnswerPlay -> {
+            ButtonFunction.AnswerPlay -> {
                 com.na982.opichelper.domain.entity.ButtonConfig(
                     function = buttonFunction,
                     state = buttonState,
                     text = "답변 재생"
                 )
             }
-            com.na982.opichelper.domain.entity.ButtonFunction.MemorizeTest -> {
+            ButtonFunction.MemorizeTest -> {
                 // 반복듣기 모드에서 버튼 텍스트 동적 변경
                 val buttonText = when {
                     currentState.selectedMemorizeLevel == "반복듣기" && buttonState == com.na982.opichelper.domain.entity.ButtonState.Playing -> "반복듣기중"
@@ -420,14 +420,14 @@ class MainViewModel @Inject constructor(
                     text = buttonText
                 )
             }
-            com.na982.opichelper.domain.entity.ButtonFunction.RecordingPlay -> {
+            ButtonFunction.RecordingPlay -> {
                 com.na982.opichelper.domain.entity.ButtonConfig(
                     function = buttonFunction,
                     state = buttonState,
                     text = "녹음 재생"
                 )
             }
-            com.na982.opichelper.domain.entity.ButtonFunction.Stop -> {
+            ButtonFunction.Stop -> {
                 com.na982.opichelper.domain.entity.ButtonConfig(
                     function = buttonFunction,
                     state = buttonState,

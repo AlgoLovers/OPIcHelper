@@ -51,16 +51,4 @@ data class ButtonConfig(
     val text: String,
     val isEnabled: Boolean = true,
     val isVisible: Boolean = true
-)
-
-/**
- * 인터럽트 처리를 위한 인터페이스
- */
-interface InterruptHandler {
-    fun handleCategoryChange()
-    fun handleMemorizeLevelChange()
-    fun handleScriptChange()
-    fun handleSettingsEnter()
-    fun handleAppExit()
-    fun handleBackPress()
-} 
+) 

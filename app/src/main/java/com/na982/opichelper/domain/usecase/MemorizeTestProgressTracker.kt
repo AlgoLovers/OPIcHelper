@@ -1,13 +1,11 @@
 package com.na982.opichelper.domain.usecase
 
+import android.util.Log
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.ScriptProgress
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 

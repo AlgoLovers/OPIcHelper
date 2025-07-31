@@ -1,10 +1,10 @@
 package com.na982.opichelper.domain.usecase
 
+import android.app.Application
+import android.util.Log
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.state.AppStateManager
-import android.app.Application
-import android.util.Log
 import javax.inject.Inject
 
 /**

@@ -1,7 +1,5 @@
 package com.na982.opichelper.domain.repository
 
-import com.google.gson.annotations.SerializedName
-
 /**
  * 스크립트별 진행 상황 정보
  */
