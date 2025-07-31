@@ -25,10 +25,8 @@ import kotlinx.coroutines.launch
  */
 @Singleton
 class QaDataManager @Inject constructor(
-    private val progressTracker: MemorizeTestProgressTracker,
-    private val leveledQaDataLoader: LeveledQaDataLoader,
-    private val userPreferencesRepository: UserPreferencesRepository,
-    private val qaDataLoader: com.na982.opichelper.domain.repository.QaDataLoader
+    private val leveledQaDataLoader: com.na982.opichelper.data.repository.LeveledQaDataLoader,
+    private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
 ) {
     
     private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
@@ -93,7 +91,7 @@ class QaDataManager @Inject constructor(
         val allLeveledItems = leveledQaDataLoader.loadQaItemsForLevel(currentUserLevel)
         Log.d("QaDataManager", "레벨별 데이터 로드 완료 - 총 ${allLeveledItems.size}개 항목")
         
-        // LeveledQaDataLoader의 순서대로 카테고리 정의
+        // 강제로 정의된 순서대로 카테고리 설정
         val orderedCategories = listOf(
             "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", 
             "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
@@ -117,8 +115,10 @@ class QaDataManager @Inject constructor(
             }
         }
         
+        // 강제로 순서대로 카테고리 설정
         _categories.value = orderedCategories
         Log.d("QaDataManager", "모든 카테고리 로드 완료: ${orderedCategories.size}개 카테고리 (레벨: $currentUserLevel)")
+        Log.d("QaDataManager", "카테고리 순서: ${orderedCategories.joinToString(", ")}")
     }
     
     fun getCurrentIndex(): Int {
@@ -267,15 +267,11 @@ class QaDataManager @Inject constructor(
         
         if (category != null) {
             // 현재 진행상황 확인
-            val currentProgress = progressTracker.getScriptProgress(category, currentIndex, memorizeLevel ?: "반복 듣기")
+            // progressTracker.getScriptProgress(category, currentIndex, memorizeLevel ?: "반복 듣기") // progressTracker 제거
             
-            if (currentProgress != null) {
-                // 진행상황이 있으면 저장
-                progressTracker.persistChangedProgress()
-                Log.d("QaDataManager", "현재 진행상황 저장: $category (인덱스: $currentIndex, 레벨: ${memorizeLevel ?: "반복 듣기"})")
-            } else {
-                Log.d("QaDataManager", "저장할 진행상황 없음: $category (인덱스: $currentIndex)")
-            }
+            // 진행상황이 있으면 저장
+            // progressTracker.persistChangedProgress() // progressTracker 제거
+            Log.d("QaDataManager", "현재 진행상황 저장: $category (인덱스: $currentIndex, 레벨: ${memorizeLevel ?: "반복 듣기"})")
         }
     }
     

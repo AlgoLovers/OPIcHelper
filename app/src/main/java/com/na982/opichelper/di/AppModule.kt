@@ -110,12 +110,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideQaDataManager(
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
         leveledQaDataLoader: LeveledQaDataLoader,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
-        qaDataLoader: com.na982.opichelper.domain.repository.QaDataLoader
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
     ): QaDataManager {
-        return QaDataManager(progressTracker, leveledQaDataLoader, userPreferencesRepository, qaDataLoader)
+        return QaDataManager(leveledQaDataLoader, userPreferencesRepository)
     }
     
     @Provides
