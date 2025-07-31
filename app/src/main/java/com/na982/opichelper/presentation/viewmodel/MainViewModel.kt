@@ -297,7 +297,9 @@ class MainViewModel @Inject constructor(
      * 녹음 재생 버튼 클릭
      */
     fun handleRecordingPlayClick() {
+        Log.d("MainViewModelRefactored", "녹음 재생 버튼 클릭 시작")
         val currentState = appState.value
+        Log.d("MainViewModelRefactored", "현재 선택된 암기 레벨: ${currentState.selectedMemorizeLevel}")
         
         viewModelScope.launch {
             try {
@@ -305,13 +307,18 @@ class MainViewModel @Inject constructor(
                     "반복듣기" -> MemorizeLevel.REPEAT_LISTENING
                     "영작테스트" -> MemorizeLevel.ENGLISH_WRITING
                     "통암기" -> MemorizeLevel.FULL_MEMORIZATION
-                    else -> return@launch
+                    else -> {
+                        Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
+                        return@launch
+                    }
                 }
                 
+                Log.d("MainViewModelRefactored", "매칭된 MemorizeLevel: $memorizeLevel")
                 val event = ButtonEvent.RecordingPlayClick(memorizeLevel = memorizeLevel)
                 
                 Log.d("MainViewModelRefactored", "녹음 재생 이벤트 발생: $event")
                 buttonEventHandler.handleEvent(event)
+                Log.d("MainViewModelRefactored", "녹음 재생 이벤트 처리 완료")
                 
             } catch (e: Exception) {
                 Log.e("MainViewModelRefactored", "녹음 재생 실패", e)
