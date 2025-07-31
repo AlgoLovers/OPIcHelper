@@ -255,17 +255,24 @@ class MainViewModel @Inject constructor(
         val currentState = appState.value
         val currentQaItem = currentState.currentQaItem ?: return
         
+        Log.d("MainViewModelRefactored", "암기 테스트 버튼 클릭 - 선택된 레벨: ${currentState.selectedMemorizeLevel}")
+        
         viewModelScope.launch {
             try {
                 val memorizeLevel = when (currentState.selectedMemorizeLevel) {
                     "반복듣기" -> MemorizeLevel.REPEAT_LISTENING
                     "영작테스트" -> MemorizeLevel.ENGLISH_WRITING
                     "통암기" -> MemorizeLevel.FULL_MEMORIZATION
-                    else -> return@launch
+                    else -> {
+                        Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
+                        return@launch
+                    }
                 }
                 
                 val answerKo = getCurrentAnswerKo(currentQaItem)
                 val answerEn = getCurrentAnswer(currentQaItem)
+                
+                Log.d("MainViewModelRefactored", "암기 테스트 데이터 준비 - 레벨: $memorizeLevel, 카테고리: ${currentState.currentCategory}, 인덱스: ${currentState.currentIndex}")
                 
                 val event = ButtonEvent.MemorizeTestClick(
                     memorizeLevel = memorizeLevel,

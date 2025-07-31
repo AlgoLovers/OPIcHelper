@@ -71,7 +71,7 @@ class ButtonEventHandler @Inject constructor(
     }
     
     private suspend fun handleMemorizeTestClick(event: ButtonEvent.MemorizeTestClick): ButtonEventResult {
-        Log.d("ButtonEventHandler", "암기 테스트 이벤트 처리")
+        Log.d("ButtonEventHandler", "암기 테스트 이벤트 처리 시작 - 레벨: ${event.memorizeLevel}")
         
         // 1. 버튼 상태를 Loading으로 변경
         stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Loading)
@@ -127,7 +127,9 @@ class ButtonEventHandler @Inject constructor(
                 )
             }
             com.na982.opichelper.domain.entity.MemorizeLevel.ENGLISH_WRITING -> {
-                Log.d("ButtonEventHandler", "영작 테스트 모드 시작")
+                Log.d("ButtonEventHandler", "영작 테스트 모드 시작 - 카테고리: ${event.category}, 스크립트: ${event.scriptIndex}")
+                Log.d("ButtonEventHandler", "영작 테스트 데이터 - 한글: ${event.answerKo.take(50)}..., 영문: ${event.answerEn.take(50)}...")
+                
                 executeEnglishWritingTestUseCase.execute(
                     answerKo = event.answerKo,
                     answerEn = event.answerEn,
@@ -188,6 +190,7 @@ class ButtonEventHandler @Inject constructor(
         // 3. 버튼 상태를 Playing으로 변경
         stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
         
+        Log.d("ButtonEventHandler", "암기 테스트 이벤트 처리 완료")
         return ButtonEventResult.Success
     }
     
