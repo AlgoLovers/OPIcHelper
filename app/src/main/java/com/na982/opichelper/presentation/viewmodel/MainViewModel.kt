@@ -261,6 +261,7 @@ class MainViewModel @Inject constructor(
             try {
                 val memorizeLevel = when (currentState.selectedMemorizeLevel) {
                     "반복듣기" -> MemorizeLevel.REPEAT_LISTENING
+                    "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
                     "영작테스트" -> MemorizeLevel.ENGLISH_WRITING
                     "통암기" -> MemorizeLevel.FULL_MEMORIZATION
                     else -> {
