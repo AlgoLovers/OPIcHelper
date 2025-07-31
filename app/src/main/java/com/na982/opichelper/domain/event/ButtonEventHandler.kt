@@ -9,6 +9,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.state.StateManager
+import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 
 /**
  * 버튼 이벤트 핸들러
@@ -20,7 +21,8 @@ class ButtonEventHandler @Inject constructor(
     private val repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
     private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
     private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
-    private val stateManager: StateManager
+    private val stateManager: StateManager,
+    private val recordingAudioPlayer: RecordingAudioPlayer
 ) {
     
     /**
@@ -80,6 +82,8 @@ class ButtonEventHandler @Inject constructor(
         when (event.memorizeLevel) {
             com.na982.opichelper.domain.entity.MemorizeLevel.REPEAT_LISTENING -> {
                 Log.d("ButtonEventHandler", "반복 듣기 모드 시작")
+                // 3. 버튼 상태를 Playing으로 변경
+                stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
                 val repeatListeningData = com.na982.opichelper.domain.entity.RepeatListeningData(
                     category = event.category,
                     scriptIndex = event.scriptIndex,
@@ -188,9 +192,7 @@ class ButtonEventHandler @Inject constructor(
                 )
             }
         }
-        
-        // 3. 버튼 상태를 Playing으로 변경
-        stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
+
         
         Log.d("ButtonEventHandler", "암기 테스트 이벤트 처리 완료")
         return ButtonEventResult.Success
@@ -202,10 +204,32 @@ class ButtonEventHandler @Inject constructor(
         // 1. 버튼 상태를 Loading으로 변경
         stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Loading)
         
-        // 2. 녹음 재생 처리 (구현 필요)
-        
-        // 3. 버튼 상태를 Playing으로 변경
-        stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
+        // 2. 녹음 재생 처리
+        try {
+            // 현재 카테고리와 스크립트 인덱스 가져오기 (임시로 하드코딩, 나중에 개선 필요)
+            val currentCategory = "집" // TODO: 실제 카테고리 가져오기
+            val currentScriptIndex = 0 // TODO: 실제 스크립트 인덱스 가져오기
+            val currentSentenceIndex = 1 // TODO: 실제 문장 인덱스 가져오기
+            
+            val recordingFileName = "english_writing_${currentCategory}_${currentScriptIndex}_${currentSentenceIndex}.m4a"
+            val recordingFilePath = "/data/user/0/com.na982.opichelper/files/recordings/$recordingFileName"
+            
+            Log.d("ButtonEventHandler", "녹음 파일 재생 시도: $recordingFilePath")
+            
+            recordingAudioPlayer.playRecording(recordingFilePath) {
+                Log.d("ButtonEventHandler", "녹음 재생 완료")
+                // 재생 완료 시 버튼 상태를 Idle로 변경
+                stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+            }
+            
+            // 3. 버튼 상태를 Playing으로 변경
+            stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
+            
+        } catch (e: Exception) {
+            Log.e("ButtonEventHandler", "녹음 재생 실패", e)
+            // 오류 시 버튼 상태를 Idle로 변경
+            stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+        }
         
         return ButtonEventResult.Success
     }

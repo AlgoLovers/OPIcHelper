@@ -296,14 +296,16 @@ object AppModule {
         repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
         executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
-        stateManager: StateManager
+        stateManager: StateManager,
+        recordingAudioPlayer: RecordingAudioPlayer
     ): ButtonEventHandler {
         return ButtonEventHandler(
             ttsController = ttsController,
             repeatListeningService = repeatListeningService,
             executeEnglishWritingTestUseCase = executeEnglishWritingTestUseCase,
             executeFullMemorizationUseCase = executeFullMemorizationUseCase,
-            stateManager = stateManager
+            stateManager = stateManager,
+            recordingAudioPlayer = recordingAudioPlayer
         )
     }
     
