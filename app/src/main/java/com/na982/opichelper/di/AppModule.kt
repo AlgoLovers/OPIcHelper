@@ -37,6 +37,8 @@ import com.na982.opichelper.domain.usecase.InitializeAppUseCase
 import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
 import com.na982.opichelper.domain.state.AppStateManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.state.StateManager
+import com.na982.opichelper.domain.event.ButtonEventHandler
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -283,21 +285,25 @@ object AppModule {
     
     @Provides
     @Singleton
+    fun provideStateManager(appStateManager: AppStateManager): StateManager {
+        return appStateManager
+    }
+    
+    @Provides
+    @Singleton
     fun provideButtonEventHandler(
-        appStateManager: com.na982.opichelper.domain.state.AppStateManager,
-        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
-        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
-        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
+        ttsController: TtsController,
         repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
-        ttsController: com.na982.opichelper.domain.audio.TtsController
-    ): com.na982.opichelper.domain.event.ButtonEventHandler {
-        return com.na982.opichelper.domain.event.ButtonEventHandler(
-            appStateManager,
-            executeRepeatListeningUseCase,
-            executeEnglishWritingTestUseCase,
-            executeFullMemorizationUseCase,
-            repeatListeningService,
-            ttsController
+        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
+        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
+        stateManager: StateManager
+    ): ButtonEventHandler {
+        return ButtonEventHandler(
+            ttsController = ttsController,
+            repeatListeningService = repeatListeningService,
+            executeEnglishWritingTestUseCase = executeEnglishWritingTestUseCase,
+            executeFullMemorizationUseCase = executeFullMemorizationUseCase,
+            stateManager = stateManager
         )
     }
     

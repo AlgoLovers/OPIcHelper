@@ -8,6 +8,7 @@ import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.na982.opichelper.domain.audio.TtsController
+import com.na982.opichelper.domain.state.StateManager
 
 /**
  * 버튼 이벤트 핸들러
@@ -15,12 +16,11 @@ import com.na982.opichelper.domain.audio.TtsController
  */
 @Singleton
 class ButtonEventHandler @Inject constructor(
-    private val appStateManager: AppStateManager,
-    private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
-    private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
-    private val executeFullMemorizationUseCase: ExecuteFullMemorizationUseCase,
-    private val repeatListeningService: RepeatListeningService,
-    private val ttsController: TtsController
+    private val ttsController: TtsController,
+    private val repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
+    private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
+    private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
+    private val stateManager: StateManager
 ) {
     
     /**
@@ -43,12 +43,12 @@ class ButtonEventHandler @Inject constructor(
         stopOtherOperations()
 
         // 2. 버튼 상태를 Playing으로 변경
-        appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Playing)
+        stateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Playing)
 
         // 3. TTS 재생 (하이라이트 포함)
         ttsController.playQuestion(event.question)
 
-        appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
+        stateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
 
         return ButtonEventResult.Success
     }
@@ -60,12 +60,12 @@ class ButtonEventHandler @Inject constructor(
         stopOtherOperations()
 
         // 2. 버튼 상태를 Playing으로 변경
-        appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
+        stateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
 
         // 3. TTS 재생 (하이라이트 포함)
         ttsController.playAnswer(event.answer)
 
-        appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
+        stateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
         
         return ButtonEventResult.Success
     }
@@ -74,7 +74,7 @@ class ButtonEventHandler @Inject constructor(
         Log.d("ButtonEventHandler", "암기 테스트 이벤트 처리")
         
         // 1. 버튼 상태를 Loading으로 변경
-        appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Loading)
+        stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Loading)
         
         // 2. 암기 레벨에 따른 처리
         when (event.memorizeLevel) {
@@ -86,20 +86,20 @@ class ButtonEventHandler @Inject constructor(
                     koreanAnswer = event.answerKo,
                     englishAnswer = event.answerEn
                 )
-                executeRepeatListeningUseCase.execute(
+                repeatListeningService.startRepeatListening(
                     data = repeatListeningData,
                     uiCallback = object : com.na982.opichelper.domain.audio.RepeatListeningUiCallback {
                         override fun onCardFlip(isKorean: Boolean) {
                             Log.d("ButtonEventHandler", "반복듣기 카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
                             // 카드 뒤집기 상태 업데이트
-                            appStateManager.updateCardState(
+                            stateManager.updateCardState(
                                 isAnswerCardFlipped = isKorean
                             )
                         }
                         override fun onHighlight(index: Int?) {
                             Log.d("ButtonEventHandler", "반복듣기 영문 하이라이트: $index")
                             // 영문 하이라이트 상태 업데이트
-                            appStateManager.updateHighlightState(
+                            stateManager.updateHighlightState(
                                 questionHighlightIndex = -1,
                                 answerHighlightIndex = index ?: -1,
                                 answerKoHighlightIndex = -1
@@ -108,7 +108,7 @@ class ButtonEventHandler @Inject constructor(
                         override fun onKoreanHighlight(index: Int?) {
                             Log.d("ButtonEventHandler", "반복듣기 한글 하이라이트: $index")
                             // 한글 하이라이트 상태 업데이트
-                            appStateManager.updateHighlightState(
+                            stateManager.updateHighlightState(
                                 questionHighlightIndex = -1,
                                 answerHighlightIndex = -1,
                                 answerKoHighlightIndex = index ?: -1
@@ -117,9 +117,9 @@ class ButtonEventHandler @Inject constructor(
                         override fun onComplete() {
                             Log.d("ButtonEventHandler", "반복듣기 완료")
                             // 완료 시 버튼 상태를 Idle로 변경
-                            appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
+                            stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
                             // 카드 상태 초기화
-                            appStateManager.updateCardState(
+                            stateManager.updateCardState(
                                 isAnswerCardFlipped = false
                             )
                         }
@@ -136,14 +136,14 @@ class ButtonEventHandler @Inject constructor(
                     onCardFlip = { isKorean ->
                         Log.d("ButtonEventHandler", "영작테스트 카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
                         // 카드 뒤집기 상태 업데이트
-                        appStateManager.updateCardState(
+                        stateManager.updateCardState(
                             isAnswerCardFlipped = isKorean
                         )
                     },
                     onKoreanHighlight = { index ->
                         Log.d("ButtonEventHandler", "영작테스트 한글 하이라이트: $index")
                         // 한글 하이라이트 상태 업데이트
-                        appStateManager.updateHighlightState(
+                        stateManager.updateHighlightState(
                             questionHighlightIndex = -1,
                             answerHighlightIndex = -1,
                             answerKoHighlightIndex = index ?: -1
@@ -152,7 +152,7 @@ class ButtonEventHandler @Inject constructor(
                     onRecordingHighlight = { index ->
                         Log.d("ButtonEventHandler", "영작테스트 녹음 하이라이트: $index")
                         // 녹음 하이라이트 상태 업데이트
-                        appStateManager.updateHighlightState(
+                        stateManager.updateHighlightState(
                             questionHighlightIndex = -1,
                             answerHighlightIndex = index ?: -1,
                             answerKoHighlightIndex = -1
@@ -161,12 +161,12 @@ class ButtonEventHandler @Inject constructor(
                     onRecordingStateChange = { isRecording ->
                         Log.d("ButtonEventHandler", "영작테스트 녹음 상태 변경: $isRecording")
                         // 녹음 상태 업데이트
-                        appStateManager.updateRecordingState(isRecording)
+                        stateManager.updateRecordingState(isRecording)
                     },
                     onMergedFileCreated = {
                         Log.d("ButtonEventHandler", "영작테스트 병합 파일 생성 완료")
                         // 병합 파일 생성 완료 처리
-                        appStateManager.updateMergedFileCreated(true)
+                        stateManager.updateMergedFileCreated(true)
                     }
                 )
             }
@@ -179,14 +179,14 @@ class ButtonEventHandler @Inject constructor(
                         // 녹음 상태 변경
                     },
                     onPlayingStateChange = { isPlaying ->
-                        appStateManager.updateTtsPlayingState(isPlaying, false)
+                        stateManager.updateTtsPlayingState(isPlaying, false)
                     }
                 )
             }
         }
         
         // 3. 버튼 상태를 Playing으로 변경
-        appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
+        stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
         
         return ButtonEventResult.Success
     }
@@ -195,12 +195,12 @@ class ButtonEventHandler @Inject constructor(
         Log.d("ButtonEventHandler", "녹음 재생 이벤트 처리")
         
         // 1. 버튼 상태를 Loading으로 변경
-        appStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Loading)
+        stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Loading)
         
         // 2. 녹음 재생 처리 (구현 필요)
         
         // 3. 버튼 상태를 Playing으로 변경
-        appStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
+        stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
         
         return ButtonEventResult.Success
     }
@@ -216,14 +216,14 @@ class ButtonEventHandler @Inject constructor(
             repeatListeningService.stopRepeatListening()
             
             // 반복듣기 중지 시 카드 상태 초기화 (하이라이트는 TtsController에서 처리)
-            appStateManager.updateCardState(
+            stateManager.updateCardState(
                 isAnswerCardFlipped = false
             )
             Log.d("ButtonEventHandler", "반복듣기 중지 - 카드 상태 초기화")
         }
         
         // 3. 버튼 상태를 Idle로 변경
-        appStateManager.updateButtonState(event.buttonFunction, ButtonState.Idle)
+        stateManager.updateButtonState(event.buttonFunction, ButtonState.Idle)
         
         return ButtonEventResult.Success
     }
@@ -241,13 +241,13 @@ class ButtonEventHandler @Inject constructor(
         repeatListeningService.stopRepeatListening()
         
         // 3. 모든 버튼 상태를 Idle로 변경
-        appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
-        appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
-        appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
-        appStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+        stateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
+        stateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
+        stateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
+        stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
         
         // 4. 카드 상태 초기화
-        appStateManager.updateCardState(
+        stateManager.updateCardState(
             isQuestionCardFlipped = false,
             isAnswerCardFlipped = false
         )

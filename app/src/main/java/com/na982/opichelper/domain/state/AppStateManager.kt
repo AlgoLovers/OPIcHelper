@@ -12,7 +12,7 @@ import javax.inject.Singleton
  * 단일 책임: 상태 관리만 담당
  */
 @Singleton
-class AppStateManager @Inject constructor() {
+class AppStateManager @Inject constructor() : StateManager {
     
     private val _state = MutableStateFlow(AppState())
     val state: StateFlow<AppState> = _state.asStateFlow()
@@ -28,7 +28,7 @@ class AppStateManager @Inject constructor() {
     /**
      * 버튼 상태 업데이트
      */
-    fun updateButtonState(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction, newState: com.na982.opichelper.domain.entity.ButtonState) {
+    override fun updateButtonState(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction, newState: com.na982.opichelper.domain.entity.ButtonState) {
         Log.d("AppStateManager", "버튼 상태 업데이트: $buttonFunction -> $newState")
         updateState { currentState ->
             val updatedButtonStates = currentState.buttonStates.toMutableMap()
@@ -40,10 +40,10 @@ class AppStateManager @Inject constructor() {
     /**
      * TTS 재생 상태 업데이트 (통합)
      */
-    fun updateTtsPlayingState(
-        isQuestionPlaying: Boolean? = null,
-        isAnswerPlaying: Boolean? = null,
-        isPlaying: Boolean? = null
+    override fun updateTtsPlayingState(
+        isQuestionPlaying: Boolean?,
+        isAnswerPlaying: Boolean?,
+        isPlaying: Boolean?
     ) {
         updateState { currentState ->
             currentState.copy(
@@ -57,11 +57,11 @@ class AppStateManager @Inject constructor() {
     /**
      * 하이라이트 상태 업데이트 (통합)
      */
-    fun updateHighlightState(
-        questionHighlightIndex: Int = -1,
-        answerHighlightIndex: Int = -1,
-        answerKoHighlightIndex: Int = -1,
-        recordingHighlightIndex: Int = -1
+    override fun updateHighlightState(
+        questionHighlightIndex: Int,
+        answerHighlightIndex: Int,
+        answerKoHighlightIndex: Int,
+        recordingHighlightIndex: Int
     ) {
         updateState { currentState ->
             // -1이 명시적으로 전달되면 -1로 설정, 그렇지 않으면 기존 값 유지
@@ -82,9 +82,9 @@ class AppStateManager @Inject constructor() {
     /**
      * 카드 상태 업데이트
      */
-    fun updateCardState(
-        isQuestionCardFlipped: Boolean? = null,
-        isAnswerCardFlipped: Boolean? = null
+    override fun updateCardState(
+        isQuestionCardFlipped: Boolean?,
+        isAnswerCardFlipped: Boolean?
     ) {
         updateState { currentState ->
             currentState.copy(
@@ -181,7 +181,7 @@ class AppStateManager @Inject constructor() {
     /**
      * 녹음 상태 업데이트
      */
-    fun updateRecordingState(isRecording: Boolean) {
+    override fun updateRecordingState(isRecording: Boolean) {
         updateState { currentState ->
             currentState.copy(isRecording = isRecording)
         }
@@ -190,7 +190,7 @@ class AppStateManager @Inject constructor() {
     /**
      * 병합 파일 생성 완료 상태 업데이트
      */
-    fun updateMergedFileCreated(created: Boolean) {
+    override fun updateMergedFileCreated(created: Boolean) {
         updateState { currentState ->
             currentState.copy(mergedFileCreated = created)
         }
