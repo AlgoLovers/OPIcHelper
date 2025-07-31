@@ -6,7 +6,7 @@ import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaDataRepository
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,14 +17,14 @@ class FullMemorizationRepositoryImpl @Inject constructor(
     private val audioRecorder: AudioRecorder,
     private val audioPlayer: AudioPlayer,
     private val audioFileManager: AudioFileManager,
-    private val qaDataManager: QaDataManager
+    private val qaDataRepository: QaDataRepository
 ) : FullMemorizationRepository {
 
     private var currentRecordingPath: String? = null
 
     override suspend fun playQuestionWithHighlight() {
         try {
-            val qaItem = qaDataManager.getCurrentQaItem()
+            val qaItem = qaDataRepository.getCurrentQaItem()
             if (qaItem != null) {
                 // 영어 질문 TTS 재생 (표준화된 방식 사용)
                 val questionDuration = ttsOrchestrator.speakAndWaitForCompletion(qaItem.questionEn, isKorean = false, rate = 1.0f)
@@ -99,14 +99,14 @@ class FullMemorizationRepositoryImpl @Inject constructor(
 
     override fun hasRecording(): Boolean {
         // 현재 QA 아이템 정보로 실제 파일 존재 여부 확인
-        val qaItem = qaDataManager.getCurrentQaItem()
+        val qaItem = qaDataRepository.getCurrentQaItem()
         if (qaItem == null) {
             Log.d("FullMemorizationRepositoryImpl", "hasRecording: QA 아이템이 null")
             return false
         }
         
         val category = qaItem.category
-        val scriptIndex = qaDataManager.getCurrentIndex()
+        val scriptIndex = qaDataRepository.getCurrentIndex()
         
         // recordings 디렉토리에서 해당 패턴의 파일 찾기
         val dummyPath = audioFileManager.getRecordingFilePath("dummy.m4a")
