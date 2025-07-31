@@ -12,6 +12,7 @@ import com.na982.opichelper.domain.state.StateManager
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.state.StateReader
+import java.io.File
 
 /**
  * 버튼 이벤트 핸들러
@@ -217,32 +218,56 @@ class ButtonEventHandler @Inject constructor(
             Log.d("ButtonEventHandler", "현재 상태 - 카테고리: $currentCategory, 스크립트: $currentScriptIndex")
             
             // 영작테스트에서 병합된 파일 재생
-            val recordingFileName = "english_writing_${currentCategory}_${currentScriptIndex}_merged.m4a"
-            val recordingFilePath = "/data/user/0/com.na982.opichelper/files/recordings/$recordingFileName"
+            val recordingFileName = "영작테스트_${currentCategory}_${currentScriptIndex}_*"
+            val recordingsDir = "/data/user/0/com.na982.opichelper/files/merged"
             
-            Log.d("ButtonEventHandler", "병합된 녹음 파일 재생 시도: $recordingFilePath")
+            Log.d("ButtonEventHandler", "병합된 녹음 파일 검색: $recordingsDir/$recordingFileName")
             
-            recordingAudioPlayer.playRecording(
-                filePath = recordingFilePath,
-                onHighlight = { index ->
-                    Log.d("ButtonEventHandler", "녹음 재생 하이라이트: $index")
-                    // 영문 하이라이트 상태 업데이트
-                    stateManager.updateHighlightState(
-                        questionHighlightIndex = -1,
-                        answerHighlightIndex = index ?: -1,
-                        answerKoHighlightIndex = -1,
-                        recordingHighlightIndex = -1
-                    )
-                },
-                onCompletion = {
-                    Log.d("ButtonEventHandler", "병합된 녹음 재생 완료")
-                    // 재생 완료 시 버튼 상태를 Idle로 변경
-                    stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
-                }
-            )
+            // 파일 시스템에서 실제 파일 찾기
+            val mergedDir = File(recordingsDir)
+            val pattern = Regex("영작테스트_${currentCategory}_${currentScriptIndex}_.*\\.m4a")
+            val mergedFiles = mergedDir.listFiles { file ->
+                file.name.matches(pattern)
+            }
             
-            // 3. 버튼 상태를 Playing으로 변경
-            stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
+            val recordingFilePath = if (mergedFiles?.isNotEmpty() == true) {
+                val latestFile = mergedFiles.maxByOrNull { it.lastModified() }
+                Log.d("ButtonEventHandler", "최신 병합 파일 발견: ${latestFile?.absolutePath}")
+                latestFile?.absolutePath
+            } else {
+                Log.e("ButtonEventHandler", "병합된 녹음 파일을 찾을 수 없음: $recordingsDir/$recordingFileName")
+                null
+            }
+            
+            if (recordingFilePath != null) {
+                Log.d("ButtonEventHandler", "병합된 녹음 파일 재생 시도: $recordingFilePath")
+                
+                recordingAudioPlayer.playRecording(
+                    filePath = recordingFilePath,
+                    onHighlight = { index ->
+                        Log.d("ButtonEventHandler", "녹음 재생 하이라이트: $index")
+                        // 영문 하이라이트 상태 업데이트
+                        stateManager.updateHighlightState(
+                            questionHighlightIndex = -1,
+                            answerHighlightIndex = index ?: -1,
+                            answerKoHighlightIndex = -1,
+                            recordingHighlightIndex = -1
+                        )
+                    },
+                    onCompletion = {
+                        Log.d("ButtonEventHandler", "병합된 녹음 재생 완료")
+                        // 재생 완료 시 버튼 상태를 Idle로 변경
+                        stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+                    }
+                )
+                
+                // 3. 버튼 상태를 Playing으로 변경
+                stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
+                
+            } else {
+                Log.e("ButtonEventHandler", "병합된 녹음 파일을 찾을 수 없어 재생할 수 없습니다.")
+                stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+            }
             
         } catch (e: Exception) {
             Log.e("ButtonEventHandler", "녹음 재생 실패", e)
