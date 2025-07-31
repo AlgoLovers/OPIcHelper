@@ -213,17 +213,17 @@ class ButtonEventHandler @Inject constructor(
             val currentQaItem = stateReader.currentQaItem
             val currentCategory = stateReader.currentCategory
             val currentScriptIndex = stateReader.currentIndex
-            val currentSentenceIndex = stateReader.currentSentenceIndex
             
-            Log.d("ButtonEventHandler", "현재 상태 - 카테고리: $currentCategory, 스크립트: $currentScriptIndex, 문장: $currentSentenceIndex")
+            Log.d("ButtonEventHandler", "현재 상태 - 카테고리: $currentCategory, 스크립트: $currentScriptIndex")
             
-            val recordingFileName = "english_writing_${currentCategory}_${currentScriptIndex}_${currentSentenceIndex}.m4a"
+            // 영작테스트에서 병합된 파일 재생
+            val recordingFileName = "english_writing_${currentCategory}_${currentScriptIndex}_merged.m4a"
             val recordingFilePath = "/data/user/0/com.na982.opichelper/files/recordings/$recordingFileName"
             
-            Log.d("ButtonEventHandler", "녹음 파일 재생 시도: $recordingFilePath")
+            Log.d("ButtonEventHandler", "병합된 녹음 파일 재생 시도: $recordingFilePath")
             
             recordingAudioPlayer.playRecording(recordingFilePath) {
-                Log.d("ButtonEventHandler", "녹음 재생 완료")
+                Log.d("ButtonEventHandler", "병합된 녹음 재생 완료")
                 // 재생 완료 시 버튼 상태를 Idle로 변경
                 stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
             }
