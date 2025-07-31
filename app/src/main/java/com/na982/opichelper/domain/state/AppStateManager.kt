@@ -245,4 +245,19 @@ class AppStateManager @Inject constructor() : StateManager {
             recordingHighlightIndex = -1
         )
     }
+    
+    /**
+     * 현재 상태 가져오기 메서드들
+     */
+    val currentQaItem: com.na982.opichelper.domain.entity.QaItem?
+        get() = _state.value.currentQaItem
+    
+    val currentCategory: String?
+        get() = _state.value.currentCategory
+    
+    val currentIndex: Int
+        get() = _state.value.currentIndex
+    
+    val currentSentenceIndex: Int
+        get() = _state.value.currentIndex // 현재는 currentIndex와 동일
 } 

@@ -297,7 +297,8 @@ object AppModule {
         executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
         stateManager: StateManager,
-        recordingAudioPlayer: RecordingAudioPlayer
+        recordingAudioPlayer: RecordingAudioPlayer,
+        appStateManager: AppStateManager
     ): ButtonEventHandler {
         return ButtonEventHandler(
             ttsController = ttsController,
@@ -305,7 +306,8 @@ object AppModule {
             executeEnglishWritingTestUseCase = executeEnglishWritingTestUseCase,
             executeFullMemorizationUseCase = executeFullMemorizationUseCase,
             stateManager = stateManager,
-            recordingAudioPlayer = recordingAudioPlayer
+            recordingAudioPlayer = recordingAudioPlayer,
+            appStateManager = appStateManager
         )
     }
     

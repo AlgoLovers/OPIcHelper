@@ -10,6 +10,7 @@ import javax.inject.Singleton
 import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.state.StateManager
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
+import com.na982.opichelper.domain.repository.QaDataManager
 
 /**
  * 버튼 이벤트 핸들러
@@ -22,7 +23,8 @@ class ButtonEventHandler @Inject constructor(
     private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
     private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
     private val stateManager: StateManager,
-    private val recordingAudioPlayer: RecordingAudioPlayer
+    private val recordingAudioPlayer: RecordingAudioPlayer,
+    private val appStateManager: AppStateManager
 ) {
     
     /**
@@ -206,10 +208,13 @@ class ButtonEventHandler @Inject constructor(
         
         // 2. 녹음 재생 처리
         try {
-            // 현재 카테고리와 스크립트 인덱스 가져오기 (임시로 하드코딩, 나중에 개선 필요)
-            val currentCategory = "집" // TODO: 실제 카테고리 가져오기
-            val currentScriptIndex = 0 // TODO: 실제 스크립트 인덱스 가져오기
-            val currentSentenceIndex = 1 // TODO: 실제 문장 인덱스 가져오기
+            // 현재 상태에서 카테고리와 스크립트 인덱스 가져오기
+            val currentQaItem = appStateManager.currentQaItem
+            val currentCategory = appStateManager.currentCategory
+            val currentScriptIndex = appStateManager.currentIndex
+            val currentSentenceIndex = appStateManager.currentSentenceIndex
+            
+            Log.d("ButtonEventHandler", "현재 상태 - 카테고리: $currentCategory, 스크립트: $currentScriptIndex, 문장: $currentSentenceIndex")
             
             val recordingFileName = "english_writing_${currentCategory}_${currentScriptIndex}_${currentSentenceIndex}.m4a"
             val recordingFilePath = "/data/user/0/com.na982.opichelper/files/recordings/$recordingFileName"
