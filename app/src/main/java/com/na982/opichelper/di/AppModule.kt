@@ -197,11 +197,11 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRepeatListeningRepository(
-        repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
+        repeatListeningUseCase: com.na982.opichelper.domain.usecase.RepeatListeningUseCase,
         progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
     ): RepeatListeningRepository {
         return RepeatListeningRepositoryImpl(
-            repeatListeningService = repeatListeningService,
+            repeatListeningUseCase = repeatListeningUseCase,
             progressTracker = progressTracker
         )
     }
@@ -237,19 +237,7 @@ object AppModule {
         return AppStateManager()
     }
     
-    @Provides
-    @Singleton
-    fun provideRepeatListeningService(
-        ttsController: TtsController,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
-        recordingTimeManager: RecordingTimeManager
-    ): com.na982.opichelper.domain.usecase.RepeatListeningService {
-        return com.na982.opichelper.domain.usecase.RepeatListeningService(
-            ttsController = ttsController,
-            progressTracker = progressTracker,
-            recordingTimeManager = recordingTimeManager
-        )
-    }
+
     
     @Provides
     @Singleton
@@ -295,7 +283,7 @@ object AppModule {
     @Singleton
     fun provideButtonEventHandler(
         ttsController: TtsController,
-        repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
+        repeatListeningUseCase: com.na982.opichelper.domain.usecase.RepeatListeningUseCase,
         executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
         stateManager: StateManager,
@@ -305,7 +293,7 @@ object AppModule {
     ): ButtonEventHandler {
         return ButtonEventHandler(
             ttsController = ttsController,
-            repeatListeningService = repeatListeningService,
+            repeatListeningUseCase = repeatListeningUseCase,
             executeEnglishWritingTestUseCase = executeEnglishWritingTestUseCase,
             executeFullMemorizationUseCase = executeFullMemorizationUseCase,
             stateManager = stateManager,
