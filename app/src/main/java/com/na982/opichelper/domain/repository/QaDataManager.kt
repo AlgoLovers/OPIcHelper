@@ -85,9 +85,6 @@ class QaDataManager @Inject constructor(
     suspend fun loadQaItemsFromAssets(application: Application) {
         // application 매개변수는 향후 확장을 위해 유지
         
-        // QaDataLoader에서 정의된 카테고리 순서 사용
-        val categories = qaDataLoader.getAllCategories()
-        
         // 현재 사용자 레벨 가져오기
         val currentUserLevel = userPreferencesRepository.getUserLevel()
         Log.d("QaDataManager", "데이터 로딩 시작 - 현재 사용자 레벨: $currentUserLevel")
@@ -96,8 +93,14 @@ class QaDataManager @Inject constructor(
         val allLeveledItems = leveledQaDataLoader.loadQaItemsForLevel(currentUserLevel)
         Log.d("QaDataManager", "레벨별 데이터 로드 완료 - 총 ${allLeveledItems.size}개 항목")
         
-        // 카테고리별로 아이템 분류
-        for (displayName in categories) {
+        // LeveledQaDataLoader의 순서대로 카테고리 정의
+        val orderedCategories = listOf(
+            "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", 
+            "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
+        )
+        
+        // 카테고리별로 아이템 분류 (정의된 순서대로)
+        for (displayName in orderedCategories) {
             val categoryItems = allLeveledItems.filter { item ->
                 // 카테고리명으로 정확히 필터링
                 item.category == displayName
@@ -114,8 +117,8 @@ class QaDataManager @Inject constructor(
             }
         }
         
-        _categories.value = categories
-        Log.d("QaDataManager", "모든 카테고리 로드 완료: ${categories.size}개 카테고리 (레벨: $currentUserLevel)")
+        _categories.value = orderedCategories
+        Log.d("QaDataManager", "모든 카테고리 로드 완료: ${orderedCategories.size}개 카테고리 (레벨: $currentUserLevel)")
     }
     
     fun getCurrentIndex(): Int {
