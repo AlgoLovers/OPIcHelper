@@ -23,7 +23,7 @@ import android.util.Log
 fun QuestionCard(
     currentQuestion: String,
     currentQuestionKo: String,
-    highlightIndex: Int?,
+    highlightIndex: Int,
     currentIndex: Int,
     totalCount: Int,
     isFlipped: Boolean = false,
@@ -149,7 +149,7 @@ fun QuestionCard(
 private fun ModernCard(
     title: String,
     content: String,
-    highlightIndex: Int?,
+    highlightIndex: Int,
     backgroundColor: Color,
     titleColor: Color,
     contentColor: Color

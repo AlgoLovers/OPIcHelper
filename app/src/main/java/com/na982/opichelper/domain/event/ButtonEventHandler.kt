@@ -38,19 +38,18 @@ class ButtonEventHandler @Inject constructor(
     
     private suspend fun handleQuestionPlayClick(event: ButtonEvent.QuestionPlayClick): ButtonEventResult {
         Log.d("ButtonEventHandler", "질문 재생 이벤트 처리")
-        
+
         // 1. 다른 작업 중단 (다른 버튼이 실행 중이면 중단)
         stopOtherOperations()
-        
-        // 2. 버튼 상태를 Loading으로 변경
-        appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Loading)
-        
-        // 3. TTS 재생 (하이라이트 포함)
-        ttsController.playQuestion(event.question)
-        
+
         // 4. 버튼 상태를 Playing으로 변경
         appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Playing)
-        
+
+        // 3. TTS 재생 (하이라이트 포함)
+        ttsController.playQuestion(event.question)
+
+        appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
+
         return ButtonEventResult.Success
     }
     
@@ -100,29 +99,16 @@ class ButtonEventHandler @Inject constructor(
                         }
                         override fun onHighlight(index: Int?) {
                             Log.d("ButtonEventHandler", "반복듣기 영문 하이라이트: $index")
-                            // 영문 하이라이트 상태 업데이트
-                            appStateManager.updateHighlightState(
-                                answerHighlightIndex = index
-                            )
-                            Log.d("ButtonEventHandler", "반복듣기 영문 하이라이트 상태 업데이트 완료: $index")
+                            // 하이라이트는 TtsControllerImpl에서만 처리
                         }
                         override fun onKoreanHighlight(index: Int?) {
                             Log.d("ButtonEventHandler", "반복듣기 한글 하이라이트: $index")
-                            // 한글 하이라이트 상태 업데이트
-                            appStateManager.updateHighlightState(
-                                answerKoHighlightIndex = index
-                            )
-                            Log.d("ButtonEventHandler", "반복듣기 한글 하이라이트 상태 업데이트 완료: $index")
+                            // 하이라이트는 TtsControllerImpl에서만 처리
                         }
                         override fun onComplete() {
                             Log.d("ButtonEventHandler", "반복듣기 완료")
                             // 완료 시 버튼 상태를 Idle로 변경
                             appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
-                            // 하이라이트 초기화
-                            appStateManager.updateHighlightState(
-                                answerHighlightIndex = null,
-                                answerKoHighlightIndex = null
-                            )
                             // 카드 상태 초기화
                             appStateManager.updateCardState(
                                 isAnswerCardFlipped = false

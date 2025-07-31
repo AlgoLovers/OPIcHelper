@@ -265,13 +265,13 @@ fun MainScreenRefactored(
                 }
                 qaItem != null -> {
                     // 질문 카드 (기존 아름다운 디자인 복원)
+                    val questionHighlightIndex = appState.questionHighlightIndex
+                    
+                    Log.d("MainScreenRefactored", "질문 카드 하이라이트 상태: selectedLevel=$selectedLevel, appState.questionHighlightIndex=${appState.questionHighlightIndex}, finalHighlightIndex=$questionHighlightIndex")
                     QuestionCard(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
-                        highlightIndex = when {
-                            selectedLevel == "통암기" -> fullMemorizationHighlightIndex
-                            else -> appState.questionHighlightIndex
-                        },
+                        highlightIndex = questionHighlightIndex,
                         currentIndex = currentIndex,
                         totalCount = totalCount,
                         isFlipped = isQuestionCardFlipped,

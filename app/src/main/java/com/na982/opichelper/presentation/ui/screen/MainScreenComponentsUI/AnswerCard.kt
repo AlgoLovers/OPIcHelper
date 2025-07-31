@@ -24,9 +24,9 @@ import androidx.compose.animation.ExitTransition
 fun AnswerCard(
     currentAnswer: String,
     currentAnswerKo: String,
-    highlightIndex: Int?,
-    answerKoHighlightIndex: Int? = null,
-    recordingHighlightIndex: Int? = null,
+    highlightIndex: Int,
+    answerKoHighlightIndex: Int = -1,
+    recordingHighlightIndex: Int = -1,
     isFlipped: Boolean = false,
     isRepeatListeningCardFlipped: Boolean = false,
     modifier: Modifier = Modifier
@@ -86,8 +86,8 @@ fun AnswerCard(
 private fun ModernAnswerCard(
     title: String,
     content: String,
-    highlightIndex: Int?,
-    recordingHighlightIndex: Int?,
+    highlightIndex: Int,
+    recordingHighlightIndex: Int = -1,
     backgroundColor: Color,
     titleColor: Color,
     contentColor: Color,

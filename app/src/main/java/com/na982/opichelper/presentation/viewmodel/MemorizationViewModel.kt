@@ -760,26 +760,18 @@ class MemorizationViewModel @Inject constructor(
      * 하이라이트 상태를 AppState와 동기화
      */
     private fun syncHighlightWithAppState(
-        answerHighlightIndex: Int? = null,
-        answerKoHighlightIndex: Int? = null,
-        recordingHighlightIndex: Int? = null
+        answerHighlightIndex: Int = -1,
+        answerKoHighlightIndex: Int = -1,
+        recordingHighlightIndex: Int = -1
     ) {
-        appStateManager.updateHighlightState(
-            answerHighlightIndex = answerHighlightIndex,
-            answerKoHighlightIndex = answerKoHighlightIndex,
-            recordingHighlightIndex = recordingHighlightIndex
-        )
+        // 하이라이트는 TtsControllerImpl에서만 처리
     }
     
     /**
      * 하이라이트 상태 초기화 (AppState와 동기화)
      */
     private fun clearHighlightAndSync() {
-        syncHighlightWithAppState(
-            answerHighlightIndex = null,
-            answerKoHighlightIndex = null,
-            recordingHighlightIndex = null
-        )
+        // 하이라이트는 TtsControllerImpl에서만 처리
     }
 
     // === RepeatListeningUiCallback 인터페이스 구현 ===

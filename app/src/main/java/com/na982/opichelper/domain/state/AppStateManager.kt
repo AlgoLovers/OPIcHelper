@@ -22,7 +22,6 @@ class AppStateManager @Inject constructor() {
      */
     fun updateState(update: (AppState) -> AppState) {
         val newState = update(_state.value)
-        Log.d("AppStateManager", "상태 업데이트: ${_state.value} -> $newState")
         _state.value = newState
     }
     
@@ -32,7 +31,9 @@ class AppStateManager @Inject constructor() {
     fun updateButtonState(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction, newState: com.na982.opichelper.domain.entity.ButtonState) {
         Log.d("AppStateManager", "버튼 상태 업데이트: $buttonFunction -> $newState")
         updateState { currentState ->
-            currentState.updateButtonState(buttonFunction, newState)
+            val updatedButtonStates = currentState.buttonStates.toMutableMap()
+            updatedButtonStates[buttonFunction] = newState
+            currentState.copy(buttonStates = updatedButtonStates)
         }
     }
     
@@ -45,7 +46,7 @@ class AppStateManager @Inject constructor() {
         isPlaying: Boolean? = null
     ) {
         updateState { currentState ->
-            currentState.updateTtsPlayingState(
+            currentState.copy(
                 isQuestionPlaying = isQuestionPlaying ?: currentState.isQuestionPlaying,
                 isAnswerPlaying = isAnswerPlaying ?: currentState.isAnswerPlaying,
                 isPlaying = isPlaying ?: currentState.isPlaying
@@ -57,17 +58,23 @@ class AppStateManager @Inject constructor() {
      * 하이라이트 상태 업데이트 (통합)
      */
     fun updateHighlightState(
-        questionHighlightIndex: Int? = null,
-        answerHighlightIndex: Int? = null,
-        answerKoHighlightIndex: Int? = null,
-        recordingHighlightIndex: Int? = null
+        questionHighlightIndex: Int = -1,
+        answerHighlightIndex: Int = -1,
+        answerKoHighlightIndex: Int = -1,
+        recordingHighlightIndex: Int = -1
     ) {
         updateState { currentState ->
-            currentState.updateHighlightState(
-                questionHighlightIndex = questionHighlightIndex ?: currentState.questionHighlightIndex,
-                answerHighlightIndex = answerHighlightIndex ?: currentState.answerHighlightIndex,
-                answerKoHighlightIndex = answerKoHighlightIndex ?: currentState.answerKoHighlightIndex,
-                recordingHighlightIndex = recordingHighlightIndex ?: currentState.recordingHighlightIndex
+            // -1이 명시적으로 전달되면 -1로 설정, 그렇지 않으면 기존 값 유지
+            val newQuestionHighlightIndex = questionHighlightIndex
+            val newAnswerHighlightIndex = answerHighlightIndex
+            val newAnswerKoHighlightIndex = answerKoHighlightIndex
+            val newRecordingHighlightIndex = recordingHighlightIndex
+            
+            currentState.copy(
+                questionHighlightIndex = newQuestionHighlightIndex,
+                answerHighlightIndex = newAnswerHighlightIndex,
+                answerKoHighlightIndex = newAnswerKoHighlightIndex,
+                recordingHighlightIndex = newRecordingHighlightIndex
             )
         }
     }
@@ -96,7 +103,7 @@ class AppStateManager @Inject constructor() {
         isFullMemorizationMode: Boolean? = null
     ) {
         updateState { currentState ->
-            currentState.updateMemorizationModeState(
+            currentState.copy(
                 isRepeatListeningMode = isRepeatListeningMode ?: currentState.isRepeatListeningMode,
                 isEnglishWritingTestMode = isEnglishWritingTestMode ?: currentState.isEnglishWritingTestMode,
                 isFullMemorizationMode = isFullMemorizationMode ?: currentState.isFullMemorizationMode
@@ -202,10 +209,10 @@ class AppStateManager @Inject constructor() {
     fun resetTtsState() {
         updateTtsPlayingState(isQuestionPlaying = false, isAnswerPlaying = false, isPlaying = false)
         updateHighlightState(
-            questionHighlightIndex = null,
-            answerHighlightIndex = null,
-            answerKoHighlightIndex = null,
-            recordingHighlightIndex = null
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
         )
     }
     
@@ -214,10 +221,10 @@ class AppStateManager @Inject constructor() {
      */
     fun resetHighlightState() {
         updateHighlightState(
-            questionHighlightIndex = null,
-            answerHighlightIndex = null,
-            answerKoHighlightIndex = null,
-            recordingHighlightIndex = null
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
         )
     }
 } 

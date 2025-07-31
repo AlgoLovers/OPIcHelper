@@ -36,9 +36,11 @@ class TtsControllerImpl @Inject constructor(
         
         // 2. 하이라이트와 함께 TTS 재생
         ttsOrchestrator.speakWithHighlight(question) { highlightIndex ->
-            Log.d("TtsControllerImpl", "질문 하이라이트 업데이트: $highlightIndex")
+            // 하이라이트 인덱스가 null이면 -1로 초기화, 아니면 해당 인덱스로 설정
             appStateManager.updateHighlightState(
-                questionHighlightIndex = highlightIndex
+                questionHighlightIndex = highlightIndex ?: -1,  // null이면 -1로 초기화
+                answerHighlightIndex = -1, // 답변 하이라이트는 명시적으로 -1로 설정
+                answerKoHighlightIndex = -1 // 답변 한글 하이라이트도 명시적으로 -1로 설정
             )
         }
         
@@ -48,7 +50,7 @@ class TtsControllerImpl @Inject constructor(
             isAnswerPlaying = false,
             isPlaying = false
         )
-        appStateManager.updateHighlightState(questionHighlightIndex = null)
+        appStateManager.updateHighlightState(questionHighlightIndex = -1)
         
         Log.d("TtsControllerImpl", "질문 TTS 재생 완료")
     }
@@ -65,9 +67,11 @@ class TtsControllerImpl @Inject constructor(
         
         // 2. 하이라이트와 함께 TTS 재생
         ttsOrchestrator.speakWithHighlight(answer) { highlightIndex ->
-            Log.d("TtsControllerImpl", "답변 하이라이트 업데이트: $highlightIndex")
+            // 하이라이트 인덱스가 null이면 -1로 초기화, 아니면 해당 인덱스로 설정
             appStateManager.updateHighlightState(
-                answerHighlightIndex = highlightIndex
+                questionHighlightIndex = -1, // 질문 하이라이트는 명시적으로 -1로 설정
+                answerHighlightIndex = highlightIndex ?: -1,  // null이면 -1로 초기화
+                answerKoHighlightIndex = -1 // 한글 하이라이트는 별도로 관리
             )
         }
         
@@ -77,7 +81,7 @@ class TtsControllerImpl @Inject constructor(
             isAnswerPlaying = false,
             isPlaying = false
         )
-        appStateManager.updateHighlightState(answerHighlightIndex = null)
+        appStateManager.updateHighlightState(answerHighlightIndex = -1)
         
         Log.d("TtsControllerImpl", "답변 TTS 재생 완료")
     }

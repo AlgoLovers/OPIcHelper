@@ -11,7 +11,6 @@ import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.usecase.GetCategoriesUseCase
 import com.na982.opichelper.domain.usecase.LoadQaItemsUseCase
-import com.na982.opichelper.domain.usecase.SelectCategoryUseCase
 import com.na982.opichelper.domain.usecase.InitializeAppUseCase
 import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +35,6 @@ class MainViewModel @Inject constructor(
     private val recordingTimeManager: RecordingTimeManager,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val loadQaItemsUseCase: LoadQaItemsUseCase,
-    private val selectCategoryUseCase: SelectCategoryUseCase,
     private val initializeAppUseCase: InitializeAppUseCase,
     private val getCurrentAnswerUseCase: GetCurrentAnswerUseCase,
     private val userPreferencesRepository: UserPreferencesRepository
@@ -73,21 +71,23 @@ class MainViewModel @Inject constructor(
     }
     
     /**
-     * 카테고리 선택
+     * 카테고리 변경
      */
-    fun selectCategory(category: String) {
+    fun changeCategory(category: String) {
+        Log.d("MainViewModelRefactored", "카테고리 변경: $category")
+        
+        // 기존 작업 중단
+        stopAllOperations()
+        
+        // 새로운 카테고리로 변경
         viewModelScope.launch {
             try {
-                Log.d("MainViewModelRefactored", "카테고리 선택: $category")
-                
-                // 카테고리 선택
-                val qaItems = selectCategoryUseCase.invoke(category)
-                Log.d("MainViewModelRefactored", "QA 아이템 로드 완료: ${qaItems.size}개")
-                
-                // 첫 번째 QA 아이템으로 상태 업데이트
-                if (qaItems.isNotEmpty()) {
-                    Log.d("MainViewModelRefactored", "첫 번째 QA 아이템: ${qaItems.first()}")
-                    updateCurrentQaItem(qaItems.first(), category, 0, qaItems.size)
+                qaDataManager.selectCategory(category)
+                val qaItem = qaDataManager.getCurrentQaItem()
+                if (qaItem != null) {
+                    val currentIndex = qaDataManager.getCurrentIndex()
+                    val itemsInCategory = qaDataManager.getItemsInCategory(category)
+                    updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
                 } else {
                     Log.e("MainViewModelRefactored", "QA 아이템이 비어있음")
                 }
@@ -100,7 +100,7 @@ class MainViewModel @Inject constructor(
                 )
                 
             } catch (e: Exception) {
-                Log.e("MainViewModelRefactored", "카테고리 선택 실패", e)
+                Log.e("MainViewModelRefactored", "카테고리 변경 실패", e)
                 appStateManager.updateErrorState(e.message)
             }
         }
@@ -110,22 +110,20 @@ class MainViewModel @Inject constructor(
      * 다음 QA 아이템으로 이동
      */
     fun nextQaItem() {
-        val currentState = appState.value
-        val currentCategory = currentState.currentCategory ?: return
-        val currentIndex = currentState.currentIndex
-        val totalCount = currentState.totalCount
-        
-        if (currentIndex < totalCount - 1) {
-            viewModelScope.launch {
-                try {
-                    val qaItems = selectCategoryUseCase.invoke(currentCategory)
-                    if (currentIndex + 1 < qaItems.size) {
-                        updateCurrentQaItem(qaItems[currentIndex + 1], currentCategory, currentIndex + 1, totalCount)
-                    }
-                } catch (e: Exception) {
-                    Log.e("MainViewModelRefactored", "다음 QA 아이템 이동 실패", e)
-                    appStateManager.updateErrorState(e.message)
+        viewModelScope.launch {
+            try {
+                qaDataManager.nextQaItem()
+                val qaItem = qaDataManager.getCurrentQaItem()
+                val category = qaDataManager.getCurrentCategory() ?: return@launch
+                val currentIndex = qaDataManager.getCurrentIndex()
+                val itemsInCategory = qaDataManager.getItemsInCategory(category)
+                
+                if (qaItem != null) {
+                    updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
                 }
+            } catch (e: Exception) {
+                Log.e("MainViewModelRefactored", "다음 QA 아이템 이동 실패", e)
+                appStateManager.updateErrorState(e.message)
             }
         }
     }
@@ -134,42 +132,20 @@ class MainViewModel @Inject constructor(
      * 이전 QA 아이템으로 이동
      */
     fun previousQaItem() {
-        val currentState = appState.value
-        val currentCategory = currentState.currentCategory ?: return
-        val currentIndex = currentState.currentIndex
-        
-        if (currentIndex > 0) {
-            viewModelScope.launch {
-                try {
-                    val qaItems = selectCategoryUseCase.invoke(currentCategory)
-                    if (currentIndex - 1 >= 0) {
-                        updateCurrentQaItem(qaItems[currentIndex - 1], currentCategory, currentIndex - 1, currentState.totalCount)
-                    }
-                } catch (e: Exception) {
-                    Log.e("MainViewModelRefactored", "이전 QA 아이템 이동 실패", e)
-                    appStateManager.updateErrorState(e.message)
-                }
-            }
-        }
-    }
-    
-    /**
-     * 카테고리 변경
-     */
-    fun changeCategory(category: String) {
-        Log.d("MainViewModelRefactored", "카테고리 변경: $category")
-        
-        // 기존 작업 중단
-        stopAllOperations()
-        
-        // 새로운 카테고리로 변경
         viewModelScope.launch {
-            qaDataManager.selectCategory(category)
-            val qaItem = qaDataManager.getCurrentQaItem()
-            if (qaItem != null) {
+            try {
+                qaDataManager.previousQaItem()
+                val qaItem = qaDataManager.getCurrentQaItem()
+                val category = qaDataManager.getCurrentCategory() ?: return@launch
                 val currentIndex = qaDataManager.getCurrentIndex()
                 val itemsInCategory = qaDataManager.getItemsInCategory(category)
-                updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
+                
+                if (qaItem != null) {
+                    updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModelRefactored", "이전 QA 아이템 이동 실패", e)
+                appStateManager.updateErrorState(e.message)
             }
         }
     }
@@ -235,7 +211,7 @@ class MainViewModel @Inject constructor(
             try {
                 val event = ButtonEvent.QuestionPlayClick(
                     question = currentQaItem.questionEn,
-                    isFullMemorizationMode = currentState.isFullMemorizationModeSelected(),
+                    isFullMemorizationMode = currentState.selectedMemorizeLevel == "통암기",
                     category = currentState.currentCategory ?: "",
                     scriptIndex = currentState.currentIndex
                 )
@@ -371,13 +347,7 @@ class MainViewModel @Inject constructor(
             isAnswerCardFlipped = false
         )
         
-        // 하이라이트 상태 초기화
-        appStateManager.updateHighlightState(
-            questionHighlightIndex = null,
-            answerHighlightIndex = null,
-            answerKoHighlightIndex = null,
-            recordingHighlightIndex = null
-        )
+        // 하이라이트는 TtsControllerImpl에서만 처리
     }
     
     /**
@@ -484,7 +454,7 @@ class MainViewModel @Inject constructor(
     }
     
     fun handleCategoryChange(category: String) {
-        selectCategory(category)
+        changeCategory(category)
     }
     
     fun handleMemorizeLevelChange(level: String) {

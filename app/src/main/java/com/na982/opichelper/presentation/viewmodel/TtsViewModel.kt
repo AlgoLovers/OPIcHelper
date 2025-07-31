@@ -98,23 +98,23 @@ class TtsViewModel @Inject constructor(
     }
 
     fun clearHighlight() {
-        appStateManager.resetHighlightState()
+        // 하이라이트는 TtsControllerImpl에서만 처리
     }
 
     fun setQuestionHighlightIndex(index: Int?) {
-        appStateManager.updateHighlightState(questionHighlightIndex = index)
+        // 하이라이트는 TtsControllerImpl에서만 처리
     }
 
     fun setAnswerHighlightIndex(index: Int?) {
-        appStateManager.updateHighlightState(answerHighlightIndex = index)
+        // 하이라이트는 TtsControllerImpl에서만 처리
     }
 
     fun setAnswerKoHighlightIndex(index: Int?) {
-        appStateManager.updateHighlightState(answerKoHighlightIndex = index)
+        // 하이라이트는 TtsControllerImpl에서만 처리
     }
 
     fun setRecordingHighlightIndex(index: Int?) {
-        appStateManager.updateHighlightState(recordingHighlightIndex = index)
+        // 하이라이트는 TtsControllerImpl에서만 처리
     }
 
     fun playAudioFile(file: java.io.File) {

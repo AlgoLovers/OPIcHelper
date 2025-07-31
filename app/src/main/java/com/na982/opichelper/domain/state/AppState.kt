@@ -7,6 +7,7 @@ import com.na982.opichelper.domain.entity.MemorizeLevel
 /**
  * 앱의 전체 상태를 관리하는 데이터 클래스
  * 모든 UI 상태를 중앙에서 관리
+ * 순수한 데이터 클래스로 유지 (헬퍼 메서드 제거)
  */
 data class AppState(
     // 현재 QA 아이템
@@ -31,11 +32,11 @@ data class AppState(
     val isAnswerPlaying: Boolean = false,
     val isPlaying: Boolean = false,
     
-    // 하이라이트 상태 (통합)
-    val questionHighlightIndex: Int? = null,
-    val answerHighlightIndex: Int? = null,
-    val answerKoHighlightIndex: Int? = null,
-    val recordingHighlightIndex: Int? = null,
+    // 하이라이트 상태 (통합) - -1은 하이라이트 없음을 의미
+    val questionHighlightIndex: Int = -1,
+    val answerHighlightIndex: Int = -1,
+    val answerKoHighlightIndex: Int = -1,
+    val recordingHighlightIndex: Int = -1,
     
     // 카드 상태
     val isQuestionCardFlipped: Boolean = false,
@@ -60,67 +61,4 @@ data class AppState(
     // 로딩 및 에러 상태
     val isLoading: Boolean = false,
     val error: String? = null
-) {
-    /**
-     * 버튼 상태 업데이트 헬퍼 메서드
-     */
-    fun updateButtonState(buttonFunction: ButtonFunction, newState: ButtonState): AppState {
-        val updatedButtonStates = buttonStates.toMutableMap()
-        updatedButtonStates[buttonFunction] = newState
-        return copy(buttonStates = updatedButtonStates)
-    }
-    
-    /**
-     * TTS 재생 상태 업데이트 헬퍼 메서드
-     */
-    fun updateTtsPlayingState(
-        isQuestionPlaying: Boolean = this.isQuestionPlaying,
-        isAnswerPlaying: Boolean = this.isAnswerPlaying,
-        isPlaying: Boolean = this.isPlaying
-    ): AppState {
-        return copy(
-            isQuestionPlaying = isQuestionPlaying,
-            isAnswerPlaying = isAnswerPlaying,
-            isPlaying = isPlaying
-        )
-    }
-    
-    /**
-     * 하이라이트 상태 업데이트 헬퍼 메서드
-     */
-    fun updateHighlightState(
-        questionHighlightIndex: Int? = this.questionHighlightIndex,
-        answerHighlightIndex: Int? = this.answerHighlightIndex,
-        answerKoHighlightIndex: Int? = this.answerKoHighlightIndex,
-        recordingHighlightIndex: Int? = this.recordingHighlightIndex
-    ): AppState {
-        return copy(
-            questionHighlightIndex = questionHighlightIndex,
-            answerHighlightIndex = answerHighlightIndex,
-            answerKoHighlightIndex = answerKoHighlightIndex,
-            recordingHighlightIndex = recordingHighlightIndex
-        )
-    }
-    
-    /**
-     * 암기 모드 상태 업데이트 헬퍼 메서드
-     */
-    fun updateMemorizationModeState(
-        isRepeatListeningMode: Boolean = this.isRepeatListeningMode,
-        isEnglishWritingTestMode: Boolean = this.isEnglishWritingTestMode,
-        isFullMemorizationMode: Boolean = this.isFullMemorizationMode
-    ): AppState {
-        return copy(
-            isRepeatListeningMode = isRepeatListeningMode,
-            isEnglishWritingTestMode = isEnglishWritingTestMode,
-            isFullMemorizationMode = isFullMemorizationMode
-        )
-    }
-    
-    /**
-     * 암기 테스트 실행 상태 확인
-     */
-    fun isFullMemorizationModeSelected(): Boolean {
-        return selectedMemorizeLevel == "통암기"
-    }
-} 
+) 

@@ -16,8 +16,8 @@ import android.util.Log
 @Composable
 fun HighlightText(
     text: String,
-    highlightIndex: Int?,
-    recordingHighlightIndex: Int? = null,
+    highlightIndex: Int,
+    recordingHighlightIndex: Int = -1,
     modifier: Modifier = Modifier
 ) {
     Log.d("HighlightText", "Rendering with highlightIndex=$highlightIndex, recordingHighlightIndex=$recordingHighlightIndex, text=${text.take(50)}...")
@@ -28,6 +28,8 @@ fun HighlightText(
         sentences.forEachIndexed { index, sentence ->
             val isHighlighted = highlightIndex == index
             val isRecordingHighlighted = recordingHighlightIndex == index
+            
+            Log.d("HighlightText", "문장 $index: isHighlighted=$isHighlighted, isRecordingHighlighted=$isRecordingHighlighted")
             
             // 녹음 하이라이트가 우선순위가 높음
             val backgroundColor = when {
