@@ -4,7 +4,7 @@ import android.util.Log
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.entity.MemorizeLevel
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaDataRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,7 +18,7 @@ import javax.inject.Singleton
 class ButtonActionHandler @Inject constructor(
     private val buttonStateManager: ButtonStateManager,
     private val ttsOrchestrator: TtsOrchestrator,
-    private val qaDataManager: QaDataManager,
+    private val qaDataRepository: QaDataRepository,
     private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
     private val executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
     private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase

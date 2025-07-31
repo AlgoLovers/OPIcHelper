@@ -12,10 +12,10 @@ class AuthRepositoryImpl(private val context: Context) : AuthRepository {
     private val prefs: SharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
     
     private val _isLoggedIn = MutableStateFlow(false)
-    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
+    override val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
     
     private val _currentUser = MutableStateFlow<GoogleSignInAccount?>(null)
-    val currentUser: StateFlow<GoogleSignInAccount?> = _currentUser
+    override val currentUser: StateFlow<GoogleSignInAccount?> = _currentUser
     
     init {
         // 앱 시작 시 저장된 로그인 상태 확인
@@ -31,7 +31,7 @@ class AuthRepositoryImpl(private val context: Context) : AuthRepository {
         }
     }
     
-    fun saveLoginState(account: GoogleSignInAccount?) {
+    override fun saveLoginState(account: GoogleSignInAccount?) {
         _isLoggedIn.value = true
         _currentUser.value = account
         
@@ -45,7 +45,7 @@ class AuthRepositoryImpl(private val context: Context) : AuthRepository {
         }
     }
     
-    fun saveGuestLogin() {
+    override fun saveGuestLogin() {
         _isLoggedIn.value = true
         _currentUser.value = null
         
@@ -58,7 +58,7 @@ class AuthRepositoryImpl(private val context: Context) : AuthRepository {
         }
     }
     
-    fun logout() {
+    override fun logout() {
         _isLoggedIn.value = false
         _currentUser.value = null
         
@@ -73,15 +73,15 @@ class AuthRepositoryImpl(private val context: Context) : AuthRepository {
         }
     }
     
-    fun getLoginType(): String {
+    override fun getLoginType(): String {
         return prefs.getString("login_type", "guest") ?: "guest"
     }
     
-    fun getUserName(): String {
+    override fun getUserName(): String {
         return prefs.getString("user_name", "게스트 사용자") ?: "게스트 사용자"
     }
     
-    fun getUserEmail(): String? {
+    override fun getUserEmail(): String? {
         return prefs.getString("user_email", null)
     }
 } 

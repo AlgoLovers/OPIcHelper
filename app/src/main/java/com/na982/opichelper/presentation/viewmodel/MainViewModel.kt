@@ -9,7 +9,7 @@ import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.event.ButtonEvent
 import com.na982.opichelper.domain.event.ButtonEventHandler
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.state.AppStateManager
@@ -31,7 +31,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val appStateManager: AppStateManager,
     private val buttonEventHandler: ButtonEventHandler,
-    private val qaDataManager: QaDataManager,
+    private val qaDataRepository: QaDataRepository,
     private val recordingTimeManager: RecordingTimeManager,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val loadQaItemsUseCase: LoadQaItemsUseCase,
@@ -82,11 +82,11 @@ class MainViewModel @Inject constructor(
         // 새로운 카테고리로 변경
         viewModelScope.launch {
             try {
-                qaDataManager.selectCategory(category)
-                val qaItem = qaDataManager.getCurrentQaItem()
+                            qaDataRepository.selectCategory(category)
+            val qaItem = qaDataRepository.getCurrentQaItem()
                 if (qaItem != null) {
-                    val currentIndex = qaDataManager.getCurrentIndex()
-                    val itemsInCategory = qaDataManager.getItemsInCategory(category)
+                    val currentIndex = qaDataRepository.getCurrentIndex()
+                    val itemsInCategory = qaDataRepository.getItemsInCategory(category)
                     updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
                 } else {
                     Log.e("MainViewModelRefactored", "QA 아이템이 비어있음")
@@ -112,11 +112,11 @@ class MainViewModel @Inject constructor(
     fun nextQaItem() {
         viewModelScope.launch {
             try {
-                qaDataManager.nextQaItem()
-                val qaItem = qaDataManager.getCurrentQaItem()
-                val category = qaDataManager.getCurrentCategory() ?: return@launch
-                val currentIndex = qaDataManager.getCurrentIndex()
-                val itemsInCategory = qaDataManager.getItemsInCategory(category)
+                            qaDataRepository.nextQaItem()
+            val qaItem = qaDataRepository.getCurrentQaItem()
+            val category = qaDataRepository.getCurrentCategory() ?: return@launch
+            val currentIndex = qaDataRepository.getCurrentIndex()
+            val itemsInCategory = qaDataRepository.getItemsInCategory(category)
                 
                 if (qaItem != null) {
                     updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
@@ -134,11 +134,11 @@ class MainViewModel @Inject constructor(
     fun previousQaItem() {
         viewModelScope.launch {
             try {
-                qaDataManager.previousQaItem()
-                val qaItem = qaDataManager.getCurrentQaItem()
-                val category = qaDataManager.getCurrentCategory() ?: return@launch
-                val currentIndex = qaDataManager.getCurrentIndex()
-                val itemsInCategory = qaDataManager.getItemsInCategory(category)
+                            qaDataRepository.previousQaItem()
+            val qaItem = qaDataRepository.getCurrentQaItem()
+            val category = qaDataRepository.getCurrentCategory() ?: return@launch
+            val currentIndex = qaDataRepository.getCurrentIndex()
+            val itemsInCategory = qaDataRepository.getItemsInCategory(category)
                 
                 if (qaItem != null) {
                     updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)

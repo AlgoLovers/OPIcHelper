@@ -7,7 +7,7 @@ import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.RepeatListeningData
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
 import com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
@@ -96,7 +96,7 @@ class MemorizationViewModel @Inject constructor(
     private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
     private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
     private val executeFullMemorizationUseCase: FullMemorizationUseCase,
-    private val qaDataManager: QaDataManager,
+    private val qaDataRepository: QaDataRepository,
     private val ttsOrchestrator: TtsOrchestrator,
     private val getCurrentAnswerUseCase: GetCurrentAnswerUseCase,
     private val progressTracker: MemorizeTestProgressTracker,
@@ -279,8 +279,8 @@ class MemorizationViewModel @Inject constructor(
                 Log.d("MemorizationViewModel", "통암기 모드 진입 시 녹음 파일 상태 즉시 확인")
                 checkFullMemorizationRecordingStatus()
                 
-                val category = qaDataManager.getCurrentCategory() ?: ""
-                val scriptIndex = qaDataManager.getCurrentIndex()
+                        val category = qaDataRepository.getCurrentCategory() ?: ""
+        val scriptIndex = qaDataRepository.getCurrentIndex()
                 Log.d("MemorizationViewModel", "통암기 서비스 시작: category=$category, scriptIndex=$scriptIndex")
                 
                 executeFullMemorizationUseCase.startFullMemorization(
@@ -442,13 +442,13 @@ class MemorizationViewModel @Inject constructor(
     private fun startRepeatListening() {
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
+                val currentItem = qaDataRepository.getCurrentQaItem()
                 if (currentItem != null) {
                     Log.d("MemorizationViewModel", "반복 듣기 Service 실행")
                     currentUseCaseJob = launch {
                         val repeatListeningData = RepeatListeningData(
                             category = currentItem.category,
-                            scriptIndex = qaDataManager.getCurrentIndex(),
+                            scriptIndex = qaDataRepository.getCurrentIndex(),
                             koreanAnswer = getCurrentAnswerKo(currentItem),
                             englishAnswer = getCurrentAnswer(currentItem)
                         )
@@ -466,9 +466,9 @@ class MemorizationViewModel @Inject constructor(
     }
 
     private fun startEnglishWritingTest() {
-        val currentItem = qaDataManager.currentQaItem.value
+        val currentItem = qaDataRepository.currentQaItem.value
         if (currentItem != null) {
-            val scriptIndex = qaDataManager.getCurrentIndex()
+            val scriptIndex = qaDataRepository.getCurrentIndex()
             
             currentUseCaseJob = viewModelScope.launch {
                 try {
@@ -594,9 +594,9 @@ class MemorizationViewModel @Inject constructor(
         // 3. 반복듣기 진행상황 저장
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
+                val currentItem = qaDataRepository.getCurrentQaItem()
                 if (currentItem != null) {
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), "반복 듣기")
+                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataRepository.getCurrentIndex(), "반복 듣기")
                     if (currentProgress != null) {
                         progressTracker.persistChangedProgress()
                         Log.d("MemorizationViewModel", "반복듣기 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
@@ -639,9 +639,9 @@ class MemorizationViewModel @Inject constructor(
         // 3. 영작테스트 진행상황 저장
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
+                val currentItem = qaDataRepository.getCurrentQaItem()
                 if (currentItem != null) {
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), "영작 테스트")
+                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataRepository.getCurrentIndex(), "영작 테스트")
                     if (currentProgress != null) {
                         progressTracker.persistChangedProgress()
                         Log.d("MemorizationViewModel", "영작테스트 중단 시 진행상황 저장: ${currentProgress.currentSentenceIndex}")
@@ -663,7 +663,7 @@ class MemorizationViewModel @Inject constructor(
                 Log.d("MemorizationViewModel", "암기레벨 변경 감지 - 상태 초기화")
                 
                 // 현재 스크립트의 진행상황 저장
-                val currentItem = qaDataManager.getCurrentQaItem()
+                val currentItem = qaDataRepository.getCurrentQaItem()
                 if (currentItem != null) {
                     // 현재 활성화된 암기레벨 확인
                     val currentLevel = when {
@@ -676,7 +676,7 @@ class MemorizationViewModel @Inject constructor(
                     // 현재 진행상황 저장
                     val currentProgress = progressTracker.getScriptProgress(
                         currentItem.category, 
-                        qaDataManager.getCurrentIndex(), 
+                        qaDataRepository.getCurrentIndex(), 
                         currentLevel
                     )
                     
@@ -712,7 +712,7 @@ class MemorizationViewModel @Inject constructor(
                     
                     val currentProgress = progressTracker.getScriptProgress(
                         currentItem.category, 
-                        qaDataManager.getCurrentIndex(), 
+                        qaDataRepository.getCurrentIndex(), 
                         selectedLevel
                     )
                     
@@ -733,7 +733,7 @@ class MemorizationViewModel @Inject constructor(
     // 스크립트 변경 시 통암기 녹음 파일 존재 여부 확인
     init {
         viewModelScope.launch {
-            qaDataManager.currentQaItem.collect { currentItem ->
+            qaDataRepository.currentQaItem.collect { currentItem ->
                 if (currentItem != null) {
                     Log.d("MemorizationViewModel", "스크립트 변경 감지 - 통암기 녹음 파일 상태 확인")
                     updateFullMemorizationRecordingStatus()

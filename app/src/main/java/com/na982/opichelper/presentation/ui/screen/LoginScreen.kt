@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.na982.opichelper.data.repository.AuthRepository
+import com.na982.opichelper.domain.repository.AuthRepository
 
 @Composable
 fun LoginScreen(

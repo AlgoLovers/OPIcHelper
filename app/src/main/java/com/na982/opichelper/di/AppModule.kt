@@ -30,7 +30,7 @@ import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.QaDataLoader
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
@@ -177,7 +177,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideEnglishWritingTestRepository(
-        qaDataManager: QaDataManager,
+        qaDataRepository: QaDataRepository,
         ttsOrchestrator: TtsOrchestrator,
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
@@ -185,7 +185,7 @@ object AppModule {
         progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
-            qaDataManager = qaDataManager,
+            qaDataRepository = qaDataRepository,
             ttsOrchestrator = ttsOrchestrator,
             audioRecorder = audioRecorder,
             audioFileManager = audioFileManager,
@@ -213,14 +213,14 @@ object AppModule {
         audioRecorder: AudioRecorder,
         audioPlayer: AudioPlayer,
         audioFileManager: AudioFileManager,
-        qaDataManager: QaDataManager
+        qaDataRepository: QaDataRepository
     ): FullMemorizationRepository {
         return FullMemorizationRepositoryImpl(
             ttsOrchestrator = ttsOrchestrator,
             audioRecorder = audioRecorder,
             audioPlayer = audioPlayer,
             audioFileManager = audioFileManager,
-            qaDataManager = qaDataManager
+            qaDataRepository = qaDataRepository
         )
     }
     
@@ -308,7 +308,7 @@ object AppModule {
     fun provideButtonActionHandler(
         buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
         ttsOrchestrator: TtsOrchestrator,
-        qaDataManager: QaDataManager,
+        qaDataRepository: QaDataRepository,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
         executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
         executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
@@ -316,7 +316,7 @@ object AppModule {
         return com.na982.opichelper.domain.audio.ButtonActionHandler(
             buttonStateManager, 
             ttsOrchestrator, 
-            qaDataManager,
+            qaDataRepository,
             executeFullMemorizationUseCase,
             executeRepeatListeningUseCase,
             executeEnglishWritingTestUseCase
@@ -326,11 +326,11 @@ object AppModule {
     @Provides
     @Singleton
     fun provideInitializeAppUseCase(
-        qaDataManager: QaDataManager,
+        qaDataRepository: QaDataRepository,
         userPreferencesRepository: UserPreferencesRepository,
         appStateManager: AppStateManager
     ): InitializeAppUseCase {
-        return InitializeAppUseCase(qaDataManager, userPreferencesRepository, appStateManager)
+        return InitializeAppUseCase(qaDataRepository, userPreferencesRepository, appStateManager)
     }
     
     @Provides
