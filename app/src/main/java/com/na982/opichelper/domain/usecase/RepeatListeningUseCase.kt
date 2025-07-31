@@ -115,14 +115,17 @@ class RepeatListeningService @Inject constructor(
             // 1. 한글 문장 1회 TTS (카드를 한글로 뒤집고 하이라이트)
             uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
             delay(100) // 카드 뒤집기 애니메이션 대기
+            
+            // 이전 하이라이트 초기화 (새로운 문장 시작)
+            uiCallback.onKoreanHighlight(i)
 
             // TtsController를 통한 한글 문장 하이라이트 재생
             ttsController.playSentenceWithHighlight(
                 text = koSentences[i],
                 isKorean = true,
                 onHighlight = { index ->
-                    // 실시간 한글 하이라이트
-                    uiCallback.onKoreanHighlight(index)
+                    // 실시간 한글 하이라이트 - 현재 문장 인덱스 사용
+                    uiCallback.onKoreanHighlight(i)
                 }
             )
             
@@ -161,14 +164,17 @@ class RepeatListeningService @Inject constructor(
                 
                 uiCallback.onCardFlip(false) // 카드를 영문으로 뒤집기
                 delay(100) // 카드 뒤집기 애니메이션 대기
+                
+                // 이전 하이라이트 초기화 (영문 재생 시작)
+                uiCallback.onHighlight(i)
 
                 // TtsController를 통한 영문 문장 하이라이트 재생
                 val enDuration = ttsController.playSentenceWithHighlight(
                     text = enSentences[i],
                     isKorean = false,
                     onHighlight = { index ->
-                        // 실시간 영문 하이라이트
-                        uiCallback.onHighlight(index)
+                        // 실시간 영문 하이라이트 - 현재 문장 인덱스 사용
+                        uiCallback.onHighlight(i)
                     }
                 )
                 
@@ -189,7 +195,7 @@ class RepeatListeningService @Inject constructor(
                 Log.d("RepeatListeningService", "문장 ${i + 1} 반복 ${j} 쉬는 시간: ${restTime}ms")
                 delay(restTime)
             }
-            uiCallback.onHighlight(null) // 하이라이트 제거
+            // 문장 반복 완료 후 하이라이트 제거하지 않음 (다음 문장으로 넘어갈 때까지 유지)
         }
         
         // 마지막에 카드를 원래 상태(영문)로 복원

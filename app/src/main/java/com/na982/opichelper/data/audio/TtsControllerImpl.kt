@@ -109,7 +109,7 @@ class TtsControllerImpl @Inject constructor(
             waitForCompletion = true
         )
         
-        // 3. 재생 완료 시 상태 업데이트
+        // 3. 재생 완료 시 TTS 상태만 업데이트 (하이라이트는 그대로 유지)
         appStateManager.updateTtsPlayingState(
             isQuestionPlaying = false,
             isAnswerPlaying = false,

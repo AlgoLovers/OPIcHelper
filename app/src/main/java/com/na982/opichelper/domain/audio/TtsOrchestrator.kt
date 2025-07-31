@@ -385,31 +385,24 @@ class TtsOrchestrator @Inject constructor(
         onHighlight: (Int?) -> Unit
     ): Long {
         val startTime = System.currentTimeMillis()
-        val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         
-        Log.d("TtsOrchestrator", "📝 문장 분리 완료: ${sentences.size}개 문장")
+        // 단일 문장으로 처리 (RepeatListeningUseCase에서 이미 분리된 문장을 전달)
+        Log.d("TtsOrchestrator", "🔤 단일 문장 처리: '${text.take(30)}...'")
         
-        for ((idx, sentence) in sentences.withIndex()) {
-            Log.d("TtsOrchestrator", "🔤 문장 ${idx + 1}/${sentences.size}: '${sentence.take(20)}...'")
-            
-            onHighlight(idx)
-            
-            val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
-            val success = if (isKorean) {
-                Log.d("TtsOrchestrator", "🇰🇷 문장 ${idx + 1} 한글 TTS로 재생")
-                speakKorean(sentence) { completionDeferred.complete(Unit) }
-            } else {
-                Log.d("TtsOrchestrator", "🇺🇸 문장 ${idx + 1} 영문 TTS로 재생")
-                speakEnglish(sentence) { completionDeferred.complete(Unit) }
-            }
-            
-            if (success) {
-                completionDeferred.await()
-            } else {
-                completionDeferred.complete(Unit)
-            }
-            
-            kotlinx.coroutines.delay(400L)
+        
+        val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val success = if (isKorean) {
+            Log.d("TtsOrchestrator", "🇰🇷 한글 TTS로 재생")
+            speakKorean(text) { completionDeferred.complete(Unit) }
+        } else {
+            Log.d("TtsOrchestrator", "🇺🇸 영문 TTS로 재생")
+            speakEnglish(text) { completionDeferred.complete(Unit) }
+        }
+        
+        if (success) {
+            completionDeferred.await()
+        } else {
+            completionDeferred.complete(Unit)
         }
         
         onHighlight(null)
