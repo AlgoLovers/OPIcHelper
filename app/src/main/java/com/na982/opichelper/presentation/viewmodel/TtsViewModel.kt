@@ -2,7 +2,7 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.state.AppStateManager
 import android.content.Context
 import android.util.Log
@@ -16,9 +16,10 @@ import javax.inject.Inject
 /**
  * TTS 재생 관련 기능을 담당하는 ViewModel
  * 상태 관리는 AppStateManager에 위임
+ * TTS 제어는 TtsController 인터페이스를 통해 수행
  */
 class TtsViewModel @Inject constructor(
-    private val ttsOrchestrator: TtsOrchestrator,
+    private val ttsController: TtsController,
     private val appStateManager: AppStateManager
 ) : ViewModel() {
     
@@ -49,8 +50,8 @@ class TtsViewModel @Inject constructor(
         Log.d("TtsViewModel", "AppStateManager 기반 상태 관찰 설정 완료")
     }
 
-    fun setTtsOrchestrator(orchestrator: TtsOrchestrator) {
-        Log.d("TtsViewModel", "TTS 오케스트레이터 설정 완료")
+    fun setTtsOrchestrator(orchestrator: TtsController) {
+        Log.d("TtsViewModel", "TTS 컨트롤러 설정 완료")
     }
     
     fun bindTtsService(context: Context, onKoreanTtsServiceUpdate: ((String) -> Unit)? = null) {
@@ -63,31 +64,31 @@ class TtsViewModel @Inject constructor(
 
     fun playQuestion(question: String) {
         viewModelScope.launch {
-            ttsOrchestrator.speak(question, null)
+            ttsController.playQuestion(question)
         }
     }
 
     fun stopQuestion() {
         viewModelScope.launch {
-            ttsOrchestrator.stop()
+            ttsController.stopTts()
         }
     }
 
     fun playAnswer(answer: String) {
         viewModelScope.launch {
-            ttsOrchestrator.speak(answer, null)
+            ttsController.playAnswer(answer)
         }
     }
 
     fun stopAnswer() {
         viewModelScope.launch {
-            ttsOrchestrator.stop()
+            ttsController.stopTts()
         }
     }
 
     fun stopAllTts() {
         viewModelScope.launch {
-            ttsOrchestrator.stop()
+            ttsController.stopAllTts()
         }
     }
 

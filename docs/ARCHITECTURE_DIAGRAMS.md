@@ -1,202 +1,175 @@
 # OPicHelper 아키텍처 다이어그램
 
-## 🏗️ 현재 아키텍처 분석
-
-### 1. 하이레벨 클래스 다이어그램
+## 🏗️ **고수준 클래스 다이어그램**
 
 ```mermaid
-graph TB
+classDiagram
     %% Presentation Layer
-    subgraph "Presentation Layer"
-        MainActivity
-        MainScreen
-        TtsViewModel
-        MainViewModel
-        MemorizationViewModel
-    end
+    class MainActivity
+    class MainViewModel
+    class TtsViewModel
+    class MemorizationViewModel
     
-    %% Domain Layer
-    subgraph "Domain Layer"
-        AppStateManager
-        ButtonEventHandler
-        TtsController
-        TtsOrchestrator
-        ButtonStateManager
-    end
+    %% Domain Layer - Interfaces
+    class TtsController
+    class ButtonEventHandler
+    class AppStateManager
+    class QaDataManager
+    class AudioRecorder
+    class AudioPlayer
     
-    %% Data Layer
-    subgraph "Data Layer"
-        TtsControllerImpl
-        QaDataManager
-        UserPreferencesRepository
-        AuthRepository
-    end
+    %% Data Layer - Implementations
+    class TtsControllerImpl
+    class TtsOrchestrator
+    class GoogleTtsPlayer
+    class SamsungTtsPlayer
+    class AudioRecorderImpl
+    class AudioPlayerImpl
+    class QaDataLoaderImpl
     
-    %% Use Cases
-    subgraph "Use Cases"
-        ExecuteRepeatListeningUseCase
-        ExecuteEnglishWritingTestUseCase
-        ExecuteFullMemorizationUseCase
-    end
+    %% UI Components
+    class MainScreen
+    class QuestionCard
+    class AnswerCard
+    class SmartButton
     
-    %% Dependencies
+    %% Relationships
     MainActivity --> MainViewModel
-    MainScreen --> MainViewModel
-    MainViewModel --> AppStateManager
+    MainActivity --> TtsViewModel
+    MainActivity --> MemorizationViewModel
+    
     MainViewModel --> ButtonEventHandler
+    MainViewModel --> AppStateManager
+    MainViewModel --> QaDataManager
+    
+    TtsViewModel --> TtsController
     TtsViewModel --> AppStateManager
-    TtsViewModel --> TtsOrchestrator
     
     ButtonEventHandler --> TtsController
-    ButtonEventHandler --> ExecuteRepeatListeningUseCase
-    ButtonEventHandler --> ExecuteEnglishWritingTestUseCase
-    ButtonEventHandler --> ExecuteFullMemorizationUseCase
+    ButtonEventHandler --> AppStateManager
     
-    TtsController --> TtsOrchestrator
-    TtsOrchestrator --> TtsControllerImpl
+    TtsControllerImpl ..|> TtsController
+    TtsControllerImpl --> TtsOrchestrator
+    TtsControllerImpl --> AppStateManager
     
-    ExecuteRepeatListeningUseCase --> QaDataManager
-    ExecuteEnglishWritingTestUseCase --> QaDataManager
-    ExecuteFullMemorizationUseCase --> QaDataManager
+    TtsOrchestrator --> GoogleTtsPlayer
+    TtsOrchestrator --> SamsungTtsPlayer
+    
+    MainScreen --> MainViewModel
+    MainScreen --> TtsViewModel
+    QuestionCard --> TtsViewModel
+    AnswerCard --> TtsViewModel
+    SmartButton --> MainViewModel
 ```
 
-### 2. 상태 관리 플로우
+## 🔄 **상태 관리 플로우 시퀀스 다이어그램**
 
 ```mermaid
 sequenceDiagram
     participant UI as MainScreen
-    participant VM as MainViewModel
-    participant ASM as AppStateManager
-    participant BEH as ButtonEventHandler
+    participant VM as TtsViewModel
     participant TC as TtsController
+    participant ASM as AppStateManager
     participant TO as TtsOrchestrator
+    participant TTS as TtsPlayer
     
-    UI->>VM: handleQuestionPlayClick()
-    VM->>BEH: handleEvent(QuestionPlayClick)
-    BEH->>ASM: updateButtonState(QuestionPlay, Loading)
-    BEH->>TC: playQuestion(question)
+    UI->>VM: playQuestion(question)
+    VM->>TC: playQuestion(question)
     TC->>ASM: updateTtsPlayingState(isQuestionPlaying=true)
-    TC->>TO: speakWithHighlight(question)
-    TO-->>TC: onHighlight(index)
-    TC->>ASM: updateHighlightState(questionHighlightIndex=index)
-    TO-->>TC: completion
-    TC->>ASM: updateTtsPlayingState(isQuestionPlaying=false)
-    TC->>ASM: updateHighlightState(questionHighlightIndex=null)
-    BEH->>ASM: updateButtonState(QuestionPlay, Idle)
-    ASM-->>UI: state update
+    TC->>TO: speakWithHighlight(question, callback)
+    TO->>TTS: speak(text)
+    TTS-->>TO: onProgress(index)
+    TO->>ASM: updateHighlightState(questionHighlightIndex=index)
+    ASM-->>VM: state updated
+    VM-->>UI: questionHighlightIndex updated
+    UI->>UI: re-render with highlight
+    
+    Note over TTS: TTS finishes
+    TO->>ASM: updateTtsPlayingState(isQuestionPlaying=false)
+    ASM-->>VM: state updated
+    VM-->>UI: isQuestionPlaying=false
 ```
 
-## 🚨 현재 문제점 분석
+## ⚠️ **현재 문제점 분석**
 
-### 1. **상태 관리 분산**
-- 여러 ViewModel에서 각각 상태 관리
-- TtsController, ButtonStateManager 등에서 중복된 상태 관리
-- 동기화 문제 발생 가능
+### **1. 상태 관리 분산**
+- `TtsViewModel`에서 직접 `TtsOrchestrator` 사용 ❌
+- `ButtonStateManager`에서 별도 상태 관리 ❌
+- `TtsControllerImpl`에서 중복 상태 관리 ❌
 
-### 2. **책임 분산**
-- 하나의 기능이 여러 클래스에 분산
-- TTS 관련 로직이 TtsController, TtsOrchestrator, TtsViewModel에 분산
+### **2. 의존성 역전 원칙 위배**
+- Presentation Layer가 Data Layer에 직접 의존 ❌
+- Domain Layer 인터페이스 미사용 ❌
 
-### 3. **의존성 복잡성**
-- 순환 의존성 가능성
-- 너무 많은 의존성 주입
+### **3. 테스트 어려움**
+- 구체 클래스에 의존하여 Mock 테스트 어려움 ❌
+- 상태 관리 복잡성으로 인한 테스트 복잡성 ❌
 
-## 🔧 개선 제안
+## ✅ **개선된 아키텍처 제안**
 
-### 1. **상태 관리 통합**
-```
-AppStateManager (단일 진실 소스)
-├── UI State
-├── TTS State  
-├── Button State
-└── Business State
-```
-
-### 2. **계층별 책임 명확화**
-```
-Presentation Layer: UI 상태 관리
-Domain Layer: 비즈니스 로직
-Data Layer: 데이터 접근
-```
-
-### 3. **Use Case 중심 아키텍처**
-```
-Use Cases
-├── TtsUseCase
-├── MemorizationUseCase
-└── DataUseCase
-```
-
-## 📊 개선된 아키텍처 제안
-
+### **1. 단일 진실 소스 (Single Source of Truth)**
 ```mermaid
 graph TB
-    %% Presentation Layer
-    subgraph "Presentation Layer"
-        MainActivity
-        MainScreen
-        MainViewModel
+    subgraph "AppStateManager"
+        AS[AppState]
+        AS --> BS[ButtonStates]
+        AS --> TS[TtsStates]
+        AS --> HS[HighlightStates]
+        AS --> MS[MemorizationStates]
     end
     
-    %% Domain Layer
-    subgraph "Domain Layer"
-        AppStateManager
-        UseCaseOrchestrator
+    subgraph "Observers"
+        VM[ViewModels]
+        TC[TtsController]
+        BE[ButtonEventHandler]
     end
     
-    %% Use Cases
-    subgraph "Use Cases"
-        TtsUseCase
-        MemorizationUseCase
-        DataUseCase
-    end
-    
-    %% Data Layer
-    subgraph "Data Layer"
-        RepositoryImpl
-        LocalDataSource
-        RemoteDataSource
-    end
-    
-    %% Dependencies
-    MainActivity --> MainViewModel
-    MainScreen --> MainViewModel
-    MainViewModel --> AppStateManager
-    MainViewModel --> UseCaseOrchestrator
-    
-    UseCaseOrchestrator --> TtsUseCase
-    UseCaseOrchestrator --> MemorizationUseCase
-    UseCaseOrchestrator --> DataUseCase
-    
-    TtsUseCase --> RepositoryImpl
-    MemorizationUseCase --> RepositoryImpl
-    DataUseCase --> RepositoryImpl
-    
-    RepositoryImpl --> LocalDataSource
-    RepositoryImpl --> RemoteDataSource
+    VM --> AS
+    TC --> AS
+    BE --> AS
 ```
 
-## 🎯 리팩토링 로드맵
+### **2. 의존성 역전 원칙 준수**
+```mermaid
+graph TB
+    subgraph "Presentation Layer"
+        VM[ViewModels]
+    end
+    
+    subgraph "Domain Layer"
+        TC[TtsController Interface]
+        BE[ButtonEventHandler]
+    end
+    
+    subgraph "Data Layer"
+        TCI[TtsControllerImpl]
+        TO[TtsOrchestrator]
+    end
+    
+    VM --> TC
+    BE --> TC
+    TCI ..|> TC
+    TCI --> TO
+```
 
-### Phase 1: 상태 관리 통합 ✅ (완료)
-- AppStateManager를 단일 진실 소스로 통합
-- 중복된 상태 관리 제거
+## 🚀 **리팩토링 로드맵**
 
-### Phase 2: Use Case 중심 리팩토링
-- 비즈니스 로직을 Use Case로 분리
-- ViewModel 간소화
+### **Phase 1: 상태 관리 통합** ✅
+- [x] `AppStateManager`를 단일 진실 소스로 설정
+- [x] 모든 ViewModel이 `AppStateManager` 관찰
+- [x] `TtsController`를 통한 TTS 제어
 
-### Phase 3: Repository 패턴 개선
-- 데이터 접근 계층 정리
-- 의존성 주입 단순화
+### **Phase 2: 의존성 정리**
+- [x] `TtsViewModel`이 `TtsController` 인터페이스 사용
+- [x] `ButtonEventHandler`가 `TtsController` 사용
+- [ ] Use Case 패턴 도입
 
-### Phase 4: 테스트 가능성 개선
-- 단위 테스트 추가
-- 의존성 분리
+### **Phase 3: 테스트 개선**
+- [ ] Mock 기반 단위 테스트 작성
+- [ ] 상태 관리 테스트 작성
+- [ ] 통합 테스트 작성
 
-## 📈 성과 지표
-
-- **코드 복잡도**: 감소
-- **테스트 커버리지**: 증가
-- **유지보수성**: 향상
-- **확장성**: 개선 
+### **Phase 4: 성능 최적화**
+- [ ] 불필요한 상태 업데이트 제거
+- [ ] 메모리 누수 방지
+- [ ] 백그라운드 처리 최적화 
