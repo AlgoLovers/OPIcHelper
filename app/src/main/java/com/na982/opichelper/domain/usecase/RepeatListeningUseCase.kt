@@ -7,6 +7,10 @@ import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,6 +25,8 @@ class RepeatListeningService @Inject constructor(
     private val progressTracker: MemorizeTestProgressTracker,
     private val recordingTimeManager: RecordingTimeManager
 ) {
+    private var currentJob: Job? = null
+    
     /**
      * 반복 듣기 서비스 실행
      * 
@@ -32,6 +38,40 @@ class RepeatListeningService @Inject constructor(
         data: RepeatListeningData,
         uiCallback: RepeatListeningUiCallback,
         repeatCount: Int = 5
+    ) {
+        // 이전 작업이 있다면 취소
+        currentJob?.cancel()
+        
+        currentJob = CoroutineScope(Dispatchers.Main).launch {
+            try {
+                executeRepeatListening(data, uiCallback, repeatCount)
+            } catch (e: Exception) {
+                Log.e("RepeatListeningService", "반복듣기 실행 중 오류", e)
+                // 오류 발생 시 상태 초기화
+                uiCallback.onComplete()
+            }
+        }
+    }
+    
+    /**
+     * 반복 듣기 중지
+     */
+    fun stopRepeatListening() {
+        Log.d("RepeatListeningService", "반복듣기 중지 요청")
+        currentJob?.cancel()
+        currentJob = null
+        // TTS도 중지
+        ttsOrchestrator.stop()
+        Log.d("RepeatListeningService", "반복듣기 중지 완료 - TTS 중지 및 코루틴 취소")
+    }
+    
+    /**
+     * 실제 반복듣기 실행 로직
+     */
+    private suspend fun executeRepeatListening(
+        data: RepeatListeningData,
+        uiCallback: RepeatListeningUiCallback,
+        repeatCount: Int
     ) {
         val koSentences = data.koreanAnswer.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         val enSentences = data.englishAnswer.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }

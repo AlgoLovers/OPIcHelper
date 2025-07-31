@@ -346,6 +346,8 @@ class MainViewModel @Inject constructor(
         val currentState = appState.value
         val buttonState = currentState.getButtonState(buttonFunction)
         
+        Log.d("MainViewModel", "getButtonConfig: $buttonFunction -> $buttonState")
+        
         return when (buttonFunction) {
             com.na982.opichelper.domain.entity.ButtonFunction.QuestionPlay -> {
                 com.na982.opichelper.domain.entity.ButtonConfig(
@@ -370,6 +372,8 @@ class MainViewModel @Inject constructor(
                     currentState.selectedMemorizeLevel == "통암기" -> "통암기"
                     else -> "암기 테스트"
                 }
+                
+                Log.d("MainViewModel", "MemorizeTest 버튼 설정: 상태=$buttonState, 텍스트=$buttonText")
                 
                 com.na982.opichelper.domain.entity.ButtonConfig(
                     function = buttonFunction,

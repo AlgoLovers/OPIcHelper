@@ -10,6 +10,7 @@ import android.util.Log
 import com.na982.opichelper.domain.entity.ButtonConfig
 import com.na982.opichelper.domain.entity.ButtonFunction
 
+
 /**
  * 스마트 버튼 컴포넌트
  * 버튼의 상태와 기능을 동적으로 관리
@@ -44,10 +45,18 @@ fun SmartButton(
         enabled = buttonConfig.isEnabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = when (buttonConfig.state) {
-                is com.na982.opichelper.domain.entity.ButtonState.Playing -> MaterialTheme.colorScheme.error
+                is com.na982.opichelper.domain.entity.ButtonState.Playing -> {
+                    val errorColor = MaterialTheme.colorScheme.error
+                    Log.d("SmartButton", "Playing 상태 - 버튼: ${buttonConfig.function}, 색상: $errorColor")
+                    errorColor
+                }
                 is com.na982.opichelper.domain.entity.ButtonState.Loading -> MaterialTheme.colorScheme.secondary
                 is com.na982.opichelper.domain.entity.ButtonState.Error -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.primary
+                else -> {
+                    val primaryColor = MaterialTheme.colorScheme.primary
+                    Log.d("SmartButton", "Idle 상태 - 버튼: ${buttonConfig.function}, 색상: $primaryColor")
+                    primaryColor
+                }
             }
         ),
         modifier = modifier

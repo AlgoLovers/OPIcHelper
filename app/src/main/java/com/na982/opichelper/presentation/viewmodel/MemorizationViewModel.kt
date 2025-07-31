@@ -99,7 +99,8 @@ class MemorizationViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
     private val ttsPlaybackController: TtsPlaybackController,
     private val getCurrentAnswerUseCase: GetCurrentAnswerUseCase,
-    private val progressTracker: MemorizeTestProgressTracker
+    private val progressTracker: MemorizeTestProgressTracker,
+    private val appStateManager: com.na982.opichelper.domain.state.AppStateManager
 ) : ViewModel(), RepeatListeningUiCallback {
     // 상태 StateFlow들
     private val _memorizeLevels = MutableStateFlow(listOf("반복 듣기", "영작 테스트", "통암기"))
@@ -179,10 +180,10 @@ class MemorizationViewModel @Inject constructor(
             // 편의 변수들
             isMemorizeTestRunning = _isRunning.value,
             
-            // 하이라이트 인덱스들 (TtsPlaybackController에서 가져옴)
-            answerHighlightIndex = ttsPlaybackController.answerHighlightIndex.value,
-            answerKoHighlightIndex = ttsPlaybackController.answerKoHighlightIndex.value,
-            recordingHighlightIndex = ttsPlaybackController.recordingHighlightIndex.value,
+            // 하이라이트 인덱스들 (AppState와 동기화)
+            answerHighlightIndex = null, // AppState에서 관리하므로 null로 설정
+            answerKoHighlightIndex = null, // AppState에서 관리하므로 null로 설정
+            recordingHighlightIndex = null, // AppState에서 관리하므로 null로 설정
             
             // 이벤트 상태들
             englishWritingTestCompleted = _englishWritingTestCompleted.value,
@@ -228,6 +229,7 @@ class MemorizationViewModel @Inject constructor(
                             startMode(CurrentMode.REPEAT_LISTENING)
                             ttsPlaybackController.stopTts()
                             ttsPlaybackController.clearHighlight()
+                            clearHighlightAndSync() // AppState와 동기화
                             startRepeatListening()
                         }
                     }
@@ -241,6 +243,7 @@ class MemorizationViewModel @Inject constructor(
                             startMode(CurrentMode.ENGLISH_WRITING)
                             ttsPlaybackController.stopTts()
                             ttsPlaybackController.clearHighlight()
+                            clearHighlightAndSync() // AppState와 동기화
                             // 영작테스트 녹음 파일 재생 중단 이벤트 발생
                             _stopEnglishWritingTestMergedFilePlaying.value = true
                             startEnglishWritingTest()
@@ -751,6 +754,32 @@ class MemorizationViewModel @Inject constructor(
      */
     private fun getCurrentAnswerKo(qaItem: QaItem?): String {
         return getCurrentAnswerUseCase.getCurrentAnswerKo(qaItem)
+    }
+
+    /**
+     * 하이라이트 상태를 AppState와 동기화
+     */
+    private fun syncHighlightWithAppState(
+        answerHighlightIndex: Int? = null,
+        answerKoHighlightIndex: Int? = null,
+        recordingHighlightIndex: Int? = null
+    ) {
+        appStateManager.updateHighlightState(
+            answerHighlightIndex = answerHighlightIndex,
+            answerKoHighlightIndex = answerKoHighlightIndex,
+            recordingHighlightIndex = recordingHighlightIndex
+        )
+    }
+    
+    /**
+     * 하이라이트 상태 초기화 (AppState와 동기화)
+     */
+    private fun clearHighlightAndSync() {
+        syncHighlightWithAppState(
+            answerHighlightIndex = null,
+            answerKoHighlightIndex = null,
+            recordingHighlightIndex = null
+        )
     }
 
     // === RepeatListeningUiCallback 인터페이스 구현 ===

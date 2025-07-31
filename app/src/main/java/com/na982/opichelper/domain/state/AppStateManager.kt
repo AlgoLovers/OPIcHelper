@@ -30,8 +30,11 @@ class AppStateManager @Inject constructor() {
      * 버튼 상태 업데이트
      */
     fun updateButtonState(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction, newState: com.na982.opichelper.domain.entity.ButtonState) {
+        Log.d("AppStateManager", "버튼 상태 업데이트: $buttonFunction -> $newState")
         updateState { currentState ->
-            currentState.updateButtonState(buttonFunction, newState)
+            val updatedState = currentState.updateButtonState(buttonFunction, newState)
+            Log.d("AppStateManager", "버튼 상태 업데이트 완료: $buttonFunction = $newState")
+            updatedState
         }
     }
     

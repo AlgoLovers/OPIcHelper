@@ -24,7 +24,9 @@ import javax.inject.Singleton
  */
 @Singleton
 class TtsPlaybackController @Inject constructor(
-    private val audioPlayer: AudioPlayer
+    private val audioPlayer: AudioPlayer,
+    private val appStateManager: com.na982.opichelper.domain.state.AppStateManager,
+    private val highlightManagementUseCase: com.na982.opichelper.domain.usecase.HighlightManagementUseCase
 ) : ButtonStateObserver {
     private val coroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
     
@@ -481,6 +483,8 @@ class TtsPlaybackController @Inject constructor(
      */
     fun setQuestionHighlightIndex(index: Int) {
         _questionHighlightIndex.value = index
+        // Domain Layer UseCase를 통한 하이라이트 관리
+        highlightManagementUseCase.setTtsHighlight(questionHighlightIndex = index)
         Log.d("TtsPlaybackController", "질문 하이라이트 설정: $index")
     }
     
@@ -489,6 +493,8 @@ class TtsPlaybackController @Inject constructor(
      */
     fun setAnswerHighlightIndex(index: Int) {
         _answerHighlightIndex.value = index
+        // Domain Layer UseCase를 통한 하이라이트 관리
+        highlightManagementUseCase.setTtsHighlight(answerHighlightIndex = index)
         Log.d("TtsPlaybackController", "답변 하이라이트 설정: $index")
     }
     
@@ -497,6 +503,8 @@ class TtsPlaybackController @Inject constructor(
      */
     fun setAnswerKoHighlightIndex(index: Int) {
         _answerKoHighlightIndex.value = index
+        // Domain Layer UseCase를 통한 하이라이트 관리
+        highlightManagementUseCase.setTtsHighlight(answerKoHighlightIndex = index)
         Log.d("TtsPlaybackController", "답변 한글 하이라이트 설정: $index")
     }
     
@@ -505,6 +513,8 @@ class TtsPlaybackController @Inject constructor(
      */
     fun setRecordingHighlightIndex(index: Int) {
         _recordingHighlightIndex.value = index
+        // Domain Layer UseCase를 통한 하이라이트 관리
+        highlightManagementUseCase.setRecordingHighlight(index)
         Log.d("TtsPlaybackController", "녹음 하이라이트 설정: $index")
     }
     
@@ -517,5 +527,8 @@ class TtsPlaybackController @Inject constructor(
         _answerHighlightIndex.value = null
         _answerKoHighlightIndex.value = null
         _recordingHighlightIndex.value = null
+        
+        // Domain Layer UseCase를 통한 하이라이트 초기화
+        highlightManagementUseCase.clearAllHighlights()
     }
 } 

@@ -324,21 +324,14 @@ fun MainScreenRefactored(
                     // 답변 카드 (통암기 모드에서 질문 재생 중이거나 녹음 중일 때는 숨김)
                     if (!isFullMemorizationMode || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
                         // 답변 카드 (기존 아름다운 디자인 복원)
-                        // 하이라이트 상태 로깅
+                        // 하이라이트 상태는 AppState만 사용 (단일 진실 소스)
                         val finalHighlightIndex = when {
                             selectedLevel == "반복듣기" && appState.isAnswerCardFlipped -> appState.answerKoHighlightIndex
                             selectedLevel == "반복듣기" -> appState.answerHighlightIndex
-                            isRepeatListeningCardFlipped -> memorizationUiState.answerKoHighlightIndex
-                            else -> memorizationUiState.answerHighlightIndex
+                            else -> appState.answerHighlightIndex
                         }
-                        val finalAnswerKoHighlightIndex = when {
-                            selectedLevel == "반복듣기" -> appState.answerKoHighlightIndex
-                            else -> memorizationUiState.answerKoHighlightIndex
-                        }
-                        val finalRecordingHighlightIndex = when {
-                            selectedLevel == "반복듣기" -> appState.recordingHighlightIndex
-                            else -> memorizationUiState.recordingHighlightIndex
-                        }
+                        val finalAnswerKoHighlightIndex = appState.answerKoHighlightIndex
+                        val finalRecordingHighlightIndex = appState.recordingHighlightIndex
                         
                         Log.d("MainScreenRefactored", "하이라이트 상태 - selectedLevel: $selectedLevel, isAnswerCardFlipped: ${appState.isAnswerCardFlipped}")
                         Log.d("MainScreenRefactored", "하이라이트 상태 - finalHighlightIndex: $finalHighlightIndex, finalAnswerKoHighlightIndex: $finalAnswerKoHighlightIndex")

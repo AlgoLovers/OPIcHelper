@@ -189,14 +189,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRepeatListeningRepository(
-        ttsOrchestrator: TtsOrchestrator,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
-        recordingTimeManager: RecordingTimeManager
+        repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
+        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
     ): RepeatListeningRepository {
         return RepeatListeningRepositoryImpl(
-            ttsOrchestrator = ttsOrchestrator,
-            progressTracker = progressTracker,
-            recordingTimeManager = recordingTimeManager
+            repeatListeningService = repeatListeningService,
+            progressTracker = progressTracker
         )
     }
     
@@ -257,19 +255,59 @@ object AppModule {
     
     @Provides
     @Singleton
+    fun provideRepeatListeningService(
+        ttsOrchestrator: TtsOrchestrator,
+        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
+        recordingTimeManager: RecordingTimeManager
+    ): com.na982.opichelper.domain.usecase.RepeatListeningService {
+        return com.na982.opichelper.domain.usecase.RepeatListeningService(
+            ttsOrchestrator = ttsOrchestrator,
+            progressTracker = progressTracker,
+            recordingTimeManager = recordingTimeManager
+        )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideTtsPlaybackController(
+        audioPlayer: AudioPlayer,
+        appStateManager: com.na982.opichelper.domain.state.AppStateManager,
+        highlightManagementUseCase: com.na982.opichelper.domain.usecase.HighlightManagementUseCase
+    ): TtsPlaybackController {
+        return TtsPlaybackController(audioPlayer, appStateManager, highlightManagementUseCase)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideTtsController(
+        ttsPlaybackController: TtsPlaybackController,
+        appStateManager: com.na982.opichelper.domain.state.AppStateManager
+    ): com.na982.opichelper.domain.audio.TtsController {
+        return com.na982.opichelper.data.audio.TtsControllerImpl(
+            ttsPlaybackController = ttsPlaybackController,
+            appStateManager = appStateManager
+        )
+    }
+    
+    @Provides
+    @Singleton
     fun provideButtonEventHandler(
         appStateManager: com.na982.opichelper.domain.state.AppStateManager,
         ttsPlaybackController: TtsPlaybackController,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
         executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
-        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
+        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
+        repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
+        ttsController: com.na982.opichelper.domain.audio.TtsController
     ): com.na982.opichelper.domain.event.ButtonEventHandler {
         return com.na982.opichelper.domain.event.ButtonEventHandler(
-            appStateManager,
             ttsPlaybackController,
-            executeFullMemorizationUseCase,
+            appStateManager,
             executeRepeatListeningUseCase,
-            executeEnglishWritingTestUseCase
+            executeEnglishWritingTestUseCase,
+            executeFullMemorizationUseCase,
+            repeatListeningService,
+            ttsController
         )
     }
     
