@@ -19,7 +19,7 @@ import javax.inject.Singleton
  * 책임: 반복 듣기 테스트 실행, 진행 상황 관리, TTS 제어
  */
 @Singleton
-class RepeatListeningService @Inject constructor(
+class RepeatListeningUseCase @Inject constructor(
     private val ttsController: TtsController,
     private val progressTracker: MemorizeTestProgressTracker,
     private val recordingTimeManager: RecordingTimeManager
@@ -45,7 +45,7 @@ class RepeatListeningService @Inject constructor(
             try {
                 executeRepeatListening(data, uiCallback, repeatCount)
             } catch (e: Exception) {
-                Log.e("RepeatListeningService", "반복듣기 실행 중 오류", e)
+                Log.e("RepeatListeningUseCase", "반복듣기 실행 중 오류", e)
                 // 오류 발생 시 상태 초기화
                 uiCallback.onComplete()
             }
@@ -56,12 +56,12 @@ class RepeatListeningService @Inject constructor(
      * 반복 듣기 중지
      */
     suspend fun stopRepeatListening() {
-        Log.d("RepeatListeningService", "반복듣기 중지 요청")
+        Log.d("RepeatListeningUseCase", "반복듣기 중지 요청")
         currentJob?.cancel()
         currentJob = null
         // TTS도 중지
         ttsController.stopTts()
-        Log.d("RepeatListeningService", "반복듣기 중지 완료 - TTS 중지 및 코루틴 취소")
+        Log.d("RepeatListeningUseCase", "반복듣기 중지 완료 - TTS 중지 및 코루틴 취소")
     }
     
     /**
@@ -85,18 +85,18 @@ class RepeatListeningService @Inject constructor(
             0
         }
         
-        Log.d("RepeatListeningService", "반복 듣기 시작: 총 $count 문장, 시작 인덱스: $startIndex")
-        Log.d("RepeatListeningService", "현재 스크립트 진행 상황: $currentProgress")
-        Log.d("RepeatListeningService", "검색한 카테고리: ${data.category}, 스크립트 인덱스: ${data.scriptIndex}")
+        Log.d("RepeatListeningUseCase", "반복 듣기 시작: 총 $count 문장, 시작 인덱스: $startIndex")
+        Log.d("RepeatListeningUseCase", "현재 스크립트 진행 상황: $currentProgress")
+        Log.d("RepeatListeningUseCase", "검색한 카테고리: ${data.category}, 스크립트 인덱스: ${data.scriptIndex}")
         
         for (i in startIndex until count) {
             // 코루틴이 취소되었는지 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("RepeatListeningService", "코루틴이 취소됨 - Service 중단")
+                Log.d("RepeatListeningUseCase", "코루틴이 취소됨 - Service 중단")
                 break
             }
             
-            Log.d("RepeatListeningService", "문장 ${i + 1} 처리 시작 (인덱스: $i)")
+            Log.d("RepeatListeningUseCase", "문장 ${i + 1} 처리 시작 (인덱스: $i)")
             
             // 진행 상황 업데이트 및 실시간 저장
             progressTracker.updateProgress(
@@ -109,7 +109,7 @@ class RepeatListeningService @Inject constructor(
             )
             // 실시간으로 진행상황 저장
             progressTracker.persistChangedProgress()
-            Log.d("RepeatListeningService", "문장 $i 진행상황 실시간 저장 완료")
+            Log.d("RepeatListeningUseCase", "문장 $i 진행상황 실시간 저장 완료")
             
             // 1. 한글 문장 1회 TTS (카드를 한글로 뒤집고 하이라이트)
             uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
@@ -142,12 +142,12 @@ class RepeatListeningService @Inject constructor(
             }
             val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
             
-            Log.d("RepeatListeningService", "문장 $i 딜레이 계산: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${adaptiveDelay}ms")
+            Log.d("RepeatListeningUseCase", "문장 $i 딜레이 계산: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${adaptiveDelay}ms")
             delay(adaptiveDelay)
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("RepeatListeningService", "코루틴이 취소됨 - Service 중단")
+                Log.d("RepeatListeningUseCase", "코루틴이 취소됨 - Service 중단")
                 break
             }
             
@@ -155,11 +155,11 @@ class RepeatListeningService @Inject constructor(
             for (j in 1..repeatCount) {
                 // 코루틴이 취소되었는지 확인
                 if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                    Log.d("RepeatListeningService", "코루틴이 취소됨 - Service 중단")
+                    Log.d("RepeatListeningUseCase", "코루틴이 취소됨 - Service 중단")
                     break
                 }
                 
-                Log.d("RepeatListeningService", "문장 ${i + 1} 영문 TTS 반복 ${j}/${repeatCount}")
+                Log.d("RepeatListeningUseCase", "문장 ${i + 1} 영문 TTS 반복 ${j}/${repeatCount}")
                 
                 uiCallback.onCardFlip(false) // 카드를 영문으로 뒤집기
                 delay(100) // 카드 뒤집기 애니메이션 대기
@@ -180,18 +180,18 @@ class RepeatListeningService @Inject constructor(
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {
                     recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)
-                    Log.d("RepeatListeningService", "문장 $i 영문 TTS 시간 저장: ${enDuration}ms")
+                    Log.d("RepeatListeningUseCase", "문장 $i 영문 TTS 시간 저장: ${enDuration}ms")
                 }
                 
                 // 코루틴이 취소되었는지 다시 확인 (TTS 재생 후)
                 if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                    Log.d("RepeatListeningService", "TTS 재생 후 코루틴이 취소됨 - Service 중단")
+                    Log.d("RepeatListeningUseCase", "TTS 재생 후 코루틴이 취소됨 - Service 중단")
                     break
                 }
                 
                 // 충분한 쉬는 시간 (사용자가 혼자 말해볼 시간)
                 val restTime = (enDuration * 1.2).toLong() // TTS 시간의 1.2배
-                Log.d("RepeatListeningService", "문장 ${i + 1} 반복 ${j} 쉬는 시간: ${restTime}ms")
+                Log.d("RepeatListeningUseCase", "문장 ${i + 1} 반복 ${j} 쉬는 시간: ${restTime}ms")
                 delay(restTime)
             }
             // 문장 반복 완료 후 하이라이트 제거하지 않음 (다음 문장으로 넘어갈 때까지 유지)
@@ -207,6 +207,6 @@ class RepeatListeningService @Inject constructor(
         // 완료 콜백 호출
         uiCallback.onComplete()
         
-        Log.d("RepeatListeningService", "반복 듣기 완료")
+        Log.d("RepeatListeningUseCase", "반복 듣기 완료")
     }
 } 

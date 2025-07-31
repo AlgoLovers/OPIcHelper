@@ -16,7 +16,7 @@ import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.*
 import org.junit.Assert.*
 
-class RepeatListeningServiceTest {
+class RepeatListeningUseCaseTest {
 
     @Mock
     private lateinit var mockTtsPlayer: TtsPlayer
@@ -30,12 +30,12 @@ class RepeatListeningServiceTest {
     @Mock
     private lateinit var mockRecordingTimeManager: RecordingTimeManager
 
-    private lateinit var repeatListeningService: RepeatListeningService
+    private lateinit var repeatListeningUseCase: RepeatListeningUseCase
 
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        repeatListeningService = RepeatListeningService(
+        repeatListeningUseCase = RepeatListeningUseCase(
             ttsOrchestrator = mockTtsOrchestrator,
             progressTracker = mockProgressTracker,
             recordingTimeManager = mockRecordingTimeManager
@@ -43,8 +43,8 @@ class RepeatListeningServiceTest {
     }
 
     @Test
-    fun `test RepeatListeningService creation`() {
-        assertNotNull(repeatListeningService)
+    fun `test RepeatListeningUseCase creation`() {
+        assertNotNull(repeatListeningUseCase)
     }
 
     @Test
@@ -61,7 +61,7 @@ class RepeatListeningServiceTest {
         whenever(mockProgressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")).thenReturn(null)
         
         // When
-        repeatListeningService.startRepeatListening(data, mockUiCallback)
+        repeatListeningUseCase.startRepeatListening(data, mockUiCallback)
         
         // Then
         verify(mockProgressTracker).getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
@@ -90,7 +90,7 @@ class RepeatListeningServiceTest {
         whenever(mockProgressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")).thenReturn(existingProgress)
         
         // When
-        repeatListeningService.startRepeatListening(data, mockUiCallback)
+        repeatListeningUseCase.startRepeatListening(data, mockUiCallback)
         
         // Then
         verify(mockProgressTracker).getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
@@ -119,7 +119,7 @@ class RepeatListeningServiceTest {
         whenever(mockProgressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")).thenReturn(existingProgress)
         
         // When
-        repeatListeningService.startRepeatListening(data, mockUiCallback)
+        repeatListeningUseCase.startRepeatListening(data, mockUiCallback)
         
         // Then
         verify(mockProgressTracker).getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
@@ -141,7 +141,7 @@ class RepeatListeningServiceTest {
         
         // When - 코루틴이 취소되는 상황 시뮬레이션
         val job = launch {
-            repeatListeningService.executeRepeatListeningTest(
+            repeatListeningUseCase.executeRepeatListeningTest(
                 answerKo = answerKo,
                 answerEn = answerEn,
                 onHighlight = { index -> highlightIndex = index },
@@ -186,7 +186,7 @@ class RepeatListeningServiceTest {
         var cardFlipped: Boolean? = null
         
         // When
-        repeatListeningService.executeRepeatListeningTest(
+        repeatListeningUseCase.executeRepeatListeningTest(
             answerKo = answerKo,
             answerEn = answerEn,
             onHighlight = { index -> highlightIndex = index },

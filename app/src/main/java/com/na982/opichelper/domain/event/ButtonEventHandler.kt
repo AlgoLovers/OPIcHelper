@@ -19,7 +19,7 @@ import javax.inject.Singleton
 @Singleton
 class ButtonEventHandler @Inject constructor(
     private val ttsController: TtsController,
-    private val repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
+    private val repeatListeningUseCase: com.na982.opichelper.domain.usecase.RepeatListeningUseCase,
     private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
     private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
     private val stateManager: StateManager,
@@ -93,7 +93,7 @@ class ButtonEventHandler @Inject constructor(
                     koreanAnswer = event.answerKo,
                     englishAnswer = event.answerEn
                 )
-                repeatListeningService.startRepeatListening(
+                repeatListeningUseCase.startRepeatListening(
                     data = repeatListeningData,
                     uiCallback = object : com.na982.opichelper.domain.audio.RepeatListeningUiCallback {
                         override fun onCardFlip(isKorean: Boolean) {
@@ -272,7 +272,7 @@ class ButtonEventHandler @Inject constructor(
         
         // 2. 반복듣기 중지 (MemorizeTest 버튼인 경우)
         if (event.buttonFunction == ButtonFunction.MemorizeTest) {
-            repeatListeningService.stopRepeatListening()
+            repeatListeningUseCase.stopRepeatListening()
             
             // 반복듣기 중지 시 카드 상태 초기화 (하이라이트는 TtsController에서 처리)
             stateManager.updateCardState(
@@ -297,7 +297,7 @@ class ButtonEventHandler @Inject constructor(
         ttsController.stopTts()
         
         // 2. 반복듣기 중지
-        repeatListeningService.stopRepeatListening()
+        repeatListeningUseCase.stopRepeatListening()
         
         // 3. 모든 버튼 상태를 Idle로 변경
         stateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)

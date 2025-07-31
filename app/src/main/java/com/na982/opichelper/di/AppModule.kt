@@ -251,6 +251,20 @@ object AppModule {
         )
     }
     
+    @Provides
+    @Singleton
+    fun provideRepeatListeningUseCase(
+        ttsController: TtsController,
+        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
+        recordingTimeManager: RecordingTimeManager
+    ): com.na982.opichelper.domain.usecase.RepeatListeningUseCase {
+        return com.na982.opichelper.domain.usecase.RepeatListeningUseCase(
+            ttsController = ttsController,
+            progressTracker = progressTracker,
+            recordingTimeManager = recordingTimeManager
+        )
+    }
+    
 
     
     @Provides
