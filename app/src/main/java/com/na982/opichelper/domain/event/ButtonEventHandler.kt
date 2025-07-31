@@ -13,6 +13,7 @@ import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.state.StateReader
 import java.io.File
+import com.na982.opichelper.domain.repository.AudioFileManager
 
 /**
  * 버튼 이벤트 핸들러
@@ -26,7 +27,8 @@ class ButtonEventHandler @Inject constructor(
     private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
     private val stateManager: StateManager,
     private val recordingAudioPlayer: RecordingAudioPlayer,
-    private val stateReader: StateReader
+    private val stateReader: StateReader,
+    private val audioFileManager: AudioFileManager // 추가
 ) {
     
     /**
@@ -211,39 +213,26 @@ class ButtonEventHandler @Inject constructor(
         // 2. 녹음 재생 처리
         try {
             // 현재 상태에서 카테고리와 스크립트 인덱스 가져오기
-            val currentQaItem = stateReader.currentQaItem
             val currentCategory = stateReader.currentCategory
             val currentScriptIndex = stateReader.currentIndex
-            
+
             Log.d("ButtonEventHandler", "현재 상태 - 카테고리: $currentCategory, 스크립트: $currentScriptIndex")
-            
-            // 영작테스트에서 병합된 파일 재생
-            val recordingFileName = "영작테스트_${currentCategory}_${currentScriptIndex}_*"
-            val recordingsDir = "/data/user/0/com.na982.opichelper/files/merged"
-            
-            Log.d("ButtonEventHandler", "병합된 녹음 파일 검색: $recordingsDir/$recordingFileName")
-            
-            // 파일 시스템에서 실제 파일 찾기
-            val mergedDir = File(recordingsDir)
-            val pattern = Regex("영작테스트_${currentCategory}_${currentScriptIndex}_.*\\.m4a")
-            val mergedFiles = mergedDir.listFiles { file ->
-                file.name.matches(pattern)
+
+            // null 체크
+            if (currentCategory == null) {
+                Log.e("ButtonEventHandler", "현재 카테고리가 null입니다.")
+                stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+                return ButtonEventResult.Success
             }
+
+            // AudioFileManager를 통해 영작테스트 병합 파일 가져오기
+            val mergedFile = audioFileManager.getEnglishWritingTestMergedFile(currentCategory, currentScriptIndex)
             
-            val recordingFilePath = if (mergedFiles?.isNotEmpty() == true) {
-                val latestFile = mergedFiles.maxByOrNull { it.lastModified() }
-                Log.d("ButtonEventHandler", "최신 병합 파일 발견: ${latestFile?.absolutePath}")
-                latestFile?.absolutePath
-            } else {
-                Log.e("ButtonEventHandler", "병합된 녹음 파일을 찾을 수 없음: $recordingsDir/$recordingFileName")
-                null
-            }
-            
-            if (recordingFilePath != null) {
-                Log.d("ButtonEventHandler", "병합된 녹음 파일 재생 시도: $recordingFilePath")
+            if (mergedFile != null && mergedFile.exists()) {
+                Log.d("ButtonEventHandler", "영작테스트 병합 파일 발견: ${mergedFile.absolutePath}")
                 
                 recordingAudioPlayer.playRecording(
-                    filePath = recordingFilePath,
+                    filePath = mergedFile.absolutePath,
                     onHighlight = { index ->
                         Log.d("ButtonEventHandler", "녹음 재생 하이라이트: $index")
                         // 영문 하이라이트 상태 업데이트
@@ -265,7 +254,7 @@ class ButtonEventHandler @Inject constructor(
                 stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
                 
             } else {
-                Log.e("ButtonEventHandler", "병합된 녹음 파일을 찾을 수 없어 재생할 수 없습니다.")
+                Log.e("ButtonEventHandler", "영작테스트 병합 파일을 찾을 수 없음: category=$currentCategory, scriptIndex=$currentScriptIndex")
                 stateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
             }
             
