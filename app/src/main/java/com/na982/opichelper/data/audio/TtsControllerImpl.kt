@@ -86,6 +86,75 @@ class TtsControllerImpl @Inject constructor(
         Log.d("TtsControllerImpl", "답변 TTS 재생 완료")
     }
     
+    override suspend fun playSentenceWithHighlight(
+        text: String,
+        isKorean: Boolean,
+        onHighlight: (Int?) -> Unit
+    ): Long {
+        Log.d("TtsControllerImpl", "문장 하이라이트 TTS 재생 시작: '${text.take(30)}...', isKorean=$isKorean")
+        
+        // 1. AppState 업데이트
+        appStateManager.updateTtsPlayingState(
+            isQuestionPlaying = false,
+            isAnswerPlaying = true,
+            isPlaying = true
+        )
+        
+        // 2. TtsOrchestrator를 통해 하이라이트와 함께 재생
+        val duration = ttsOrchestrator.speakUnified(
+            text = text,
+            isKorean = isKorean,
+            rate = 1.0f,
+            onHighlight = onHighlight,
+            waitForCompletion = true
+        )
+        
+        // 3. 재생 완료 시 상태 업데이트
+        appStateManager.updateTtsPlayingState(
+            isQuestionPlaying = false,
+            isAnswerPlaying = false,
+            isPlaying = false
+        )
+        
+        Log.d("TtsControllerImpl", "문장 하이라이트 TTS 재생 완료: ${duration}ms")
+        return duration
+    }
+    
+    override suspend fun playUnified(
+        text: String,
+        isKorean: Boolean,
+        rate: Float,
+        waitForCompletion: Boolean
+    ): Long {
+        Log.d("TtsControllerImpl", "통합 TTS 재생 시작: '${text.take(30)}...', isKorean=$isKorean, rate=$rate")
+        
+        // 1. AppState 업데이트
+        appStateManager.updateTtsPlayingState(
+            isQuestionPlaying = false,
+            isAnswerPlaying = true,
+            isPlaying = true
+        )
+        
+        // 2. TtsOrchestrator를 통해 하이라이트 없이 재생
+        val duration = ttsOrchestrator.speakUnified(
+            text = text,
+            isKorean = isKorean,
+            rate = rate,
+            onHighlight = null,
+            waitForCompletion = waitForCompletion
+        )
+        
+        // 3. 재생 완료 시 상태 업데이트
+        appStateManager.updateTtsPlayingState(
+            isQuestionPlaying = false,
+            isAnswerPlaying = false,
+            isPlaying = false
+        )
+        
+        Log.d("TtsControllerImpl", "통합 TTS 재생 완료: ${duration}ms")
+        return duration
+    }
+    
     override suspend fun stopTts() {
         Log.d("TtsControllerImpl", "TTS 중지 시작")
         

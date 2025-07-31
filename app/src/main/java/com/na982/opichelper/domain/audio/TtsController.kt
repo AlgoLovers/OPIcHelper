@@ -18,6 +18,34 @@ interface TtsController {
     suspend fun playAnswer(answer: String)
     
     /**
+     * 문장별 하이라이트와 함께 TTS 재생
+     * @param text 재생할 텍스트
+     * @param isKorean 한글 여부
+     * @param onHighlight 하이라이트 콜백
+     * @return 재생 시간 (밀리초)
+     */
+    suspend fun playSentenceWithHighlight(
+        text: String,
+        isKorean: Boolean,
+        onHighlight: (Int?) -> Unit
+    ): Long
+    
+    /**
+     * 통합 TTS 재생 (하이라이트 없음)
+     * @param text 재생할 텍스트
+     * @param isKorean 한글 여부
+     * @param rate 재생 속도 (기본 1.0f)
+     * @param waitForCompletion 완료까지 대기 여부
+     * @return 재생 시간 (밀리초)
+     */
+    suspend fun playUnified(
+        text: String,
+        isKorean: Boolean,
+        rate: Float = 1.0f,
+        waitForCompletion: Boolean = true
+    ): Long
+    
+    /**
      * TTS 중지 (하이라이트 초기화 포함)
      */
     suspend fun stopTts()

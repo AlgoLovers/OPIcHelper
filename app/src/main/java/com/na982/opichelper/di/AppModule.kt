@@ -258,12 +258,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRepeatListeningService(
-        ttsOrchestrator: TtsOrchestrator,
+        ttsController: com.na982.opichelper.domain.audio.TtsController,
         progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
         recordingTimeManager: RecordingTimeManager
     ): com.na982.opichelper.domain.usecase.RepeatListeningService {
         return com.na982.opichelper.domain.usecase.RepeatListeningService(
-            ttsOrchestrator = ttsOrchestrator,
+            ttsController = ttsController,
             progressTracker = progressTracker,
             recordingTimeManager = recordingTimeManager
         )

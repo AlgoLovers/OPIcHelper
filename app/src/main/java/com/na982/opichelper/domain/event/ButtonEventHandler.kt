@@ -99,11 +99,21 @@ class ButtonEventHandler @Inject constructor(
                         }
                         override fun onHighlight(index: Int?) {
                             Log.d("ButtonEventHandler", "반복듣기 영문 하이라이트: $index")
-                            // 하이라이트는 TtsControllerImpl에서만 처리
+                            // 영문 하이라이트 상태 업데이트
+                            appStateManager.updateHighlightState(
+                                questionHighlightIndex = -1,
+                                answerHighlightIndex = index ?: -1,
+                                answerKoHighlightIndex = -1
+                            )
                         }
                         override fun onKoreanHighlight(index: Int?) {
                             Log.d("ButtonEventHandler", "반복듣기 한글 하이라이트: $index")
-                            // 하이라이트는 TtsControllerImpl에서만 처리
+                            // 한글 하이라이트 상태 업데이트
+                            appStateManager.updateHighlightState(
+                                questionHighlightIndex = -1,
+                                answerHighlightIndex = -1,
+                                answerKoHighlightIndex = index ?: -1
+                            )
                         }
                         override fun onComplete() {
                             Log.d("ButtonEventHandler", "반복듣기 완료")

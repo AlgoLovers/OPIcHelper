@@ -1,6 +1,6 @@
 package com.na982.opichelper.domain.usecase
 
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
@@ -21,7 +21,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class RepeatListeningService @Inject constructor(
-    private val ttsOrchestrator: TtsOrchestrator,
+    private val ttsController: TtsController,
     private val progressTracker: MemorizeTestProgressTracker,
     private val recordingTimeManager: RecordingTimeManager
 ) {
@@ -56,12 +56,12 @@ class RepeatListeningService @Inject constructor(
     /**
      * 반복 듣기 중지
      */
-    fun stopRepeatListening() {
+    suspend fun stopRepeatListening() {
         Log.d("RepeatListeningService", "반복듣기 중지 요청")
         currentJob?.cancel()
         currentJob = null
         // TTS도 중지
-        ttsOrchestrator.stop()
+        ttsController.stopTts()
         Log.d("RepeatListeningService", "반복듣기 중지 완료 - TTS 중지 및 코루틴 취소")
     }
     
@@ -115,15 +115,15 @@ class RepeatListeningService @Inject constructor(
             // 1. 한글 문장 1회 TTS (카드를 한글로 뒤집고 하이라이트)
             uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
             delay(100) // 카드 뒤집기 애니메이션 대기
-            uiCallback.onKoreanHighlight(i) // 한글 하이라이트
-            
-            // 통합 TTS 함수 사용 - 한글 재생
-            val koDuration = ttsOrchestrator.speakUnified(
+
+            // TtsController를 통한 한글 문장 하이라이트 재생
+            ttsController.playSentenceWithHighlight(
                 text = koSentences[i],
                 isKorean = true,
-                rate = 1.0f,
-                onHighlight = null, // 반복듣기는 수동으로 하이라이트 관리
-                waitForCompletion = true
+                onHighlight = { index ->
+                    // 실시간 한글 하이라이트
+                    uiCallback.onKoreanHighlight(index)
+                }
             )
             
             // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
@@ -161,15 +161,15 @@ class RepeatListeningService @Inject constructor(
                 
                 uiCallback.onCardFlip(false) // 카드를 영문으로 뒤집기
                 delay(100) // 카드 뒤집기 애니메이션 대기
-                uiCallback.onHighlight(i) // 영문 하이라이트
-                
-                // 통합 TTS 함수 사용 - 영문 재생
-                val enDuration = ttsOrchestrator.speakUnified(
+
+                // TtsController를 통한 영문 문장 하이라이트 재생
+                val enDuration = ttsController.playSentenceWithHighlight(
                     text = enSentences[i],
                     isKorean = false,
-                    rate = 1.0f,
-                    onHighlight = null, // 반복듣기는 수동으로 하이라이트 관리
-                    waitForCompletion = true
+                    onHighlight = { index ->
+                        // 실시간 영문 하이라이트
+                        uiCallback.onHighlight(index)
+                    }
                 )
                 
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
