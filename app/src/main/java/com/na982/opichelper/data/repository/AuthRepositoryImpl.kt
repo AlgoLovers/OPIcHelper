@@ -3,10 +3,11 @@ package com.na982.opichelper.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.na982.opichelper.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class AuthRepository(private val context: Context) {
+class AuthRepositoryImpl(private val context: Context) : AuthRepository {
     
     private val prefs: SharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
     

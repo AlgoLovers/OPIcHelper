@@ -8,7 +8,7 @@ import com.na982.opichelper.data.audio.GoogleTtsPlayer
 import com.na982.opichelper.data.audio.RecordingAudioPlayerImpl
 import com.na982.opichelper.data.audio.SamsungTtsPlayer
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
-import com.na982.opichelper.data.repository.AuthRepository
+import com.na982.opichelper.data.repository.AuthRepositoryImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.FullMemorizationRepositoryImpl
 import com.na982.opichelper.data.repository.LeveledQaDataLoader
@@ -119,11 +119,11 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQaDataManager(
+    fun provideQaDataRepository(
         leveledQaDataLoader: LeveledQaDataLoader,
         userPreferencesRepository: UserPreferencesRepository
-    ): QaDataManager {
-        return QaDataManager(leveledQaDataLoader, userPreferencesRepository)
+    ): com.na982.opichelper.domain.repository.QaDataRepository {
+        return com.na982.opichelper.domain.repository.QaDataRepository(leveledQaDataLoader, userPreferencesRepository)
     }
     
     @Provides
@@ -158,8 +158,8 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideAuthRepository(@ApplicationContext context: Context): AuthRepository {
-        return AuthRepository(context)
+    fun provideAuthRepository(@ApplicationContext context: Context): com.na982.opichelper.domain.repository.AuthRepository {
+        return AuthRepositoryImpl(context)
     }
     
     @Provides

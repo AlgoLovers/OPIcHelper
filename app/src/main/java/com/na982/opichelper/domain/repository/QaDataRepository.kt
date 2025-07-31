@@ -13,11 +13,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * QA 데이터 관리 전담 클래스 (Manager 패턴)
+ * QA 데이터 관리 전담 클래스 (Repository 패턴)
  * 책임: QA 데이터 상태 관리, 카테고리 관리, 인덱스 관리, UI 상태 관리
  */
 @Singleton
-class QaDataManager @Inject constructor(
+class QaDataRepository @Inject constructor(
     private val leveledQaDataLoader: com.na982.opichelper.data.repository.LeveledQaDataLoader,
     private val userPreferencesRepository: UserPreferencesRepository
 ) {

@@ -3,7 +3,7 @@ package com.na982.opichelper.domain.usecase
 import android.util.Log
 import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.audio.TtsOrchestrator
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +23,7 @@ class FullMemorizationUseCase @Inject constructor(
     private val recordingFileRepository: RecordingFileRepository,
     private val ttsOrchestrator: TtsOrchestrator,
     private val audioRecorder: AudioRecorder,
-    private val qaDataManager: QaDataManager,
+    private val qaDataRepository: QaDataRepository,
     private val recordingTimeManager: RecordingTimeManager
 ) {
     private val _highlightIndex = MutableStateFlow<Int?>(null)
@@ -48,7 +48,7 @@ class FullMemorizationUseCase @Inject constructor(
             Log.d("FullMemorizationUseCase", "질문 재생 시작")
             onPlayingStateChange(true)
             
-            val qaItem = qaDataManager.getCurrentQaItem()
+            val qaItem = qaDataRepository.getCurrentQaItem()
             if (qaItem != null) {
                 // 영어 질문 TTS 재생 (표준화된 방식 사용)
                 val questionDuration = ttsOrchestrator.speakAndWaitForCompletion(qaItem.questionEn, isKorean = false, rate = 1.0f)
@@ -104,13 +104,13 @@ class FullMemorizationUseCase @Inject constructor(
         onPlayingStateChange: (Boolean) -> Unit
     ) {
         try {
-            val qaItem = qaDataManager.getCurrentQaItem()
+            val qaItem = qaDataRepository.getCurrentQaItem()
             if (qaItem == null) {
                 Log.e("FullMemorizationUseCase", "재생할 QA 아이템이 없음")
                 return
             }
             val category = qaItem.category
-            val scriptIndex = qaDataManager.getCurrentIndex()
+            val scriptIndex = qaDataRepository.getCurrentIndex()
             if (recordingFileRepository.hasRecordingFile(category, scriptIndex)) {
                 Log.d("FullMemorizationUseCase", "녹음 재생 시작 (하이라이트 포함)")
                 isPlaying = true
@@ -165,14 +165,14 @@ class FullMemorizationUseCase @Inject constructor(
         onPlayingStateChange: (Boolean) -> Unit
     ) {
         try {
-            val qaItem = qaDataManager.getCurrentQaItem()
+            val qaItem = qaDataRepository.getCurrentQaItem()
             if (qaItem == null) {
                 Log.e("FullMemorizationUseCase", "재생할 QA 아이템이 없음")
                 return
             }
             
             val category = qaItem.category
-            val scriptIndex = qaDataManager.getCurrentIndex()
+            val scriptIndex = qaDataRepository.getCurrentIndex()
             
             if (recordingFileRepository.hasRecordingFile(category, scriptIndex)) {
                 Log.d("FullMemorizationUseCase", "녹음 재생 시작 (하이라이트 없음)")
@@ -205,9 +205,9 @@ class FullMemorizationUseCase @Inject constructor(
      * 녹음 파일 존재 여부 확인
      */
     suspend fun hasRecording(): Boolean {
-        val qaItem = qaDataManager.getCurrentQaItem()
+        val qaItem = qaDataRepository.getCurrentQaItem()
         return if (qaItem != null) {
-            recordingFileRepository.hasRecordingFile(qaItem.category, qaDataManager.getCurrentIndex())
+            recordingFileRepository.hasRecordingFile(qaItem.category, qaDataRepository.getCurrentIndex())
         } else {
             false
         }
@@ -217,9 +217,9 @@ class FullMemorizationUseCase @Inject constructor(
      * 녹음 파일 삭제
      */
     suspend fun clearRecording() {
-        val qaItem = qaDataManager.getCurrentQaItem()
+        val qaItem = qaDataRepository.getCurrentQaItem()
         if (qaItem != null) {
-            recordingFileRepository.deleteRecordingFile(qaItem.category, qaDataManager.getCurrentIndex())
+            recordingFileRepository.deleteRecordingFile(qaItem.category, qaDataRepository.getCurrentIndex())
         }
     }
     
