@@ -179,6 +179,24 @@ class AppStateManager @Inject constructor() {
     }
     
     /**
+     * 녹음 상태 업데이트
+     */
+    fun updateRecordingState(isRecording: Boolean) {
+        updateState { currentState ->
+            currentState.copy(isRecording = isRecording)
+        }
+    }
+    
+    /**
+     * 병합 파일 생성 완료 상태 업데이트
+     */
+    fun updateMergedFileCreated(created: Boolean) {
+        updateState { currentState ->
+            currentState.copy(mergedFileCreated = created)
+        }
+    }
+    
+    /**
      * 로딩 상태 업데이트
      */
     fun updateLoadingState(isLoading: Boolean) {

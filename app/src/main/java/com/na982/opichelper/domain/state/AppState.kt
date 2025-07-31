@@ -58,6 +58,12 @@ data class AppState(
     val englishWritingTestCompleted: Boolean = false,
     val stopEnglishWritingTestMergedFilePlaying: Boolean = false,
     
+    // 녹음 상태
+    val isRecording: Boolean = false,
+    
+    // 병합 파일 생성 상태
+    val mergedFileCreated: Boolean = false,
+    
     // 로딩 및 에러 상태
     val isLoading: Boolean = false,
     val error: String? = null

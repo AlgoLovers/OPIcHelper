@@ -134,19 +134,39 @@ class ButtonEventHandler @Inject constructor(
                     category = event.category,
                     scriptIndex = event.scriptIndex,
                     onCardFlip = { isKorean ->
-                        // 카드 뒤집기 처리
+                        Log.d("ButtonEventHandler", "영작테스트 카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
+                        // 카드 뒤집기 상태 업데이트
+                        appStateManager.updateCardState(
+                            isAnswerCardFlipped = isKorean
+                        )
                     },
                     onKoreanHighlight = { index ->
-                        // 한글 하이라이트 처리
+                        Log.d("ButtonEventHandler", "영작테스트 한글 하이라이트: $index")
+                        // 한글 하이라이트 상태 업데이트
+                        appStateManager.updateHighlightState(
+                            questionHighlightIndex = -1,
+                            answerHighlightIndex = -1,
+                            answerKoHighlightIndex = index ?: -1
+                        )
                     },
                     onRecordingHighlight = { index ->
-                        // 녹음 하이라이트 처리
+                        Log.d("ButtonEventHandler", "영작테스트 녹음 하이라이트: $index")
+                        // 녹음 하이라이트 상태 업데이트
+                        appStateManager.updateHighlightState(
+                            questionHighlightIndex = -1,
+                            answerHighlightIndex = index ?: -1,
+                            answerKoHighlightIndex = -1
+                        )
                     },
                     onRecordingStateChange = { isRecording ->
-                        // 녹음 상태 변경
+                        Log.d("ButtonEventHandler", "영작테스트 녹음 상태 변경: $isRecording")
+                        // 녹음 상태 업데이트
+                        appStateManager.updateRecordingState(isRecording)
                     },
                     onMergedFileCreated = {
+                        Log.d("ButtonEventHandler", "영작테스트 병합 파일 생성 완료")
                         // 병합 파일 생성 완료 처리
+                        appStateManager.updateMergedFileCreated(true)
                     }
                 )
             }
