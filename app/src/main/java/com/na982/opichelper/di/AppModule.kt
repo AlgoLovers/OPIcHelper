@@ -39,6 +39,7 @@ import com.na982.opichelper.domain.state.AppStateManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.state.StateManager
 import com.na982.opichelper.domain.event.ButtonEventHandler
+import com.na982.opichelper.domain.state.StateReader
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -291,6 +292,12 @@ object AppModule {
     
     @Provides
     @Singleton
+    fun provideStateReader(appStateManager: AppStateManager): StateReader {
+        return appStateManager
+    }
+    
+    @Provides
+    @Singleton
     fun provideButtonEventHandler(
         ttsController: TtsController,
         repeatListeningService: com.na982.opichelper.domain.usecase.RepeatListeningService,
@@ -298,7 +305,7 @@ object AppModule {
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
         stateManager: StateManager,
         recordingAudioPlayer: RecordingAudioPlayer,
-        appStateManager: AppStateManager
+        stateReader: StateReader
     ): ButtonEventHandler {
         return ButtonEventHandler(
             ttsController = ttsController,
@@ -307,7 +314,7 @@ object AppModule {
             executeFullMemorizationUseCase = executeFullMemorizationUseCase,
             stateManager = stateManager,
             recordingAudioPlayer = recordingAudioPlayer,
-            appStateManager = appStateManager
+            stateReader = stateReader
         )
     }
     

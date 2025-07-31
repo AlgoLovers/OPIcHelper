@@ -12,7 +12,7 @@ import javax.inject.Singleton
  * 단일 책임: 상태 관리만 담당
  */
 @Singleton
-class AppStateManager @Inject constructor() : StateManager {
+class AppStateManager @Inject constructor() : StateManager, StateReader {
     
     private val _state = MutableStateFlow(AppState())
     val state: StateFlow<AppState> = _state.asStateFlow()
@@ -249,15 +249,15 @@ class AppStateManager @Inject constructor() : StateManager {
     /**
      * 현재 상태 가져오기 메서드들
      */
-    val currentQaItem: com.na982.opichelper.domain.entity.QaItem?
+    override val currentQaItem: com.na982.opichelper.domain.entity.QaItem?
         get() = _state.value.currentQaItem
     
-    val currentCategory: String?
+    override val currentCategory: String?
         get() = _state.value.currentCategory
     
-    val currentIndex: Int
+    override val currentIndex: Int
         get() = _state.value.currentIndex
     
-    val currentSentenceIndex: Int
+    override val currentSentenceIndex: Int
         get() = _state.value.currentIndex // 현재는 currentIndex와 동일
 } 

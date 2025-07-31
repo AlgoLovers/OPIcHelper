@@ -11,6 +11,7 @@ import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.state.StateManager
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.state.StateReader
 
 /**
  * 버튼 이벤트 핸들러
@@ -24,7 +25,7 @@ class ButtonEventHandler @Inject constructor(
     private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
     private val stateManager: StateManager,
     private val recordingAudioPlayer: RecordingAudioPlayer,
-    private val appStateManager: AppStateManager
+    private val stateReader: StateReader
 ) {
     
     /**
@@ -195,7 +196,7 @@ class ButtonEventHandler @Inject constructor(
             }
         }
 
-        
+            
         Log.d("ButtonEventHandler", "암기 테스트 이벤트 처리 완료")
         return ButtonEventResult.Success
     }
@@ -209,10 +210,10 @@ class ButtonEventHandler @Inject constructor(
         // 2. 녹음 재생 처리
         try {
             // 현재 상태에서 카테고리와 스크립트 인덱스 가져오기
-            val currentQaItem = appStateManager.currentQaItem
-            val currentCategory = appStateManager.currentCategory
-            val currentScriptIndex = appStateManager.currentIndex
-            val currentSentenceIndex = appStateManager.currentSentenceIndex
+            val currentQaItem = stateReader.currentQaItem
+            val currentCategory = stateReader.currentCategory
+            val currentScriptIndex = stateReader.currentIndex
+            val currentSentenceIndex = stateReader.currentSentenceIndex
             
             Log.d("ButtonEventHandler", "현재 상태 - 카테고리: $currentCategory, 스크립트: $currentScriptIndex, 문장: $currentSentenceIndex")
             
