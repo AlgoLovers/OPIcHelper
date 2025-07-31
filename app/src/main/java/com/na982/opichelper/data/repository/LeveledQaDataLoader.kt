@@ -8,6 +8,7 @@ import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.entity.LeveledAnswer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import android.util.Log
 
 class LeveledQaDataLoader(private val context: Context) {
     
@@ -31,11 +32,32 @@ class LeveledQaDataLoader(private val context: Context) {
             val folderName = levelFolderMapping[level] ?: "ih"
             val allQaItems = mutableListOf<QaItem>()
             
-            // 해당 폴더의 모든 JSON 파일을 로드
-            context.assets.list(folderName)?.forEach { fileName ->
-                if (fileName.endsWith(".json")) {
-                    try {
-                        val jsonString = context.assets.open("$folderName/$fileName").bufferedReader().use { it.readText() }
+            // 정의된 카테고리 순서대로 파일 로드
+            val orderedFileNames = listOf(
+                "qa_home.json",
+                "qa_music.json", 
+                "qa_home_vacation.json",
+                "qa_movie.json",
+                "qa_restaurants.json",
+                "qa_beach.json",
+                "qa_internet.json",
+                "qa_industry_career.json",
+                "qa_bank.json",
+                "qa_transportation.json",
+                "qa_fashion.json",
+                "qa_family_friends.json",
+                "qa_furniture.json",
+                "qa_reservation.json",
+                "qa_holiday.json"
+            )
+            
+            orderedFileNames.forEach { fileName ->
+                try {
+                    val filePath = "$folderName/$fileName"
+                    Log.d("LeveledQaDataLoader", "파일 로드 시도: $filePath")
+                    
+                    if (context.assets.list(folderName)?.contains(fileName) == true) {
+                        val jsonString = context.assets.open(filePath).bufferedReader().use { it.readText() }
                         val type = object : TypeToken<List<QaItemAsset>>() {}.type
                         val assetItems: List<QaItemAsset> = gson.fromJson(jsonString, type) ?: emptyList()
                         
@@ -56,12 +78,16 @@ class LeveledQaDataLoader(private val context: Context) {
                         }
                         
                         allQaItems.addAll(items)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.d("LeveledQaDataLoader", "카테고리 '${getCategoryFromFileName(fileName)}'에서 ${items.size}개 항목 로드됨")
+                    } else {
+                        Log.w("LeveledQaDataLoader", "파일이 존재하지 않음: $filePath")
                     }
+                } catch (e: Exception) {
+                    Log.e("LeveledQaDataLoader", "파일 로드 실패: $fileName", e)
                 }
             }
             
+            Log.d("LeveledQaDataLoader", "레벨 $level 데이터 로드 완료: 총 ${allQaItems.size}개 항목")
             allQaItems
         } catch (e: Exception) {
             e.printStackTrace()

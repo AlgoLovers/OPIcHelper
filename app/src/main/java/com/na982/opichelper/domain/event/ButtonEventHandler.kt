@@ -42,7 +42,7 @@ class ButtonEventHandler @Inject constructor(
         // 1. 다른 작업 중단 (다른 버튼이 실행 중이면 중단)
         stopOtherOperations()
 
-        // 4. 버튼 상태를 Playing으로 변경
+        // 2. 버튼 상태를 Playing으로 변경
         appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Playing)
 
         // 3. TTS 재생 (하이라이트 포함)
@@ -58,15 +58,14 @@ class ButtonEventHandler @Inject constructor(
         
         // 1. 다른 작업 중단 (다른 버튼이 실행 중이면 중단)
         stopOtherOperations()
-        
-        // 2. 버튼 상태를 Loading으로 변경
-        appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Loading)
-        
+
+        // 2. 버튼 상태를 Playing으로 변경
+        appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
+
         // 3. TTS 재생 (하이라이트 포함)
         ttsController.playAnswer(event.answer)
-        
-        // 4. 버튼 상태를 Playing으로 변경
-        appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
+
+        appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
         
         return ButtonEventResult.Success
     }
