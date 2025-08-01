@@ -39,6 +39,8 @@ import com.na982.opichelper.domain.state.AppStateManager
 import com.na982.opichelper.data.state.AppStateManagerImpl
 import com.na982.opichelper.domain.usecase.GetLeveledAnswerUseCase
 import com.na982.opichelper.domain.usecase.InitializeAppUseCase
+import com.na982.opichelper.domain.usecase.LoadCategoriesUseCase
+import com.na982.opichelper.domain.usecase.LoadQaItemsUseCase
 import com.na982.opichelper.domain.strategy.MemorizationStrategyFactory
 import com.na982.opichelper.domain.strategy.RepeatListeningStrategy
 import com.na982.opichelper.domain.strategy.EnglishWritingStrategy
@@ -373,6 +375,59 @@ object AppModule {
         userPreferencesRepository: UserPreferencesRepository
     ): GetLeveledAnswerUseCase {
         return GetLeveledAnswerUseCase(userPreferencesRepository)
+    }
+    
+    // Manager 클래스들 의존성 주입
+    @Provides
+    @Singleton
+    fun provideCategoryManager(
+        qaDataRepository: QaDataRepository,
+        appStateManager: AppStateManager,
+        loadCategoriesUseCase: LoadCategoriesUseCase,
+        loadQaItemsUseCase: LoadQaItemsUseCase
+    ): com.na982.opichelper.presentation.viewmodel.CategoryManager {
+        return com.na982.opichelper.presentation.viewmodel.CategoryManager(
+            qaDataRepository = qaDataRepository,
+            appStateManager = appStateManager,
+            loadCategoriesUseCase = loadCategoriesUseCase,
+            loadQaItemsUseCase = loadQaItemsUseCase
+        )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideAudioControlManager(
+        ttsOrchestrator: TtsOrchestrator,
+        buttonEventHandler: ButtonEventHandler,
+        appStateManager: AppStateManager
+    ): com.na982.opichelper.presentation.viewmodel.AudioControlManager {
+        return com.na982.opichelper.presentation.viewmodel.AudioControlManager(
+            ttsOrchestrator = ttsOrchestrator,
+            buttonEventHandler = buttonEventHandler,
+            appStateManager = appStateManager
+        )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideMemorizationManager(
+        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
+        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase,
+        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
+        qaDataRepository: QaDataRepository,
+        ttsOrchestrator: TtsOrchestrator,
+        getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
+        progressTracker: com.na982.opichelper.domain.state.MemorizationProgressTracker
+    ): com.na982.opichelper.presentation.viewmodel.MemorizationManager {
+        return com.na982.opichelper.presentation.viewmodel.MemorizationManager(
+            executeRepeatListeningUseCase = executeRepeatListeningUseCase,
+            executeEnglishWritingTestUseCase = executeEnglishWritingTestUseCase,
+            executeFullMemorizationUseCase = executeFullMemorizationUseCase,
+            qaDataRepository = qaDataRepository,
+            ttsOrchestrator = ttsOrchestrator,
+            getCurrentAnswerUseCase = getCurrentAnswerUseCase,
+            progressTracker = progressTracker
+        )
     }
     
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
