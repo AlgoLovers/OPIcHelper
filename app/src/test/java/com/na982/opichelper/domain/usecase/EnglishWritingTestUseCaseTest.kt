@@ -1,6 +1,6 @@
 package com.na982.opichelper.domain.usecase
 
-import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.audio.AudioRecorder

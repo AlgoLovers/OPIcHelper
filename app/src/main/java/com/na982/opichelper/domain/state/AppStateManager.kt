@@ -1,98 +1,85 @@
 package com.na982.opichelper.domain.state
 
-import android.util.Log
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.na982.opichelper.domain.entity.ButtonFunction
+import com.na982.opichelper.domain.entity.ButtonState
+import com.na982.opichelper.domain.entity.QaItem
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
- * 앱의 전체 상태를 관리하는 클래스
- * 단일 책임: 상태 관리만 담당
+ * 앱 상태 관리를 위한 통합 인터페이스
+ * 읽기와 쓰기 기능을 모두 제공
  */
-@Singleton
-class AppStateManager @Inject constructor() : StateManager, StateReader {
-    
-    private val _state = MutableStateFlow(AppState())
-    val state: StateFlow<AppState> = _state.asStateFlow()
+interface AppStateManager {
+    // ===== 읽기 메서드들 =====
     
     /**
-     * 상태 업데이트
+     * 현재 QA 아이템 가져오기
      */
-    fun updateState(update: (AppState) -> AppState) {
-        val newState = update(_state.value)
-        _state.value = newState
-    }
+    val currentQaItem: QaItem?
     
     /**
-     * 버튼 상태 업데이트
+     * 현재 카테고리 가져오기
      */
-    override fun updateButtonState(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction, newState: com.na982.opichelper.domain.entity.ButtonState) {
-        Log.d("AppStateManager", "버튼 상태 업데이트: $buttonFunction -> $newState")
-        updateState { currentState ->
-            val updatedButtonStates = currentState.buttonStates.toMutableMap()
-            updatedButtonStates[buttonFunction] = newState
-            currentState.copy(buttonStates = updatedButtonStates)
-        }
-    }
+    val currentCategory: String?
     
     /**
-     * TTS 재생 상태 업데이트 (통합)
+     * 현재 인덱스 가져오기
      */
-    override fun updateTtsPlayingState(
-        isQuestionPlaying: Boolean?,
-        isAnswerPlaying: Boolean?,
-        isPlaying: Boolean?
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                isQuestionPlaying = isQuestionPlaying ?: currentState.isQuestionPlaying,
-                isAnswerPlaying = isAnswerPlaying ?: currentState.isAnswerPlaying,
-                isPlaying = isPlaying ?: currentState.isPlaying
-            )
-        }
-    }
+    val currentIndex: Int
     
     /**
-     * 하이라이트 상태 업데이트 (통합)
+     * 현재 문장 인덱스 가져오기
      */
-    override fun updateHighlightState(
-        questionHighlightIndex: Int,
-        answerHighlightIndex: Int,
-        answerKoHighlightIndex: Int,
-        recordingHighlightIndex: Int
-    ) {
-        updateState { currentState ->
-            // -1이 명시적으로 전달되면 -1로 설정, 그렇지 않으면 기존 값 유지
-            val newQuestionHighlightIndex = questionHighlightIndex
-            val newAnswerHighlightIndex = answerHighlightIndex
-            val newAnswerKoHighlightIndex = answerKoHighlightIndex
-            val newRecordingHighlightIndex = recordingHighlightIndex
-            
-            currentState.copy(
-                questionHighlightIndex = newQuestionHighlightIndex,
-                answerHighlightIndex = newAnswerHighlightIndex,
-                answerKoHighlightIndex = newAnswerKoHighlightIndex,
-                recordingHighlightIndex = newRecordingHighlightIndex
-            )
-        }
-    }
+    val currentSentenceIndex: Int
+    
+    /**
+     * 앱 상태 StateFlow
+     */
+    val state: StateFlow<AppState>
+    
+    // ===== 쓰기 메서드들 =====
     
     /**
      * 카드 상태 업데이트
      */
-    override fun updateCardState(
-        isQuestionCardFlipped: Boolean?,
-        isAnswerCardFlipped: Boolean?
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                isQuestionCardFlipped = isQuestionCardFlipped ?: currentState.isQuestionCardFlipped,
-                isAnswerCardFlipped = isAnswerCardFlipped ?: currentState.isAnswerCardFlipped
-            )
-        }
-    }
+    fun updateCardState(
+        isQuestionCardFlipped: Boolean? = null,
+        isAnswerCardFlipped: Boolean? = null
+    )
+    
+    /**
+     * 하이라이트 상태 업데이트
+     */
+    fun updateHighlightState(
+        questionHighlightIndex: Int = -1,
+        answerHighlightIndex: Int = -1,
+        answerKoHighlightIndex: Int = -1,
+        recordingHighlightIndex: Int = -1
+    )
+    
+    /**
+     * 녹음 상태 업데이트
+     */
+    fun updateRecordingState(isRecording: Boolean)
+    
+    /**
+     * 병합 파일 생성 완료 상태 업데이트
+     */
+    fun updateMergedFileCreated(created: Boolean)
+    
+    /**
+     * 버튼 상태 업데이트
+     */
+    fun updateButtonState(buttonFunction: ButtonFunction, newState: ButtonState)
+    
+    /**
+     * TTS 재생 상태 업데이트
+     */
+    fun updateTtsPlayingState(
+        isQuestionPlaying: Boolean? = null,
+        isAnswerPlaying: Boolean? = null,
+        isPlaying: Boolean? = null
+    )
     
     /**
      * 암기 모드 상태 업데이트
@@ -101,67 +88,27 @@ class AppStateManager @Inject constructor() : StateManager, StateReader {
         isRepeatListeningMode: Boolean? = null,
         isEnglishWritingTestMode: Boolean? = null,
         isFullMemorizationMode: Boolean? = null
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                isRepeatListeningMode = isRepeatListeningMode ?: currentState.isRepeatListeningMode,
-                isEnglishWritingTestMode = isEnglishWritingTestMode ?: currentState.isEnglishWritingTestMode,
-                isFullMemorizationMode = isFullMemorizationMode ?: currentState.isFullMemorizationMode
-            )
-        }
-    }
+    )
     
     /**
-     * 현재 QA 아이템 업데이트
+     * 로딩 상태 업데이트
      */
-    fun updateCurrentQaItem(
-        qaItem: com.na982.opichelper.domain.entity.QaItem?,
+    fun updateLoadingState(isLoading: Boolean)
+    
+    /**
+     * 에러 상태 업데이트
+     */
+    fun updateErrorState(error: String?)
+    
+    /**
+     * QA 아이템 상태 업데이트
+     */
+    fun updateQaItemState(
+        qaItem: QaItem? = null,
         category: String? = null,
         index: Int? = null,
         totalCount: Int? = null
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                currentQaItem = qaItem,
-                currentCategory = category ?: currentState.currentCategory,
-                currentIndex = index ?: currentState.currentIndex,
-                totalCount = totalCount ?: currentState.totalCount
-            )
-        }
-    }
-    
-    /**
-     * 선택된 암기 레벨 업데이트
-     */
-    fun updateSelectedMemorizeLevel(level: String) {
-        updateState { currentState ->
-            currentState.copy(selectedMemorizeLevel = level)
-        }
-    }
-    
-    /**
-     * TTS 서비스 상태 업데이트
-     */
-    fun updateKoreanTtsService(serviceName: String) {
-        updateState { currentState ->
-            currentState.copy(currentKoreanTtsService = serviceName)
-        }
-    }
-    
-    /**
-     * 암기 테스트 진행 상태 업데이트
-     */
-    fun updateMemorizeTestState(
-        isRunning: Boolean? = null,
-        currentMode: String? = null
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                isMemorizeTestRunning = isRunning ?: currentState.isMemorizeTestRunning,
-                currentMemorizeMode = currentMode ?: currentState.currentMemorizeMode
-            )
-        }
-    }
+    )
     
     /**
      * 영작 테스트 상태 업데이트
@@ -169,95 +116,28 @@ class AppStateManager @Inject constructor() : StateManager, StateReader {
     fun updateEnglishWritingTestState(
         completed: Boolean? = null,
         stopMergedFilePlaying: Boolean? = null
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                englishWritingTestCompleted = completed ?: currentState.englishWritingTestCompleted,
-                stopEnglishWritingTestMergedFilePlaying = stopMergedFilePlaying ?: currentState.stopEnglishWritingTestMergedFilePlaying
-            )
-        }
-    }
+    )
     
     /**
-     * 녹음 상태 업데이트
+     * TTS 서비스 상태 업데이트
      */
-    override fun updateRecordingState(isRecording: Boolean) {
-        updateState { currentState ->
-            currentState.copy(isRecording = isRecording)
-        }
-    }
+    fun updateTtsServiceState(service: String)
     
     /**
-     * 병합 파일 생성 완료 상태 업데이트
+     * 암기 테스트 진행 상태 업데이트
      */
-    override fun updateMergedFileCreated(created: Boolean) {
-        updateState { currentState ->
-            currentState.copy(mergedFileCreated = created)
-        }
-    }
+    fun updateMemorizeTestState(
+        isRunning: Boolean? = null,
+        mode: String? = null
+    )
     
     /**
-     * 로딩 상태 업데이트
+     * 선택된 암기 레벨 업데이트
      */
-    fun updateLoadingState(isLoading: Boolean) {
-        updateState { currentState ->
-            currentState.copy(isLoading = isLoading)
-        }
-    }
-    
-    /**
-     * 에러 상태 업데이트
-     */
-    fun updateErrorState(error: String?) {
-        updateState { currentState ->
-            currentState.copy(error = error)
-        }
-    }
-    
-    /**
-     * 모든 상태 초기화
-     */
-    fun resetAllState() {
-        updateState { AppState() }
-    }
+    fun updateSelectedMemorizeLevel(level: String)
     
     /**
      * TTS 관련 상태만 초기화
      */
-    fun resetTtsState() {
-        updateTtsPlayingState(isQuestionPlaying = false, isAnswerPlaying = false, isPlaying = false)
-        updateHighlightState(
-            questionHighlightIndex = -1,
-            answerHighlightIndex = -1,
-            answerKoHighlightIndex = -1,
-            recordingHighlightIndex = -1
-        )
-    }
-    
-    /**
-     * 하이라이트 상태만 초기화
-     */
-    fun resetHighlightState() {
-        updateHighlightState(
-            questionHighlightIndex = -1,
-            answerHighlightIndex = -1,
-            answerKoHighlightIndex = -1,
-            recordingHighlightIndex = -1
-        )
-    }
-    
-    /**
-     * 현재 상태 가져오기 메서드들
-     */
-    override val currentQaItem: com.na982.opichelper.domain.entity.QaItem?
-        get() = _state.value.currentQaItem
-    
-    override val currentCategory: String?
-        get() = _state.value.currentCategory
-    
-    override val currentIndex: Int
-        get() = _state.value.currentIndex
-    
-    override val currentSentenceIndex: Int
-        get() = _state.value.currentIndex // 현재는 currentIndex와 동일
+    fun resetTtsState()
 } 

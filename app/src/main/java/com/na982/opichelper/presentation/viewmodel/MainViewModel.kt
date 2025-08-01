@@ -13,8 +13,8 @@ import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.state.AppStateManager
-import com.na982.opichelper.domain.usecase.GetCategoriesUseCase
-import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
+import com.na982.opichelper.domain.usecase.LoadCategoriesUseCase
+import com.na982.opichelper.domain.usecase.GetLeveledAnswerUseCase
 import com.na982.opichelper.domain.usecase.InitializeAppUseCase
 import com.na982.opichelper.domain.usecase.LoadQaItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,10 +33,10 @@ class MainViewModel @Inject constructor(
     private val buttonEventHandler: ButtonEventHandler,
     private val qaDataRepository: QaDataRepository,
     private val recordingTimeManager: RecordingTimeManager,
-    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val getCategoriesUseCase: LoadCategoriesUseCase,
     private val loadQaItemsUseCase: LoadQaItemsUseCase,
     private val initializeAppUseCase: InitializeAppUseCase,
-    private val getCurrentAnswerUseCase: GetCurrentAnswerUseCase,
+    private val getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
     
@@ -350,7 +350,7 @@ class MainViewModel @Inject constructor(
      * 현재 QA 아이템 업데이트
      */
     private fun updateCurrentQaItem(qaItem: QaItem, category: String, index: Int, totalCount: Int) {
-        appStateManager.updateCurrentQaItem(
+                    appStateManager.updateQaItemState(
             qaItem = qaItem,
             category = category,
             index = index,

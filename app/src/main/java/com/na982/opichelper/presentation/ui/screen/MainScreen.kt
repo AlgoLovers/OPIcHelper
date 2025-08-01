@@ -38,6 +38,7 @@ import com.na982.opichelper.presentation.ui.component.AnswerPlaySmartButton
 import com.na982.opichelper.presentation.ui.component.MemorizeTestSmartButton
 import com.na982.opichelper.presentation.ui.component.QuestionPlaySmartButton
 import com.na982.opichelper.presentation.ui.component.RecordingPlaySmartButton
+import com.na982.opichelper.presentation.ui.component.SmartButton
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.AnswerCard
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.AppTitle
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.CategorySelector
@@ -301,7 +302,7 @@ fun MainScreenRefactored(
                         )
 
                         // 암기 테스트 스마트 버튼
-                        MemorizeTestSmartButton(
+                        SmartButton(
                             buttonConfig = memorizeTestButtonConfig,
                             onPlayClick = {
                                 when (selectedLevel) {

@@ -25,7 +25,7 @@ import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlayer
 import com.na982.opichelper.domain.event.ButtonEventHandler
 import com.na982.opichelper.domain.manager.WakeLockManager
-import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
@@ -36,9 +36,8 @@ import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.state.AppStateManager
-import com.na982.opichelper.domain.state.StateManager
-import com.na982.opichelper.domain.state.StateReader
-import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
+import com.na982.opichelper.data.state.AppStateManagerImpl
+import com.na982.opichelper.domain.usecase.GetLeveledAnswerUseCase
 import com.na982.opichelper.domain.usecase.InitializeAppUseCase
 import dagger.Module
 import dagger.Provides
@@ -182,7 +181,7 @@ object AppModule {
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
         recordingTimeManager: RecordingTimeManager,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+        progressTracker: com.na982.opichelper.domain.state.MemorizationProgressTracker
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
             qaDataRepository = qaDataRepository,
@@ -197,8 +196,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRepeatListeningRepository(
-        repeatListeningUseCase: com.na982.opichelper.domain.usecase.RepeatListeningUseCase,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+        repeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
+        progressTracker: com.na982.opichelper.domain.state.MemorizationProgressTracker
     ): RepeatListeningRepository {
         return RepeatListeningRepositoryImpl(
             repeatListeningUseCase = repeatListeningUseCase,
@@ -234,7 +233,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAppStateManager(): AppStateManager {
-        return AppStateManager()
+        return AppStateManagerImpl()
     }
     
 
@@ -243,10 +242,10 @@ object AppModule {
     @Singleton
     fun provideRepeatListeningUseCase(
         ttsController: TtsController,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
+        progressTracker: com.na982.opichelper.domain.state.MemorizationProgressTracker,
         recordingTimeManager: RecordingTimeManager
-    ): com.na982.opichelper.domain.usecase.RepeatListeningUseCase {
-        return com.na982.opichelper.domain.usecase.RepeatListeningUseCase(
+    ): com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase {
+        return com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase(
             ttsController = ttsController,
             progressTracker = progressTracker,
             recordingTimeManager = recordingTimeManager
@@ -267,28 +266,17 @@ object AppModule {
         )
     }
     
-    @Provides
-    @Singleton
-    fun provideStateManager(appStateManager: AppStateManager): StateManager {
-        return appStateManager
-    }
-    
-    @Provides
-    @Singleton
-    fun provideStateReader(appStateManager: AppStateManager): StateReader {
-        return appStateManager
-    }
+
     
     @Provides
     @Singleton
     fun provideButtonEventHandler(
         ttsController: TtsController,
-        repeatListeningUseCase: com.na982.opichelper.domain.usecase.RepeatListeningUseCase,
-        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase,
-        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
-        stateManager: StateManager,
+        repeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
+        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase,
+        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
+        appStateManager: AppStateManager,
         recordingAudioPlayer: RecordingAudioPlayer,
-        stateReader: StateReader,
         audioFileManager: AudioFileManager
     ): ButtonEventHandler {
         return ButtonEventHandler(
@@ -296,9 +284,8 @@ object AppModule {
             repeatListeningUseCase = repeatListeningUseCase,
             executeEnglishWritingTestUseCase = executeEnglishWritingTestUseCase,
             executeFullMemorizationUseCase = executeFullMemorizationUseCase,
-            stateManager = stateManager,
+            appStateManager = appStateManager,
             recordingAudioPlayer = recordingAudioPlayer,
-            stateReader = stateReader,
             audioFileManager = audioFileManager
         )
     }
@@ -309,9 +296,9 @@ object AppModule {
         buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
         ttsOrchestrator: TtsOrchestrator,
         qaDataRepository: QaDataRepository,
-        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
-        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
-        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
+        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
+        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
+        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
     ): com.na982.opichelper.domain.audio.ButtonActionHandler {
         return com.na982.opichelper.domain.audio.ButtonActionHandler(
             buttonStateManager, 
@@ -335,10 +322,10 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideGetCurrentAnswerUseCase(
+    fun provideGetLeveledAnswerUseCase(
         userPreferencesRepository: UserPreferencesRepository
-    ): GetCurrentAnswerUseCase {
-        return GetCurrentAnswerUseCase(userPreferencesRepository)
+    ): GetLeveledAnswerUseCase {
+        return GetLeveledAnswerUseCase(userPreferencesRepository)
     }
     
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요

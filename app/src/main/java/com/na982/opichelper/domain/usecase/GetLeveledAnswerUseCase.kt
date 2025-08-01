@@ -7,7 +7,7 @@ import javax.inject.Inject
 /**
  * 현재 사용자 레벨에 맞는 답변을 가져오는 UseCase
  */
-class GetCurrentAnswerUseCase @Inject constructor(
+class GetLeveledAnswerUseCase @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
     

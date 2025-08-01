@@ -39,7 +39,7 @@ class InitializeAppUseCase @Inject constructor(
         val currentIndex = qaDataRepository.getCurrentIndex()
         val totalCount = qaDataRepository.getItemsInCategory(currentCategory ?: "").size
             
-            appStateManager.updateCurrentQaItem(
+            appStateManager.updateQaItemState(
                 qaItem = currentQaItem,
                 category = currentCategory,
                 index = currentIndex,

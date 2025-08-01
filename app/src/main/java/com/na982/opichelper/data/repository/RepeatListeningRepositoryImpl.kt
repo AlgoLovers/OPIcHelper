@@ -5,8 +5,8 @@ import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.ProgressData
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
-import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
-import com.na982.opichelper.domain.usecase.RepeatListeningUseCase
+import com.na982.opichelper.domain.state.MemorizationProgressTracker
+import com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,8 +20,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class RepeatListeningRepositoryImpl @Inject constructor(
-    private val repeatListeningUseCase: RepeatListeningUseCase,
-    private val progressTracker: MemorizeTestProgressTracker
+    private val repeatListeningUseCase: StartRepeatListeningUseCase,
+    private val progressTracker: MemorizationProgressTracker
 ) : RepeatListeningRepository {
     
     override suspend fun executeRepeatListening(
@@ -32,7 +32,7 @@ class RepeatListeningRepositoryImpl @Inject constructor(
         Log.d("RepeatListeningRepositoryImpl", "반복듣기 Repository 실행 시작")
         
         try {
-            repeatListeningUseCase.startRepeatListening(
+            repeatListeningUseCase.execute(
                 data = data,
                 uiCallback = uiCallback,
                 repeatCount = repeatCount

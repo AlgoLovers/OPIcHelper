@@ -2,7 +2,7 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.na982.opichelper.domain.audio.AudioRecorder
-import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker

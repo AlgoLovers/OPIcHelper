@@ -3,12 +3,12 @@ package com.na982.opichelper.data.repository
 import android.util.Log
 import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.audio.TtsOrchestrator
-import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.ProgressData
 import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
-import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+import com.na982.opichelper.domain.state.MemorizationProgressTracker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.io.File
@@ -33,7 +33,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
     private val audioRecorder: AudioRecorder,
     private val audioFileManager: AudioFileManager,
     private val recordingTimeManager: RecordingTimeManager,
-    private val progressTracker: MemorizeTestProgressTracker
+    private val progressTracker: MemorizationProgressTracker
 ) : EnglishWritingTestRepository {
     
     override suspend fun executeEnglishWritingTest(

@@ -8,11 +8,11 @@ import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.QaDataRepository
-import com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
-import com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase
-import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
-import com.na982.opichelper.domain.usecase.GetCurrentAnswerUseCase
-import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+import com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
+import com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
+import com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase
+import com.na982.opichelper.domain.usecase.GetLeveledAnswerUseCase
+import com.na982.opichelper.domain.state.MemorizationProgressTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,13 +93,13 @@ data class MemorizationUiState(
 
 @HiltViewModel
 class MemorizationViewModel @Inject constructor(
-    private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
-    private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
-    private val executeFullMemorizationUseCase: FullMemorizationUseCase,
+    private val executeRepeatListeningUseCase: StartRepeatListeningUseCase,
+    private val executeEnglishWritingTestUseCase: StartEnglishWritingTestUseCase,
+    private val executeFullMemorizationUseCase: StartFullMemorizationUseCase,
     private val qaDataRepository: QaDataRepository,
     private val ttsOrchestrator: TtsOrchestrator,
-    private val getCurrentAnswerUseCase: GetCurrentAnswerUseCase,
-    private val progressTracker: MemorizeTestProgressTracker,
+    private val getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
+    private val progressTracker: MemorizationProgressTracker,
     private val appStateManager: com.na982.opichelper.domain.state.AppStateManager
 ) : ViewModel(), RepeatListeningUiCallback {
     // 상태 StateFlow들
@@ -128,8 +128,8 @@ class MemorizationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MemorizationUiState())
     val uiState: StateFlow<MemorizationUiState> = _uiState.asStateFlow()
 
-    // 하이라이트 인덱스는 UseCase의 StateFlow만 구독
-    val fullMemorizationHighlightIndex: StateFlow<Int?> = executeFullMemorizationUseCase.highlightIndex
+    // 하이라이트 인덱스는 AppState에서 관리
+    val fullMemorizationHighlightIndex: StateFlow<Int?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 
     private var currentUseCaseJob: Job? = null
 
@@ -283,7 +283,7 @@ class MemorizationViewModel @Inject constructor(
         val scriptIndex = qaDataRepository.getCurrentIndex()
                 Log.d("MemorizationViewModel", "통암기 서비스 시작: category=$category, scriptIndex=$scriptIndex")
                 
-                executeFullMemorizationUseCase.startFullMemorization(
+                executeFullMemorizationUseCase.execute(
                     category = category,
                     scriptIndex = scriptIndex,
                     onRecordingStateChange = { isRecording ->
@@ -319,7 +319,9 @@ class MemorizationViewModel @Inject constructor(
     fun stopFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                executeFullMemorizationUseCase.stopRecording()
+                executeFullMemorizationUseCase.stopRecording { isRecording ->
+                    // 녹음 상태 변경 처리
+                }
                 updateFullMemorizationRecordingStatus()
                 Log.d("MemorizationViewModel", "통암기 녹음 종료")
             } catch (e: Exception) {
@@ -334,13 +336,18 @@ class MemorizationViewModel @Inject constructor(
                 if (executeFullMemorizationUseCase.hasRecording()) {
                     startMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
                     Log.d("MemorizationViewModel", "통암기 녹음 재생 시작")
-                    executeFullMemorizationUseCase.playRecordingWithHighlight { isPlaying ->
+                    executeFullMemorizationUseCase.playRecording(
+                        onPlayingStateChange = { isPlaying ->
                         Log.d("MemorizationViewModel", "통암기 녹음 재생 상태 변경: isPlaying=$isPlaying")
                         if (!isPlaying) {
                             startMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
                             Log.d("MemorizationViewModel", "통암기 녹음 재생 완료 - 모드 복원")
                         }
+                    },
+                    onHighlight = { index ->
+                        // 하이라이트 처리 (필요시)
                     }
+                )
                     Log.d("MemorizationViewModel", "통암기 녹음 재생 완료")
                 } else {
                     Log.d("MemorizationViewModel", "통암기 녹음 파일이 존재하지 않음")

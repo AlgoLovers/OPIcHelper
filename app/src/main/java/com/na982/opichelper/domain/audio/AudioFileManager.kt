@@ -1,4 +1,4 @@
-package com.na982.opichelper.domain.repository
+package com.na982.opichelper.domain.audio
 
 import java.io.File
 
@@ -107,6 +107,20 @@ interface AudioFileManager {
      * @return 머지 파일 (없으면 null)
      */
     suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File?
+    
+    /**
+     * 전체 암기 녹음 파일 존재 여부 확인
+     * @param category 카테고리
+     * @param scriptIndex 스크립트 인덱스
+     * @return 녹음 파일이 존재하면 true, 없으면 false
+     */
     suspend fun hasFullMemorizationRecording(category: String, scriptIndex: Int): Boolean
+    
+    /**
+     * 전체 암기 녹음 파일 가져오기
+     * @param category 카테고리
+     * @param scriptIndex 스크립트 인덱스
+     * @return 녹음 파일 (없으면 null)
+     */
     suspend fun getFullMemorizationRecording(category: String, scriptIndex: Int): File?
 } 

@@ -4,9 +4,9 @@ import com.na982.opichelper.domain.repository.QaDataLoader
 import javax.inject.Inject
 
 /**
- * 카테고리 목록을 가져오는 UseCase
+ * 카테고리 목록을 로드하는 UseCase
  */
-class GetCategoriesUseCase @Inject constructor(
+class LoadCategoriesUseCase @Inject constructor(
     private val qaDataLoader: QaDataLoader
 ) {
     suspend operator fun invoke(): List<String> {

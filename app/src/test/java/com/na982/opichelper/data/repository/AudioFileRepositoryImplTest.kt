@@ -1,6 +1,6 @@
 package com.na982.opichelper.data.repository
 
-import com.na982.opichelper.domain.repository.AudioFileManager
+import com.na982.opichelper.domain.audio.AudioFileManager
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock

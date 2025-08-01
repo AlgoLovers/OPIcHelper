@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 통암기 UseCase
+ * 전체 암기 테스트 시작 UseCase
  * 
  * 클린 아키텍처 원칙:
  * - Domain Layer에서 비즈니스 로직 처리
@@ -15,49 +15,49 @@ import javax.inject.Singleton
  * - 상태 관리와 플로우 조율 담당
  */
 @Singleton
-class ExecuteFullMemorizationUseCase @Inject constructor(
+class StartFullMemorizationUseCase @Inject constructor(
     private val fullMemorizationRepository: FullMemorizationRepository
 ) {
     
     /**
-     * 통암기 테스트 시작
+     * 전체 암기 테스트 시작
      * 1. 질문 TTS 재생
      * 2. 녹음 시작
      */
-    suspend fun startFullMemorization(
+    suspend fun execute(
         category: String,
         scriptIndex: Int,
         onRecordingStateChange: (Boolean) -> Unit,
         onPlayingStateChange: (Boolean) -> Unit
     ) {
         try {
-            Log.d("ExecuteFullMemorizationUseCase", "통암기 테스트 시작: $category, $scriptIndex")
+            Log.d("StartFullMemorizationUseCase", "전체 암기 테스트 시작: $category, $scriptIndex")
             
             // 1. 질문 TTS 재생
-            Log.d("ExecuteFullMemorizationUseCase", "질문 재생 시작")
-            Log.d("ExecuteFullMemorizationUseCase", "onPlayingStateChange(true) 호출")
+            Log.d("StartFullMemorizationUseCase", "질문 재생 시작")
+            Log.d("StartFullMemorizationUseCase", "onPlayingStateChange(true) 호출")
             onPlayingStateChange(true)
             
             fullMemorizationRepository.playQuestionWithHighlight()
             
-            Log.d("ExecuteFullMemorizationUseCase", "onPlayingStateChange(false) 호출")
+            Log.d("StartFullMemorizationUseCase", "onPlayingStateChange(false) 호출")
             onPlayingStateChange(false)
-            Log.d("ExecuteFullMemorizationUseCase", "질문 재생 완료")
+            Log.d("StartFullMemorizationUseCase", "질문 재생 완료")
             
             // TTS 완료 후 약간의 지연 (GUI 업데이트 대기)
             delay(500L)
-            Log.d("ExecuteFullMemorizationUseCase", "TTS 완료 후 지연 완료")
+            Log.d("StartFullMemorizationUseCase", "TTS 완료 후 지연 완료")
             
             // 2. 녹음 시작
-            Log.d("ExecuteFullMemorizationUseCase", "녹음 시작")
+            Log.d("StartFullMemorizationUseCase", "녹음 시작")
             onRecordingStateChange(true)
             
             fullMemorizationRepository.startRecording(category, scriptIndex)
             
-            Log.d("ExecuteFullMemorizationUseCase", "통암기 테스트 시작 완료")
+            Log.d("StartFullMemorizationUseCase", "전체 암기 테스트 시작 완료")
             
         } catch (e: Exception) {
-            Log.e("ExecuteFullMemorizationUseCase", "통암기 테스트 시작 실패", e)
+            Log.e("StartFullMemorizationUseCase", "전체 암기 테스트 시작 실패", e)
             onPlayingStateChange(false)
             onRecordingStateChange(false)
             throw e
@@ -71,15 +71,15 @@ class ExecuteFullMemorizationUseCase @Inject constructor(
         onRecordingStateChange: (Boolean) -> Unit
     ) {
         try {
-            Log.d("ExecuteFullMemorizationUseCase", "녹음 종료")
+            Log.d("StartFullMemorizationUseCase", "녹음 종료")
             
             fullMemorizationRepository.stopRecording()
             onRecordingStateChange(false)
             
-            Log.d("ExecuteFullMemorizationUseCase", "녹음 종료 완료")
+            Log.d("StartFullMemorizationUseCase", "녹음 종료 완료")
             
         } catch (e: Exception) {
-            Log.e("ExecuteFullMemorizationUseCase", "녹음 종료 실패", e)
+            Log.e("StartFullMemorizationUseCase", "녹음 종료 실패", e)
             onRecordingStateChange(false)
             throw e
         }
@@ -93,7 +93,7 @@ class ExecuteFullMemorizationUseCase @Inject constructor(
         onHighlight: (Int?) -> Unit
     ) {
         try {
-            Log.d("ExecuteFullMemorizationUseCase", "녹음 재생 시작")
+            Log.d("StartFullMemorizationUseCase", "녹음 재생 시작")
             
             onPlayingStateChange(true)
             
@@ -103,10 +103,10 @@ class ExecuteFullMemorizationUseCase @Inject constructor(
             
             onPlayingStateChange(false)
             
-            Log.d("ExecuteFullMemorizationUseCase", "녹음 재생 완료")
+            Log.d("StartFullMemorizationUseCase", "녹음 재생 완료")
             
         } catch (e: Exception) {
-            Log.e("ExecuteFullMemorizationUseCase", "녹음 재생 실패", e)
+            Log.e("StartFullMemorizationUseCase", "녹음 재생 실패", e)
             onPlayingStateChange(false)
             throw e
         }

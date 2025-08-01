@@ -19,9 +19,9 @@ class ButtonActionHandler @Inject constructor(
     private val buttonStateManager: ButtonStateManager,
     private val ttsOrchestrator: TtsOrchestrator,
     private val qaDataRepository: QaDataRepository,
-    private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.ExecuteFullMemorizationUseCase,
-    private val executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase,
-    private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
+    private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
+    private val executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
+    private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
 ) {
     
     private val coroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
@@ -49,7 +49,7 @@ class ButtonActionHandler @Inject constructor(
                 if (isFullMemorizationMode) {
                     Log.d("ButtonActionHandler", "통암기 모드 - 통암기 UseCase 시작")
                     // 통암기 모드에서는 UseCase를 통해 처리
-                    executeFullMemorizationUseCase.startFullMemorization(
+                    executeFullMemorizationUseCase.execute(
                         category = category,
                         scriptIndex = scriptIndex,
                         onRecordingStateChange = { isRecording ->
@@ -183,7 +183,7 @@ class ButtonActionHandler @Inject constructor(
                     MemorizeLevel.FULL_MEMORIZATION -> {
                         Log.d("ButtonActionHandler", "통암기 모드 시작")
                         // UseCase를 통해 통암기 실행
-                        executeFullMemorizationUseCase.startFullMemorization(
+                        executeFullMemorizationUseCase.execute(
                             category = category,
                             scriptIndex = scriptIndex,
                             onRecordingStateChange = { isRecording ->

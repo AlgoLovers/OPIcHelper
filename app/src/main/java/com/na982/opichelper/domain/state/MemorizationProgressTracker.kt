@@ -1,6 +1,7 @@
-package com.na982.opichelper.domain.usecase
+package com.na982.opichelper.domain.state
 
 import android.util.Log
+import com.na982.opichelper.domain.repository.CategoryProgress
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.ScriptProgress
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,7 @@ import javax.inject.Singleton
  * 모든 스크립트의 진행 상황을 메모리에 보관하고, 앱 종료 시에만 변경된 항목을 저장
  */
 @Singleton
-class MemorizeTestProgressTracker @Inject constructor(
+class MemorizationProgressTracker @Inject constructor(
     private val progressPersistenceService: ProgressPersistenceService
 ) {
     // 모든 스크립트의 진행 상황 (메모리에서 관리)
@@ -50,9 +51,9 @@ class MemorizeTestProgressTracker @Inject constructor(
             _progressMap.value = scriptProgressMap
             _hasProgress.value = scriptProgressMap.isNotEmpty()
             
-            Log.d("MemorizeTestProgressTracker", "모든 진행 상황 복원 완료: ${scriptProgressMap.size}개 스크립트")
+            Log.d("MemorizationProgressTracker", "모든 진행 상황 복원 완료: ${scriptProgressMap.size}개 스크립트")
         } catch (e: Exception) {
-            Log.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
+            Log.e("MemorizationProgressTracker", "진행 상황 복원 실패", e)
             _progressMap.value = emptyMap()
             _hasProgress.value = false
         }
@@ -98,102 +99,97 @@ class MemorizeTestProgressTracker @Inject constructor(
         )
         
         _progressMap.value = currentMap
+        _hasProgress.value = true
+        
+        Log.d("MemorizationProgressTracker", "진행 상황 업데이트: $key -> 문장 ${currentSentenceIndex + 1}/${totalSentences}")
+    }
+    
+    /**
+     * 특정 스크립트의 진행 상황 삭제 (암기레벨별)
+     */
+    fun clearScriptProgress(category: String, scriptIndex: Int, memorizeLevel: String) {
+        val key = "${category}_${scriptIndex}_${memorizeLevel}"
+        val currentMap = _progressMap.value.toMutableMap()
+        
+        currentMap.remove(key)
+        _progressMap.value = currentMap
         _hasProgress.value = currentMap.isNotEmpty()
         
-        Log.d("MemorizeTestProgressTracker", "진행 상황 업데이트: $key -> 문장 $currentSentenceIndex/$totalSentences")
+        Log.d("MemorizationProgressTracker", "진행 상황 삭제: $key")
     }
     
     /**
-     * 현재 문장 인덱스만 업데이트 (암기레벨별)
-     */
-    fun updateCurrentSentenceIndex(category: String, scriptIndex: Int, memorizeLevel: String, sentenceIndex: Int) {
-        val key = "${category}_${scriptIndex}_${memorizeLevel}"
-        val currentProgress = _progressMap.value[key]
-        
-        if (currentProgress != null) {
-            val currentMap = _progressMap.value.toMutableMap()
-            currentMap[key] = currentProgress.copy(
-                currentSentenceIndex = sentenceIndex,
-                needsSave = true
-            )
-            _progressMap.value = currentMap
-            
-            Log.d("MemorizeTestProgressTracker", "문장 인덱스 업데이트: $key -> $sentenceIndex")
-        }
-    }
-    
-    /**
-     * 앱 종료 시 변경된 진행 상황만 저장
+     * 변경된 진행 상황만 저장
      */
     suspend fun persistChangedProgress() {
         try {
             val changedProgress = _progressMap.value.values.filter { it.needsSave }
             
             if (changedProgress.isNotEmpty()) {
-                // CategoryProgress로 변환하여 저장
-                changedProgress.forEach { scriptProgress: ScriptProgress ->
-                    val categoryProgress = com.na982.opichelper.domain.repository.CategoryProgress(
+                Log.d("MemorizationProgressTracker", "변경된 진행 상황 저장 시작: ${changedProgress.size}개")
+                
+                // 각 진행 상황을 저장
+                changedProgress.forEach { scriptProgress ->
+                    val categoryProgress = CategoryProgress(
                         category = scriptProgress.category,
                         scriptIndex = scriptProgress.scriptIndex,
                         memorizeLevel = scriptProgress.memorizeLevel,
                         currentSentenceIndex = scriptProgress.currentSentenceIndex,
                         totalSentences = scriptProgress.totalSentences,
-                        isMemorizeTestRunning = scriptProgress.isMemorizeTestRunning,
-                        timestamp = scriptProgress.timestamp
+                        isMemorizeTestRunning = scriptProgress.isMemorizeTestRunning
                     )
-                    
                     progressPersistenceService.saveCategoryProgress(categoryProgress)
                 }
                 
                 // 저장 완료 후 needsSave 플래그 제거
-                val currentMap = _progressMap.value.toMutableMap()
-                changedProgress.forEach { scriptProgress: ScriptProgress ->
-                    val key = scriptProgress.getKey()
-                    currentMap[key] = scriptProgress.toPersistable()
+                val updatedMap = _progressMap.value.mapValues { (_, progress) ->
+                    progress.copy(needsSave = false)
                 }
-                _progressMap.value = currentMap
+                _progressMap.value = updatedMap
                 
-                Log.d("MemorizeTestProgressTracker", "변경된 진행 상황 저장 완료: ${changedProgress.size}개")
-            } else {
-                Log.d("MemorizeTestProgressTracker", "저장할 진행 상황 없음")
+                Log.d("MemorizationProgressTracker", "변경된 진행 상황 저장 완료")
             }
         } catch (e: Exception) {
-            Log.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
+            Log.e("MemorizationProgressTracker", "진행 상황 저장 실패", e)
         }
     }
     
     /**
-     * 특정 스크립트의 진행 상황 삭제 (암기레벨별)
+     * 모든 진행 상황 저장 (앱 종료 시)
      */
-    suspend fun clearScriptProgress(category: String, scriptIndex: Int, memorizeLevel: String) {
+    suspend fun persistAllProgress() {
         try {
-            val key = "${category}_${scriptIndex}_${memorizeLevel}"
-            val currentMap = _progressMap.value.toMutableMap()
-            currentMap.remove(key)
-            _progressMap.value = currentMap
-            _hasProgress.value = currentMap.isNotEmpty()
+            val allProgress = _progressMap.value.values
             
-            // 저장소에서도 삭제
-            progressPersistenceService.clearCategoryProgress(category, scriptIndex, memorizeLevel)
-            
-            Log.d("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제: $key")
+            if (allProgress.isNotEmpty()) {
+                Log.d("MemorizationProgressTracker", "모든 진행 상황 저장 시작: ${allProgress.size}개")
+                
+                // 각 진행 상황을 저장
+                allProgress.forEach { scriptProgress ->
+                    val categoryProgress = CategoryProgress(
+                        category = scriptProgress.category,
+                        scriptIndex = scriptProgress.scriptIndex,
+                        memorizeLevel = scriptProgress.memorizeLevel,
+                        currentSentenceIndex = scriptProgress.currentSentenceIndex,
+                        totalSentences = scriptProgress.totalSentences,
+                        isMemorizeTestRunning = scriptProgress.isMemorizeTestRunning
+                    )
+                    progressPersistenceService.saveCategoryProgress(categoryProgress)
+                }
+                
+                Log.d("MemorizationProgressTracker", "모든 진행 상황 저장 완료")
+            }
         } catch (e: Exception) {
-            Log.e("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제 실패", e)
+            Log.e("MemorizationProgressTracker", "모든 진행 상황 저장 실패", e)
         }
     }
     
     /**
-     * 모든 진행 상황 삭제
+     * 모든 진행 상황 초기화
      */
-    suspend fun clearAllProgress() {
-        try {
-            progressPersistenceService.clearAllProgress()
-            _progressMap.value = emptyMap()
-            _hasProgress.value = false
-            
-            Log.d("MemorizeTestProgressTracker", "모든 진행 상황 삭제 완료")
-        } catch (e: Exception) {
-            Log.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)
-        }
+    fun clearAllProgress() {
+        _progressMap.value = emptyMap()
+        _hasProgress.value = false
+        Log.d("MemorizationProgressTracker", "모든 진행 상황 초기화")
     }
 } 

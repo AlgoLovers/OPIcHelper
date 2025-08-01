@@ -3,9 +3,10 @@ package com.na982.opichelper.domain.usecase
 import android.util.Log
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * 영작 테스트 실행 UseCase
+ * 영작 테스트 시작 UseCase
  * 
  * 영작 테스트 실행 (부분암기 테스트)
  * 
@@ -14,12 +15,12 @@ import javax.inject.Inject
  * - Repository 인터페이스에만 의존
  * - 단일 책임 원칙 준수
  */
-@javax.inject.Singleton
-class ExecuteEnglishWritingTestUseCase @Inject constructor(
+@Singleton
+class StartEnglishWritingTestUseCase @Inject constructor(
     private val englishWritingTestRepository: EnglishWritingTestRepository
 ) {
     /**
-     * 영작 테스트 실행
+     * 영작 테스트 시작
      * 
      * @param answerKo 한글 답변
      * @param answerEn 영문 답변
@@ -42,7 +43,7 @@ class ExecuteEnglishWritingTestUseCase @Inject constructor(
         onRecordingStateChange: (Boolean) -> Unit,
         onMergedFileCreated: () -> Unit
     ) {
-        Log.d("ExecuteEnglishWritingTestUseCase", "영작 테스트 UseCase 실행 시작")
+        Log.d("StartEnglishWritingTestUseCase", "영작 테스트 시작")
         
         try {
             englishWritingTestRepository.executeEnglishWritingTest(
@@ -57,7 +58,7 @@ class ExecuteEnglishWritingTestUseCase @Inject constructor(
                 onMergedFileCreated = onMergedFileCreated
             )
         } catch (e: Exception) {
-            Log.e("ExecuteEnglishWritingTestUseCase", "영작 테스트 실행 중 오류", e)
+            Log.e("StartEnglishWritingTestUseCase", "영작 테스트 실행 중 오류", e)
             throw e
         }
     }
