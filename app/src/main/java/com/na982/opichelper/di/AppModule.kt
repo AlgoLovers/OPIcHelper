@@ -57,7 +57,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
     
-    // Data Layer Implementations
+    // ===== Data Layer Implementations =====
+    
     @Provides
     @Singleton
     fun provideAudioRecorder(@ApplicationContext context: Context): AudioRecorder {
@@ -82,7 +83,8 @@ object AppModule {
         return AudioFileManagerImpl(context)
     }
     
-    // TTS Players
+    // ===== TTS Players =====
+    
     @Provides
     @Singleton
     @Named("google")
@@ -106,6 +108,20 @@ object AppModule {
     ): TtsOrchestrator {
         return TtsOrchestrator(context, googleTtsPlayer, samsungTtsPlayer)
     }
+    
+    @Provides
+    @Singleton
+    fun provideTtsController(
+        ttsOrchestrator: TtsOrchestrator,
+        appStateManager: AppStateManager
+    ): TtsController {
+        return com.na982.opichelper.data.audio.TtsControllerImpl(
+            ttsOrchestrator = ttsOrchestrator,
+            appStateManager = appStateManager
+        )
+    }
+    
+    // ===== Repository Layer =====
     
     @Provides
     @Singleton
@@ -152,13 +168,6 @@ object AppModule {
         recordingTimeManager: RecordingTimeManager
     ): RecordingFileRepository {
         return RecordingFileRepositoryImpl(audioFileManager, audioRecorder, recordingAudioPlayer, recordingTimeManager)
-    }
-    
-    // WakeLock Manager
-    @Provides
-    @Singleton
-    fun provideWakeLockManager(@ApplicationContext context: Context): WakeLockManager {
-        return WakeLockManager(context)
     }
     
     @Provides
@@ -229,11 +238,12 @@ object AppModule {
         )
     }
     
-    // 새로운 버튼 관리 클래스들
+    // ===== Manager Classes =====
+    
     @Provides
     @Singleton
-    fun provideButtonStateObserver(ttsOrchestrator: TtsOrchestrator): com.na982.opichelper.domain.button.ButtonStateObserver {
-        return ttsOrchestrator
+    fun provideWakeLockManager(@ApplicationContext context: Context): WakeLockManager {
+        return WakeLockManager(context)
     }
     
     @Provides
@@ -242,142 +252,12 @@ object AppModule {
         return AppStateManagerImpl()
     }
     
-
-    
-    @Provides
-    @Singleton
-    fun provideRepeatListeningUseCase(
-        ttsController: TtsController,
-        progressTracker: com.na982.opichelper.domain.state.MemorizationProgressTracker,
-        recordingTimeManager: RecordingTimeManager
-    ): com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase {
-        return com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase(
-            ttsController = ttsController,
-            progressTracker = progressTracker,
-            recordingTimeManager = recordingTimeManager
-        )
-    }
-    
-
-    
-    @Provides
-    @Singleton
-    fun provideTtsController(
-        ttsOrchestrator: TtsOrchestrator,
-        appStateManager: AppStateManager
-    ): TtsController {
-        return com.na982.opichelper.data.audio.TtsControllerImpl(
-            ttsOrchestrator = ttsOrchestrator,
-            appStateManager = appStateManager
-        )
-    }
-    
-
-    
-    // Strategy Pattern 관련 의존성 주입
-    @Provides
-    @Singleton
-    fun provideRepeatListeningStrategy(
-        repeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
-    ): RepeatListeningStrategy {
-        return RepeatListeningStrategy(repeatListeningUseCase)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideEnglishWritingStrategy(
-        englishWritingUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
-    ): EnglishWritingStrategy {
-        return EnglishWritingStrategy(englishWritingUseCase)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideFullMemorizationStrategy(
-        fullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase
-    ): FullMemorizationStrategy {
-        return FullMemorizationStrategy(fullMemorizationUseCase)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideMemorizationStrategyFactory(
-        repeatListeningStrategy: RepeatListeningStrategy,
-        englishWritingStrategy: EnglishWritingStrategy,
-        fullMemorizationStrategy: FullMemorizationStrategy
-    ): MemorizationStrategyFactory {
-        return MemorizationStrategyFactory(
-            repeatListeningStrategy = repeatListeningStrategy,
-            englishWritingStrategy = englishWritingStrategy,
-            fullMemorizationStrategy = fullMemorizationStrategy
-        )
-    }
-    
-    @Provides
-    @Singleton
-    fun provideButtonEventHandler(
-        ttsController: TtsController,
-        strategyFactory: MemorizationStrategyFactory,
-        appStateManager: AppStateManager,
-        recordingAudioPlayer: RecordingAudioPlayer,
-        audioFileManager: AudioFileManager
-    ): ButtonEventHandler {
-        return ButtonEventHandler(
-            ttsController = ttsController,
-            strategyFactory = strategyFactory,
-            appStateManager = appStateManager,
-            recordingAudioPlayer = recordingAudioPlayer,
-            audioFileManager = audioFileManager
-        )
-    }
-    
     @Provides
     @Singleton
     fun provideButtonStateManager(): com.na982.opichelper.domain.button.ButtonStateManager {
         return com.na982.opichelper.domain.button.ButtonStateManager()
     }
     
-    @Provides
-    @Singleton
-    fun provideButtonActionHandler(
-        buttonStateManager: com.na982.opichelper.domain.button.ButtonStateManager,
-        ttsOrchestrator: TtsOrchestrator,
-        qaDataRepository: QaDataRepository,
-        userPreferencesRepository: UserPreferencesRepository,
-        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
-        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
-        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
-    ): com.na982.opichelper.domain.button.ButtonActionHandler {
-        return com.na982.opichelper.domain.button.ButtonActionHandler(
-            buttonStateManager, 
-            ttsOrchestrator, 
-            qaDataRepository,
-            userPreferencesRepository,
-            executeFullMemorizationUseCase,
-            executeRepeatListeningUseCase,
-            executeEnglishWritingTestUseCase
-        )
-    }
-    
-    @Provides
-    @Singleton
-    fun provideInitializeAppUseCase(
-        qaDataRepository: QaDataRepository,
-        userPreferencesRepository: UserPreferencesRepository,
-        appStateManager: AppStateManager
-    ): InitializeAppUseCase {
-        return InitializeAppUseCase(qaDataRepository, userPreferencesRepository, appStateManager)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideGetLeveledAnswerUseCase(
-        userPreferencesRepository: UserPreferencesRepository
-    ): GetLeveledAnswerUseCase {
-        return GetLeveledAnswerUseCase(userPreferencesRepository)
-    }
-    
-    // Manager 클래스들 의존성 주입
     @Provides
     @Singleton
     fun provideCategoryManager(
@@ -430,5 +310,125 @@ object AppModule {
         )
     }
     
-    // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
+    // ===== UseCase Layer =====
+    
+    @Provides
+    @Singleton
+    fun provideRepeatListeningUseCase(
+        ttsController: TtsController,
+        progressTracker: com.na982.opichelper.domain.state.MemorizationProgressTracker,
+        recordingTimeManager: RecordingTimeManager
+    ): com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase {
+        return com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase(
+            ttsController = ttsController,
+            progressTracker = progressTracker,
+            recordingTimeManager = recordingTimeManager
+        )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideInitializeAppUseCase(
+        qaDataRepository: QaDataRepository,
+        userPreferencesRepository: UserPreferencesRepository,
+        appStateManager: AppStateManager
+    ): InitializeAppUseCase {
+        return InitializeAppUseCase(qaDataRepository, userPreferencesRepository, appStateManager)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideGetLeveledAnswerUseCase(
+        userPreferencesRepository: UserPreferencesRepository
+    ): GetLeveledAnswerUseCase {
+        return GetLeveledAnswerUseCase(userPreferencesRepository)
+    }
+    
+    // ===== Strategy Pattern =====
+    
+    @Provides
+    @Singleton
+    fun provideRepeatListeningStrategy(
+        repeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
+    ): RepeatListeningStrategy {
+        return RepeatListeningStrategy(repeatListeningUseCase)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideEnglishWritingStrategy(
+        englishWritingUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
+    ): EnglishWritingStrategy {
+        return EnglishWritingStrategy(englishWritingUseCase)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideFullMemorizationStrategy(
+        fullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase
+    ): FullMemorizationStrategy {
+        return FullMemorizationStrategy(fullMemorizationUseCase)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideMemorizationStrategyFactory(
+        repeatListeningStrategy: RepeatListeningStrategy,
+        englishWritingStrategy: EnglishWritingStrategy,
+        fullMemorizationStrategy: FullMemorizationStrategy
+    ): MemorizationStrategyFactory {
+        return MemorizationStrategyFactory(
+            repeatListeningStrategy = repeatListeningStrategy,
+            englishWritingStrategy = englishWritingStrategy,
+            fullMemorizationStrategy = fullMemorizationStrategy
+        )
+    }
+    
+    // ===== Event Handlers =====
+    
+    @Provides
+    @Singleton
+    fun provideButtonStateObserver(ttsOrchestrator: TtsOrchestrator): com.na982.opichelper.domain.button.ButtonStateObserver {
+        return ttsOrchestrator
+    }
+    
+    @Provides
+    @Singleton
+    fun provideButtonEventHandler(
+        ttsController: TtsController,
+        strategyFactory: MemorizationStrategyFactory,
+        appStateManager: AppStateManager,
+        recordingAudioPlayer: RecordingAudioPlayer,
+        audioFileManager: AudioFileManager
+    ): ButtonEventHandler {
+        return ButtonEventHandler(
+            ttsController = ttsController,
+            strategyFactory = strategyFactory,
+            appStateManager = appStateManager,
+            recordingAudioPlayer = recordingAudioPlayer,
+            audioFileManager = audioFileManager
+        )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideButtonActionHandler(
+        buttonStateManager: com.na982.opichelper.domain.button.ButtonStateManager,
+        ttsOrchestrator: TtsOrchestrator,
+        qaDataRepository: QaDataRepository,
+        userPreferencesRepository: UserPreferencesRepository,
+        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
+        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
+        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
+    ): com.na982.opichelper.domain.button.ButtonActionHandler {
+        return com.na982.opichelper.domain.button.ButtonActionHandler(
+            buttonStateManager, 
+            ttsOrchestrator, 
+            qaDataRepository,
+            userPreferencesRepository,
+            executeFullMemorizationUseCase,
+            executeRepeatListeningUseCase,
+            executeEnglishWritingTestUseCase
+        )
+    }
 } 
