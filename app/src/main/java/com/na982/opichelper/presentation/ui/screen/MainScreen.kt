@@ -70,7 +70,6 @@ fun MainScreenRefactored(
     // ===== 새로운 아키텍처 상태 =====
     val appState by viewModel.appState.collectAsState()
     val memorizationViewModelInstance = memorizationViewModel ?: hiltViewModel<MemorizationViewModel>()
-    val memorizeLevels by memorizationViewModelInstance.memorizeLevels.collectAsState()
     val selectedLevel = appState.selectedMemorizeLevel
     val currentQaItemState = appState.currentQaItem
     val currentCategoryState = appState.currentCategory
@@ -85,8 +84,6 @@ fun MainScreenRefactored(
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
 
     // ===== 영작 테스트 (English Writing) =====
-    val englishWritingTestCompleted by memorizationViewModelInstance.englishWritingTestCompleted.collectAsState()
-    val stopEnglishWritingTestMergedFilePlaying by memorizationViewModelInstance.stopEnglishWritingTestMergedFilePlaying.collectAsState()
     val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
 
     // ===== 통암기 (Full Memorization) =====
@@ -127,39 +124,12 @@ fun MainScreenRefactored(
         }
     }
 
-    // 영작테스트 완료 시 병합 파일 확인
-    LaunchedEffect(englishWritingTestCompleted) {
-        if (englishWritingTestCompleted) {
-            Log.d("MainScreenRefactored", "영작테스트 완료 이벤트 감지 - 병합 파일 확인 시작")
-            delay(500L) // 파일 시스템 동기화 추가 대기
-            viewModel.checkEnglishWritingTestMergedFile()
-            memorizationViewModelInstance.resetEnglishWritingTestCompleted()
-            Log.d("MainScreenRefactored", "영작테스트 완료 이벤트 처리 완료")
-        }
-    }
-
     // 영작테스트 모드 종료 시 병합 파일 확인
     LaunchedEffect(isEnglishWritingTestMode) {
         if (!isEnglishWritingTestMode) {
             Log.d("MainScreenRefactored", "영작테스트 모드 종료 - 병합 파일 확인")
             viewModel.checkEnglishWritingTestMergedFile()
         }
-    }
-
-    // 영작테스트 녹음 파일 재생 중단 이벤트 처리
-    LaunchedEffect(stopEnglishWritingTestMergedFilePlaying) {
-        if (stopEnglishWritingTestMergedFilePlaying) {
-            Log.d("MainScreenRefactored", "영작테스트 녹음 파일 재생 중단 이벤트 감지")
-            viewModel.handleStopClick(ButtonFunction.RecordingPlay)
-            memorizationViewModelInstance.resetStopEnglishWritingTestMergedFilePlaying()
-            Log.d("MainScreenRefactored", "영작테스트 녹음 파일 재생 중단 처리 완료")
-        }
-    }
-
-    // 암기레벨 변경 감지 및 상태 초기화
-    LaunchedEffect(selectedLevel) {
-        Log.d("MainScreenRefactored", "암기레벨 변경 감지: $selectedLevel")
-        memorizationViewModelInstance.onMemorizeLevelChanged()
     }
 
     // 다크 테마 감지
@@ -233,7 +203,7 @@ fun MainScreenRefactored(
                     ) {
                         MemorizeLevelSelector(
                             selectedLevel = selectedLevel,
-                            levels = memorizeLevels,
+                            levels = listOf("반복 듣기", "영작 테스트", "통암기"),
                             onLevelSelected = {
                                 viewModel.handleMemorizeLevelChange(it)
                             }

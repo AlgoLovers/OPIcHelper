@@ -13,4 +13,12 @@ class LoadQaItemsUseCase @Inject constructor(
         val data = qaDataLoader.loadQaItemsFromAssets()
         return data
     }
+    
+    /**
+     * 특정 카테고리의 QA 아이템들을 로드하는 UseCase
+     */
+    suspend operator fun invoke(category: String): List<com.na982.opichelper.domain.entity.QaItem> {
+        val allData = qaDataLoader.loadQaItemsFromAssets()
+        return allData[category] ?: emptyList()
+    }
 } 

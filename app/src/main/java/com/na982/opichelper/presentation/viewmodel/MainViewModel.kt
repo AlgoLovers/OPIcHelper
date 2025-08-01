@@ -33,8 +33,9 @@ class MainViewModel @Inject constructor(
     private val buttonEventHandler: ButtonEventHandler,
     private val qaDataRepository: QaDataRepository,
     private val recordingTimeManager: RecordingTimeManager,
-    private val getCategoriesUseCase: LoadCategoriesUseCase,
-    private val loadQaItemsUseCase: LoadQaItemsUseCase,
+    private val categoryManager: CategoryManager,
+    private val audioControlManager: AudioControlManager,
+    private val memorizationManager: MemorizationManager,
     private val initializeAppUseCase: InitializeAppUseCase,
     private val getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
     private val userPreferencesRepository: UserPreferencesRepository
@@ -42,6 +43,21 @@ class MainViewModel @Inject constructor(
     
     // 앱 상태를 직접 관찰
     val appState: StateFlow<com.na982.opichelper.domain.state.AppState> = appStateManager.state
+    
+    // 카테고리 관련 상태는 CategoryManager에서 가져오기
+    val categories: StateFlow<List<String>> = categoryManager.categories
+    val currentCategory: StateFlow<String?> = categoryManager.currentCategory
+    val categoryLoading: StateFlow<Boolean> = categoryManager.isLoading
+    val categoryError: StateFlow<String?> = categoryManager.error
+    
+    // 오디오 제어 관련 상태는 AudioControlManager에서 가져오기
+    val isQuestionPlaying: StateFlow<Boolean> = audioControlManager.isQuestionPlaying
+    val isAnswerPlaying: StateFlow<Boolean> = audioControlManager.isAnswerPlaying
+    val isPlaying: StateFlow<Boolean> = audioControlManager.isPlaying
+    val audioError: StateFlow<String?> = audioControlManager.error
+    
+    // 암기 테스트 관련 상태는 MemorizationManager에서 가져오기
+    val memorizationState: StateFlow<MemorizationUiState> = memorizationManager.uiState
     
     init {
         Log.d("MainViewModelRefactored", "새로운 아키텍처 MainViewModel 초기화")
@@ -71,55 +87,32 @@ class MainViewModel @Inject constructor(
     }
     
     /**
-     * 카테고리 변경
+     * 카테고리 변경 (CategoryManager에 위임)
      */
     fun changeCategory(category: String) {
-        Log.d("MainViewModelRefactored", "카테고리 변경: $category")
-        
-        // 기존 작업 중단
-        stopAllOperations()
-        
-        // 새로운 카테고리로 변경
-        viewModelScope.launch {
-            try {
-                            qaDataRepository.selectCategory(category)
-            val qaItem = qaDataRepository.getCurrentQaItem()
-                if (qaItem != null) {
-                    val currentIndex = qaDataRepository.getCurrentIndex()
-                    val itemsInCategory = qaDataRepository.getItemsInCategory(category)
-                    updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
-                } else {
-                    Log.e("MainViewModelRefactored", "QA 아이템이 비어있음")
-                }
-                
-                // 암기 모드 상태 초기화
-                appStateManager.updateMemorizationModeState(
-                    isRepeatListeningMode = false,
-                    isEnglishWritingTestMode = false,
-                    isFullMemorizationMode = false
-                )
-                
-            } catch (e: Exception) {
-                Log.e("MainViewModelRefactored", "카테고리 변경 실패", e)
-                appStateManager.updateErrorState(e.message)
-            }
-        }
+        Log.d("MainViewModelRefactored", "카테고리 변경 위임: $category")
+        categoryManager.changeCategory(category)
     }
     
     /**
-     * 다음 QA 아이템으로 이동
+     * 다음 QA 아이템으로 이동 (임시 구현)
      */
     fun nextQaItem() {
         viewModelScope.launch {
             try {
-                            qaDataRepository.nextQaItem()
-            val qaItem = qaDataRepository.getCurrentQaItem()
-            val category = qaDataRepository.getCurrentCategory() ?: return@launch
-            val currentIndex = qaDataRepository.getCurrentIndex()
-            val itemsInCategory = qaDataRepository.getItemsInCategory(category)
+                qaDataRepository.nextQaItem()
+                val qaItem = qaDataRepository.getCurrentQaItem()
+                val category = qaDataRepository.getCurrentCategory() ?: return@launch
+                val currentIndex = qaDataRepository.getCurrentIndex()
+                val itemsInCategory = qaDataRepository.getItemsInCategory(category)
                 
                 if (qaItem != null) {
-                    updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
+                    appStateManager.updateQaItemState(
+                        qaItem = qaItem,
+                        category = category,
+                        index = currentIndex,
+                        totalCount = itemsInCategory.size
+                    )
                 }
             } catch (e: Exception) {
                 Log.e("MainViewModelRefactored", "다음 QA 아이템 이동 실패", e)
@@ -129,19 +122,24 @@ class MainViewModel @Inject constructor(
     }
     
     /**
-     * 이전 QA 아이템으로 이동
+     * 이전 QA 아이템으로 이동 (임시 구현)
      */
     fun previousQaItem() {
         viewModelScope.launch {
             try {
-                            qaDataRepository.previousQaItem()
-            val qaItem = qaDataRepository.getCurrentQaItem()
-            val category = qaDataRepository.getCurrentCategory() ?: return@launch
-            val currentIndex = qaDataRepository.getCurrentIndex()
-            val itemsInCategory = qaDataRepository.getItemsInCategory(category)
+                qaDataRepository.previousQaItem()
+                val qaItem = qaDataRepository.getCurrentQaItem()
+                val category = qaDataRepository.getCurrentCategory() ?: return@launch
+                val currentIndex = qaDataRepository.getCurrentIndex()
+                val itemsInCategory = qaDataRepository.getItemsInCategory(category)
                 
                 if (qaItem != null) {
-                    updateCurrentQaItem(qaItem, category, currentIndex, itemsInCategory.size)
+                    appStateManager.updateQaItemState(
+                        qaItem = qaItem,
+                        category = category,
+                        index = currentIndex,
+                        totalCount = itemsInCategory.size
+                    )
                 }
             } catch (e: Exception) {
                 Log.e("MainViewModelRefactored", "이전 QA 아이템 이동 실패", e)
@@ -174,82 +172,34 @@ class MainViewModel @Inject constructor(
     }
     
     /**
-     * 모든 작업을 중단하는 헬퍼 메서드
+     * 모든 작업을 중단하는 헬퍼 메서드 (AudioControlManager에 위임)
      */
     private fun stopAllOperations() {
-        viewModelScope.launch {
-            try {
-                Log.d("MainViewModelRefactored", "모든 작업 중단")
-                
-                // 모든 버튼에 대해 중지 이벤트 발생
-                val stopEvents = listOf(
-                    ButtonEvent.StopClick(ButtonFunction.QuestionPlay),
-                    ButtonEvent.StopClick(ButtonFunction.AnswerPlay),
-                    ButtonEvent.StopClick(ButtonFunction.MemorizeTest),
-                    ButtonEvent.StopClick(ButtonFunction.RecordingPlay)
-                )
-                
-                for (event in stopEvents) {
-                    buttonEventHandler.handleEvent(event)
-                }
-                
-                Log.d("MainViewModelRefactored", "모든 작업 중단 완료")
-            } catch (e: Exception) {
-                Log.e("MainViewModelRefactored", "작업 중단 실패", e)
-            }
-        }
+        audioControlManager.stopAllAudio()
     }
     
     /**
-     * 질문 재생 버튼 클릭
+     * 질문 재생 버튼 클릭 (AudioControlManager에 위임)
      */
     fun handleQuestionPlayClick() {
         val currentState = appState.value
         val currentQaItem = currentState.currentQaItem ?: return
         
-        viewModelScope.launch {
-            try {
-                val event = ButtonEvent.QuestionPlayClick(
-                    question = currentQaItem.questionEn,
-                    isFullMemorizationMode = currentState.selectedMemorizeLevel == "통암기",
-                    category = currentState.currentCategory ?: "",
-                    scriptIndex = currentState.currentIndex
-                )
-                
-                Log.d("MainViewModelRefactored", "질문 재생 이벤트 발생: $event")
-                buttonEventHandler.handleEvent(event)
-                
-            } catch (e: Exception) {
-                Log.e("MainViewModelRefactored", "질문 재생 실패", e)
-                appStateManager.updateErrorState(e.message)
-            }
-        }
+        audioControlManager.playQuestion(currentQaItem)
     }
     
     /**
-     * 답변 재생 버튼 클릭
+     * 답변 재생 버튼 클릭 (AudioControlManager에 위임)
      */
     fun handleAnswerPlayClick() {
         val currentState = appState.value
         val currentQaItem = currentState.currentQaItem ?: return
         
-        viewModelScope.launch {
-            try {
-                val answer = getCurrentAnswer(currentQaItem)
-                val event = ButtonEvent.AnswerPlayClick(answer = answer)
-                
-                Log.d("MainViewModelRefactored", "답변 재생 이벤트 발생: $event")
-                buttonEventHandler.handleEvent(event)
-                
-            } catch (e: Exception) {
-                Log.e("MainViewModelRefactored", "답변 재생 실패", e)
-                appStateManager.updateErrorState(e.message)
-            }
-        }
+        audioControlManager.playAnswer(currentQaItem)
     }
     
     /**
-     * 암기 테스트 버튼 클릭
+     * 암기 테스트 버튼 클릭 (MemorizationManager에 위임)
      */
     fun handleMemorizeTestClick() {
         val currentState = appState.value
@@ -257,38 +207,21 @@ class MainViewModel @Inject constructor(
         
         Log.d("MainViewModelRefactored", "암기 테스트 버튼 클릭 - 선택된 레벨: ${currentState.selectedMemorizeLevel}")
         
-        viewModelScope.launch {
-            try {
-                val memorizeLevel = when (currentState.selectedMemorizeLevel) {
-                    "반복듣기" -> MemorizeLevel.REPEAT_LISTENING
-                    "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
-                    "영작테스트" -> MemorizeLevel.ENGLISH_WRITING
-                    "통암기" -> MemorizeLevel.FULL_MEMORIZATION
-                    else -> {
-                        Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
-                        return@launch
-                    }
-                }
-                
-                val answerKo = getCurrentAnswerKo(currentQaItem)
-                val answerEn = getCurrentAnswer(currentQaItem)
-                
-                Log.d("MainViewModelRefactored", "암기 테스트 데이터 준비 - 레벨: $memorizeLevel, 카테고리: ${currentState.currentCategory}, 인덱스: ${currentState.currentIndex}")
-                
-                val event = ButtonEvent.MemorizeTestClick(
-                    memorizeLevel = memorizeLevel,
-                    category = currentState.currentCategory ?: "",
-                    scriptIndex = currentState.currentIndex,
-                    answerKo = answerKo,
-                    answerEn = answerEn
-                )
-                
-                Log.d("MainViewModelRefactored", "암기 테스트 이벤트 발생: $event")
-                buttonEventHandler.handleEvent(event)
-                
-            } catch (e: Exception) {
-                Log.e("MainViewModelRefactored", "암기 테스트 실패", e)
-                appStateManager.updateErrorState(e.message)
+        val category = currentState.currentCategory ?: return
+        val scriptIndex = currentState.currentIndex
+        
+        when (currentState.selectedMemorizeLevel) {
+            "반복듣기" -> {
+                memorizationManager.startRepeatListening(category, scriptIndex)
+            }
+            "영작테스트" -> {
+                memorizationManager.startEnglishWritingTest(category, scriptIndex)
+            }
+            "통암기" -> {
+                memorizationManager.startFullMemorization(category, scriptIndex)
+            }
+            else -> {
+                Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
             }
         }
     }
@@ -346,25 +279,7 @@ class MainViewModel @Inject constructor(
         }
     }
     
-    /**
-     * 현재 QA 아이템 업데이트
-     */
-    private fun updateCurrentQaItem(qaItem: QaItem, category: String, index: Int, totalCount: Int) {
-                    appStateManager.updateQaItemState(
-            qaItem = qaItem,
-            category = category,
-            index = index,
-            totalCount = totalCount
-        )
-        
-        // 카드 상태 초기화
-        appStateManager.updateCardState(
-            isQuestionCardFlipped = false,
-            isAnswerCardFlipped = false
-        )
-        
-        // 하이라이트는 TtsControllerImpl에서만 처리
-    }
+
     
     /**
      * 현재 답변 가져오기 (UseCase 사용)
@@ -470,7 +385,7 @@ class MainViewModel @Inject constructor(
     }
     
     fun handleCategoryChange(category: String) {
-        changeCategory(category)
+        categoryManager.changeCategory(category)
     }
     
     fun handleMemorizeLevelChange(level: String) {
