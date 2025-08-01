@@ -1,4 +1,4 @@
-package com.na982.opichelper.presentation.viewmodel
+package com.na982.opichelper.domain.manager
 
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel

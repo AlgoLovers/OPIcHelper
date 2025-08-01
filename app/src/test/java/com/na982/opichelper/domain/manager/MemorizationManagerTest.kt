@@ -1,4 +1,4 @@
-package com.na982.opichelper.presentation.viewmodel
+package com.na982.opichelper.domain.manager
 
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.entity.QaItem
@@ -54,8 +54,6 @@ class MemorizationManagerTest {
             executeRepeatListeningUseCase = mockExecuteRepeatListeningUseCase,
             executeEnglishWritingTestUseCase = mockExecuteEnglishWritingTestUseCase,
             executeFullMemorizationUseCase = mockExecuteFullMemorizationUseCase,
-            qaDataRepository = mockQaDataRepository,
-            ttsOrchestrator = mockTtsOrchestrator,
             getCurrentAnswerUseCase = mockGetCurrentAnswerUseCase,
             progressTracker = mockProgressTracker
         )

@@ -25,6 +25,12 @@ import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlayer
 import com.na982.opichelper.domain.event.ButtonEventHandler
 import com.na982.opichelper.domain.manager.WakeLockManager
+import com.na982.opichelper.domain.manager.CategoryManager
+import com.na982.opichelper.domain.manager.AudioControlManager
+import com.na982.opichelper.domain.manager.MemorizationManager
+import com.na982.opichelper.domain.manager.ICategoryManager
+import com.na982.opichelper.domain.manager.IAudioControlManager
+import com.na982.opichelper.domain.manager.IMemorizationManager
 import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
@@ -258,6 +264,7 @@ object AppModule {
         return com.na982.opichelper.domain.button.ButtonStateManager()
     }
     
+    // Manager Classes
     @Provides
     @Singleton
     fun provideCategoryManager(
@@ -265,8 +272,8 @@ object AppModule {
         appStateManager: AppStateManager,
         loadCategoriesUseCase: LoadCategoriesUseCase,
         loadQaItemsUseCase: LoadQaItemsUseCase
-    ): com.na982.opichelper.presentation.viewmodel.CategoryManager {
-        return com.na982.opichelper.presentation.viewmodel.CategoryManager(
+    ): ICategoryManager {
+        return CategoryManager(
             qaDataRepository = qaDataRepository,
             appStateManager = appStateManager,
             loadCategoriesUseCase = loadCategoriesUseCase,
@@ -280,8 +287,8 @@ object AppModule {
         ttsOrchestrator: TtsOrchestrator,
         buttonEventHandler: ButtonEventHandler,
         appStateManager: AppStateManager
-    ): com.na982.opichelper.presentation.viewmodel.AudioControlManager {
-        return com.na982.opichelper.presentation.viewmodel.AudioControlManager(
+    ): IAudioControlManager {
+        return AudioControlManager(
             ttsOrchestrator = ttsOrchestrator,
             buttonEventHandler = buttonEventHandler,
             appStateManager = appStateManager
@@ -294,17 +301,13 @@ object AppModule {
         executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
         executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
-        qaDataRepository: QaDataRepository,
-        ttsOrchestrator: TtsOrchestrator,
         getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
         progressTracker: com.na982.opichelper.domain.state.MemorizationProgressTracker
-    ): com.na982.opichelper.presentation.viewmodel.MemorizationManager {
-        return com.na982.opichelper.presentation.viewmodel.MemorizationManager(
+    ): IMemorizationManager {
+        return MemorizationManager(
             executeRepeatListeningUseCase = executeRepeatListeningUseCase,
             executeEnglishWritingTestUseCase = executeEnglishWritingTestUseCase,
             executeFullMemorizationUseCase = executeFullMemorizationUseCase,
-            qaDataRepository = qaDataRepository,
-            ttsOrchestrator = ttsOrchestrator,
             getCurrentAnswerUseCase = getCurrentAnswerUseCase,
             progressTracker = progressTracker
         )

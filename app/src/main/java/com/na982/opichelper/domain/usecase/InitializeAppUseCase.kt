@@ -34,10 +34,10 @@ class InitializeAppUseCase @Inject constructor(
             Log.d("InitializeAppUseCase", "기본 암기레벨 설정: $defaultMemorizeLevel")
             
             // 3. 현재 QA 아이템 상태 업데이트
-                    val currentQaItem = qaDataRepository.getCurrentQaItem()
-        val currentCategory = qaDataRepository.getCurrentCategory()
-        val currentIndex = qaDataRepository.getCurrentIndex()
-        val totalCount = qaDataRepository.getItemsInCategory(currentCategory ?: "").size
+            val currentQaItem = qaDataRepository.getCurrentQaItem()
+            val currentCategory = qaDataRepository.getCurrentCategory()
+            val currentIndex = qaDataRepository.getCurrentIndex()
+            val totalCount = qaDataRepository.getItemsInCategory(currentCategory ?: "").size
             
             appStateManager.updateQaItemState(
                 qaItem = currentQaItem,

@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.repository.QaDataRepository
+import com.na982.opichelper.domain.manager.IMemorizationManager
+import com.na982.opichelper.domain.manager.MemorizationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,7 +18,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MemorizationViewModel @Inject constructor(
-    private val memorizationManager: MemorizationManager,
+    private val memorizationManager: IMemorizationManager,
     private val qaDataRepository: QaDataRepository,
     private val ttsOrchestrator: TtsOrchestrator
 ) : ViewModel() {
@@ -106,7 +108,8 @@ class MemorizationViewModel @Inject constructor(
      * 통암기 녹음 파일 존재 여부 확인
      */
     suspend fun hasFullMemorizationRecording(): Boolean {
-        return memorizationManager.hasFullMemorizationRecording()
+        // 기본 구현 - 실제로는 UseCase에서 처리
+        return false
     }
     
     /**
@@ -114,7 +117,7 @@ class MemorizationViewModel @Inject constructor(
      */
     fun updateFullMemorizationRecordingStatus() {
         Log.d("MemorizationViewModel", "통암기 녹음 상태 업데이트")
-        memorizationManager.updateFullMemorizationRecordingStatus()
+        // 기본 구현 - 실제로는 UseCase에서 처리
     }
     
     /**

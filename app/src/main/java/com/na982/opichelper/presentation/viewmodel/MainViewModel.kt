@@ -17,6 +17,10 @@ import com.na982.opichelper.domain.usecase.LoadCategoriesUseCase
 import com.na982.opichelper.domain.usecase.GetLeveledAnswerUseCase
 import com.na982.opichelper.domain.usecase.InitializeAppUseCase
 import com.na982.opichelper.domain.usecase.LoadQaItemsUseCase
+import com.na982.opichelper.domain.manager.ICategoryManager
+import com.na982.opichelper.domain.manager.IAudioControlManager
+import com.na982.opichelper.domain.manager.IMemorizationManager
+import com.na982.opichelper.domain.manager.MemorizationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,9 +37,9 @@ class MainViewModel @Inject constructor(
     private val buttonEventHandler: ButtonEventHandler,
     private val qaDataRepository: QaDataRepository,
     private val recordingTimeManager: RecordingTimeManager,
-    private val categoryManager: CategoryManager,
-    private val audioControlManager: AudioControlManager,
-    private val memorizationManager: MemorizationManager,
+    private val categoryManager: ICategoryManager,
+    private val audioControlManager: IAudioControlManager,
+    private val memorizationManager: IMemorizationManager,
     private val initializeAppUseCase: InitializeAppUseCase,
     private val getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
     private val userPreferencesRepository: UserPreferencesRepository

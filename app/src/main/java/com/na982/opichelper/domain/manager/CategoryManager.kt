@@ -1,4 +1,4 @@
-package com.na982.opichelper.presentation.viewmodel
+package com.na982.opichelper.domain.manager
 
 import android.util.Log
 import com.na982.opichelper.domain.entity.QaItem
@@ -23,20 +23,20 @@ class CategoryManager @Inject constructor(
     private val appStateManager: AppStateManager,
     private val loadCategoriesUseCase: LoadCategoriesUseCase,
     private val loadQaItemsUseCase: LoadQaItemsUseCase
-) {
+) : ICategoryManager {
     
     // 카테고리 관련 상태
     private val _categories = MutableStateFlow<List<String>>(emptyList())
-    val categories: StateFlow<List<String>> = _categories.asStateFlow()
+    override val categories: StateFlow<List<String>> = _categories.asStateFlow()
     
     private val _currentCategory = MutableStateFlow<String?>(null)
-    val currentCategory: StateFlow<String?> = _currentCategory.asStateFlow()
+    override val currentCategory: StateFlow<String?> = _currentCategory.asStateFlow()
     
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    override val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
     private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    override val error: StateFlow<String?> = _error.asStateFlow()
     
     init {
         Log.d("CategoryManager", "카테고리 매니저 초기화")
@@ -46,7 +46,7 @@ class CategoryManager @Inject constructor(
     /**
      * 카테고리 목록 로드
      */
-    fun loadCategories() {
+    override fun loadCategories() {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
             try {
                 Log.d("CategoryViewModel", "카테고리 목록 로드 시작")
@@ -70,7 +70,7 @@ class CategoryManager @Inject constructor(
     /**
      * 카테고리 변경
      */
-    fun changeCategory(category: String) {
+    override fun changeCategory(category: String) {
         Log.d("CategoryManager", "카테고리 변경: $category")
         
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
@@ -104,22 +104,30 @@ class CategoryManager @Inject constructor(
     /**
      * 특정 카테고리의 QA 아이템 로드
      */
-    private suspend fun loadQaItemsForCategory(category: String) {
-        Log.d("CategoryViewModel", "QA 아이템 로드 시작: $category")
-        
-        try {
-            val qaItems = loadQaItemsUseCase(category)
-            Log.d("CategoryViewModel", "QA 아이템 로드 완료: ${qaItems.size}개")
-            
-            // 첫 번째 아이템으로 초기화
-            if (qaItems.isNotEmpty()) {
-                val firstItem = qaItems.first()
-                updateCurrentQaItem(firstItem, category, 0, qaItems.size)
+    override fun loadQaItemsForCategory(category: String) {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+            try {
+                Log.d("CategoryManager", "QA 아이템 로드 시작: $category")
+                _isLoading.value = true
+                _error.value = null
+                
+                val qaItems = loadQaItemsUseCase(category)
+                
+                if (qaItems.isNotEmpty()) {
+                    // 첫 번째 아이템을 현재 아이템으로 설정
+                    qaDataRepository.selectCategory(category)
+                    Log.d("CategoryManager", "QA 아이템 로드 완료: ${qaItems.size}개")
+                } else {
+                    Log.w("CategoryManager", "QA 아이템이 없습니다: $category")
+                    _error.value = "해당 카테고리에 QA 아이템이 없습니다."
+                }
+                
+            } catch (e: Exception) {
+                Log.e("CategoryManager", "QA 아이템 로드 실패", e)
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
             }
-            
-        } catch (e: Exception) {
-            Log.e("CategoryViewModel", "QA 아이템 로드 실패", e)
-            throw e
         }
     }
     
@@ -149,7 +157,17 @@ class CategoryManager @Inject constructor(
     /**
      * 에러 상태 초기화
      */
-    fun clearError() {
+    override fun clearError() {
+        _error.value = null
+    }
+    
+    /**
+     * 상태 초기화
+     */
+    override fun resetState() {
+        _categories.value = emptyList()
+        _currentCategory.value = null
+        _isLoading.value = false
         _error.value = null
     }
     
