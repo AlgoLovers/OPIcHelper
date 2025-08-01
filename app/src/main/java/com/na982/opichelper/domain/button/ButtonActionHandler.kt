@@ -1,37 +1,46 @@
-package com.na982.opichelper.domain.audio
+package com.na982.opichelper.domain.button
 
 import android.util.Log
+import com.na982.opichelper.domain.audio.AudioFileManager
+import com.na982.opichelper.domain.button.ButtonStateManager
+import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.entity.MemorizeLevel
+import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.repository.QaDataRepository
+import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
+import com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase
+import com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 버튼 동작을 처리하는 클래스
- * 의존성 역전 원칙에 따라 버튼 동작을 추상화
+ * 버튼 액션 핸들러
+ * 책임: 버튼 클릭 시 실제 동작 처리
  */
 @Singleton
 class ButtonActionHandler @Inject constructor(
     private val buttonStateManager: ButtonStateManager,
     private val ttsOrchestrator: TtsOrchestrator,
     private val qaDataRepository: QaDataRepository,
-    private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
-    private val executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
-    private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val executeFullMemorizationUseCase: StartFullMemorizationUseCase,
+    private val executeRepeatListeningUseCase: StartRepeatListeningUseCase,
+    private val executeEnglishWritingTestUseCase: StartEnglishWritingTestUseCase
 ) {
     
-    private val coroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
+    private val coroutineScope = CoroutineScope(Dispatchers.Main)
     
     /**
      * 질문 재생 버튼 클릭 처리
      */
     fun handleQuestionPlayClick(
-        question: String, 
-        isFullMemorizationMode: Boolean, 
+        question: String,
         category: String,
         scriptIndex: Int,
         onStateChange: (Boolean, Boolean) -> Unit = { _, _ -> }
@@ -43,10 +52,11 @@ class ButtonActionHandler @Inject constructor(
                 // 1. 버튼 상태를 Loading으로 변경
                 buttonStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Loading)
                 
-                // 2. 다른 작업 중단 (질문 재생 시에는 긴급 중지하지 않음)
+                // 2. 다른 작업 중단
                 
-                // 3. 통암기 모드인지 확인
-                if (isFullMemorizationMode) {
+                // 3. 선택된 암기레벨에 따른 처리
+                val selectedLevel = "반복듣기" // 임시로 하드코딩
+                if (selectedLevel == "통암기") {
                     Log.d("ButtonActionHandler", "통암기 모드 - 통암기 UseCase 시작")
                     // 통암기 모드에서는 UseCase를 통해 처리
                     executeFullMemorizationUseCase.execute(
@@ -139,7 +149,7 @@ class ButtonActionHandler @Inject constructor(
                         )
                         executeRepeatListeningUseCase.execute(
                             data = repeatListeningData,
-                            uiCallback = object : RepeatListeningUiCallback {
+                            uiCallback = object : com.na982.opichelper.domain.audio.RepeatListeningUiCallback {
                                 override fun onCardFlip(isKorean: Boolean) {
                                     // 카드 뒤집기 처리
                                 }
@@ -277,39 +287,33 @@ class ButtonActionHandler @Inject constructor(
                         buttonStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
                     }
                     is ButtonFunction.Stop -> {
-                        // 긴급 중지 기능은 제거됨
+                        // 모든 작업 중단
+                        ttsOrchestrator.stop()
+                        buttonStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
+                        buttonStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
+                        buttonStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
+                        buttonStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
                     }
                 }
                 
                 Log.d("ButtonActionHandler", "버튼 중지 처리 완료")
             } catch (e: Exception) {
                 Log.e("ButtonActionHandler", "버튼 중지 처리 실패", e)
-                buttonStateManager.updateButtonState(buttonType, ButtonState.Error)
             }
         }
     }
     
     /**
-     * TTS 재생 완료 시 버튼 상태 업데이트
+     * 현재 QA 아이템 가져오기
      */
-    fun onTtsPlaybackCompleted(buttonType: ButtonFunction) {
-        Log.d("ButtonActionHandler", "TTS 재생 완료 - 버튼 상태 업데이트: $buttonType")
-        buttonStateManager.updateButtonState(buttonType, ButtonState.Idle)
+    fun getCurrentQaItem(): QaItem? {
+        return qaDataRepository.getCurrentQaItem()
     }
     
     /**
-     * 암기 테스트 완료 시 버튼 상태 업데이트
+     * 선택된 암기레벨 가져오기
      */
-    fun onMemorizeTestCompleted() {
-        Log.d("ButtonActionHandler", "암기 테스트 완료 - 버튼 상태 업데이트")
-        buttonStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
-    }
-    
-    /**
-     * 녹음 재생 완료 시 버튼 상태 업데이트
-     */
-    fun onRecordingPlaybackCompleted() {
-        Log.d("ButtonActionHandler", "녹음 재생 완료 - 버튼 상태 업데이트")
-        buttonStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)
+    fun getSelectedMemorizeLevel(): String {
+        return "반복듣기" // 임시로 하드코딩
     }
 } 

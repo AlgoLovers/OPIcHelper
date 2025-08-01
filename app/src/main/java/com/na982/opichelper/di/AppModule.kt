@@ -39,6 +39,10 @@ import com.na982.opichelper.domain.state.AppStateManager
 import com.na982.opichelper.data.state.AppStateManagerImpl
 import com.na982.opichelper.domain.usecase.GetLeveledAnswerUseCase
 import com.na982.opichelper.domain.usecase.InitializeAppUseCase
+import com.na982.opichelper.domain.strategy.MemorizationStrategyFactory
+import com.na982.opichelper.domain.strategy.RepeatListeningStrategy
+import com.na982.opichelper.domain.strategy.EnglishWritingStrategy
+import com.na982.opichelper.domain.strategy.FullMemorizationStrategy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -226,7 +230,7 @@ object AppModule {
     // 새로운 버튼 관리 클래스들
     @Provides
     @Singleton
-    fun provideButtonStateObserver(ttsOrchestrator: TtsOrchestrator): com.na982.opichelper.domain.audio.ButtonStateObserver {
+    fun provideButtonStateObserver(ttsOrchestrator: TtsOrchestrator): com.na982.opichelper.domain.button.ButtonStateObserver {
         return ttsOrchestrator
     }
     
@@ -268,22 +272,57 @@ object AppModule {
     
 
     
+    // Strategy Pattern 관련 의존성 주입
+    @Provides
+    @Singleton
+    fun provideRepeatListeningStrategy(
+        repeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
+    ): RepeatListeningStrategy {
+        return RepeatListeningStrategy(repeatListeningUseCase)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideEnglishWritingStrategy(
+        englishWritingUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
+    ): EnglishWritingStrategy {
+        return EnglishWritingStrategy(englishWritingUseCase)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideFullMemorizationStrategy(
+        fullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase
+    ): FullMemorizationStrategy {
+        return FullMemorizationStrategy(fullMemorizationUseCase)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideMemorizationStrategyFactory(
+        repeatListeningStrategy: RepeatListeningStrategy,
+        englishWritingStrategy: EnglishWritingStrategy,
+        fullMemorizationStrategy: FullMemorizationStrategy
+    ): MemorizationStrategyFactory {
+        return MemorizationStrategyFactory(
+            repeatListeningStrategy = repeatListeningStrategy,
+            englishWritingStrategy = englishWritingStrategy,
+            fullMemorizationStrategy = fullMemorizationStrategy
+        )
+    }
+    
     @Provides
     @Singleton
     fun provideButtonEventHandler(
         ttsController: TtsController,
-        repeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
-        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase,
-        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
+        strategyFactory: MemorizationStrategyFactory,
         appStateManager: AppStateManager,
         recordingAudioPlayer: RecordingAudioPlayer,
         audioFileManager: AudioFileManager
     ): ButtonEventHandler {
         return ButtonEventHandler(
             ttsController = ttsController,
-            repeatListeningUseCase = repeatListeningUseCase,
-            executeEnglishWritingTestUseCase = executeEnglishWritingTestUseCase,
-            executeFullMemorizationUseCase = executeFullMemorizationUseCase,
+            strategyFactory = strategyFactory,
             appStateManager = appStateManager,
             recordingAudioPlayer = recordingAudioPlayer,
             audioFileManager = audioFileManager
@@ -292,18 +331,26 @@ object AppModule {
     
     @Provides
     @Singleton
+    fun provideButtonStateManager(): com.na982.opichelper.domain.button.ButtonStateManager {
+        return com.na982.opichelper.domain.button.ButtonStateManager()
+    }
+    
+    @Provides
+    @Singleton
     fun provideButtonActionHandler(
-        buttonStateManager: com.na982.opichelper.domain.audio.ButtonStateManager,
+        buttonStateManager: com.na982.opichelper.domain.button.ButtonStateManager,
         ttsOrchestrator: TtsOrchestrator,
         qaDataRepository: QaDataRepository,
+        userPreferencesRepository: UserPreferencesRepository,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
         executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
         executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
-    ): com.na982.opichelper.domain.audio.ButtonActionHandler {
-        return com.na982.opichelper.domain.audio.ButtonActionHandler(
+    ): com.na982.opichelper.domain.button.ButtonActionHandler {
+        return com.na982.opichelper.domain.button.ButtonActionHandler(
             buttonStateManager, 
             ttsOrchestrator, 
             qaDataRepository,
+            userPreferencesRepository,
             executeFullMemorizationUseCase,
             executeRepeatListeningUseCase,
             executeEnglishWritingTestUseCase

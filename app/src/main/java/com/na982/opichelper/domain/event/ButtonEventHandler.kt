@@ -8,6 +8,8 @@ import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.state.AppStateManager
+import com.na982.opichelper.domain.strategy.MemorizationStrategyFactory
+import com.na982.opichelper.domain.strategy.MemorizationUiCallback
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,9 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class ButtonEventHandler @Inject constructor(
     private val ttsController: TtsController,
-    private val repeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
-    private val executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase,
-    private val executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
+    private val strategyFactory: MemorizationStrategyFactory,
     private val appStateManager: AppStateManager,
     private val recordingAudioPlayer: RecordingAudioPlayer,
     private val audioFileManager: AudioFileManager
@@ -79,124 +79,85 @@ class ButtonEventHandler @Inject constructor(
         // 1. 버튼 상태를 Loading으로 변경
         appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Loading)
         
-        // 2. 암기 레벨에 따른 처리
-        when (event.memorizeLevel) {
-            com.na982.opichelper.domain.entity.MemorizeLevel.REPEAT_LISTENING -> {
-                Log.d("ButtonEventHandler", "반복 듣기 모드 시작")
-                // 3. 버튼 상태를 Playing으로 변경
-                appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
-                val repeatListeningData = com.na982.opichelper.domain.entity.RepeatListeningData(
-                    category = event.category,
-                    scriptIndex = event.scriptIndex,
-                    koreanAnswer = event.answerKo,
-                    englishAnswer = event.answerEn
-                )
-                repeatListeningUseCase.execute(
-                    data = repeatListeningData,
-                    uiCallback = object : com.na982.opichelper.domain.audio.RepeatListeningUiCallback {
-                        override fun onCardFlip(isKorean: Boolean) {
-                            Log.d("ButtonEventHandler", "반복듣기 카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
-                            // 카드 뒤집기 상태 업데이트
-                            appStateManager.updateCardState(
-                                isAnswerCardFlipped = isKorean
-                            )
-                        }
-                        override fun onHighlight(index: Int?) {
-                            Log.d("ButtonEventHandler", "반복듣기 영문 하이라이트: $index")
-                            // 영문 하이라이트 상태 업데이트
-                            appStateManager.updateHighlightState(
-                                questionHighlightIndex = -1,
-                                answerHighlightIndex = index ?: -1,
-                                answerKoHighlightIndex = -1
-                            )
-                        }
-                        override fun onKoreanHighlight(index: Int?) {
-                            Log.d("ButtonEventHandler", "반복듣기 한글 하이라이트: $index")
-                            // 한글 하이라이트 상태 업데이트
-                            appStateManager.updateHighlightState(
-                                questionHighlightIndex = -1,
-                                answerHighlightIndex = -1,
-                                answerKoHighlightIndex = index ?: -1
-                            )
-                        }
-                        override fun onComplete() {
-                            Log.d("ButtonEventHandler", "반복듣기 완료")
-                            // 완료 시 버튼 상태를 Idle로 변경
-                            appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
-                            // 카드 상태 초기화
-                            appStateManager.updateCardState(
-                                isAnswerCardFlipped = false
-                            )
-                        }
-                    }
-                )
-            }
-            com.na982.opichelper.domain.entity.MemorizeLevel.ENGLISH_WRITING -> {
-                Log.d("ButtonEventHandler", "영작 테스트 모드 시작 - 카테고리: ${event.category}, 스크립트: ${event.scriptIndex}")
-                Log.d("ButtonEventHandler", "영작 테스트 데이터 - 한글: ${event.answerKo.take(50)}..., 영문: ${event.answerEn.take(50)}...")
-                appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
-                executeEnglishWritingTestUseCase.execute(
-                    answerKo = event.answerKo,
-                    answerEn = event.answerEn,
-                    category = event.category,
-                    scriptIndex = event.scriptIndex,
-                    onCardFlip = { isKorean ->
-                        Log.d("ButtonEventHandler", "영작테스트 카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
-                        // 카드 뒤집기 상태 업데이트
-                        appStateManager.updateCardState(
-                            isAnswerCardFlipped = isKorean
-                        )
-                    },
-                    onKoreanHighlight = { index ->
-                        Log.d("ButtonEventHandler", "영작테스트 한글 하이라이트: $index")
-                        // 한글 하이라이트 상태 업데이트
-                        appStateManager.updateHighlightState(
-                            questionHighlightIndex = -1,
-                            answerHighlightIndex = -1,
-                            answerKoHighlightIndex = index ?: -1
-                        )
-                    },
-                    onRecordingHighlight = { index ->
-                        Log.d("ButtonEventHandler", "영작테스트 녹음 하이라이트: $index")
-                        // 녹음 하이라이트 상태 업데이트
-                        appStateManager.updateHighlightState(
-                            questionHighlightIndex = -1,
-                            answerHighlightIndex = -1,
-                            answerKoHighlightIndex = -1,
-                            recordingHighlightIndex = index ?: -1
-                        )
-                    },
-                    onRecordingStateChange = { isRecording ->
-                        Log.d("ButtonEventHandler", "영작테스트 녹음 상태 변경: $isRecording")
-                        // 녹음 상태 업데이트
-                        appStateManager.updateRecordingState(isRecording)
-                    },
-                    onMergedFileCreated = {
-                        Log.d("ButtonEventHandler", "영작테스트 병합 파일 생성 완료")
-                        // 병합 파일 생성 완료 처리
-                        appStateManager.updateMergedFileCreated(true)
-                        appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
-                    }
-                )
-            }
-            com.na982.opichelper.domain.entity.MemorizeLevel.FULL_MEMORIZATION -> {
-                Log.d("ButtonEventHandler", "통암기 모드 시작")
-                executeFullMemorizationUseCase.execute(
-                    category = event.category,
-                    scriptIndex = event.scriptIndex,
-                    onRecordingStateChange = { isRecording ->
-                        // 녹음 상태 변경
-                    },
-                    onPlayingStateChange = { isPlaying ->
-                        appStateManager.updateTtsPlayingState(isPlaying, false)
-                    }
-                )
-            }
-        }
-
-            
+        // 2. 전략 팩토리에서 적절한 전략 가져오기
+        val strategy = strategyFactory.getStrategy(event.memorizeLevel)
+        
+        // 3. 버튼 상태를 Playing으로 변경
+        appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
+        
+        // 4. 선택된 전략 실행
+        strategy.execute(
+            category = event.category,
+            scriptIndex = event.scriptIndex,
+            answerKo = event.answerKo,
+            answerEn = event.answerEn,
+            uiCallback = createMemorizationUiCallback()
+        )
+        
         Log.d("ButtonEventHandler", "암기 테스트 이벤트 처리 완료")
         return ButtonEventResult.Success
+    }
+    
+    /**
+     * 암기 전략에서 사용할 UI 콜백 생성
+     */
+    private fun createMemorizationUiCallback(): MemorizationUiCallback {
+        return object : MemorizationUiCallback {
+            override fun onCardFlip(isKorean: Boolean) {
+                Log.d("ButtonEventHandler", "카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
+                appStateManager.updateCardState(isAnswerCardFlipped = isKorean)
+            }
+            
+            override fun onHighlight(index: Int?) {
+                Log.d("ButtonEventHandler", "영문 하이라이트: $index")
+                appStateManager.updateHighlightState(
+                    questionHighlightIndex = -1,
+                    answerHighlightIndex = index ?: -1,
+                    answerKoHighlightIndex = -1
+                )
+            }
+            
+            override fun onKoreanHighlight(index: Int?) {
+                Log.d("ButtonEventHandler", "한글 하이라이트: $index")
+                appStateManager.updateHighlightState(
+                    questionHighlightIndex = -1,
+                    answerHighlightIndex = -1,
+                    answerKoHighlightIndex = index ?: -1
+                )
+            }
+            
+            override fun onRecordingHighlight(index: Int?) {
+                Log.d("ButtonEventHandler", "녹음 하이라이트: $index")
+                appStateManager.updateHighlightState(
+                    questionHighlightIndex = -1,
+                    answerHighlightIndex = -1,
+                    answerKoHighlightIndex = -1,
+                    recordingHighlightIndex = index ?: -1
+                )
+            }
+            
+            override fun onRecordingStateChange(isRecording: Boolean) {
+                Log.d("ButtonEventHandler", "녹음 상태 변경: $isRecording")
+                appStateManager.updateRecordingState(isRecording)
+            }
+            
+            override fun onPlayingStateChange(isPlaying: Boolean) {
+                Log.d("ButtonEventHandler", "재생 상태 변경: $isPlaying")
+                appStateManager.updateTtsPlayingState(isPlaying, false)
+            }
+            
+            override fun onMergedFileCreated() {
+                Log.d("ButtonEventHandler", "병합 파일 생성 완료")
+                appStateManager.updateMergedFileCreated(true)
+                appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
+            }
+            
+            override fun onComplete() {
+                Log.d("ButtonEventHandler", "암기 테스트 완료")
+                appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
+                appStateManager.updateCardState(isAnswerCardFlipped = false)
+            }
+        }
     }
     
     private suspend fun handleRecordingPlayClick(event: ButtonEvent.RecordingPlayClick): ButtonEventResult {
@@ -268,15 +229,13 @@ class ButtonEventHandler @Inject constructor(
         // 1. TTS 중지 (하이라이트 초기화 포함)
         ttsController.stopTts()
         
-        // 2. 반복듣기 중지 (MemorizeTest 버튼인 경우)
+        // 2. 암기 테스트 중지 (MemorizeTest 버튼인 경우)
         if (event.buttonFunction == ButtonFunction.MemorizeTest) {
-            repeatListeningUseCase.stop()
-            
-            // 반복듣기 중지 시 카드 상태 초기화 (하이라이트는 TtsController에서 처리)
+            // 각 전략은 자신의 중지 로직을 처리하므로 여기서는 상태만 초기화
             appStateManager.updateCardState(
                 isAnswerCardFlipped = false
             )
-            Log.d("ButtonEventHandler", "반복듣기 중지 - 카드 상태 초기화")
+            Log.d("ButtonEventHandler", "암기 테스트 중지 - 카드 상태 초기화")
         }
         
         // 3. 버튼 상태를 Idle로 변경
@@ -294,8 +253,8 @@ class ButtonEventHandler @Inject constructor(
         // 1. TTS 중지
         ttsController.stopTts()
         
-        // 2. 반복듣기 중지
-        repeatListeningUseCase.stop()
+        // 2. 암기 테스트 중지 (각 전략이 자신의 중지 로직을 처리)
+        // TTS 중지로 충분
         
         // 3. 모든 버튼 상태를 Idle로 변경
         appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)

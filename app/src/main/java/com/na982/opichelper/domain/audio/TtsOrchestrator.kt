@@ -3,6 +3,7 @@ package com.na982.opichelper.domain.audio
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import com.na982.opichelper.domain.button.ButtonStateObserver
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
@@ -27,20 +28,25 @@ class TtsOrchestrator @Inject constructor(
     private var currentKoreanTtsIndex = 0
     
     // ButtonStateObserver 구현
-    private val _isQuestionPlaying = kotlinx.coroutines.flow.MutableStateFlow(false)
-    private val _isAnswerPlaying = kotlinx.coroutines.flow.MutableStateFlow(false)
-    private var questionPlaybackCompletedCallback: (() -> Unit)? = null
-    private var answerPlaybackCompletedCallback: (() -> Unit)? = null
-    
-    override val isQuestionPlaying: kotlinx.coroutines.flow.StateFlow<Boolean> = _isQuestionPlaying.asStateFlow()
-    override val isAnswerPlaying: kotlinx.coroutines.flow.StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
-    
-    override fun onQuestionPlaybackCompleted(callback: () -> Unit) {
-        questionPlaybackCompletedCallback = callback
+    override fun onButtonStateChanged(buttonFunction: com.na982.opichelper.domain.entity.ButtonFunction, newState: com.na982.opichelper.domain.entity.ButtonState) {
+        // TTS 관련 버튼 상태 변경 시 처리
+        when (buttonFunction) {
+            is com.na982.opichelper.domain.entity.ButtonFunction.QuestionPlay -> {
+                Log.d("TtsOrchestrator", "질문 재생 버튼 상태 변경: $newState")
+            }
+            is com.na982.opichelper.domain.entity.ButtonFunction.AnswerPlay -> {
+                Log.d("TtsOrchestrator", "답변 재생 버튼 상태 변경: $newState")
+            }
+            else -> {
+                // 다른 버튼들은 무시
+            }
+        }
     }
     
-    override fun onAnswerPlaybackCompleted(callback: () -> Unit) {
-        answerPlaybackCompletedCallback = callback
+    override fun onAllButtonsReset() {
+        Log.d("TtsOrchestrator", "모든 버튼 초기화")
+        // TTS 중지
+        stop()
     }
     
     init {
@@ -128,9 +134,7 @@ class TtsOrchestrator @Inject constructor(
                 player.stop()
             }
             
-            // 상태 초기화
-            _isQuestionPlaying.value = false
-            _isAnswerPlaying.value = false
+            // 상태 초기화 (ButtonStateObserver로 이동했으므로 여기서는 제거)
             
             Log.d("TtsOrchestrator", "TTS 중지 완료")
         } catch (e: Exception) {
