@@ -116,6 +116,77 @@ classDiagram
     AppStateManagerImpl --> AppState
 ```
 
+## 시퀀스 다이어그램
+
+```mermaid
+sequenceDiagram
+    participant User as 사용자
+    participant SmartButton as SmartButton
+    participant MainViewModel as MainViewModel
+    participant AudioControlManager as AudioControlManager
+    participant TtsController as TtsController
+    participant TtsOrchestrator as TtsOrchestrator
+    participant AppStateManager as AppStateManager
+    participant GoogleTtsPlayer as GoogleTtsPlayer
+    participant MainScreen as MainScreen
+    participant HighlightText as HighlightText
+
+    User->>SmartButton: 질문 재생 버튼 클릭
+    SmartButton->>MainViewModel: handleQuestionPlayClick()
+    MainViewModel->>AudioControlManager: playQuestion(qaItem)
+    
+    AudioControlManager->>AppStateManager: updateButtonState(QuestionPlay, Loading)
+    AppStateManager->>MainScreen: AppState 업데이트
+    MainScreen->>SmartButton: 버튼 색상 변경 (회색)
+    
+    AudioControlManager->>TtsController: playQuestion(question)
+    TtsController->>AppStateManager: updateTtsPlayingState(isQuestionPlaying=true)
+    AppStateManager->>MainScreen: AppState 업데이트
+    
+    TtsController->>AppStateManager: updateHighlightState(questionHighlightIndex=-1)
+    AppStateManager->>MainScreen: AppState 업데이트
+    MainScreen->>HighlightText: 하이라이트 초기화
+    
+    TtsController->>TtsOrchestrator: speakWithHighlight(question, onHighlight)
+    TtsOrchestrator->>TtsOrchestrator: 텍스트를 문장별로 분리
+    
+    Note over TtsOrchestrator: 각 문장별 처리
+    TtsOrchestrator->>AppStateManager: onHighlight(0) - 첫 번째 문장
+    AppStateManager->>MainScreen: AppState 업데이트
+    MainScreen->>HighlightText: 첫 번째 문장 하이라이트
+    
+    TtsOrchestrator->>GoogleTtsPlayer: speak(첫 번째 문장)
+    GoogleTtsPlayer->>GoogleTtsPlayer: TTS 재생
+    
+    Note over GoogleTtsPlayer: 첫 번째 문장 완료
+    TtsOrchestrator->>AppStateManager: onHighlight(1) - 두 번째 문장
+    AppStateManager->>MainScreen: AppState 업데이트
+    MainScreen->>HighlightText: 두 번째 문장 하이라이트
+    
+    TtsOrchestrator->>GoogleTtsPlayer: speak(두 번째 문장)
+    GoogleTtsPlayer->>GoogleTtsPlayer: TTS 재생
+    
+    Note over GoogleTtsPlayer: 두 번째 문장 완료
+    TtsOrchestrator->>AppStateManager: onHighlight(2) - 세 번째 문장
+    AppStateManager->>MainScreen: AppState 업데이트
+    MainScreen->>HighlightText: 세 번째 문장 하이라이트
+    
+    TtsOrchestrator->>GoogleTtsPlayer: speak(세 번째 문장)
+    GoogleTtsPlayer->>GoogleTtsPlayer: TTS 재생
+    
+    Note over GoogleTtsPlayer: 세 번째 문장 완료
+    TtsOrchestrator->>AppStateManager: onHighlight(-1) - 하이라이트 해제
+    AppStateManager->>MainScreen: AppState 업데이트
+    MainScreen->>HighlightText: 하이라이트 해제
+    
+    TtsController->>AppStateManager: updateTtsPlayingState(isQuestionPlaying=false)
+    AppStateManager->>MainScreen: AppState 업데이트
+    
+    AudioControlManager->>AppStateManager: updateButtonState(QuestionPlay, Idle)
+    AppStateManager->>MainScreen: AppState 업데이트
+    MainScreen->>SmartButton: 버튼 색상 변경 (파란색)
+```
+
 ## 플로우 다이어그램
 
 ```

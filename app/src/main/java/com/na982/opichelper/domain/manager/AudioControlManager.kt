@@ -57,11 +57,11 @@ class AudioControlManager @Inject constructor(
                 // 버튼 상태를 Loading으로 변경
                 appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Loading)
                 
-                // TTS 재생 (하이라이트 포함)
+                // TTS 재생 (하이라이트 포함) - suspend 함수이므로 await
                 ttsController.playQuestion(qaItem.questionEn)
                 
-                // 버튼 상태를 Playing으로 변경
-                appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Playing)
+                // TTS 재생이 완료되면 버튼 상태를 Idle로 변경
+                appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
                 
                 Log.d("AudioControlManager", "질문 재생 완료")
                 
@@ -86,11 +86,11 @@ class AudioControlManager @Inject constructor(
                 // 버튼 상태를 Loading으로 변경
                 appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Loading)
                 
-                // TTS 재생 (하이라이트 포함)
+                // TTS 재생 (하이라이트 포함) - suspend 함수이므로 await
                 ttsController.playAnswer(qaItem.answers.values.first().answerEn)
                 
-                // 버튼 상태를 Playing으로 변경
-                appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
+                // TTS 재생이 완료되면 버튼 상태를 Idle로 변경
+                appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
                 
                 Log.d("AudioControlManager", "답변 재생 완료")
                 
