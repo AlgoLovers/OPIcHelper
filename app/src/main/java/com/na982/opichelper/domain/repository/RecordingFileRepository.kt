@@ -22,6 +22,22 @@ interface RecordingFileRepository {
     suspend fun getRecordingFilePath(category: String, scriptIndex: Int): String?
     
     /**
+     * 영작테스트 녹음 파일 경로 가져오기
+     * @param category 카테고리
+     * @param scriptIndex 스크립트 인덱스
+     * @return 영작테스트 병합 녹음 파일 경로 (없으면 null)
+     */
+    suspend fun getEnglishWritingRecordingPath(category: String, scriptIndex: Int): String?
+    
+    /**
+     * 통암기 녹음 파일 경로 가져오기
+     * @param category 카테고리
+     * @param scriptIndex 스크립트 인덱스
+     * @return 통암기 녹음 파일 경로 (없으면 null)
+     */
+    suspend fun getFullMemorizationRecordingPath(category: String, scriptIndex: Int): String?
+    
+    /**
      * 녹음 파일 생성 (새 녹음 시작)
      * @param category 카테고리
      * @param scriptIndex 스크립트 인덱스

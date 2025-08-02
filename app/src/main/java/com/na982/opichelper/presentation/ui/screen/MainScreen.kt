@@ -332,32 +332,34 @@ fun MainScreenRefactored(
                             // 답변 재생 스마트 버튼
                             AnswerPlaySmartButton(
                                 buttonConfig = answerButtonConfig,
-                                                            onPlayClick = {
-                                viewModel.handleAnswerPlayClick()
-                            },
+                                onPlayClick = {
+                                    viewModel.handleAnswerPlayClick()
+                                },
                                 onStopClick = {
                                     viewModel.handleStopClick(ButtonFunction.AnswerPlay)
                                 },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(if (selectedLevel == "반복듣기") 1f else 1f)
                             )
 
                             // 녹음 재생 스마트 버튼 (조건부 표시)
-                            RecordingPlaySmartButton(
-                                buttonConfig = recordingPlayButtonConfig,
-                                onPlayClick = {
-                                    when (selectedLevel) {
-                                        "반복 듣기" -> MemorizeLevel.REPEAT_LISTENING
-                                        "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
-                                        "통암기" -> MemorizeLevel.FULL_MEMORIZATION
-                                        else -> MemorizeLevel.REPEAT_LISTENING
-                                    }
-                                    viewModel.handleRecordingPlayClick()
-                                },
-                                onStopClick = {
-                                    viewModel.handleStopClick(ButtonFunction.RecordingPlay)
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
+                            if (selectedLevel != "반복듣기") {
+                                RecordingPlaySmartButton(
+                                    buttonConfig = recordingPlayButtonConfig,
+                                    onPlayClick = {
+                                        when (selectedLevel) {
+                                            "반복 듣기" -> MemorizeLevel.REPEAT_LISTENING
+                                            "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
+                                            "통암기" -> MemorizeLevel.FULL_MEMORIZATION
+                                            else -> MemorizeLevel.REPEAT_LISTENING
+                                        }
+                                        viewModel.handleRecordingPlayClick()
+                                    },
+                                    onStopClick = {
+                                        viewModel.handleStopClick(ButtonFunction.RecordingPlay)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
 

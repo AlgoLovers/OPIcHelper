@@ -423,6 +423,42 @@ class MainViewModel @Inject constructor(
         Log.d("MainViewModelRefactored", "영작테스트 병합 파일 확인")
     }
     
+    /**
+     * 영작테스트 녹음 파일 존재 여부 확인
+     */
+    suspend fun hasEnglishWritingRecording(): Boolean {
+        val currentState = appState.value
+        val category = currentState.currentCategory ?: return false
+        val scriptIndex = currentState.currentIndex
+        
+        return try {
+            // TODO: RecordingFileRepository를 통해 파일 존재 여부 확인
+            Log.d("MainViewModelRefactored", "영작테스트 녹음 파일 확인: category=$category, scriptIndex=$scriptIndex")
+            false // 임시로 false 반환
+        } catch (e: Exception) {
+            Log.e("MainViewModelRefactored", "영작테스트 녹음 파일 확인 실패", e)
+            false
+        }
+    }
+    
+    /**
+     * 통암기 녹음 파일 존재 여부 확인
+     */
+    suspend fun hasFullMemorizationRecording(): Boolean {
+        val currentState = appState.value
+        val category = currentState.currentCategory ?: return false
+        val scriptIndex = currentState.currentIndex
+        
+        return try {
+            // TODO: RecordingFileRepository를 통해 파일 존재 여부 확인
+            Log.d("MainViewModelRefactored", "통암기 녹음 파일 확인: category=$category, scriptIndex=$scriptIndex")
+            false // 임시로 false 반환
+        } catch (e: Exception) {
+            Log.e("MainViewModelRefactored", "통암기 녹음 파일 확인 실패", e)
+            false
+        }
+    }
+    
     fun isQuestionCardFlipped(): StateFlow<Boolean> {
         return MutableStateFlow(false)
     }

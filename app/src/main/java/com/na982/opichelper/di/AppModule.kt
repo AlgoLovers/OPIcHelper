@@ -347,6 +347,18 @@ object AppModule {
     
     @Provides
     @Singleton
+    fun providePlayRecordingUseCase(
+        recordingAudioPlayer: RecordingAudioPlayer,
+        recordingFileRepository: RecordingFileRepository
+    ): com.na982.opichelper.domain.usecase.PlayRecordingUseCase {
+        return com.na982.opichelper.domain.usecase.PlayRecordingUseCase(
+            recordingAudioPlayer = recordingAudioPlayer,
+            recordingFileRepository = recordingFileRepository
+        )
+    }
+    
+    @Provides
+    @Singleton
     fun provideInitializeAppUseCase(
         qaDataRepository: QaDataRepository,
         userPreferencesRepository: UserPreferencesRepository,
@@ -414,14 +426,16 @@ object AppModule {
     @Provides
     @Singleton
     fun provideButtonEventHandler(
-        appStateManager: AppStateManager,
         audioControlManager: IAudioControlManager,
-        strategyFactory: MemorizationStrategyFactory
+        appStateManager: AppStateManager,
+        strategyFactory: MemorizationStrategyFactory,
+        playRecordingUseCase: com.na982.opichelper.domain.usecase.PlayRecordingUseCase
     ): ButtonEventHandler {
         return ButtonEventHandler(
-            appStateManager = appStateManager,
             audioControlManager = audioControlManager,
-            strategyFactory = strategyFactory
+            appStateManager = appStateManager,
+            strategyFactory = strategyFactory,
+            playRecordingUseCase = playRecordingUseCase
         )
     }
 } 

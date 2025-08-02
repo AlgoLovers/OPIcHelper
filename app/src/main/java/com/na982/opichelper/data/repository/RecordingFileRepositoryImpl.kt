@@ -46,6 +46,42 @@ class RecordingFileRepositoryImpl @Inject constructor(
             null
         }
     }
+    
+    override suspend fun getEnglishWritingRecordingPath(category: String, scriptIndex: Int): String? {
+        // 영작테스트 병합 파일은 merged 디렉토리에 저장됨
+        val mergedDir = getMergedDirectory()
+        val files = mergedDir?.listFiles()
+        
+        if (files != null) {
+            for (file in files) {
+                if (file.name.startsWith("영작테스트_${category}_${scriptIndex}_") && file.name.endsWith(".m4a")) {
+                    Log.d("RecordingFileRepositoryImpl", "getEnglishWritingRecordingPath: 파일 발견 - ${file.name}")
+                    return file.absolutePath
+                }
+            }
+        }
+        
+        Log.d("RecordingFileRepositoryImpl", "getEnglishWritingRecordingPath: 파일 없음 - category=$category, scriptIndex=$scriptIndex")
+        return null
+    }
+    
+    override suspend fun getFullMemorizationRecordingPath(category: String, scriptIndex: Int): String? {
+        // 통암기 파일은 recordings 디렉토리에 저장됨
+        val recordingsDir = getRecordingsDirectory()
+        val files = recordingsDir?.listFiles()
+        
+        if (files != null) {
+            for (file in files) {
+                if (file.name.startsWith("통암기_${category}_${scriptIndex}_") && file.name.endsWith(".m4a")) {
+                    Log.d("RecordingFileRepositoryImpl", "getFullMemorizationRecordingPath: 파일 발견 - ${file.name}")
+                    return file.absolutePath
+                }
+            }
+        }
+        
+        Log.d("RecordingFileRepositoryImpl", "getFullMemorizationRecordingPath: 파일 없음 - category=$category, scriptIndex=$scriptIndex")
+        return null
+    }
 
     override suspend fun createRecordingFile(category: String, scriptIndex: Int): String {
         val timestamp = System.currentTimeMillis()
@@ -178,6 +214,11 @@ class RecordingFileRepositoryImpl @Inject constructor(
 
     private fun getRecordingsDirectory(): File? {
         val dummyPath = audioFileManager.getRecordingFilePath("dummy.m4a")
+        return File(dummyPath).parentFile
+    }
+
+    private fun getMergedDirectory(): File? {
+        val dummyPath = audioFileManager.getMergedFilePath("dummy.m4a")
         return File(dummyPath).parentFile
     }
 } 

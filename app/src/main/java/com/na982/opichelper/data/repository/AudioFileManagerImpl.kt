@@ -191,6 +191,14 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
         return File(recordingsDir, fileName).absolutePath
     }
 
+    override fun getMergedFilePath(fileName: String): String {
+        val mergedDir = File(context.filesDir, "merged")
+        if (!mergedDir.exists()) {
+            mergedDir.mkdirs()
+        }
+        return File(mergedDir, fileName).absolutePath
+    }
+
     override suspend fun hasRecordingFile(scriptId: String): Boolean {
         return withContext(Dispatchers.IO) {
             val file = File(getRecordingFilePath("${scriptId}_recording.m4a"))
@@ -230,7 +238,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
         var totalDuration = 0L
 
         try {
-            files.forEachIndexed { fileIndex, file ->
+            files.forEachIndexed { _, file ->
                 val extractor = MediaExtractor()
                 extractor.setDataSource(file.absolutePath)
 
