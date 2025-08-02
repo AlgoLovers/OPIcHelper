@@ -1,5 +1,6 @@
 package com.na982.opichelper.domain.usecase
 
+import com.na982.opichelper.LogIgnoreRule
 import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.state.MemorizationProgressTracker
 import com.na982.opichelper.domain.repository.RecordingTimeManager
@@ -7,6 +8,7 @@ import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
@@ -17,6 +19,9 @@ import org.mockito.kotlin.*
  * BASIC_OPERATIONS.md 2-1. 반복듣기 모드 시나리오 기반
  */
 class StartRepeatListeningUseCaseTest {
+
+    @get:Rule
+    val logIgnoreRule = LogIgnoreRule()
 
     @Mock
     private lateinit var mockTtsController: TtsController

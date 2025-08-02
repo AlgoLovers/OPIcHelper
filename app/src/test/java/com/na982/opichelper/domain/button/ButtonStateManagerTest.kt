@@ -1,5 +1,6 @@
 package com.na982.opichelper.domain.button
 
+import com.na982.opichelper.LogIgnoreRule
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.state.AppStateManager
@@ -7,6 +8,7 @@ import com.na982.opichelper.data.state.AppStateManagerImpl
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
@@ -18,6 +20,9 @@ import org.mockito.kotlin.*
  */
 class ButtonStateManagerTest {
 
+    @get:Rule
+    val logIgnoreRule = LogIgnoreRule()
+
     @Mock
     private lateinit var mockObserver: ButtonStateObserver
 
@@ -26,10 +31,6 @@ class ButtonStateManagerTest {
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        
-        // 테스트에서 Log 무시 설정
-        System.setProperty("java.util.logging.config.file", "logging.properties")
-        
         appStateManager = AppStateManagerImpl()
     }
 

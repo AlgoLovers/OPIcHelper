@@ -1,5 +1,6 @@
 package com.na982.opichelper.domain.manager
 
+import com.na982.opichelper.LogIgnoreRule
 import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
@@ -9,12 +10,16 @@ import com.na982.opichelper.domain.entity.LeveledAnswer
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.kotlin.*
 import org.mockito.MockitoAnnotations
 
 class AudioControlManagerTest {
+
+    @get:Rule
+    val logIgnoreRule = LogIgnoreRule()
 
     @Mock
     private lateinit var mockTtsController: TtsController

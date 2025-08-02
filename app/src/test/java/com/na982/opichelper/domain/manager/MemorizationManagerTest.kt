@@ -1,5 +1,6 @@
 package com.na982.opichelper.domain.manager
 
+import com.na982.opichelper.LogIgnoreRule
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
@@ -13,6 +14,7 @@ import com.na982.opichelper.domain.usecase.GetLeveledAnswerUseCase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
@@ -23,6 +25,9 @@ import org.mockito.kotlin.*
  * 암기 테스트 모드 관리 기능 테스트
  */
 class MemorizationManagerTest {
+
+    @get:Rule
+    val logIgnoreRule = LogIgnoreRule()
 
     @Mock
     private lateinit var mockExecuteRepeatListeningUseCase: StartRepeatListeningUseCase

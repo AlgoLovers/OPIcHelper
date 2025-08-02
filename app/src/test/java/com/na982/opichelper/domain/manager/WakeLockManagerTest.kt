@@ -2,8 +2,10 @@ package com.na982.opichelper.domain.manager
 
 import android.content.Context
 import android.os.PowerManager
+import com.na982.opichelper.LogIgnoreRule
 import io.mockk.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
@@ -14,6 +16,9 @@ import org.mockito.kotlin.*
  * 화면 켜짐 유지를 위한 WakeLock 관리 기능 테스트
  */
 class WakeLockManagerTest {
+
+    @get:Rule
+    val logIgnoreRule = LogIgnoreRule()
 
     @Mock
     private lateinit var mockContext: Context

@@ -1,5 +1,6 @@
 package com.na982.opichelper.domain.manager
 
+import com.na982.opichelper.LogIgnoreRule
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.entity.LeveledAnswer
@@ -10,6 +11,7 @@ import com.na982.opichelper.domain.usecase.LoadQaItemsUseCase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
@@ -20,6 +22,9 @@ import org.mockito.kotlin.*
  * 카테고리 관리 및 QA 아이템 로딩 기능 테스트
  */
 class CategoryManagerTest {
+
+    @get:Rule
+    val logIgnoreRule = LogIgnoreRule()
 
     @Mock
     private lateinit var mockQaDataRepository: QaDataRepository
