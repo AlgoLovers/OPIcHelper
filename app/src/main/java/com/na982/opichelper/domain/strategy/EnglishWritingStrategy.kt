@@ -1,6 +1,7 @@
 package com.na982.opichelper.domain.strategy
 
 import android.util.Log
+import com.na982.opichelper.domain.audio.EnglishWritingUiCallback
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
 import javax.inject.Inject
@@ -28,25 +29,31 @@ class EnglishWritingStrategy @Inject constructor(
             answerEn = answerEn,
             category = category,
             scriptIndex = scriptIndex,
-            onCardFlip = { isKorean ->
-                Log.d("EnglishWritingStrategy", "카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
-                uiCallback.onCardFlip(isKorean)
-            },
-            onKoreanHighlight = { index ->
-                Log.d("EnglishWritingStrategy", "한글 하이라이트: $index")
-                uiCallback.onKoreanHighlight(index ?: -1)
-            },
-            onRecordingHighlight = { index ->
-                Log.d("EnglishWritingStrategy", "녹음 하이라이트: $index")
-                uiCallback.onRecordingHighlight(index ?: -1)
-            },
-            onRecordingStateChange = { isRecording ->
-                Log.d("EnglishWritingStrategy", "녹음 상태 변경: $isRecording")
-                uiCallback.onRecordingStateChange(isRecording)
-            },
-            onMergedFileCreated = {
-                Log.d("EnglishWritingStrategy", "병합 파일 생성 완료")
-                uiCallback.onMergedFileCreated()
+            uiCallback = object : EnglishWritingUiCallback {
+                override fun onCardFlip(isKorean: Boolean) {
+                    Log.d("EnglishWritingStrategy", "카드 뒤집기: ${if (isKorean) "한글" else "영문"}")
+                    uiCallback.onCardFlip(isKorean)
+                }
+                
+                override fun onKoreanHighlight(index: Int) {
+                    Log.d("EnglishWritingStrategy", "한글 하이라이트: $index")
+                    uiCallback.onKoreanHighlight(index)
+                }
+                
+                override fun onRecordingHighlight(index: Int) {
+                    Log.d("EnglishWritingStrategy", "녹음 하이라이트: $index")
+                    uiCallback.onRecordingHighlight(index)
+                }
+                
+                override fun onRecordingStateChange(isRecording: Boolean) {
+                    Log.d("EnglishWritingStrategy", "녹음 상태 변경: $isRecording")
+                    uiCallback.onRecordingStateChange(isRecording)
+                }
+                
+                override fun onMergedFileCreated() {
+                    Log.d("EnglishWritingStrategy", "병합 파일 생성 완료")
+                    uiCallback.onMergedFileCreated()
+                }
             }
         )
     }

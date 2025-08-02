@@ -17,6 +17,7 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.na982.opichelper.domain.audio.EnglishWritingUiCallback
 
 /**
  * 영작 테스트 Repository 구현체
@@ -41,26 +42,25 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         answerEn: String,
         category: String,
         scriptIndex: Int,
-        onCardFlip: (Boolean) -> Unit,
-        onKoreanHighlight: (Int?) -> Unit,
-        onRecordingHighlight: (Int?) -> Unit,
-        onRecordingStateChange: (Boolean) -> Unit,
-        onMergedFileCreated: () -> Unit
+        uiCallback: EnglishWritingUiCallback
     ) {
-        val koSentences = answerKo.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-        val enSentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 시작 - 카테고리: $category, 스크립트: $scriptIndex")
+        
+        // 문장 분리
+        val koSentences = answerKo.split(".").filter { it.trim().isNotEmpty() }
+        val enSentences = answerEn.split(".").filter { it.trim().isNotEmpty() }
+        
         val count = minOf(koSentences.size, enSentences.size)
-        
-        // 복원된 앱 상태에서 시작 인덱스 가져오기 (암기레벨별)
-        val currentProgress = progressTracker.getScriptProgress(category, scriptIndex, "영작 테스트")
-        
-        val startIndex = if (currentProgress?.isMemorizeTestRunning == true) {
-            currentProgress.currentSentenceIndex
-        } else {
-            0
+        if (count == 0) {
+            Log.w("EnglishWritingTestRepositoryImpl", "문장이 없음")
+            return
         }
         
-        Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 시작: 총 $count 문장, 시작 인덱스: $startIndex")
+        // 현재 진행 상황 확인
+        val currentProgress = progressTracker.getScriptProgress(category, scriptIndex, "영작 테스트")
+        val startIndex = currentProgress?.currentSentenceIndex ?: 0
+        
+        Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 시작 - 총 문장: $count, 시작 인덱스: $startIndex")
         
         val recordingFiles = mutableListOf<File>()
         
@@ -87,16 +87,17 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 진행상황 실시간 저장 완료")
             
             // 1. 한글 문장 TTS (카드를 한글로 뒤집고 하이라이트)
-            onCardFlip(true) // 카드를 한글로 뒤집기
+            uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
             delay(100) // 카드 뒤집기 애니메이션 대기
-            onKoreanHighlight(idx) // 한글 하이라이트
             
             // 한글 문장 TTS 재생 (하이라이트 포함)
             ttsController.playSentenceWithHighlight(
                 text = koSentences[idx],
                 isKorean = true,
                 onHighlight = { index ->
-                    onKoreanHighlight(index)
+                    // TtsController에서 받은 index를 사용하여 하이라이트 설정
+                    Log.d("EnglishWritingTestRepositoryImpl", "한글 문장 $idx 하이라이트 설정: index=$index")
+                    uiCallback.onKoreanHighlight(idx)
                 }
             )
             
@@ -107,8 +108,8 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             }
 
             // 2. 녹음 시작 (마이크 2차 하이라이트) - 한글 하이라이트는 유지
-            onRecordingHighlight(idx) // 녹음 하이라이트 추가 (한글 하이라이트와 함께)
-            onRecordingStateChange(true) // 녹음 상태 활성화
+            uiCallback.onRecordingHighlight(idx) // 녹음 하이라이트 추가 (한글 하이라이트와 함께)
+            uiCallback.onRecordingStateChange(true) // 녹음 상태 활성화
             
             // 1. 저장된 TTS 시간 확인 (반복듣기에서 저장한 영문 TTS 시간)
             val savedTtsTime = recordingTimeManager.getRecordingTime(category, scriptIndex, idx)
@@ -143,15 +144,11 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             val savedFile = audioFileManager.saveRecordingFile(recordingFile, "english_writing_${category}_${scriptIndex}_${idx}")
             recordingFiles.add(savedFile)
             
-            onRecordingStateChange(false) // 녹음 상태 비활성화
-            onRecordingHighlight(null) // 녹음 하이라이트 제거
-            onKoreanHighlight(null) // 한글 하이라이트 제거
+            uiCallback.onRecordingStateChange(false) // 녹음 상태 비활성화
         }
         
         // 마지막에 카드를 원래 상태(영문)로 복원
-        onCardFlip(false)
-        onKoreanHighlight(null)
-        onRecordingHighlight(null)
+        uiCallback.onCardFlip(false)
         
         // 3. 모든 녹음 파일을 하나로 합치기
         if (recordingFiles.isNotEmpty()) {
@@ -171,7 +168,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 완료 - 머지된 파일: ${mergedFile.absolutePath}")
             
             // 병합 파일 생성 완료 콜백 호출
-            onMergedFileCreated()
+            uiCallback.onMergedFileCreated()
         }
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)

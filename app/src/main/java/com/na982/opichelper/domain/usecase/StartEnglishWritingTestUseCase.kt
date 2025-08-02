@@ -1,6 +1,7 @@
 package com.na982.opichelper.domain.usecase
 
 import android.util.Log
+import com.na982.opichelper.domain.audio.EnglishWritingUiCallback
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,22 +27,14 @@ class StartEnglishWritingTestUseCase @Inject constructor(
      * @param answerEn 영문 답변
      * @param category 카테고리
      * @param scriptIndex 스크립트 인덱스
-     * @param onCardFlip 카드 뒤집기 콜백
-     * @param onKoreanHighlight 한글 하이라이트 콜백
-     * @param onRecordingHighlight 녹음 하이라이트 콜백
-     * @param onRecordingStateChange 녹음 상태 변경 콜백
-     * @param onMergedFileCreated 병합 파일 생성 완료 콜백
+     * @param uiCallback UI 콜백 인터페이스
      */
     suspend fun execute(
         answerKo: String,
         answerEn: String,
         category: String,
         scriptIndex: Int,
-        onCardFlip: (Boolean) -> Unit,
-        onKoreanHighlight: (Int?) -> Unit,
-        onRecordingHighlight: (Int?) -> Unit,
-        onRecordingStateChange: (Boolean) -> Unit,
-        onMergedFileCreated: () -> Unit
+        uiCallback: EnglishWritingUiCallback
     ) {
         Log.d("StartEnglishWritingTestUseCase", "영작 테스트 시작")
         
@@ -51,11 +44,7 @@ class StartEnglishWritingTestUseCase @Inject constructor(
                 answerEn = answerEn,
                 category = category,
                 scriptIndex = scriptIndex,
-                onCardFlip = onCardFlip,
-                onKoreanHighlight = onKoreanHighlight,
-                onRecordingHighlight = onRecordingHighlight,
-                onRecordingStateChange = onRecordingStateChange,
-                onMergedFileCreated = onMergedFileCreated
+                uiCallback = uiCallback
             )
         } catch (e: Exception) {
             Log.e("StartEnglishWritingTestUseCase", "영작 테스트 실행 중 오류", e)

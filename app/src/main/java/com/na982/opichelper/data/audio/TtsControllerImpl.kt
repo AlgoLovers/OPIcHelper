@@ -132,20 +132,52 @@ class TtsControllerImpl @Inject constructor(
             isPlaying = true
         )
         
-        // 2. TtsOrchestrator를 통해 하이라이트와 함께 재생
-        val duration = ttsOrchestrator.speakUnified(
-            text = text,
-            isKorean = isKorean,
-            rate = 1.0f,
-            onHighlight = onHighlight,
-            waitForCompletion = true
+        // 2. 하이라이트 초기화
+        appStateManager.updateHighlightState(
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
         )
         
-        // 3. 재생 완료 시 TTS 상태만 업데이트 (하이라이트는 그대로 유지)
+        // 3. 영문/한글 모두 동일하게 하이라이트 처리
+        val duration = ttsOrchestrator.speakWithHighlight(text) { highlightIndex ->
+            Log.d("TtsControllerImpl", "문장 하이라이트 콜백: $highlightIndex, isKorean=$isKorean")
+            
+            // TtsOrchestrator에서 받은 highlightIndex를 그대로 사용
+            if (isKorean) {
+                appStateManager.updateHighlightState(
+                    questionHighlightIndex = -1,
+                    answerHighlightIndex = -1,
+                    answerKoHighlightIndex = highlightIndex,
+                    recordingHighlightIndex = -1
+                )
+            } else {
+                appStateManager.updateHighlightState(
+                    questionHighlightIndex = -1,
+                    answerHighlightIndex = highlightIndex,
+                    answerKoHighlightIndex = -1,
+                    recordingHighlightIndex = -1
+                )
+            }
+            
+            // onHighlight 콜백 호출
+            onHighlight(highlightIndex)
+        }
+        
+        // 4. 재생 완료 시 TTS 상태만 업데이트 (하이라이트는 그대로 유지)
         appStateManager.updateTtsPlayingState(
             isQuestionPlaying = false,
             isAnswerPlaying = false,
             isPlaying = false
+        )
+        
+        // 5. 하이라이트 완전 해제
+        appStateManager.updateHighlightState(
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
         )
         
         Log.d("TtsControllerImpl", "문장 하이라이트 TTS 재생 완료: ${duration}ms")
@@ -172,7 +204,6 @@ class TtsControllerImpl @Inject constructor(
             text = text,
             isKorean = isKorean,
             rate = rate,
-            onHighlight = null,
             waitForCompletion = waitForCompletion
         )
         

@@ -243,9 +243,10 @@ class TtsOrchestrator @Inject constructor(
     /**
      * 문장별 하이라이트와 함께 TTS 재생
      */
-    suspend fun speakWithHighlight(text: String, onHighlight: (Int) -> Unit) {
+    suspend fun speakWithHighlight(text: String, onHighlight: (Int) -> Unit): Long {
         Log.d("TtsOrchestrator", "🎯 speakWithHighlight 호출됨: '${text.take(30)}...'")
         
+        val startTime = System.currentTimeMillis()
         val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         Log.d("TtsOrchestrator", "📝 문장 분리 완료: ${sentences.size}개 문장")
         
@@ -279,7 +280,9 @@ class TtsOrchestrator @Inject constructor(
         
         // 모든 재생 완료 후 하이라이트 해제
         onHighlight(-1)
+        val endTime = System.currentTimeMillis()
         Log.d("TtsOrchestrator", "✅ speakWithHighlight 완료")
+        return endTime - startTime
     }
     
     /**
@@ -356,7 +359,7 @@ class TtsOrchestrator @Inject constructor(
     }
     
     /**
-     * 통합 TTS 재생 함수 - 모든 TTS 재생에서 사용
+     * 통합 TTS 재생 (하이라이트 지원)
      * @param text 재생할 텍스트
      * @param isKorean 한글 여부 (null이면 자동 감지)
      * @param rate 재생 속도 (1.0f가 기본)
@@ -378,7 +381,7 @@ class TtsOrchestrator @Inject constructor(
         
         return if (onHighlight != null) {
             // 하이라이트가 있는 경우 - 문장별 분리 재생
-            speakWithHighlightUnified(text, detectedKorean, rate, onHighlight)
+            speakWithHighlight(text, onHighlight)
         } else {
             // 하이라이트가 없는 경우 - 단일 텍스트 재생
             speakSingleTextUnified(text, detectedKorean, rate, waitForCompletion)
@@ -399,13 +402,8 @@ class TtsOrchestrator @Inject constructor(
         // 단일 문장으로 처리 (RepeatListeningUseCase에서 이미 분리된 문장을 전달)
         Log.d("TtsOrchestrator", "🔤 단일 문장 처리: '${text.take(30)}...'")
         
-        // 하이라이트 초기화
-        onHighlight(-1)
-        kotlinx.coroutines.delay(100L) // UI 업데이트를 위한 짧은 딜레이
-        
-        // 현재 문장 하이라이트 설정
-        onHighlight(0)
-        Log.d("TtsOrchestrator", "✨ 하이라이트 설정: 문장 0")
+        // EnglishWritingTestRepositoryImpl에서 이미 올바른 하이라이트를 설정했으므로
+        // 여기서는 초기화하지 않고 그대로 유지
         
         val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
         val success = if (isKorean) {

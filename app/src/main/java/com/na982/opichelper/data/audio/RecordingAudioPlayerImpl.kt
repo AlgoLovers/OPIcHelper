@@ -35,10 +35,7 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
                 
                 prepare()
                 Log.d("RecordingAudioPlayerImpl", "prepare 완료")
-                
-                // 재생 시작 시 하이라이트 시작
-                onHighlight(0) // 첫 번째 문장부터 시작
-                
+
                 start()
                 Log.d("RecordingAudioPlayerImpl", "start 완료")
                 

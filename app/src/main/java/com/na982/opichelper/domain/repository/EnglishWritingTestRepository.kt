@@ -1,5 +1,7 @@
 package com.na982.opichelper.domain.repository
 
+import com.na982.opichelper.domain.audio.EnglishWritingUiCallback
+
 /**
  * 영작 테스트 Repository 인터페이스
  * 
@@ -17,11 +19,7 @@ interface EnglishWritingTestRepository {
         answerEn: String,
         category: String,
         scriptIndex: Int,
-        onCardFlip: (Boolean) -> Unit,
-        onKoreanHighlight: (Int?) -> Unit,
-        onRecordingHighlight: (Int?) -> Unit,
-        onRecordingStateChange: (Boolean) -> Unit,
-        onMergedFileCreated: () -> Unit
+        uiCallback: EnglishWritingUiCallback
     )
     
     /**
