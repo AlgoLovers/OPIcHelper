@@ -234,7 +234,7 @@ class MainViewModel @Inject constructor(
     }
     
     /**
-     * 암기 테스트 버튼 클릭 (MemorizationManager에 위임)
+     * 암기 테스트 버튼 클릭 (ButtonEventHandler에 위임)
      */
     fun handleMemorizeTestClick() {
         val currentState = appState.value
@@ -242,21 +242,40 @@ class MainViewModel @Inject constructor(
         
         Log.d("MainViewModelRefactored", "암기 테스트 버튼 클릭 - 선택된 레벨: ${currentState.selectedMemorizeLevel}")
         
-        val category = currentState.currentCategory ?: return
-        val scriptIndex = currentState.currentIndex
-        
-        when (currentState.selectedMemorizeLevel) {
-            "반복듣기" -> {
-                memorizationManager.startRepeatListening(category, scriptIndex)
-            }
-            "영작테스트" -> {
-                memorizationManager.startEnglishWritingTest(category, scriptIndex)
-            }
-            "통암기" -> {
-                memorizationManager.startFullMemorization(category, scriptIndex)
-            }
-            else -> {
-                Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
+        viewModelScope.launch {
+            try {
+                val memorizeLevel = when (currentState.selectedMemorizeLevel) {
+                    "반복듣기" -> MemorizeLevel.REPEAT_LISTENING
+                    "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
+                    "영작테스트" -> MemorizeLevel.ENGLISH_WRITING
+                    "통암기" -> MemorizeLevel.FULL_MEMORIZATION
+                    else -> {
+                        Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
+                        return@launch
+                    }
+                }
+                
+                val category = currentState.currentCategory ?: return@launch
+                val scriptIndex = currentState.currentIndex
+                val answerKo = currentQaItem.answers.values.first().answerKo
+                val answerEn = currentQaItem.answers.values.first().answerEn
+                
+                Log.d("MainViewModelRefactored", "매칭된 MemorizeLevel: $memorizeLevel")
+                val event = ButtonEvent.MemorizeTestClick(
+                    memorizeLevel = memorizeLevel,
+                    category = category,
+                    scriptIndex = scriptIndex,
+                    answerKo = answerKo,
+                    answerEn = answerEn
+                )
+                
+                Log.d("MainViewModelRefactored", "암기 테스트 이벤트 발생: $event")
+                buttonEventHandler.handleEvent(event)
+                Log.d("MainViewModelRefactored", "암기 테스트 이벤트 처리 완료")
+                
+            } catch (e: Exception) {
+                Log.e("MainViewModelRefactored", "암기 테스트 실패", e)
+                appStateManager.updateErrorState(e.message)
             }
         }
     }
