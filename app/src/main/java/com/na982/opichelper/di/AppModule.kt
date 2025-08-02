@@ -432,26 +432,4 @@ object AppModule {
             audioFileManager = audioFileManager
         )
     }
-    
-    @Provides
-    @Singleton
-    fun provideButtonActionHandler(
-        buttonStateManager: com.na982.opichelper.domain.button.ButtonStateManager,
-        ttsController: TtsController,
-        qaDataRepository: QaDataRepository,
-        userPreferencesRepository: UserPreferencesRepository,
-        executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
-        executeRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase,
-        executeEnglishWritingTestUseCase: com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
-    ): com.na982.opichelper.domain.button.ButtonActionHandler {
-        return com.na982.opichelper.domain.button.ButtonActionHandler(
-            buttonStateManager, 
-            ttsController, 
-            qaDataRepository,
-            userPreferencesRepository,
-            executeFullMemorizationUseCase,
-            executeRepeatListeningUseCase,
-            executeEnglishWritingTestUseCase
-        )
-    }
 } 
