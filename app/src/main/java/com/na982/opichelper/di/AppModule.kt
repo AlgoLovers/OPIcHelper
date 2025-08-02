@@ -198,7 +198,7 @@ object AppModule {
     @Singleton
     fun provideEnglishWritingTestRepository(
         qaDataRepository: QaDataRepository,
-        ttsOrchestrator: TtsOrchestrator,
+        ttsController: TtsController,
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
         recordingTimeManager: RecordingTimeManager,
@@ -206,7 +206,7 @@ object AppModule {
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
             qaDataRepository = qaDataRepository,
-            ttsOrchestrator = ttsOrchestrator,
+            ttsController = ttsController,
             audioRecorder = audioRecorder,
             audioFileManager = audioFileManager,
             recordingTimeManager = recordingTimeManager,
@@ -229,14 +229,14 @@ object AppModule {
     @Provides
     @Singleton
     fun provideFullMemorizationRepository(
-        ttsOrchestrator: TtsOrchestrator,
+        ttsController: TtsController,
         audioRecorder: AudioRecorder,
         audioPlayer: AudioPlayer,
         audioFileManager: AudioFileManager,
         qaDataRepository: QaDataRepository
     ): FullMemorizationRepository {
         return FullMemorizationRepositoryImpl(
-            ttsOrchestrator = ttsOrchestrator,
+            ttsController = ttsController,
             audioRecorder = audioRecorder,
             audioPlayer = audioPlayer,
             audioFileManager = audioFileManager,
@@ -284,12 +284,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAudioControlManager(
-        ttsOrchestrator: TtsOrchestrator,
+        ttsController: TtsController,
         buttonEventHandler: ButtonEventHandler,
         appStateManager: AppStateManager
     ): IAudioControlManager {
         return AudioControlManager(
-            ttsOrchestrator = ttsOrchestrator,
+            ttsController = ttsController,
             buttonEventHandler = buttonEventHandler,
             appStateManager = appStateManager
         )
@@ -326,6 +326,26 @@ object AppModule {
             ttsController = ttsController,
             progressTracker = progressTracker,
             recordingTimeManager = recordingTimeManager
+        )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideEnglishWritingTestUseCase(
+        englishWritingTestRepository: EnglishWritingTestRepository
+    ): com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase {
+        return com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase(
+            englishWritingTestRepository = englishWritingTestRepository
+        )
+    }
+    
+    @Provides
+    @Singleton
+    fun provideFullMemorizationUseCase(
+        fullMemorizationRepository: FullMemorizationRepository
+    ): com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase {
+        return com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase(
+            fullMemorizationRepository = fullMemorizationRepository
         )
     }
     
@@ -417,7 +437,7 @@ object AppModule {
     @Singleton
     fun provideButtonActionHandler(
         buttonStateManager: com.na982.opichelper.domain.button.ButtonStateManager,
-        ttsOrchestrator: TtsOrchestrator,
+        ttsController: TtsController,
         qaDataRepository: QaDataRepository,
         userPreferencesRepository: UserPreferencesRepository,
         executeFullMemorizationUseCase: com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase,
@@ -426,7 +446,7 @@ object AppModule {
     ): com.na982.opichelper.domain.button.ButtonActionHandler {
         return com.na982.opichelper.domain.button.ButtonActionHandler(
             buttonStateManager, 
-            ttsOrchestrator, 
+            ttsController, 
             qaDataRepository,
             userPreferencesRepository,
             executeFullMemorizationUseCase,

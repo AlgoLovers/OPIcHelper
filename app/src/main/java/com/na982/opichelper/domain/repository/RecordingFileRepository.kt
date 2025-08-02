@@ -48,7 +48,7 @@ interface RecordingFileRepository {
         category: String,
         scriptIndex: Int,
         onPlayingStateChange: (Boolean) -> Unit,
-        onHighlight: (Int?) -> Unit
+        onHighlight: (Int) -> Unit
     )
     
     /**
@@ -67,4 +67,6 @@ interface RecordingFileRepository {
      * 현재 재생 중인 녹음 파일 중지
      */
     suspend fun stopPlayingRecording()
+
+    suspend fun playRecording(filePath: String, onHighlight: (Int) -> Unit, onCompletion: () -> Unit)
 } 

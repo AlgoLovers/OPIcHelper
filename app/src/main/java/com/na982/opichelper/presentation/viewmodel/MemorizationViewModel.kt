@@ -3,7 +3,7 @@ package com.na982.opichelper.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.manager.IMemorizationManager
 import com.na982.opichelper.domain.manager.MemorizationUiState
@@ -20,7 +20,7 @@ import javax.inject.Inject
 class MemorizationViewModel @Inject constructor(
     private val memorizationManager: IMemorizationManager,
     private val qaDataRepository: QaDataRepository,
-    private val ttsOrchestrator: TtsOrchestrator
+    private val ttsController: TtsController
 ) : ViewModel() {
     
     // MemorizationManager의 상태를 그대로 노출
@@ -72,8 +72,7 @@ class MemorizationViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 memorizationManager.stopCurrentMode()
-                ttsOrchestrator.stop()
-                ttsOrchestrator.clearHighlight()
+                ttsController.stopAllTts()
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "작업 중단 실패", e)
             }

@@ -2,7 +2,7 @@ package com.na982.opichelper.data.repository
 
 import android.util.Log
 import com.na982.opichelper.domain.audio.AudioRecorder
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.ProgressData
@@ -29,7 +29,7 @@ import javax.inject.Singleton
 @Singleton
 class EnglishWritingTestRepositoryImpl @Inject constructor(
     private val qaDataRepository: QaDataRepository,
-    private val ttsOrchestrator: TtsOrchestrator,
+    private val ttsController: TtsController,
     private val audioRecorder: AudioRecorder,
     private val audioFileManager: AudioFileManager,
     private val recordingTimeManager: RecordingTimeManager,
@@ -91,8 +91,14 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             delay(100) // 카드 뒤집기 애니메이션 대기
             onKoreanHighlight(idx) // 한글 하이라이트
             
-            // 한글 문장 TTS 재생 (완료까지 기다림)
-            ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx], isKorean = true, rate = 0.8f)
+            // 한글 문장 TTS 재생 (하이라이트 포함)
+            ttsController.playSentenceWithHighlight(
+                text = koSentences[idx],
+                isKorean = true,
+                onHighlight = { index ->
+                    onKoreanHighlight(index)
+                }
+            )
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {

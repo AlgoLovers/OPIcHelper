@@ -46,7 +46,7 @@ interface TtsPlayer {
     /**
      * 문장별 하이라이트와 함께 TTS 재생
      */
-    suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit)
+    suspend fun speakWithHighlight(text: String, onHighlight: (Int) -> Unit)
     
     /**
      * TTS 재생 후 재생 시간 반환

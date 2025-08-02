@@ -34,11 +34,11 @@ class EnglishWritingStrategy @Inject constructor(
             },
             onKoreanHighlight = { index ->
                 Log.d("EnglishWritingStrategy", "한글 하이라이트: $index")
-                uiCallback.onKoreanHighlight(index)
+                uiCallback.onKoreanHighlight(index ?: -1)
             },
             onRecordingHighlight = { index ->
                 Log.d("EnglishWritingStrategy", "녹음 하이라이트: $index")
-                uiCallback.onRecordingHighlight(index)
+                uiCallback.onRecordingHighlight(index ?: -1)
             },
             onRecordingStateChange = { isRecording ->
                 Log.d("EnglishWritingStrategy", "녹음 상태 변경: $isRecording")

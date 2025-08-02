@@ -29,9 +29,7 @@ interface FullMemorizationRepository {
     /**
      * 녹음 파일 재생
      */
-    suspend fun playRecording(
-        onHighlight: (Int?) -> Unit
-    )
+    suspend fun playRecording(filePath: String, onHighlight: (Int) -> Unit, onCompletion: () -> Unit)
     
     /**
      * 녹음 파일 존재 여부 확인

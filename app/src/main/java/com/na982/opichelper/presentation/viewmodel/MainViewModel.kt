@@ -373,8 +373,8 @@ class MainViewModel @Inject constructor(
         return MutableStateFlow(false)
     }
     
-    fun englishWritingTestMergedFileHighlightIndex(): StateFlow<Int?> {
-        return MutableStateFlow(null)
+    fun englishWritingTestMergedFileHighlightIndex(): StateFlow<Int> {
+        return MutableStateFlow(-1)
     }
     
     // UI에서 필요한 추가 메서드들

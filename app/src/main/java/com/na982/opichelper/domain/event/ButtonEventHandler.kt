@@ -108,31 +108,31 @@ class ButtonEventHandler @Inject constructor(
                 appStateManager.updateCardState(isAnswerCardFlipped = isKorean)
             }
             
-            override fun onHighlight(index: Int?) {
+            override fun onHighlight(index: Int) {
                 Log.d("ButtonEventHandler", "영문 하이라이트: $index")
                 appStateManager.updateHighlightState(
                     questionHighlightIndex = -1,
-                    answerHighlightIndex = index ?: -1,
+                    answerHighlightIndex = index,
                     answerKoHighlightIndex = -1
                 )
             }
             
-            override fun onKoreanHighlight(index: Int?) {
+            override fun onKoreanHighlight(index: Int) {
                 Log.d("ButtonEventHandler", "한글 하이라이트: $index")
                 appStateManager.updateHighlightState(
                     questionHighlightIndex = -1,
                     answerHighlightIndex = -1,
-                    answerKoHighlightIndex = index ?: -1
+                    answerKoHighlightIndex = index
                 )
             }
             
-            override fun onRecordingHighlight(index: Int?) {
+            override fun onRecordingHighlight(index: Int) {
                 Log.d("ButtonEventHandler", "녹음 하이라이트: $index")
                 appStateManager.updateHighlightState(
                     questionHighlightIndex = -1,
                     answerHighlightIndex = -1,
                     answerKoHighlightIndex = -1,
-                    recordingHighlightIndex = index ?: -1
+                    recordingHighlightIndex = index
                 )
             }
             
@@ -194,7 +194,7 @@ class ButtonEventHandler @Inject constructor(
                         // 영문 하이라이트 상태 업데이트
                         appStateManager.updateHighlightState(
                             questionHighlightIndex = -1,
-                            answerHighlightIndex = index ?: -1,
+                            answerHighlightIndex = index,
                             answerKoHighlightIndex = -1,
                             recordingHighlightIndex = -1
                         )

@@ -80,9 +80,9 @@ data class MemorizationUiState(
     val isMemorizeTestRunning: Boolean = false,
     
     // 하이라이트 인덱스들
-    val answerHighlightIndex: Int? = null,
-    val answerKoHighlightIndex: Int? = null,
-    val recordingHighlightIndex: Int? = null,
+    val answerHighlightIndex: Int = -1,
+    val answerKoHighlightIndex: Int = -1,
+    val recordingHighlightIndex: Int = -1,
     
     // 이벤트 상태들
     val englishWritingTestCompleted: Boolean = false,

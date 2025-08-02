@@ -11,7 +11,7 @@ interface RecordingAudioPlayer {
      * @param onHighlight 하이라이트 콜백 (문장 인덱스)
      * @param onCompletion 재생 완료 콜백
      */
-    fun playRecording(filePath: String, onHighlight: (Int?) -> Unit, onCompletion: () -> Unit)
+    fun playRecording(filePath: String, onHighlight: (Int) -> Unit, onCompletion: () -> Unit)
     
     /**
      * 녹음 파일 재생 (기본)

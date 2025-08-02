@@ -34,23 +34,39 @@ class TtsControllerImpl @Inject constructor(
             isPlaying = true
         )
         
-        // 2. 하이라이트와 함께 TTS 재생
+        // 2. 하이라이트 초기화
+        appStateManager.updateHighlightState(
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
+        )
+        
+        // 3. 하이라이트와 함께 TTS 재생
         ttsOrchestrator.speakWithHighlight(question) { highlightIndex ->
-            // 하이라이트 인덱스가 null이면 -1로 초기화, 아니면 해당 인덱스로 설정
+            Log.d("TtsControllerImpl", "질문 하이라이트 콜백: $highlightIndex")
+            // 하이라이트 인덱스 업데이트
             appStateManager.updateHighlightState(
-                questionHighlightIndex = highlightIndex ?: -1,  // null이면 -1로 초기화
-                answerHighlightIndex = -1, // 답변 하이라이트는 명시적으로 -1로 설정
-                answerKoHighlightIndex = -1 // 답변 한글 하이라이트도 명시적으로 -1로 설정
+                questionHighlightIndex = highlightIndex,
+                answerHighlightIndex = -1,
+                answerKoHighlightIndex = -1,
+                recordingHighlightIndex = -1
             )
         }
         
-        // 3. 재생 완료 시 상태 업데이트
+        // 4. 재생 완료 시 상태 업데이트
         appStateManager.updateTtsPlayingState(
             isQuestionPlaying = false,
             isAnswerPlaying = false,
             isPlaying = false
         )
-        appStateManager.updateHighlightState(questionHighlightIndex = -1)
+        // 5. 하이라이트 완전 해제
+        appStateManager.updateHighlightState(
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
+        )
         
         Log.d("TtsControllerImpl", "질문 TTS 재생 완료")
     }
@@ -65,23 +81,39 @@ class TtsControllerImpl @Inject constructor(
             isPlaying = true
         )
         
-        // 2. 하이라이트와 함께 TTS 재생
+        // 2. 하이라이트 초기화
+        appStateManager.updateHighlightState(
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
+        )
+        
+        // 3. 하이라이트와 함께 TTS 재생
         ttsOrchestrator.speakWithHighlight(answer) { highlightIndex ->
-            // 하이라이트 인덱스가 null이면 -1로 초기화, 아니면 해당 인덱스로 설정
+            Log.d("TtsControllerImpl", "답변 하이라이트 콜백: $highlightIndex")
+            // 하이라이트 인덱스 업데이트
             appStateManager.updateHighlightState(
-                questionHighlightIndex = -1, // 질문 하이라이트는 명시적으로 -1로 설정
-                answerHighlightIndex = highlightIndex ?: -1,  // null이면 -1로 초기화
-                answerKoHighlightIndex = -1 // 한글 하이라이트는 별도로 관리
+                questionHighlightIndex = -1,
+                answerHighlightIndex = highlightIndex,
+                answerKoHighlightIndex = -1,
+                recordingHighlightIndex = -1
             )
         }
         
-        // 3. 재생 완료 시 상태 업데이트
+        // 4. 재생 완료 시 상태 업데이트
         appStateManager.updateTtsPlayingState(
             isQuestionPlaying = false,
             isAnswerPlaying = false,
             isPlaying = false
         )
-        appStateManager.updateHighlightState(answerHighlightIndex = -1)
+        // 5. 하이라이트 완전 해제
+        appStateManager.updateHighlightState(
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
+        )
         
         Log.d("TtsControllerImpl", "답변 TTS 재생 완료")
     }
@@ -89,7 +121,7 @@ class TtsControllerImpl @Inject constructor(
     override suspend fun playSentenceWithHighlight(
         text: String,
         isKorean: Boolean,
-        onHighlight: (Int?) -> Unit
+        onHighlight: (Int) -> Unit
     ): Long {
         Log.d("TtsControllerImpl", "문장 하이라이트 TTS 재생 시작: '${text.take(30)}...', isKorean=$isKorean")
         

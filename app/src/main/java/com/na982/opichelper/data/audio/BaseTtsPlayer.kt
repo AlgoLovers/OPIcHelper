@@ -97,7 +97,7 @@ abstract class BaseTtsPlayer(
         }
     }
     
-    override suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
+    override suspend fun speakWithHighlight(text: String, onHighlight: (Int) -> Unit) {
         // 기본 구현: 하이라이트 없이 재생
         speak(text, null)
     }

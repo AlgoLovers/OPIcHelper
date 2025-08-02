@@ -30,7 +30,7 @@ fun HighlightText(
             val isHighlighted = highlightIndex == index
             val isRecordingHighlighted = recordingHighlightIndex == index
             
-            Log.d("HighlightText", "문장 $index: isHighlighted=$isHighlighted, isRecordingHighlighted=$isRecordingHighlighted")
+            Log.d("HighlightText", "문장 $index: isHighlighted=$isHighlighted, isRecordingHighlighted=$isRecordingHighlighted, sentence='${sentence.take(30)}...'")
             
             // 녹음 하이라이트가 우선순위가 높음
             val backgroundColor = when {

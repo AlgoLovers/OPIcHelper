@@ -75,13 +75,17 @@ class AppStateManagerImpl @Inject constructor() : AppStateManager {
         answerKoHighlightIndex: Int,
         recordingHighlightIndex: Int
     ) {
+        Log.d("AppStateManagerImpl", "하이라이트 상태 업데이트: question=$questionHighlightIndex, answer=$answerHighlightIndex, answerKo=$answerKoHighlightIndex, recording=$recordingHighlightIndex")
+        
         updateState { currentState ->
-            currentState.copy(
+            val newState = currentState.copy(
                 questionHighlightIndex = questionHighlightIndex,
                 answerHighlightIndex = answerHighlightIndex,
                 answerKoHighlightIndex = answerKoHighlightIndex,
                 recordingHighlightIndex = recordingHighlightIndex
             )
+            Log.d("AppStateManagerImpl", "하이라이트 상태 업데이트 완료: ${newState.questionHighlightIndex}, ${newState.answerHighlightIndex}")
+            newState
         }
     }
     

@@ -203,7 +203,7 @@ class StartRepeatListeningUseCase @Inject constructor(
         
         // 마지막에 카드를 원래 상태(영문)로 복원
         uiCallback.onCardFlip(false)
-        uiCallback.onHighlight(null)
+        uiCallback.onHighlight(-1)
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
         progressTracker.clearScriptProgress(data.category, data.scriptIndex, "반복 듣기")

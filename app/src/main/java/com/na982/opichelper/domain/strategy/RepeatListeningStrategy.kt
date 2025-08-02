@@ -39,12 +39,12 @@ class RepeatListeningStrategy @Inject constructor(
                     uiCallback.onCardFlip(isKorean)
                 }
                 
-                override fun onHighlight(index: Int?) {
+                override fun onHighlight(index: Int) {
                     Log.d("RepeatListeningStrategy", "영문 하이라이트: $index")
                     uiCallback.onHighlight(index)
                 }
                 
-                override fun onKoreanHighlight(index: Int?) {
+                override fun onKoreanHighlight(index: Int) {
                     Log.d("RepeatListeningStrategy", "한글 하이라이트: $index")
                     uiCallback.onKoreanHighlight(index)
                 }

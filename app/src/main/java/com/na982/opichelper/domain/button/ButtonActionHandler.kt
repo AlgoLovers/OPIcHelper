@@ -3,7 +3,7 @@ package com.na982.opichelper.domain.button
 import android.util.Log
 import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.button.ButtonStateManager
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.entity.MemorizeLevel
@@ -26,7 +26,7 @@ import javax.inject.Singleton
 @Singleton
 class ButtonActionHandler @Inject constructor(
     private val buttonStateManager: ButtonStateManager,
-    private val ttsOrchestrator: TtsOrchestrator,
+    private val ttsController: TtsController,
     private val qaDataRepository: QaDataRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val executeFullMemorizationUseCase: StartFullMemorizationUseCase,
@@ -71,8 +71,8 @@ class ButtonActionHandler @Inject constructor(
                     )
                 } else {
                     Log.d("ButtonActionHandler", "일반 모드 - 질문 TTS 재생")
-                    // 일반 모드에서는 TTS 재생
-                    ttsOrchestrator.speak(question, null)
+                    // 일반 모드에서는 TTS 재생 (하이라이트 포함)
+                    ttsController.playQuestion(question)
                     
                     // TTS 완료 후 버튼 상태를 Idle로 변경
                     // TTS 재생이 완료되면 자동으로 상태가 변경됨
@@ -102,8 +102,8 @@ class ButtonActionHandler @Inject constructor(
                 
                 // 2. 다른 작업 중단
                 
-                // 3. 답변 TTS 재생
-                ttsOrchestrator.speak(answer, null)
+                // 3. 답변 TTS 재생 (하이라이트 포함)
+                ttsController.playAnswer(answer)
                 
                 // 4. 버튼 상태를 Playing으로 변경
                 buttonStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
@@ -153,10 +153,10 @@ class ButtonActionHandler @Inject constructor(
                                 override fun onCardFlip(isKorean: Boolean) {
                                     // 카드 뒤집기 처리
                                 }
-                                override fun onHighlight(index: Int?) {
+                                override fun onHighlight(index: Int) {
                                     // 하이라이트 처리
                                 }
-                                override fun onKoreanHighlight(index: Int?) {
+                                override fun onKoreanHighlight(index: Int) {
                                     // 한글 하이라이트 처리
                                 }
                                 override fun onComplete() {
@@ -269,11 +269,11 @@ class ButtonActionHandler @Inject constructor(
                 // 1. 해당 버튼의 작업 중단
                 when (buttonType) {
                     is ButtonFunction.QuestionPlay -> {
-                        ttsOrchestrator.stop()
+                        ttsController.stopAllTts()
                         buttonStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
                     }
                     is ButtonFunction.AnswerPlay -> {
-                        ttsOrchestrator.stop()
+                        ttsController.stopAllTts()
                         buttonStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
                     }
                     is ButtonFunction.MemorizeTest -> {
@@ -288,7 +288,7 @@ class ButtonActionHandler @Inject constructor(
                     }
                     is ButtonFunction.Stop -> {
                         // 모든 작업 중단
-                        ttsOrchestrator.stop()
+                        ttsController.stopAllTts()
                         buttonStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
                         buttonStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
                         buttonStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)

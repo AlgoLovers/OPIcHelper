@@ -5,7 +5,7 @@ package com.na982.opichelper.domain.audio
  */
 interface RepeatListeningUiCallback {
     fun onCardFlip(isKorean: Boolean)
-    fun onHighlight(index: Int?)
-    fun onKoreanHighlight(index: Int?)
+    fun onHighlight(index: Int)
+    fun onKoreanHighlight(index: Int)
     fun onComplete()
 } 

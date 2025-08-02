@@ -90,15 +90,19 @@ class StartFullMemorizationUseCase @Inject constructor(
      */
     suspend fun playRecording(
         onPlayingStateChange: (Boolean) -> Unit,
-        onHighlight: (Int?) -> Unit
+        onHighlight: (Int) -> Unit
     ) {
         try {
             Log.d("StartFullMemorizationUseCase", "녹음 재생 시작")
             
             onPlayingStateChange(true)
             
-            fullMemorizationRepository.playRecording { index ->
-                onHighlight(index)
+            // 녹음 파일 경로 가져오기
+            val recordingPath = fullMemorizationRepository.getRecordingPath()
+            if (recordingPath != null) {
+                fullMemorizationRepository.playRecording(recordingPath, onHighlight) {
+                    // 재생 완료 콜백
+                }
             }
             
             onPlayingStateChange(false)

@@ -169,7 +169,7 @@ class TtsOrchestrator @Inject constructor(
     /**
      * 답변 하이라이트 인덱스 설정
      */
-    fun setAnswerHighlightIndex(index: Int?) {
+    fun setAnswerHighlightIndex(index: Int) {
         Log.d("TtsOrchestrator", "답변 하이라이트 인덱스 설정: $index")
         // 하이라이트 관련 상태는 AppStateManager에서 관리
     }
@@ -177,7 +177,7 @@ class TtsOrchestrator @Inject constructor(
     /**
      * 답변 한글 하이라이트 인덱스 설정
      */
-    fun setAnswerKoHighlightIndex(index: Int?) {
+    fun setAnswerKoHighlightIndex(index: Int) {
         Log.d("TtsOrchestrator", "답변 한글 하이라이트 인덱스 설정: $index")
         // 하이라이트 관련 상태는 AppStateManager에서 관리
     }
@@ -185,7 +185,7 @@ class TtsOrchestrator @Inject constructor(
     /**
      * 녹음 하이라이트 인덱스 설정
      */
-    fun setRecordingHighlightIndex(index: Int?) {
+    fun setRecordingHighlightIndex(index: Int) {
         Log.d("TtsOrchestrator", "녹음 하이라이트 인덱스 설정: $index")
         // 하이라이트 관련 상태는 AppStateManager에서 관리
     }
@@ -243,16 +243,22 @@ class TtsOrchestrator @Inject constructor(
     /**
      * 문장별 하이라이트와 함께 TTS 재생
      */
-    suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
+    suspend fun speakWithHighlight(text: String, onHighlight: (Int) -> Unit) {
         Log.d("TtsOrchestrator", "🎯 speakWithHighlight 호출됨: '${text.take(30)}...'")
         
         val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         Log.d("TtsOrchestrator", "📝 문장 분리 완료: ${sentences.size}개 문장")
         
+        // 하이라이트 초기화
+        onHighlight(-1)
+        
         for ((idx, sentence) in sentences.withIndex()) {
             Log.d("TtsOrchestrator", "🔤 문장 ${idx + 1}/${sentences.size}: '${sentence.take(20)}...'")
             
+            // 현재 문장 하이라이트 설정
             onHighlight(idx)
+            Log.d("TtsOrchestrator", "✨ 하이라이트 설정: 문장 $idx")
+            
             val isKorean = sentence.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
             
             Log.d("TtsOrchestrator", "🔍 문장 ${idx + 1} 언어 감지: 한글여부=$isKorean")
@@ -270,7 +276,9 @@ class TtsOrchestrator @Inject constructor(
             finished.await()
             kotlinx.coroutines.delay(400L)
         }
-        onHighlight(null)
+        
+        // 모든 재생 완료 후 하이라이트 해제
+        onHighlight(-1)
         Log.d("TtsOrchestrator", "✅ speakWithHighlight 완료")
     }
     
@@ -360,7 +368,7 @@ class TtsOrchestrator @Inject constructor(
         text: String,
         isKorean: Boolean? = null,
         rate: Float = 1.0f,
-        onHighlight: ((Int?) -> Unit)? = null,
+        onHighlight: ((Int) -> Unit)? = null,
         waitForCompletion: Boolean = true
     ): Long {
         Log.d("TtsOrchestrator", "🎯 speakUnified 호출: '${text.take(30)}...', isKorean=$isKorean, rate=$rate, hasHighlight=${onHighlight != null}")
@@ -384,13 +392,20 @@ class TtsOrchestrator @Inject constructor(
         text: String,
         isKorean: Boolean,
         rate: Float,
-        onHighlight: (Int?) -> Unit
+        onHighlight: (Int) -> Unit
     ): Long {
         val startTime = System.currentTimeMillis()
         
         // 단일 문장으로 처리 (RepeatListeningUseCase에서 이미 분리된 문장을 전달)
         Log.d("TtsOrchestrator", "🔤 단일 문장 처리: '${text.take(30)}...'")
         
+        // 하이라이트 초기화
+        onHighlight(-1)
+        kotlinx.coroutines.delay(100L) // UI 업데이트를 위한 짧은 딜레이
+        
+        // 현재 문장 하이라이트 설정
+        onHighlight(0)
+        Log.d("TtsOrchestrator", "✨ 하이라이트 설정: 문장 0")
         
         val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
         val success = if (isKorean) {
@@ -407,7 +422,8 @@ class TtsOrchestrator @Inject constructor(
             completionDeferred.complete(Unit)
         }
         
-        onHighlight(null)
+        // 모든 재생 완료 후 하이라이트 해제
+        onHighlight(-1)
         val endTime = System.currentTimeMillis()
         Log.d("TtsOrchestrator", "✅ speakWithHighlightUnified 완료")
         return endTime - startTime

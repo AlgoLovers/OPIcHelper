@@ -15,7 +15,7 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
     override val isPlaying: Boolean
         get() = player?.isPlaying == true
 
-    override fun playRecording(filePath: String, onHighlight: (Int?) -> Unit, onCompletion: () -> Unit) {
+    override fun playRecording(filePath: String, onHighlight: (Int) -> Unit, onCompletion: () -> Unit) {
         Log.d("RecordingAudioPlayerImpl", "녹음 재생 시작 (하이라이트 포함): $filePath")
         
         // 기존 재생 중지
@@ -55,14 +55,14 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
                 
                 setOnCompletionListener {
                     Log.d("RecordingAudioPlayerImpl", "녹음 재생 완료")
-                    onHighlight(null) // 하이라이트 제거
+                    onHighlight(-1) // 하이라이트 제거
                     stopRecording()
                     onCompletion()
                 }
                 
                 setOnErrorListener { _, what, extra ->
                     Log.e("RecordingAudioPlayerImpl", "녹음 재생 오류: what=$what, extra=$extra")
-                    onHighlight(null) // 하이라이트 제거
+                    onHighlight(-1) // 하이라이트 제거
                     stopRecording()
                     onCompletion()
                     true
@@ -70,7 +70,7 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
                 
             } catch (e: Exception) {
                 Log.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
-                onHighlight(null) // 하이라이트 제거
+                onHighlight(-1) // 하이라이트 제거
                 stopRecording()
                 onCompletion()
             }

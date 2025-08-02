@@ -3,7 +3,7 @@ package com.na982.opichelper.data.repository
 import android.util.Log
 import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.audio.AudioRecorder
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
 import com.na982.opichelper.domain.repository.QaDataRepository
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Singleton
 class FullMemorizationRepositoryImpl @Inject constructor(
-    private val ttsOrchestrator: TtsOrchestrator,
+    private val ttsController: TtsController,
     private val audioRecorder: AudioRecorder,
     private val audioPlayer: AudioPlayer,
     private val audioFileManager: AudioFileManager,
@@ -26,9 +26,9 @@ class FullMemorizationRepositoryImpl @Inject constructor(
         try {
             val qaItem = qaDataRepository.getCurrentQaItem()
             if (qaItem != null) {
-                // 영어 질문 TTS 재생 (표준화된 방식 사용)
-                val questionDuration = ttsOrchestrator.speakAndWaitForCompletion(qaItem.questionEn, isKorean = false, rate = 1.0f)
-                Log.d("FullMemorizationRepositoryImpl", "영어 질문 TTS 재생 완료: ${questionDuration}ms")
+                // 영어 질문 TTS 재생 (하이라이트 포함)
+                ttsController.playQuestion(qaItem.questionEn)
+                Log.d("FullMemorizationRepositoryImpl", "영어 질문 TTS 재생 완료")
             }
         } catch (e: Exception) {
             Log.e("FullMemorizationRepositoryImpl", "영어 질문 TTS 재생 실패", e)
@@ -68,9 +68,7 @@ class FullMemorizationRepositoryImpl @Inject constructor(
         }
     }
     
-    override suspend fun playRecording(
-        onHighlight: (Int?) -> Unit
-    ) {
+    override suspend fun playRecording(filePath: String, onHighlight: (Int) -> Unit, onCompletion: () -> Unit) {
         try {
             if (currentRecordingPath == null) {
                 Log.e("FullMemorizationRepositoryImpl", "재생할 녹음 파일이 없음")
@@ -87,7 +85,7 @@ class FullMemorizationRepositoryImpl @Inject constructor(
             kotlinx.coroutines.delay(recordingDuration.toLong())
             
             // 재생 완료
-            onHighlight(null)
+            onHighlight(-1)
             
             Log.d("FullMemorizationRepositoryImpl", "녹음 재생 완료")
             

@@ -23,7 +23,7 @@ class RecordingFileRepositoryImpl @Inject constructor(
 
     override suspend fun hasRecordingFile(category: String, scriptIndex: Int): Boolean {
         val recordingsDir = getRecordingsDirectory()
-        val files = recordingsDir.listFiles()
+        val files = recordingsDir?.listFiles()
         
         if (files != null) {
             for (file in files) {
@@ -86,7 +86,7 @@ class RecordingFileRepositoryImpl @Inject constructor(
         category: String,
         scriptIndex: Int,
         onPlayingStateChange: (Boolean) -> Unit,
-        onHighlight: (Int?) -> Unit
+        onHighlight: (Int) -> Unit
     ) {
         try {
             val filePath = getRecordingFilePath(category, scriptIndex)
@@ -152,7 +152,31 @@ class RecordingFileRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun getRecordingsDirectory(): File {
+    override suspend fun playRecording(filePath: String, onHighlight: (Int) -> Unit, onCompletion: () -> Unit) {
+        try {
+            Log.d("RecordingFileRepositoryImpl", "playRecording: $filePath")
+            
+            // 기존 재생 중지
+            stopPlayingRecording()
+            
+            val file = File(filePath)
+            if (!file.exists()) {
+                Log.e("RecordingFileRepositoryImpl", "playRecording: 파일이 존재하지 않음 - $filePath")
+                onCompletion()
+                return
+            }
+            
+            currentPlayingPath = filePath
+            
+            recordingAudioPlayer.playRecording(filePath, onHighlight, onCompletion)
+            
+        } catch (e: Exception) {
+            Log.e("RecordingFileRepositoryImpl", "playRecording 실패", e)
+            onCompletion()
+        }
+    }
+
+    private fun getRecordingsDirectory(): File? {
         val dummyPath = audioFileManager.getRecordingFilePath("dummy.m4a")
         return File(dummyPath).parentFile
     }

@@ -239,6 +239,8 @@ fun MainScreenRefactored(
                     val questionHighlightIndex = appState.questionHighlightIndex
                     
                     Log.d("MainScreenRefactored", "질문 카드 하이라이트 상태: selectedLevel=$selectedLevel, appState.questionHighlightIndex=${appState.questionHighlightIndex}, finalHighlightIndex=$questionHighlightIndex")
+                    Log.d("MainScreenRefactored", "질문 카드 하이라이트 상세: TTS 상태 - isQuestionPlaying=${appState.isQuestionPlaying}, isAnswerPlaying=${appState.isAnswerPlaying}, isPlaying=${appState.isPlaying}")
+                    
                     QuestionCard(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,

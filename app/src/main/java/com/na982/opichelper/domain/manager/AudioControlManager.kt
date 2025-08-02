@@ -2,7 +2,7 @@ package com.na982.opichelper.domain.manager
 
 import android.util.Log
 import javax.inject.Singleton
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.entity.QaItem
@@ -22,7 +22,7 @@ import javax.inject.Inject
  */
 @Singleton
 class AudioControlManager @Inject constructor(
-    private val ttsOrchestrator: TtsOrchestrator,
+    private val ttsController: com.na982.opichelper.domain.audio.TtsController,
     private val buttonEventHandler: ButtonEventHandler,
     private val appStateManager: AppStateManager
 ) : IAudioControlManager {
@@ -57,8 +57,8 @@ class AudioControlManager @Inject constructor(
                 // 버튼 상태를 Loading으로 변경
                 appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Loading)
                 
-                // TTS 재생
-                ttsOrchestrator.speak(qaItem.questionEn) { }
+                // TTS 재생 (하이라이트 포함)
+                ttsController.playQuestion(qaItem.questionEn)
                 
                 // 버튼 상태를 Playing으로 변경
                 appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Playing)
@@ -86,8 +86,8 @@ class AudioControlManager @Inject constructor(
                 // 버튼 상태를 Loading으로 변경
                 appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Loading)
                 
-                // TTS 재생
-                ttsOrchestrator.speak(qaItem.answers.values.first().answerEn) { }
+                // TTS 재생 (하이라이트 포함)
+                ttsController.playAnswer(qaItem.answers.values.first().answerEn)
                 
                 // 버튼 상태를 Playing으로 변경
                 appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
@@ -110,7 +110,7 @@ class AudioControlManager @Inject constructor(
         
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
             try {
-                ttsOrchestrator.stop()
+                ttsController.stopAllTts()
                 
                 // 버튼 상태를 Idle로 변경
                 appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
@@ -135,11 +135,11 @@ class AudioControlManager @Inject constructor(
             try {
                 when (buttonFunction) {
                     ButtonFunction.QuestionPlay.toString() -> {
-                        ttsOrchestrator.stop()
+                        ttsController.stopAllTts()
                         appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
                     }
                     ButtonFunction.AnswerPlay.toString() -> {
-                        ttsOrchestrator.stop()
+                        ttsController.stopAllTts()
                         appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
                     }
                     else -> {

@@ -34,9 +34,9 @@ interface MemorizationStrategy {
  */
 interface MemorizationUiCallback {
     fun onCardFlip(isKorean: Boolean) {}
-    fun onHighlight(index: Int?) {}
-    fun onKoreanHighlight(index: Int?) {}
-    fun onRecordingHighlight(index: Int?) {}
+    fun onHighlight(index: Int) {}
+    fun onKoreanHighlight(index: Int) {}
+    fun onRecordingHighlight(index: Int) {}
     fun onRecordingStateChange(isRecording: Boolean) {}
     fun onPlayingStateChange(isPlaying: Boolean) {}
     fun onMergedFileCreated() {}

@@ -54,7 +54,7 @@ class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
         }
     }
     
-    override suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
+    override suspend fun speakWithHighlight(text: String, onHighlight: (Int) -> Unit) {
         // 단일 TTS 플레이어는 하이라이트를 지원하지 않음
         speak(text, null)
     }

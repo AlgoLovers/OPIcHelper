@@ -27,7 +27,7 @@ interface TtsController {
     suspend fun playSentenceWithHighlight(
         text: String,
         isKorean: Boolean,
-        onHighlight: (Int?) -> Unit
+        onHighlight: (Int) -> Unit
     ): Long
     
     /**
