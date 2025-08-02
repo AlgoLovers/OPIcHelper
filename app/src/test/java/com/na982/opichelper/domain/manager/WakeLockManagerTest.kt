@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.PowerManager
 import com.na982.opichelper.LogIgnoreRule
 import io.mockk.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -40,6 +42,10 @@ class WakeLockManagerTest {
         whenever(mockPowerManager.newWakeLock(any(), any())).thenReturn(mockWakeLock)
         
         wakeLockManager = WakeLockManager(mockContext)
+        
+        // WakeLock 획득을 통해 mockWakeLock 설정
+        whenever(mockWakeLock.isHeld).thenReturn(false)
+        wakeLockManager.acquireWakeLock()
     }
 
     @Test
@@ -101,7 +107,7 @@ class WakeLockManagerTest {
         val isHeld = wakeLockManager.isWakeLockHeld()
 
         // Then: true 반환
-        assert(isHeld)
+        assertTrue(isHeld)
     }
 
     @Test
@@ -113,7 +119,7 @@ class WakeLockManagerTest {
         val isHeld = wakeLockManager.isWakeLockHeld()
 
         // Then: false 반환
-        assert(!isHeld)
+        assertFalse(isHeld)
     }
 
     @Test
@@ -125,7 +131,7 @@ class WakeLockManagerTest {
         // When: 안전한 해제 실행
         wakeLockManager.safeRelease()
 
-        // Then: WakeLock이 정상적으로 해제됨
+        // Then: WakeLock이 정상적으로 해제됨 (release 호출됨)
         verify(mockWakeLock).release()
     }
 
