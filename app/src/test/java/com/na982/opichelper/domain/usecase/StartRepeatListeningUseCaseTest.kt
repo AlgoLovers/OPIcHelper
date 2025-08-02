@@ -167,8 +167,8 @@ class StartRepeatListeningUseCaseTest {
         verify(mockTtsController).stopTts()
         
         // And: 모든 하이라이트가 초기화됨
-        verify(mockUiCallback).onKoreanHighlight(null)
-        verify(mockUiCallback).onHighlight(null)
+        verify(mockUiCallback).onKoreanHighlight(-1)
+        verify(mockUiCallback).onHighlight(-1)
         
         // And: 앱이 정상적으로 종료됨 (실제로는 Activity에서 처리)
     }

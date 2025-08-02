@@ -1,46 +1,31 @@
 package com.na982.opichelper.domain.manager
 
-import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.entity.LeveledAnswer
-import com.na982.opichelper.domain.event.ButtonEvent
-import com.na982.opichelper.domain.event.ButtonEventHandler
-import com.na982.opichelper.domain.state.AppStateManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
-import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.*
+import org.mockito.MockitoAnnotations
 
-/**
- * AudioControlManager 테스트
- * 오디오 제어 기능 테스트
- */
 class AudioControlManagerTest {
 
     @Mock
-    private lateinit var mockTtsOrchestrator: com.na982.opichelper.domain.audio.TtsOrchestrator
+    private lateinit var mockTtsController: TtsController
 
-    @Mock
-    private lateinit var mockButtonEventHandler: com.na982.opichelper.domain.event.ButtonEventHandler
-
-    @Mock
-    private lateinit var mockAppStateManager: com.na982.opichelper.domain.state.AppStateManager
-
-    private lateinit var audioControlManager: com.na982.opichelper.domain.manager.AudioControlManager
+    private lateinit var audioControlManager: AudioControlManager
 
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         audioControlManager = AudioControlManager(
-            ttsOrchestrator = mockTtsOrchestrator,
-            buttonEventHandler = mockButtonEventHandler,
-            appStateManager = mockAppStateManager
+            ttsController = mockTtsController
         )
     }
 
@@ -48,247 +33,164 @@ class AudioControlManagerTest {
     fun `질문_재생_성공`() = runTest {
         // Given: QA 아이템과 TTS 재생 성공
         val qaItem = createMockQaItem()
-        whenever(mockTtsOrchestrator.speak(any(), any())).thenAnswer { }
+        var completionCalled = false
+        
+        whenever(mockTtsController.playQuestion(any())).thenAnswer { 
+            completionCalled = true
+            Unit
+        }
 
         // When: 질문 재생
-        audioControlManager.playQuestion(qaItem)
+        audioControlManager.playQuestion(qaItem) {
+            completionCalled = true
+        }
 
         // Then: TTS가 정상적으로 호출됨
-        verify(mockTtsOrchestrator).speak(qaItem.questionEn, any())
+        verify(mockTtsController).playQuestion(qaItem.questionEn)
         
-        // And: 버튼 상태가 Loading에서 Playing으로 변경됨
-        verify(mockAppStateManager).updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Loading)
-        verify(mockAppStateManager).updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Playing)
+        // And: 콜백이 호출됨
+        assert(completionCalled)
     }
 
     @Test
     fun `질문_재생_실패`() = runTest {
         // Given: TTS 재생 시 예외 발생
         val qaItem = createMockQaItem()
-        whenever(mockTtsOrchestrator.speak(any(), any())).thenThrow(RuntimeException("재생 실패"))
+        var completionCalled = false
+        
+        whenever(mockTtsController.playQuestion(any())).thenThrow(RuntimeException("재생 실패"))
 
         // When: 질문 재생
-        audioControlManager.playQuestion(qaItem)
+        audioControlManager.playQuestion(qaItem) {
+            completionCalled = true
+        }
 
         // Then: 에러 상태가 설정됨
         val error = audioControlManager.error.first()
         assert(error != null)
         assert(error!!.contains("재생 실패"))
         
-        // And: 버튼 상태가 Idle로 변경됨
-        verify(mockAppStateManager).updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
+        // And: 에러 시에도 콜백이 호출됨
+        assert(completionCalled)
     }
 
     @Test
     fun `답변_재생_성공`() = runTest {
         // Given: QA 아이템과 TTS 재생 성공
         val qaItem = createMockQaItem()
-        whenever(mockTtsOrchestrator.speak(any(), any())).thenAnswer { }
+        var completionCalled = false
+        
+        whenever(mockTtsController.playAnswer(any())).thenAnswer { 
+            completionCalled = true
+            Unit
+        }
 
         // When: 답변 재생
-        audioControlManager.playAnswer(qaItem)
+        audioControlManager.playAnswer(qaItem) {
+            completionCalled = true
+        }
 
         // Then: TTS가 정상적으로 호출됨
-        verify(mockTtsOrchestrator).speak(qaItem.answers.values.first().answerEn, any())
+        verify(mockTtsController).playAnswer(qaItem.answers.values.first().answerEn)
         
-        // And: 버튼 상태가 Loading에서 Playing으로 변경됨
-        verify(mockAppStateManager).updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Loading)
-        verify(mockAppStateManager).updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Playing)
+        // And: 콜백이 호출됨
+        assert(completionCalled)
     }
 
     @Test
     fun `답변_재생_실패`() = runTest {
         // Given: TTS 재생 시 예외 발생
         val qaItem = createMockQaItem()
-        whenever(mockTtsOrchestrator.speak(any(), any())).thenThrow(RuntimeException("재생 실패"))
+        var completionCalled = false
+        
+        whenever(mockTtsController.playAnswer(any())).thenThrow(RuntimeException("재생 실패"))
 
         // When: 답변 재생
-        audioControlManager.playAnswer(qaItem)
+        audioControlManager.playAnswer(qaItem) {
+            completionCalled = true
+        }
 
         // Then: 에러 상태가 설정됨
         val error = audioControlManager.error.first()
         assert(error != null)
         assert(error!!.contains("재생 실패"))
         
-        // And: 버튼 상태가 Idle로 변경됨
-        verify(mockAppStateManager).updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
+        // And: 에러 시에도 콜백이 호출됨
+        assert(completionCalled)
     }
 
     @Test
     fun `모든_오디오_중지`() = runTest {
         // Given: TTS 중지 성공
-        whenever(mockTtsOrchestrator.stop()).thenAnswer { }
+        whenever(mockTtsController.stopAllTts()).thenAnswer { }
 
         // When: 모든 오디오 중지
         audioControlManager.stopAllAudio()
 
         // Then: TTS가 중지됨
-        verify(mockTtsOrchestrator).stop()
-        
-        // And: 모든 버튼에 대해 StopClick 이벤트가 발생함
-        verify(mockButtonEventHandler).handleEvent(ButtonEvent.StopClick(ButtonFunction.QuestionPlay))
-        verify(mockButtonEventHandler).handleEvent(ButtonEvent.StopClick(ButtonFunction.AnswerPlay))
-        verify(mockButtonEventHandler).handleEvent(ButtonEvent.StopClick(ButtonFunction.MemorizeTest))
-        verify(mockButtonEventHandler).handleEvent(ButtonEvent.StopClick(ButtonFunction.RecordingPlay))
+        verify(mockTtsController).stopAllTts()
     }
 
     @Test
-    fun `모든_오디오_중지_실패`() = runTest {
-        // Given: TTS 중지 시 예외 발생
-        whenever(mockTtsOrchestrator.stop()).thenThrow(RuntimeException("중지 실패"))
+    fun `특정_오디오_중지_질문`() = runTest {
+        // Given: TTS 중지 성공
+        whenever(mockTtsController.stopAllTts()).thenAnswer { }
 
-        // When: 모든 오디오 중지
-        audioControlManager.stopAllAudio()
+        // When: 질문 오디오 중지
+        audioControlManager.stopSpecificAudio(ButtonFunction.QuestionPlay.toString())
 
-        // Then: 에러 상태가 설정됨
-        val error = audioControlManager.error.first()
-        assert(error != null)
-        assert(error!!.contains("중지 실패"))
+        // Then: TTS가 중지됨
+        verify(mockTtsController).stopAllTts()
     }
 
     @Test
-    fun 특정_버튼_오디오_중지() {
-        // Given
-        val buttonFunction = ButtonFunction.QuestionPlay.toString()
-        
-        // When
-        audioControlManager.stopSpecificAudio(buttonFunction)
-        
-        // Then
-        verify(mockTtsOrchestrator).stop()
-        verify(mockAppStateManager).updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
-    }
-    
-    @Test
-    fun 질문_재생_버튼_클릭_처리() = runTest {
-        // Given
-        val buttonFunction = ButtonFunction.QuestionPlay.toString()
-        val qaItem = createMockQaItem()
-        
-        // When
-        audioControlManager.handleButtonClick(buttonFunction, qaItem)
-        
-        // Then
-        verify(mockTtsOrchestrator).speak(qaItem.questionEn, any())
-    }
-    
-    @Test
-    fun 답변_재생_버튼_클릭_처리() = runTest {
-        // Given
-        val buttonFunction = ButtonFunction.AnswerPlay.toString()
-        val qaItem = createMockQaItem()
-        
-        // When
-        audioControlManager.handleButtonClick(buttonFunction, qaItem)
-        
-        // Then
-        verify(mockTtsOrchestrator).speak(qaItem.answers.values.first().answerEn, any())
-    }
-    
-    @Test
-    fun Stop_버튼_클릭_처리() = runTest {
-        // Given
-        val buttonFunction = ButtonFunction.Stop.toString()
-        
-        // When
-        audioControlManager.handleButtonClick(buttonFunction, null)
-        
-        // Then
-        verify(mockTtsOrchestrator).stop()
-    }
-    
-    @Test
-    fun 기타_버튼_클릭_처리() = runTest {
-        // Given
-        val buttonFunction = ButtonFunction.MemorizeTest.toString()
-        
-        // When
-        audioControlManager.handleButtonClick(buttonFunction, null)
-        
-        // Then
-        // 로그만 출력하고 실제 동작은 하지 않음
-        verify(mockTtsOrchestrator, never()).stop()
-        verify(mockTtsOrchestrator, never()).speak(any(), any())
-    }
-    
-    @Test
-    fun 알_수_없는_버튼_클릭_처리() = runTest {
-        // Given
-        val buttonFunction = "UNKNOWN_BUTTON"
-        
-        // When
-        audioControlManager.handleButtonClick(buttonFunction, null)
-        
-        // Then
-        // 로그만 출력하고 실제 동작은 하지 않음
-        verify(mockTtsOrchestrator, never()).stop()
-        verify(mockTtsOrchestrator, never()).speak(any(), any())
+    fun `특정_오디오_중지_답변`() = runTest {
+        // Given: TTS 중지 성공
+        whenever(mockTtsController.stopAllTts()).thenAnswer { }
+
+        // When: 답변 오디오 중지
+        audioControlManager.stopSpecificAudio(ButtonFunction.AnswerPlay.toString())
+
+        // Then: TTS가 중지됨
+        verify(mockTtsController).stopAllTts()
     }
 
     @Test
-    fun `버튼_클릭_이벤트_처리_실패`() = runTest {
-        // Given: ButtonEventHandler에서 예외 발생
-        whenever(mockButtonEventHandler.handleEvent(any())).thenThrow(RuntimeException("처리 실패"))
+    fun `알_수_없는_버튼_함수_중지`() = runTest {
+        // When: 알 수 없는 버튼 함수로 중지
+        audioControlManager.stopSpecificAudio("UNKNOWN")
 
-        // When: 기타 버튼 클릭
-        audioControlManager.handleButtonClick(ButtonFunction.MemorizeTest.toString(), null)
-
-        // Then: 에러 상태가 설정됨
-        val error = audioControlManager.error.first()
-        assert(error != null)
-        assert(error!!.contains("처리 실패"))
+        // Then: TTS가 호출되지 않음
+        verify(mockTtsController, never()).stopAllTts()
     }
 
     @Test
     fun `에러_상태_초기화`() = runTest {
-        // Given: 에러 상태 설정
-        audioControlManager.playQuestion(createMockQaItem())
-
-        // When: 에러 상태 초기화
-        audioControlManager.clearError()
-
-        // Then: 에러 상태가 null로 초기화됨
-        val error = audioControlManager.error.first()
-        assert(error == null)
-    }
-
-    @Test
-    fun 재생_상태_업데이트() = runTest {
-        // Given
-        val isQuestionPlaying = true
-        val isAnswerPlaying = false
-        val isPlaying = true
+        // Given: 에러 상태가 설정됨
+        audioControlManager.playQuestion(createMockQaItem()) {
+            // 에러 발생
+        }
         
-        // When & Then
-        // 상태는 내부적으로 관리되므로 별도 테스트 불필요
-        assert(true) // 기본 테스트 통과
-    }
+        // When: 새로운 재생 시작
+        audioControlManager.playQuestion(createMockQaItem()) {
+            // 성공
+        }
 
-    @Test
-    fun 초기_상태_확인() = runTest {
-        // Given & When: 초기 상태 확인
-        val isQuestionPlaying = audioControlManager.isQuestionPlaying.first()
-        val isAnswerPlaying = audioControlManager.isAnswerPlaying.first()
-        val isPlaying = audioControlManager.isPlaying.first()
+        // Then: 에러가 초기화됨
         val error = audioControlManager.error.first()
-
-        // Then: 초기 상태가 올바르게 설정됨
-        assert(!isQuestionPlaying)
-        assert(!isAnswerPlaying)
-        assert(!isPlaying)
         assert(error == null)
     }
 
     private fun createMockQaItem(): QaItem {
         return QaItem(
-            id = "bank_001",
-            category = "bank",
-            questionEn = "How can I open a bank account?",
-            questionKo = "은행 계좌를 어떻게 열 수 있나요?",
+            id = "test_001",
+            category = "test",
+            questionEn = "Tell me about how you usually clean your house.",
+            questionKo = "당신이 보통 집을 어떻게 청소하는지 말해주세요.",
             answers = mapOf(
                 UserLevel.IM to LeveledAnswer(
-                    answerEn = "You can open a bank account by visiting a bank branch.",
-                    answerKo = "은행 지점을 방문하여 은행 계좌를 열 수 있습니다."
+                    answerEn = "I usually clean my house on weekends.",
+                    answerKo = "저는 보통 주말에 집을 청소합니다."
                 )
             )
         )

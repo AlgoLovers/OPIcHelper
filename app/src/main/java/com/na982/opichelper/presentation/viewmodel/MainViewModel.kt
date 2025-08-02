@@ -24,6 +24,9 @@ import com.na982.opichelper.domain.manager.MemorizationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -54,10 +57,22 @@ class MainViewModel @Inject constructor(
     val categoryLoading: StateFlow<Boolean> = categoryManager.isLoading
     val categoryError: StateFlow<String?> = categoryManager.error
     
-    // 오디오 제어 관련 상태는 AudioControlManager에서 가져오기
-    val isQuestionPlaying: StateFlow<Boolean> = audioControlManager.isQuestionPlaying
-    val isAnswerPlaying: StateFlow<Boolean> = audioControlManager.isAnswerPlaying
-    val isPlaying: StateFlow<Boolean> = audioControlManager.isPlaying
+    // 오디오 제어 관련 상태는 AppState에서 가져오기
+    val isQuestionPlaying: StateFlow<Boolean> = appState.map { it.isQuestionPlaying }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(),
+        false
+    )
+    val isAnswerPlaying: StateFlow<Boolean> = appState.map { it.isAnswerPlaying }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(),
+        false
+    )
+    val isPlaying: StateFlow<Boolean> = appState.map { it.isPlaying }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(),
+        false
+    )
     val audioError: StateFlow<String?> = audioControlManager.error
     
     // 암기 테스트 관련 상태는 MemorizationManager에서 가져오기
@@ -183,23 +198,39 @@ class MainViewModel @Inject constructor(
     }
     
     /**
-     * 질문 재생 버튼 클릭 (AudioControlManager에 위임)
+     * 질문 재생 버튼 클릭 (ButtonEventHandler에 위임)
      */
     fun handleQuestionPlayClick() {
         val currentState = appState.value
         val currentQaItem = currentState.currentQaItem ?: return
         
-        audioControlManager.playQuestion(currentQaItem)
+        viewModelScope.launch {
+            try {
+                val event = ButtonEvent.QuestionPlayClick(currentQaItem)
+                buttonEventHandler.handleEvent(event)
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "질문 재생 실패", e)
+                appStateManager.updateErrorState(e.message)
+            }
+        }
     }
     
     /**
-     * 답변 재생 버튼 클릭 (AudioControlManager에 위임)
+     * 답변 재생 버튼 클릭 (ButtonEventHandler에 위임)
      */
     fun handleAnswerPlayClick() {
         val currentState = appState.value
         val currentQaItem = currentState.currentQaItem ?: return
         
-        audioControlManager.playAnswer(currentQaItem)
+        viewModelScope.launch {
+            try {
+                val event = ButtonEvent.AnswerPlayClick(currentQaItem)
+                buttonEventHandler.handleEvent(event)
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "답변 재생 실패", e)
+                appStateManager.updateErrorState(e.message)
+            }
+        }
     }
     
     /**
@@ -251,8 +282,20 @@ class MainViewModel @Inject constructor(
                     }
                 }
                 
+                val currentQaItem = currentState.currentQaItem ?: return@launch
+                val category = currentState.currentCategory ?: return@launch
+                val scriptIndex = currentState.currentIndex
+                val answerKo = currentQaItem.answers.values.first().answerKo
+                val answerEn = currentQaItem.answers.values.first().answerEn
+                
                 Log.d("MainViewModelRefactored", "매칭된 MemorizeLevel: $memorizeLevel")
-                val event = ButtonEvent.RecordingPlayClick(memorizeLevel = memorizeLevel)
+                val event = ButtonEvent.RecordingPlayClick(
+                    memorizeLevel = memorizeLevel,
+                    category = category,
+                    scriptIndex = scriptIndex,
+                    answerKo = answerKo,
+                    answerEn = answerEn
+                )
                 
                 Log.d("MainViewModelRefactored", "녹음 재생 이벤트 발생: $event")
                 buttonEventHandler.handleEvent(event)

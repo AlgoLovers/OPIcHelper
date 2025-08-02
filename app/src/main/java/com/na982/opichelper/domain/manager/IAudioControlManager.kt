@@ -5,26 +5,32 @@ import kotlinx.coroutines.flow.StateFlow
 
 /**
  * 오디오 제어 인터페이스
- * 책임: TTS 재생, 오디오 중지, 버튼 상태 관리
+ * 단일 책임: 오디오 재생만 담당
  */
 interface IAudioControlManager {
     
-    // 상태 노출
-    val isQuestionPlaying: StateFlow<Boolean>
-    val isAnswerPlaying: StateFlow<Boolean>
-    val isPlaying: StateFlow<Boolean>
+    /**
+     * 에러 상태
+     */
     val error: StateFlow<String?>
     
-    // 오디오 제어 기능
-    fun playQuestion(qaItem: QaItem)
-    fun playAnswer(qaItem: QaItem)
+    /**
+     * 질문 재생
+     */
+    fun playQuestion(qaItem: QaItem, onCompletion: () -> Unit)
+    
+    /**
+     * 답변 재생
+     */
+    fun playAnswer(qaItem: QaItem, onCompletion: () -> Unit)
+    
+    /**
+     * 모든 오디오 중지
+     */
     fun stopAllAudio()
+    
+    /**
+     * 특정 버튼의 오디오 중지
+     */
     fun stopSpecificAudio(buttonFunction: String)
-    
-    // 버튼 클릭 이벤트 처리
-    fun handleButtonClick(buttonFunction: String, qaItem: QaItem?)
-    
-    // 상태 초기화
-    fun clearError()
-    fun resetState()
 } 

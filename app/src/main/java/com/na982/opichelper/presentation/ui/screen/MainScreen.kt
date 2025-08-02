@@ -263,8 +263,6 @@ fun MainScreenRefactored(
                         QuestionPlaySmartButton(
                             buttonConfig = questionButtonConfig,
                             onPlayClick = {
-                                // 현재 선택된 암기레벨에 따라 모드 결정
-                                selectedLevel == "통암기"
                                 viewModel.handleQuestionPlayClick()
                             },
                             onStopClick = {

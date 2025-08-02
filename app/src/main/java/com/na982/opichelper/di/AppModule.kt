@@ -284,14 +284,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAudioControlManager(
-        ttsController: TtsController,
-        buttonEventHandler: ButtonEventHandler,
-        appStateManager: AppStateManager
+        ttsController: TtsController
     ): IAudioControlManager {
         return AudioControlManager(
-            ttsController = ttsController,
-            buttonEventHandler = buttonEventHandler,
-            appStateManager = appStateManager
+            ttsController = ttsController
         )
     }
     
@@ -418,18 +414,14 @@ object AppModule {
     @Provides
     @Singleton
     fun provideButtonEventHandler(
-        ttsController: TtsController,
-        strategyFactory: MemorizationStrategyFactory,
         appStateManager: AppStateManager,
-        recordingAudioPlayer: RecordingAudioPlayer,
-        audioFileManager: AudioFileManager
+        audioControlManager: IAudioControlManager,
+        strategyFactory: MemorizationStrategyFactory
     ): ButtonEventHandler {
         return ButtonEventHandler(
-            ttsController = ttsController,
-            strategyFactory = strategyFactory,
             appStateManager = appStateManager,
-            recordingAudioPlayer = recordingAudioPlayer,
-            audioFileManager = audioFileManager
+            audioControlManager = audioControlManager,
+            strategyFactory = strategyFactory
         )
     }
 } 

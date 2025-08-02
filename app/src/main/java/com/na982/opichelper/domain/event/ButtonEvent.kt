@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.event
 
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.MemorizeLevel
+import com.na982.opichelper.domain.entity.QaItem
 
 /**
  * 버튼 이벤트를 정의하는 sealed class
@@ -9,14 +10,11 @@ import com.na982.opichelper.domain.entity.MemorizeLevel
  */
 sealed class ButtonEvent {
     data class QuestionPlayClick(
-        val question: String,
-        val isFullMemorizationMode: Boolean,
-        val category: String,
-        val scriptIndex: Int
+        val qaItem: QaItem
     ) : ButtonEvent()
     
     data class AnswerPlayClick(
-        val answer: String
+        val qaItem: QaItem
     ) : ButtonEvent()
     
     data class MemorizeTestClick(
@@ -28,7 +26,11 @@ sealed class ButtonEvent {
     ) : ButtonEvent()
     
     data class RecordingPlayClick(
-        val memorizeLevel: MemorizeLevel
+        val memorizeLevel: MemorizeLevel,
+        val category: String,
+        val scriptIndex: Int,
+        val answerKo: String,
+        val answerEn: String
     ) : ButtonEvent()
     
     data class StopClick(
