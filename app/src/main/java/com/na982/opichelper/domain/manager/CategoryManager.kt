@@ -82,6 +82,18 @@ class CategoryManager @Inject constructor(
                 qaDataRepository.selectCategory(category)
                 _currentCategory.value = category
                 
+                // AppStateManager 상태 업데이트
+                val currentQaItem = qaDataRepository.getCurrentQaItem()
+                val currentIndex = qaDataRepository.getCurrentIndex()
+                val itemsInCategory = qaDataRepository.getItemsInCategory(category)
+                
+                appStateManager.updateQaItemState(
+                    qaItem = currentQaItem,
+                    category = category,
+                    index = currentIndex,
+                    totalCount = itemsInCategory.size
+                )
+                
                 // QA 아이템 로드
                 loadQaItemsForCategory(category)
                 

@@ -20,8 +20,9 @@ class QaDataLoaderImpl @Inject constructor(
     
     private val gson = Gson()
     private val categoryDisplayNames = listOf(
-        "집", "음악", "집휴가", "영화", "레스토랑", "해변", "인터넷", 
-        "산업직업", "은행", "교통", "패션", "가족친구", "가구", "예약", "휴일"
+        "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", 
+        "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
+
     )
     
     private val categoryFileNames = listOf(
