@@ -51,7 +51,7 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
     
     // 앱 상태를 직접 관찰
-    val appState: StateFlow<com.na982.opichelper.domain.state.AppState> = appStateManager.state
+        val appState: StateFlow<com.na982.opichelper.domain.state.AppState> = appStateManager.state
     
     // 카테고리 관련 상태는 CategoryManager에서 가져오기
     val categories: StateFlow<List<String>> = categoryManager.categories
