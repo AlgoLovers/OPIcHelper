@@ -52,7 +52,7 @@ import com.na982.opichelper.domain.strategy.MemorizationStrategyFactory
 import com.na982.opichelper.domain.strategy.RepeatListeningStrategy
 import com.na982.opichelper.domain.strategy.EnglishWritingStrategy
 import com.na982.opichelper.domain.strategy.FullMemorizationStrategy
-import com.na982.opichelper.domain.mapper.MemorizationLevelMapper
+import com.na982.opichelper.domain.strategy.MemorizationLevelMapper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

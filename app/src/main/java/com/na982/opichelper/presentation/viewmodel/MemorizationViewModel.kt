@@ -8,8 +8,8 @@ import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.manager.IMemorizationManager
 import com.na982.opichelper.domain.manager.MemorizationUiState
 import com.na982.opichelper.domain.manager.MemorizationManager
-import com.na982.opichelper.domain.manager.MemorizeLevel
-import com.na982.opichelper.domain.manager.MemorizationLevelMapper
+import com.na982.opichelper.domain.entity.MemorizeLevel
+import com.na982.opichelper.domain.strategy.MemorizationLevelMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
