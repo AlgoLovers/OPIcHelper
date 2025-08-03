@@ -1,6 +1,7 @@
 package com.na982.opichelper.integration
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertTrue
 import androidx.test.platform.app.InstrumentationRegistry
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsController

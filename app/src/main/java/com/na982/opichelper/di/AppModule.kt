@@ -31,6 +31,7 @@ import com.na982.opichelper.domain.manager.MemorizationManager
 import com.na982.opichelper.domain.manager.ICategoryManager
 import com.na982.opichelper.domain.manager.IAudioControlManager
 import com.na982.opichelper.domain.manager.IMemorizationManager
+import com.na982.opichelper.domain.manager.ProgressManager
 import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
@@ -429,13 +430,15 @@ object AppModule {
         audioControlManager: IAudioControlManager,
         appStateManager: AppStateManager,
         strategyFactory: MemorizationStrategyFactory,
-        playRecordingUseCase: com.na982.opichelper.domain.usecase.PlayRecordingUseCase
+        playRecordingUseCase: com.na982.opichelper.domain.usecase.PlayRecordingUseCase,
+        progressManager: ProgressManager
     ): ButtonEventHandler {
         return ButtonEventHandler(
             audioControlManager = audioControlManager,
             appStateManager = appStateManager,
             strategyFactory = strategyFactory,
-            playRecordingUseCase = playRecordingUseCase
+            playRecordingUseCase = playRecordingUseCase,
+            progressManager = progressManager
         )
     }
 } 

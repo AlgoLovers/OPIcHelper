@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.event
 
 import android.util.Log
 import com.na982.opichelper.domain.manager.IAudioControlManager
+import com.na982.opichelper.domain.manager.ProgressManager
 import com.na982.opichelper.domain.entity.ButtonFunction
 import com.na982.opichelper.domain.entity.ButtonState
 import com.na982.opichelper.domain.entity.QaItem
@@ -21,7 +22,8 @@ class ButtonEventHandler @Inject constructor(
     private val audioControlManager: IAudioControlManager,
     private val appStateManager: AppStateManager,
     private val strategyFactory: MemorizationStrategyFactory,
-    private val playRecordingUseCase: PlayRecordingUseCase
+    private val playRecordingUseCase: PlayRecordingUseCase,
+    private val progressManager: ProgressManager
 ) {
     
     /**
@@ -227,7 +229,8 @@ class ButtonEventHandler @Inject constructor(
             
             override fun onMergedFileCreated() {
                 Log.d("ButtonEventHandler", "병합 파일 생성 완료")
-                // 병합 파일 생성 완료 시 특별한 처리 필요 없음
+                // 영작테스트 완료 처리
+                progressManager.onEnglishWritingTestCompleted()
             }
         }
     }

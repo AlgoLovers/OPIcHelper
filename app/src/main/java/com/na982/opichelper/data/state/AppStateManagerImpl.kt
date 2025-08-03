@@ -101,20 +101,6 @@ class AppStateManagerImpl @Inject constructor() : AppStateManager {
         }
     }
     
-    override fun updateMemorizationModeState(
-        isRepeatListeningMode: Boolean?,
-        isEnglishWritingTestMode: Boolean?,
-        isFullMemorizationMode: Boolean?
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                isRepeatListeningMode = isRepeatListeningMode ?: currentState.isRepeatListeningMode,
-                isEnglishWritingTestMode = isEnglishWritingTestMode ?: currentState.isEnglishWritingTestMode,
-                isFullMemorizationMode = isFullMemorizationMode ?: currentState.isFullMemorizationMode
-            )
-        }
-    }
-    
     override fun updateQaItemState(
         qaItem: QaItem?,
         category: String?,
@@ -140,30 +126,6 @@ class AppStateManagerImpl @Inject constructor() : AppStateManager {
     override fun updateTtsServiceState(service: String) {
         updateState { currentState ->
             currentState.copy(currentKoreanTtsService = service)
-        }
-    }
-    
-    override fun updateMemorizeTestState(
-        isRunning: Boolean?,
-        mode: String?
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                isMemorizeTestRunning = isRunning ?: currentState.isMemorizeTestRunning,
-                currentMemorizeMode = mode ?: currentState.currentMemorizeMode
-            )
-        }
-    }
-    
-    override fun updateEnglishWritingTestState(
-        completed: Boolean?,
-        stopMergedFilePlaying: Boolean?
-    ) {
-        updateState { currentState ->
-            currentState.copy(
-                englishWritingTestCompleted = completed ?: currentState.englishWritingTestCompleted,
-                stopEnglishWritingTestMergedFilePlaying = stopMergedFilePlaying ?: currentState.stopEnglishWritingTestMergedFilePlaying
-            )
         }
     }
     

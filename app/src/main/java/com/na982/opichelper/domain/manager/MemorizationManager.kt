@@ -274,6 +274,31 @@ class MemorizationManager @Inject constructor(
     }
     
     /**
+     * 영작테스트 완료 처리
+     */
+    override fun onEnglishWritingTestCompleted() {
+        Log.d("MemorizationManager", "영작테스트 완료 처리")
+        
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+            try {
+                // UI 상태 업데이트 - 영작테스트 완료
+                _uiState.value = _uiState.value.copy(
+                    isRunning = false,
+                    currentMode = CurrentMode.NONE,
+                    isEnglishWritingTestMode = false,
+                    isEnglishWritingTestRunning = false,
+                    englishWritingTestCompleted = true
+                )
+                
+                Log.d("MemorizationManager", "영작테스트 완료 상태 업데이트 완료")
+                
+            } catch (e: Exception) {
+                Log.e("MemorizationManager", "영작테스트 완료 처리 실패", e)
+            }
+        }
+    }
+    
+    /**
      * 통암기 녹음 중지
      */
     override fun stopFullMemorizationRecording() {

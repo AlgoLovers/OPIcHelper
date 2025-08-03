@@ -85,12 +85,12 @@ class CategoryManager @Inject constructor(
                 // QA 아이템 로드
                 loadQaItemsForCategory(category)
                 
-                // 암기 모드 상태 초기화
-                appStateManager.updateMemorizationModeState(
-                    isRepeatListeningMode = false,
-                    isEnglishWritingTestMode = false,
-                    isFullMemorizationMode = false
-                )
+                // 암기 모드 상태 초기화 - ProgressManager에서 처리하도록 변경
+                // appStateManager.updateMemorizationModeState(
+                //     isRepeatListeningMode = false,
+                //     isEnglishWritingTestMode = false,
+                //     isFullMemorizationMode = false
+                // )
                 
                 Log.d("CategoryViewModel", "카테고리 변경 완료: $category")
                 

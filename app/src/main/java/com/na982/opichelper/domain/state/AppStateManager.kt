@@ -82,15 +82,6 @@ interface AppStateManager {
     )
     
     /**
-     * 암기 모드 상태 업데이트
-     */
-    fun updateMemorizationModeState(
-        isRepeatListeningMode: Boolean? = null,
-        isEnglishWritingTestMode: Boolean? = null,
-        isFullMemorizationMode: Boolean? = null
-    )
-    
-    /**
      * 로딩 상태 업데이트
      */
     fun updateLoadingState(isLoading: Boolean)
@@ -111,25 +102,9 @@ interface AppStateManager {
     )
     
     /**
-     * 영작 테스트 상태 업데이트
-     */
-    fun updateEnglishWritingTestState(
-        completed: Boolean? = null,
-        stopMergedFilePlaying: Boolean? = null
-    )
-    
-    /**
      * TTS 서비스 상태 업데이트
      */
     fun updateTtsServiceState(service: String)
-    
-    /**
-     * 암기 테스트 진행 상태 업데이트
-     */
-    fun updateMemorizeTestState(
-        isRunning: Boolean? = null,
-        mode: String? = null
-    )
     
     /**
      * 선택된 암기 레벨 업데이트

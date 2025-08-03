@@ -41,21 +41,8 @@ data class AppState(
     val isQuestionCardFlipped: Boolean = false,
     val isAnswerCardFlipped: Boolean = false,
     
-    // 암기 모드 상태
-    val isRepeatListeningMode: Boolean = false,
-    val isEnglishWritingTestMode: Boolean = false,
-    val isFullMemorizationMode: Boolean = false,
-    
     // TTS 서비스 상태
     val currentKoreanTtsService: String = "",
-    
-    // 암기 테스트 진행 상태
-    val isMemorizeTestRunning: Boolean = false,
-    val currentMemorizeMode: String = "NONE",
-    
-    // 영작 테스트 상태
-    val englishWritingTestCompleted: Boolean = false,
-    val stopEnglishWritingTestMergedFilePlaying: Boolean = false,
     
     // 녹음 상태
     val isRecording: Boolean = false,

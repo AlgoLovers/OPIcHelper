@@ -37,6 +37,11 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
     private val progressTracker: MemorizationProgressTracker
 ) : EnglishWritingTestRepository {
     
+    companion object {
+        private const val TAG = "EnglishWritingTest"
+        private const val DEBUG_DETAILED = false // 상세 로그 비활성화
+    }
+    
     override suspend fun executeEnglishWritingTest(
         answerKo: String,
         answerEn: String,
@@ -44,7 +49,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         scriptIndex: Int,
         uiCallback: EnglishWritingUiCallback
     ) {
-        Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 시작 - 카테고리: $category, 스크립트: $scriptIndex")
+        Log.i(TAG, "영작 테스트 시작: $category/$scriptIndex")
         
         // 문장 분리
         val koSentences = answerKo.split(".").filter { it.trim().isNotEmpty() }
@@ -52,7 +57,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         
         val count = minOf(koSentences.size, enSentences.size)
         if (count == 0) {
-            Log.w("EnglishWritingTestRepositoryImpl", "문장이 없음")
+            Log.w(TAG, "문장이 없음")
             return
         }
         
@@ -60,18 +65,20 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         val currentProgress = progressTracker.getScriptProgress(category, scriptIndex, "영작 테스트")
         val startIndex = currentProgress?.currentSentenceIndex ?: 0
         
-        Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 시작 - 총 문장: $count, 시작 인덱스: $startIndex")
+        Log.i(TAG, "영작 테스트 진행: 총 $count 문장, 시작 인덱스: $startIndex")
         
         val recordingFiles = mutableListOf<File>()
         
         for (idx in startIndex until count) {
             // 코루틴이 취소되었는지 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("EnglishWritingTestRepositoryImpl", "코루틴이 취소됨 - Repository 중단")
+                Log.d(TAG, "코루틴이 취소됨 - Repository 중단")
                 break
             }
             
-            Log.d("EnglishWritingTestRepositoryImpl", "문장 ${idx + 1} 처리 시작 (인덱스: $idx)")
+            if (DEBUG_DETAILED) {
+                Log.d(TAG, "문장 ${idx + 1} 처리 시작 (인덱스: $idx)")
+            }
             
             // 진행 상황 업데이트 및 실시간 저장
             progressTracker.updateProgress(
@@ -84,7 +91,9 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             )
             // 실시간으로 진행상황 저장
             progressTracker.persistChangedProgress()
-            Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 진행상황 실시간 저장 완료")
+            if (DEBUG_DETAILED) {
+                Log.d(TAG, "문장 $idx 진행상황 실시간 저장 완료")
+            }
             
             // 1. 한글 문장 TTS (카드를 한글로 뒤집고 하이라이트)
             uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
@@ -96,14 +105,16 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
                 isKorean = true,
                 onHighlight = { index ->
                     // TtsController에서 받은 index를 사용하여 하이라이트 설정
-                    Log.d("EnglishWritingTestRepositoryImpl", "한글 문장 $idx 하이라이트 설정: index=$index")
+                    if (DEBUG_DETAILED) {
+                        Log.d(TAG, "한글 문장 $idx 하이라이트 설정: index=$index")
+                    }
                     uiCallback.onKoreanHighlight(idx)
                 }
             )
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("EnglishWritingTestRepositoryImpl", "코루틴이 취소됨 - Repository 중단")
+                Log.d(TAG, "코루틴이 취소됨 - Repository 중단")
                 break
             }
 
@@ -116,11 +127,15 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             
             // 2. 폴백 로직: 저장된 TTS 시간이 있으면 사용, 없으면 문장 길이로 계산
             val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
-                Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 저장된 TTS 시간 사용: ${savedTtsTime}ms")
+                if (DEBUG_DETAILED) {
+                    Log.d(TAG, "문장 $idx 저장된 TTS 시간 사용: ${savedTtsTime}ms")
+                }
                 savedTtsTime
             } else {
                 val calculatedTime = (enSentences[idx].length * 100L).coerceAtLeast(3000L)
-                Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 저장된 TTS 시간 없음 - 문장 길이로 계산: ${calculatedTime}ms")
+                if (DEBUG_DETAILED) {
+                    Log.d(TAG, "문장 $idx 저장된 TTS 시간 없음 - 문장 길이로 계산: ${calculatedTime}ms")
+                }
                 calculatedTime
             }
             
@@ -134,11 +149,15 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             
             // 실제 녹음 시간 저장
             recordingTimeManager.saveRecordingTime(category, scriptIndex, idx, actualRecordingTime)
-            Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 실제 녹음 시간: ${actualRecordingTime}ms, 키: ${category}_${scriptIndex}")
+            if (DEBUG_DETAILED) {
+                Log.d(TAG, "문장 $idx 실제 녹음 시간: ${actualRecordingTime}ms")
+            }
             
             // 저장 확인
             val savedTime = recordingTimeManager.getRecordingTime(category, scriptIndex, idx)
-            Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 저장 확인: 저장된 시간=${savedTime}ms")
+            if (DEBUG_DETAILED) {
+                Log.d(TAG, "문장 $idx 저장 확인: 저장된 시간=${savedTime}ms")
+            }
             
             // 녹음 파일 저장
             val savedFile = audioFileManager.saveRecordingFile(recordingFile, "english_writing_${category}_${scriptIndex}_${idx}")
@@ -165,7 +184,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
                 }
             }
             
-            Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 완료 - 머지된 파일: ${mergedFile.absolutePath}")
+            Log.i(TAG, "영작 테스트 완료 - 머지된 파일: ${mergedFile.name}")
             
             // 병합 파일 생성 완료 콜백 호출
             uiCallback.onMergedFileCreated()
@@ -174,7 +193,17 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
         progressTracker.clearScriptProgress(category, scriptIndex, "영작 테스트")
         
-        Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 완료")
+        // 영작테스트 완료 상태 업데이트
+        progressTracker.updateProgress(
+            category = category,
+            scriptIndex = scriptIndex,
+            memorizeLevel = "영작 테스트",
+            currentSentenceIndex = count - 1, // 마지막 문장 인덱스
+            totalSentences = count,
+            isMemorizeTestRunning = false // 테스트 완료로 상태 변경
+        )
+        
+        Log.i(TAG, "영작 테스트 완료")
     }
     
     override suspend fun getCurrentProgress(category: String, scriptIndex: Int): ProgressData? {
@@ -204,5 +233,8 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
     
     override suspend fun clearProgress(category: String, scriptIndex: Int) {
         progressTracker.clearScriptProgress(category, scriptIndex, "영작 테스트")
+        if (DEBUG_DETAILED) {
+            Log.d(TAG, "영작 테스트 진행상황 삭제: $category/$scriptIndex")
+        }
     }
 } 

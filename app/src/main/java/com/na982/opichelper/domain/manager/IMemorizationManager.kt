@@ -24,6 +24,9 @@ interface IMemorizationManager {
     fun playFullMemorizationRecording()
     fun deleteFullMemorizationRecording()
     
+    // 영작테스트 완료 처리
+    fun onEnglishWritingTestCompleted()
+    
     // 상태 초기화
     fun resetState()
     fun clearError()

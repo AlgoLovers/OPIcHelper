@@ -178,16 +178,16 @@ class MainViewModel @Inject constructor(
         
         appStateManager.updateSelectedMemorizeLevel(level)
         
-        // 암기 모드 상태 업데이트
-        val isRepeatListeningMode = level == "반복듣기"
-        val isEnglishWritingTestMode = level == "영작테스트"
-        val isFullMemorizationMode = level == "통암기"
-        
-        appStateManager.updateMemorizationModeState(
-            isRepeatListeningMode = isRepeatListeningMode,
-            isEnglishWritingTestMode = isEnglishWritingTestMode,
-            isFullMemorizationMode = isFullMemorizationMode
-        )
+        // 암기 모드 상태 업데이트 - ProgressManager에서 처리하도록 변경
+        // val isRepeatListeningMode = level == "반복듣기"
+        // val isEnglishWritingTestMode = level == "영작테스트"
+        // val isFullMemorizationMode = level == "통암기"
+        // 
+        // appStateManager.updateMemorizationModeState(
+        //     isRepeatListeningMode = isRepeatListeningMode,
+        //     isEnglishWritingTestMode = isEnglishWritingTestMode,
+        //     isFullMemorizationMode = isFullMemorizationMode
+        // )
     }
     
     /**
