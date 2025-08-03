@@ -232,6 +232,11 @@ class ButtonEventHandler @Inject constructor(
                 // 영작테스트 완료 처리
                 progressManager.onEnglishWritingTestCompleted()
             }
+            
+            override fun onComplete() {
+                Log.d("ButtonEventHandler", "암기 테스트 완료 - 버튼 상태를 Idle로 변경")
+                appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
+            }
         }
     }
 } 

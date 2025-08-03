@@ -122,21 +122,33 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             uiCallback.onRecordingHighlight(idx) // 녹음 하이라이트 추가 (한글 하이라이트와 함께)
             uiCallback.onRecordingStateChange(true) // 녹음 상태 활성화
             
-            // 1. 저장된 TTS 시간 확인 (반복듣기에서 저장한 영문 TTS 시간)
+            // 1순위: 저장된 TTS 시간 확인 (반복듣기에서 저장한 영문 TTS 시간)
             val savedTtsTime = recordingTimeManager.getRecordingTime(category, scriptIndex, idx)
             
-            // 2. 폴백 로직: 저장된 TTS 시간이 있으면 사용, 없으면 문장 길이로 계산
+            // 2순위: 폴백 - 문장 길이 기반 예측 계산
             val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
                 if (DEBUG_DETAILED) {
                     Log.d(TAG, "문장 $idx 저장된 TTS 시간 사용: ${savedTtsTime}ms")
                 }
                 savedTtsTime
             } else {
-                val calculatedTime = (enSentences[idx].length * 100L).coerceAtLeast(3000L)
-                if (DEBUG_DETAILED) {
-                    Log.d(TAG, "문장 $idx 저장된 TTS 시간 없음 - 문장 길이로 계산: ${calculatedTime}ms")
+                val enSentence = enSentences[idx]
+                val enWordCount = enSentence.split("\\s+".toRegex()).size
+                
+                // 단어 수 기반 적응형 딜레이 계산
+                val baseDelay = enWordCount * 500 // 기본 딜레이
+                val lengthMultiplier = when {
+                    enWordCount <= 5 -> 1.5f    // 짧은 문장: 1.5배
+                    enWordCount <= 10 -> 1.2f   // 중간 문장: 1.2배
+                    enWordCount <= 15 -> 1.0f   // 긴 문장: 1.0배
+                    else -> 0.8f                // 매우 긴 문장: 0.8배
                 }
-                calculatedTime
+                val calculatedDelay = (baseDelay * lengthMultiplier).toLong()
+                
+                if (DEBUG_DETAILED) {
+                    Log.d(TAG, "문장 $idx 예측 계산 사용: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${calculatedDelay}ms")
+                }
+                calculatedDelay
             }
             
             // 녹음 시작

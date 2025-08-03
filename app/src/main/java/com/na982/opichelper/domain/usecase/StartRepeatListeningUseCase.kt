@@ -165,9 +165,7 @@ class StartRepeatListeningUseCase @Inject constructor(
                 break
             }
             
-            // 2. 영문 문장 1~repeatCount회 TTS (카드를 영문으로 뒤집고 하이라이트)
-            var currentTtsTime: Long? = null // 현재 반복에서 사용할 TTS 시간
-            
+
             for (j in 1..repeatCount) {
                 // 안전한 코루틴 취소 확인 (영문 반복)
                 if (!CoroutineUtils.checkCancellation("StartRepeatListeningUseCase", "영문 반복")) {
@@ -195,7 +193,6 @@ class StartRepeatListeningUseCase @Inject constructor(
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {
                     recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)
-                    currentTtsTime = enDuration // 현재 반복에서 사용할 TTS 시간 설정
                     Log.d("StartRepeatListeningUseCase", "문장 $i 영문 TTS 시간 저장: ${enDuration}ms")
                 }
                 
@@ -204,14 +201,8 @@ class StartRepeatListeningUseCase @Inject constructor(
                     Log.d("StartRepeatListeningUseCase", "TTS 재생 후 코루틴이 취소됨 - Service 중단")
                     break
                 }
-                
-                // 충분한 쉬는 시간 (사용자가 혼자 말해볼 시간)
-                val restTime = if (currentTtsTime != null) {
-                    (currentTtsTime * 1.2).toLong() // 현재 반복의 TTS 시간의 1.2배
-                } else {
-                    (adaptiveDelay * 1.2).toLong() // 예측 계산 시간의 1.2배
-                }
-                Log.d("StartRepeatListeningUseCase", "문장 ${i + 1} 반복 ${j} 쉬는 시간: ${restTime}ms (기준: ${if (currentTtsTime != null) "현재 TTS 시간" else "예측 계산 시간"})")
+
+                val restTime = (enDuration * 1.2).toLong()
                 delay(restTime)
             }
             // 문장 반복 완료 후 하이라이트 제거하지 않음 (다음 문장으로 넘어갈 때까지 유지)
