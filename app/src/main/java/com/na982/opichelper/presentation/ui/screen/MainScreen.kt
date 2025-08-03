@@ -275,12 +275,6 @@ fun MainScreenRefactored(
                         SmartButton(
                             buttonConfig = memorizeTestButtonConfig,
                             onPlayClick = {
-                                when (selectedLevel) {
-                                    "반복 듣기" -> MemorizeLevel.REPEAT_LISTENING
-                                    "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
-                                    "통암기" -> MemorizeLevel.FULL_MEMORIZATION
-                                    else -> MemorizeLevel.REPEAT_LISTENING
-                                }
                                 viewModel.handleMemorizeTestClick()
                             },
                             onStopClick = {

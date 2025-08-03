@@ -45,7 +45,8 @@ class MainViewModel @Inject constructor(
     private val memorizationManager: IMemorizationManager,
     private val initializeAppUseCase: InitializeAppUseCase,
     private val getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val memorizationLevelMapper: MemorizationLevelMapper // Added MemorizationLevelMapper
 ) : ViewModel() {
     
     // 앱 상태를 직접 관찰
@@ -234,7 +235,7 @@ class MainViewModel @Inject constructor(
     }
     
     /**
-     * 암기 테스트 버튼 클릭 (ButtonEventHandler에 위임)
+     * 암기 테스트 버튼 클릭
      */
     fun handleMemorizeTestClick() {
         val currentState = appState.value
@@ -244,15 +245,11 @@ class MainViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                val memorizeLevel = when (currentState.selectedMemorizeLevel) {
-                    "반복듣기" -> MemorizeLevel.REPEAT_LISTENING
-                    "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
-                    "영작테스트" -> MemorizeLevel.ENGLISH_WRITING
-                    "통암기" -> MemorizeLevel.FULL_MEMORIZATION
-                    else -> {
-                        Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
-                        return@launch
-                    }
+                // MemorizationLevelMapper를 사용하여 레벨 매핑
+                val memorizeLevel = memorizationLevelMapper.mapToMemorizeLevel(currentState.selectedMemorizeLevel)
+                if (memorizeLevel == null) {
+                    Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
+                    return@launch
                 }
                 
                 val category = currentState.currentCategory ?: return@launch
@@ -290,15 +287,11 @@ class MainViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                val memorizeLevel = when (currentState.selectedMemorizeLevel) {
-                    "반복듣기" -> MemorizeLevel.REPEAT_LISTENING
-                    "영작 테스트" -> MemorizeLevel.ENGLISH_WRITING
-                    "영작테스트" -> MemorizeLevel.ENGLISH_WRITING
-                    "통암기" -> MemorizeLevel.FULL_MEMORIZATION
-                    else -> {
-                        Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
-                        return@launch
-                    }
+                // MemorizationLevelMapper를 사용하여 레벨 매핑
+                val memorizeLevel = memorizationLevelMapper.mapToMemorizeLevel(currentState.selectedMemorizeLevel)
+                if (memorizeLevel == null) {
+                    Log.w("MainViewModelRefactored", "알 수 없는 암기 레벨: ${currentState.selectedMemorizeLevel}")
+                    return@launch
                 }
                 
                 val currentQaItem = currentState.currentQaItem ?: return@launch

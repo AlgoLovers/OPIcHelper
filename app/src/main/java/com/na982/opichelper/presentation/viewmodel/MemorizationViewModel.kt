@@ -7,6 +7,9 @@ import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.manager.IMemorizationManager
 import com.na982.opichelper.domain.manager.MemorizationUiState
+import com.na982.opichelper.domain.manager.MemorizationManager
+import com.na982.opichelper.domain.manager.MemorizeLevel
+import com.na982.opichelper.domain.manager.MemorizationLevelMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -18,8 +21,9 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MemorizationViewModel @Inject constructor(
-    private val memorizationManager: IMemorizationManager,
+    private val memorizationManager: MemorizationManager,
     private val qaDataRepository: QaDataRepository,
+    private val memorizationLevelMapper: MemorizationLevelMapper, // Added MemorizationLevelMapper
     private val ttsController: TtsController
 ) : ViewModel() {
     
@@ -40,21 +44,26 @@ class MemorizationViewModel @Inject constructor(
                 val category = qaDataRepository.getCurrentCategory() ?: ""
                 val scriptIndex = qaDataRepository.getCurrentIndex()
                 
-                when (selectedLevel) {
-                    "반복 듣기" -> {
+                // MemorizationLevelMapper를 사용하여 레벨 매핑
+                val memorizeLevel = memorizationLevelMapper.mapToMemorizeLevel(selectedLevel)
+                if (memorizeLevel == null) {
+                    Log.w("MemorizationViewModel", "알 수 없는 암기 레벨: '$selectedLevel'")
+                    return@launch
+                }
+                
+                // 전략 패턴을 사용하여 적절한 암기 테스트 시작
+                when (memorizeLevel) {
+                    MemorizeLevel.REPEAT_LISTENING -> {
                         Log.d("MemorizationViewModel", "반복듣기 시작")
                         memorizationManager.startRepeatListening(category, scriptIndex)
                     }
-                    "영작 테스트" -> {
+                    MemorizeLevel.ENGLISH_WRITING -> {
                         Log.d("MemorizationViewModel", "영작테스트 시작")
                         memorizationManager.startEnglishWritingTest(category, scriptIndex)
                     }
-                    "통암기" -> {
+                    MemorizeLevel.FULL_MEMORIZATION -> {
                         Log.d("MemorizationViewModel", "통암기 시작")
                         memorizationManager.startFullMemorization(category, scriptIndex)
-                    }
-                    else -> {
-                        Log.w("MemorizationViewModel", "알 수 없는 암기 레벨: '$selectedLevel'")
                     }
                 }
             } catch (e: Exception) {

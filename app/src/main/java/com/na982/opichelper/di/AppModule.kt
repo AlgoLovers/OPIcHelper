@@ -52,6 +52,7 @@ import com.na982.opichelper.domain.strategy.MemorizationStrategyFactory
 import com.na982.opichelper.domain.strategy.RepeatListeningStrategy
 import com.na982.opichelper.domain.strategy.EnglishWritingStrategy
 import com.na982.opichelper.domain.strategy.FullMemorizationStrategy
+import com.na982.opichelper.domain.mapper.MemorizationLevelMapper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -402,6 +403,18 @@ object AppModule {
         return FullMemorizationStrategy(fullMemorizationUseCase)
     }
     
+    /**
+     * MemorizationLevelMapper 제공
+     */
+    @Provides
+    @Singleton
+    fun provideMemorizationLevelMapper(): MemorizationLevelMapper {
+        return MemorizationLevelMapper()
+    }
+
+    /**
+     * MemorizationStrategyFactory 제공
+     */
     @Provides
     @Singleton
     fun provideMemorizationStrategyFactory(
@@ -410,9 +423,9 @@ object AppModule {
         fullMemorizationStrategy: FullMemorizationStrategy
     ): MemorizationStrategyFactory {
         return MemorizationStrategyFactory(
-            repeatListeningStrategy = repeatListeningStrategy,
-            englishWritingStrategy = englishWritingStrategy,
-            fullMemorizationStrategy = fullMemorizationStrategy
+            repeatListeningStrategy,
+            englishWritingStrategy,
+            fullMemorizationStrategy
         )
     }
     
