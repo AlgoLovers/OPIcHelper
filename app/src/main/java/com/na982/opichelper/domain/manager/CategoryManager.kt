@@ -94,8 +94,8 @@ class CategoryManager @Inject constructor(
                     totalCount = itemsInCategory.size
                 )
                 
-                // QA 아이템 로드
-                loadQaItemsForCategory(category)
+                // QA 아이템만 로드 (카테고리 선택 제거)
+                loadQaItemsOnly(category)
                 
                 // 암기 모드 상태 초기화 - ProgressManager에서 처리하도록 변경
                 // appStateManager.updateMemorizationModeState(
@@ -114,9 +114,9 @@ class CategoryManager @Inject constructor(
     }
     
     /**
-     * 특정 카테고리의 QA 아이템 로드
+     * QA 아이템만 로드 (카테고리 선택 없이)
      */
-    override fun loadQaItemsForCategory(category: String) {
+    private fun loadQaItemsOnly(category: String) {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
             try {
                 Log.d("CategoryManager", "QA 아이템 로드 시작: $category")
@@ -126,8 +126,6 @@ class CategoryManager @Inject constructor(
                 val qaItems = loadQaItemsUseCase(category)
                 
                 if (qaItems.isNotEmpty()) {
-                    // 첫 번째 아이템을 현재 아이템으로 설정
-                    qaDataRepository.selectCategory(category)
                     Log.d("CategoryManager", "QA 아이템 로드 완료: ${qaItems.size}개")
                 } else {
                     Log.w("CategoryManager", "QA 아이템이 없습니다: $category")
@@ -144,17 +142,10 @@ class CategoryManager @Inject constructor(
     }
     
     /**
-     * 현재 QA 아이템 업데이트
+     * 특정 카테고리의 QA 아이템 로드 (기존 인터페이스 유지)
      */
-    private fun updateCurrentQaItem(qaItem: QaItem, category: String, index: Int, totalCount: Int) {
-        Log.d("CategoryViewModel", "QA 아이템 업데이트: $category, $index/$totalCount")
-        
-        appStateManager.updateQaItemState(
-            qaItem = qaItem,
-            category = category,
-            index = index,
-            totalCount = totalCount
-        )
+    override fun loadQaItemsForCategory(category: String) {
+        loadQaItemsOnly(category)
     }
     
     /**
