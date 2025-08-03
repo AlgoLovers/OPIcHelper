@@ -109,6 +109,9 @@ fun MainScreenRefactored(
     val category = currentCategoryState
     val currentIndex = appState.currentIndex
     val totalCount = appState.totalCount
+    
+    // ===== 카테고리 상태 =====
+    val categories by viewModel.categories.collectAsState()
 
     // 앱 재시작 시 MemorizationViewModel 상태 초기화
     LaunchedEffect(Unit) {
@@ -181,7 +184,7 @@ fun MainScreenRefactored(
                     ) {
                         CategorySelector(
                             selectedCategory = category ?: "",
-                            categories = listOf("은행", "해변", "가족친구", "패션", "가구", "휴일", "집휴가", "집", "산업직업", "인터넷", "영화", "음악", "예약", "레스토랑", "교통"),
+                            categories = categories,
                             onCategorySelected = {
                                 viewModel.handleCategoryChange(it)
                             }
