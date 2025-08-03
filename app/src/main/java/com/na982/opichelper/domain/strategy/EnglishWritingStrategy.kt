@@ -54,6 +54,11 @@ class EnglishWritingStrategy @Inject constructor(
                     Log.d("EnglishWritingStrategy", "병합 파일 생성 완료")
                     uiCallback.onMergedFileCreated()
                 }
+                
+                override fun onComplete() {
+                    Log.d("EnglishWritingStrategy", "영작테스트 완료")
+                    uiCallback.onComplete()
+                }
             }
         )
     }

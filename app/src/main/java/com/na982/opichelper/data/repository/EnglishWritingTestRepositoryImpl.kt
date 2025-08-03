@@ -98,8 +98,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             
             // 1. 한글 문장 TTS (카드를 한글로 뒤집고 하이라이트)
             uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
-            delay(100) // 카드 뒤집기 애니메이션 대기
-            
+
             // 한글 문장 TTS 재생 (하이라이트 포함)
             ttsController.playSentenceWithHighlight(
                 text = koSentences[idx],
@@ -180,6 +179,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         
         // 마지막에 카드를 원래 상태(영문)로 복원
         uiCallback.onCardFlip(false)
+        uiCallback.onRecordingHighlight(-1)
         
         // 3. 모든 녹음 파일을 하나로 합치기
         if (recordingFiles.isNotEmpty()) {
@@ -200,6 +200,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             
             // 병합 파일 생성 완료 콜백 호출
             uiCallback.onMergedFileCreated()
+            uiCallback.onComplete()
         }
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)

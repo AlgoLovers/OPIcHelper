@@ -9,4 +9,5 @@ interface EnglishWritingUiCallback {
     fun onRecordingHighlight(index: Int)
     fun onRecordingStateChange(isRecording: Boolean)
     fun onMergedFileCreated()
+    fun onComplete()
 } 
