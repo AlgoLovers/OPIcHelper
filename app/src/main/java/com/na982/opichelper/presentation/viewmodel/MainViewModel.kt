@@ -11,6 +11,7 @@ import com.na982.opichelper.domain.event.ButtonEvent
 import com.na982.opichelper.domain.event.ButtonEventHandler
 import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
+
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.state.AppStateManager
 import com.na982.opichelper.domain.usecase.LoadCategoriesUseCase

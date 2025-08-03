@@ -5,6 +5,7 @@ import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.RecordingTimeManager
+
 import com.na982.opichelper.domain.state.MemorizationProgressTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,6 +13,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import com.na982.opichelper.domain.util.CoroutineUtils
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -94,9 +96,8 @@ class StartRepeatListeningUseCase @Inject constructor(
         Log.d("StartRepeatListeningUseCase", "검색한 카테고리: ${data.category}, 스크립트 인덱스: ${data.scriptIndex}")
         
         for (i in startIndex until count) {
-            // 코루틴이 취소되었는지 확인
-            if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("StartRepeatListeningUseCase", "코루틴이 취소됨 - Service 중단")
+            // 안전한 코루틴 취소 확인
+            if (!CoroutineUtils.checkCancellation("StartRepeatListeningUseCase", "문장 처리")) {
                 break
             }
             
@@ -132,34 +133,44 @@ class StartRepeatListeningUseCase @Inject constructor(
                 }
             )
             
-            // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
-            val enSentence = enSentences[i]
-            val enWordCount = enSentence.split("\\s+".toRegex()).size
+            // 1순위: 저장된 TTS 시간 확인 (이전 영작테스트에서 저장된 시간)
+            val savedTtsTime = recordingTimeManager.getRecordingTime(data.category, data.scriptIndex, i)
             
-            // 방법 1: 단어 수 기반 적응형 딜레이
-            val baseDelay = enWordCount * 500 // 기본 딜레이
-            val lengthMultiplier = when {
-                enWordCount <= 5 -> 1.5f    // 짧은 문장: 1.5배
-                enWordCount <= 10 -> 1.2f   // 중간 문장: 1.2배
-                enWordCount <= 15 -> 1.0f   // 긴 문장: 1.0배
-                else -> 0.8f                // 매우 긴 문장: 0.8배
+            // 2순위: 폴백 - 문장 길이 기반 예측 계산
+            val adaptiveDelay = if (savedTtsTime != null && savedTtsTime > 0) {
+                Log.d("StartRepeatListeningUseCase", "문장 $i 저장된 TTS 시간 사용: ${savedTtsTime}ms")
+                savedTtsTime
+            } else {
+                val enSentence = enSentences[i]
+                val enWordCount = enSentence.split("\\s+".toRegex()).size
+                
+                // 단어 수 기반 적응형 딜레이 계산
+                val baseDelay = enWordCount * 500 // 기본 딜레이
+                val lengthMultiplier = when {
+                    enWordCount <= 5 -> 1.5f    // 짧은 문장: 1.5배
+                    enWordCount <= 10 -> 1.2f   // 중간 문장: 1.2배
+                    enWordCount <= 15 -> 1.0f   // 긴 문장: 1.0배
+                    else -> 0.8f                // 매우 긴 문장: 0.8배
+                }
+                val calculatedDelay = (baseDelay * lengthMultiplier).toLong()
+                
+                Log.d("StartRepeatListeningUseCase", "문장 $i 예측 계산 사용: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${calculatedDelay}ms")
+                calculatedDelay
             }
-            val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
             
-            Log.d("StartRepeatListeningUseCase", "문장 $i 딜레이 계산: 영문 단어 수=$enWordCount, 기본 딜레이=${baseDelay}ms, 최종 딜레이=${adaptiveDelay}ms")
             delay(adaptiveDelay)
             
-            // 코루틴이 취소되었는지 다시 확인
-            if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("StartRepeatListeningUseCase", "코루틴이 취소됨 - Service 중단")
+            // 안전한 코루틴 취소 확인 (딜레이 후)
+            if (!CoroutineUtils.checkCancellation("StartRepeatListeningUseCase", "딜레이 후")) {
                 break
             }
             
             // 2. 영문 문장 1~repeatCount회 TTS (카드를 영문으로 뒤집고 하이라이트)
+            var currentTtsTime: Long? = null // 현재 반복에서 사용할 TTS 시간
+            
             for (j in 1..repeatCount) {
-                // 코루틴이 취소되었는지 확인
-                if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                    Log.d("StartRepeatListeningUseCase", "코루틴이 취소됨 - Service 중단")
+                // 안전한 코루틴 취소 확인 (영문 반복)
+                if (!CoroutineUtils.checkCancellation("StartRepeatListeningUseCase", "영문 반복")) {
                     break
                 }
                 
@@ -184,18 +195,23 @@ class StartRepeatListeningUseCase @Inject constructor(
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
                 if (j == 1) {
                     recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)
+                    currentTtsTime = enDuration // 현재 반복에서 사용할 TTS 시간 설정
                     Log.d("StartRepeatListeningUseCase", "문장 $i 영문 TTS 시간 저장: ${enDuration}ms")
                 }
                 
-                // 코루틴이 취소되었는지 다시 확인 (TTS 재생 후)
-                if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
+                // 안전한 코루틴 취소 확인 (TTS 재생 후)
+                if (!CoroutineUtils.checkCancellation("StartRepeatListeningUseCase", "TTS 재생 후")) {
                     Log.d("StartRepeatListeningUseCase", "TTS 재생 후 코루틴이 취소됨 - Service 중단")
                     break
                 }
                 
                 // 충분한 쉬는 시간 (사용자가 혼자 말해볼 시간)
-                val restTime = (enDuration * 1.2).toLong() // TTS 시간의 1.2배
-                Log.d("StartRepeatListeningUseCase", "문장 ${i + 1} 반복 ${j} 쉬는 시간: ${restTime}ms")
+                val restTime = if (currentTtsTime != null) {
+                    (currentTtsTime * 1.2).toLong() // 현재 반복의 TTS 시간의 1.2배
+                } else {
+                    (adaptiveDelay * 1.2).toLong() // 예측 계산 시간의 1.2배
+                }
+                Log.d("StartRepeatListeningUseCase", "문장 ${i + 1} 반복 ${j} 쉬는 시간: ${restTime}ms (기준: ${if (currentTtsTime != null) "현재 TTS 시간" else "예측 계산 시간"})")
                 delay(restTime)
             }
             // 문장 반복 완료 후 하이라이트 제거하지 않음 (다음 문장으로 넘어갈 때까지 유지)

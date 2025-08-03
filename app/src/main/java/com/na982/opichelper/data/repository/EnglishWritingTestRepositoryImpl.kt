@@ -8,7 +8,9 @@ import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.ProgressData
 import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
+
 import com.na982.opichelper.domain.state.MemorizationProgressTracker
+import com.na982.opichelper.domain.util.CoroutineUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.io.File
@@ -70,9 +72,8 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         val recordingFiles = mutableListOf<File>()
         
         for (idx in startIndex until count) {
-            // 코루틴이 취소되었는지 확인
-            if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d(TAG, "코루틴이 취소됨 - Repository 중단")
+            // 안전한 코루틴 취소 확인
+            if (!CoroutineUtils.checkCancellation(TAG, "문장 처리")) {
                 break
             }
             
@@ -112,9 +113,8 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
                 }
             )
             
-            // 코루틴이 취소되었는지 다시 확인
-            if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d(TAG, "코루틴이 취소됨 - Repository 중단")
+            // 안전한 코루틴 취소 확인 (TTS 재생 후)
+            if (!CoroutineUtils.checkCancellation(TAG, "TTS 재생 후")) {
                 break
             }
 
