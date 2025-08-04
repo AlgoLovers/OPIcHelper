@@ -1,16 +1,30 @@
 package com.na982.opichelper.data.audio
 
 import android.media.MediaPlayer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import com.na982.opichelper.domain.audio.HighlightManager
+import com.na982.opichelper.domain.audio.HighlightStrategy
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
+import com.na982.opichelper.domain.event.HighlightEventHandler
+import com.na982.opichelper.domain.event.HighlightEvent
+import com.na982.opichelper.domain.repository.RecordingTimeManager
 import java.io.File
+import javax.inject.Inject
 
 /**
  * 녹음 재생 전용 AudioPlayer 구현체
  * TTS와 완전히 분리된 독립적인 MediaPlayer 인스턴스 사용
  */
-class RecordingAudioPlayerImpl : RecordingAudioPlayer {
+class RecordingAudioPlayerImpl @Inject constructor(
+    private val recordingTimeManager: RecordingTimeManager,
+    private val highlightManager: HighlightManager,
+    private val highlightEventHandler: HighlightEventHandler
+) : RecordingAudioPlayer {
     private var player: MediaPlayer? = null
+    private var positionUpdateHandler: Handler? = null
+    private var positionUpdateRunnable: Runnable? = null
     
     override val isPlaying: Boolean
         get() = player?.isPlaying == true
@@ -39,27 +53,26 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
                 start()
                 Log.d("RecordingAudioPlayerImpl", "start 완료")
                 
-                // 재생 진행률에 따른 하이라이트 업데이트 (간단한 구현)
-                setOnSeekCompleteListener {
-                    val currentPosition = currentPosition
-                    val duration = this.duration
-                    val progress = currentPosition.toFloat() / duration
-                    
-                    // 진행률에 따라 문장 인덱스 계산 (간단한 구현)
-                    val sentenceIndex = (progress * 6).toInt().coerceIn(0, 5) // 6개 문장 가정
-                    onHighlight(sentenceIndex)
-                }
+                // 위치 업데이트 핸들러 초기화
+                startPositionUpdates()
+                
+                // 하이라이트 매니저 시작 (이벤트 기반)
+                highlightManager.startHighlightUpdates(highlightEventHandler)
                 
                 setOnCompletionListener {
                     Log.d("RecordingAudioPlayerImpl", "녹음 재생 완료")
-                    onHighlight(-1) // 하이라이트 제거
+                    stopPositionUpdates()
+                    highlightManager.stopHighlightUpdates()
+                    highlightEventHandler.handle(HighlightEvent.ClearHighlight)
                     stopRecording()
                     onCompletion()
                 }
                 
                 setOnErrorListener { _, what, extra ->
                     Log.e("RecordingAudioPlayerImpl", "녹음 재생 오류: what=$what, extra=$extra")
-                    onHighlight(-1) // 하이라이트 제거
+                    stopPositionUpdates()
+                    highlightManager.stopHighlightUpdates()
+                    highlightEventHandler.handle(HighlightEvent.ClearHighlight)
                     stopRecording()
                     onCompletion()
                     true
@@ -67,7 +80,76 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
                 
             } catch (e: Exception) {
                 Log.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
-                onHighlight(-1) // 하이라이트 제거
+                stopPositionUpdates()
+                highlightManager.stopHighlightUpdates()
+                highlightEventHandler.handle(HighlightEvent.ClearHighlight)
+                stopRecording()
+                onCompletion()
+            }
+        }
+    }
+
+    override fun playRecordingWithTimes(filePath: String, recordingTimes: List<Long>, onHighlight: (Int) -> Unit, onCompletion: () -> Unit) {
+        Log.d("RecordingAudioPlayerImpl", "녹음 재생 시작 (시간 정보 포함): $filePath, 녹음시간: $recordingTimes")
+        
+        // 기존 재생 중지
+        stopRecording()
+        
+        val file = File(filePath)
+        if (!file.exists()) {
+            Log.e("RecordingAudioPlayerImpl", "녹음 파일이 존재하지 않음: $filePath")
+            onCompletion()
+            return
+        }
+        
+        // 하이라이트 전략 설정
+        val strategy = com.na982.opichelper.domain.audio.strategy.RecordingHighlightStrategy(
+            recordingTimes, 
+            com.na982.opichelper.domain.audio.HighlightType.ENGLISH_WRITING_RECORDING
+        )
+        highlightManager.setStrategy(strategy)
+        
+        player = MediaPlayer().apply {
+            try {
+                setDataSource(file.absolutePath)
+                Log.d("RecordingAudioPlayerImpl", "setDataSource 완료")
+                
+                prepare()
+                Log.d("RecordingAudioPlayerImpl", "prepare 완료")
+
+                start()
+                Log.d("RecordingAudioPlayerImpl", "start 완료")
+                
+                // 위치 업데이트 핸들러 초기화
+                startPositionUpdates()
+                
+                // 하이라이트 매니저 시작 (이벤트 기반)
+                highlightManager.startHighlightUpdates(highlightEventHandler)
+                
+                setOnCompletionListener {
+                    Log.d("RecordingAudioPlayerImpl", "녹음 재생 완료")
+                    stopPositionUpdates()
+                    highlightManager.stopHighlightUpdates()
+                    highlightEventHandler.handle(HighlightEvent.ClearHighlight)
+                    stopRecording()
+                    onCompletion()
+                }
+                
+                setOnErrorListener { _, what, extra ->
+                    Log.e("RecordingAudioPlayerImpl", "녹음 재생 오류: what=$what, extra=$extra")
+                    stopPositionUpdates()
+                    highlightManager.stopHighlightUpdates()
+                    highlightEventHandler.handle(HighlightEvent.ClearHighlight)
+                    stopRecording()
+                    onCompletion()
+                    true
+                }
+                
+            } catch (e: Exception) {
+                Log.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
+                stopPositionUpdates()
+                highlightManager.stopHighlightUpdates()
+                highlightEventHandler.handle(HighlightEvent.ClearHighlight)
                 stopRecording()
                 onCompletion()
             }
@@ -154,6 +236,8 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
 
     override fun stopRecording() {
         try {
+            stopPositionUpdates()
+            highlightManager.stopHighlightUpdates()
             player?.let { mediaPlayer ->
                 if (mediaPlayer.isPlaying) {
                     mediaPlayer.stop()
@@ -179,5 +263,39 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
             Log.e("RecordingAudioPlayerImpl", "getDuration 실패: $filePath", e)
             0
         }
+    }
+    
+    /**
+     * 위치 업데이트 시작
+     */
+    private fun startPositionUpdates() {
+        positionUpdateHandler = Handler(Looper.getMainLooper())
+        
+        positionUpdateRunnable = object : Runnable {
+            override fun run() {
+                player?.let { mediaPlayer ->
+                    if (mediaPlayer.isPlaying) {
+                        val currentPosition = mediaPlayer.currentPosition
+                        highlightManager.updateCurrentPosition(currentPosition)
+                        
+                        // 100ms마다 업데이트
+                        positionUpdateHandler?.postDelayed(this, 100)
+                    }
+                }
+            }
+        }
+        
+        positionUpdateHandler?.post(positionUpdateRunnable!!)
+    }
+    
+    /**
+     * 위치 업데이트 중지
+     */
+    private fun stopPositionUpdates() {
+        positionUpdateRunnable?.let { runnable ->
+            positionUpdateHandler?.removeCallbacks(runnable)
+        }
+        positionUpdateRunnable = null
+        positionUpdateHandler = null
     }
 } 

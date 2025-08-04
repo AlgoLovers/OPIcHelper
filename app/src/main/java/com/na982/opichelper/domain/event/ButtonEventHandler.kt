@@ -124,20 +124,11 @@ class ButtonEventHandler @Inject constructor(
         // 3. 버튼 상태를 Playing으로 변경
         appStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
         
-        // 4. 녹음 재생 전용 UseCase 실행
+        // 4. 녹음 재생 전용 UseCase 실행 (이벤트 기반)
         playRecordingUseCase.execute(
             memorizeLevel = event.memorizeLevel,
             category = event.category,
             scriptIndex = event.scriptIndex,
-            onHighlight = { index ->
-                Log.d("ButtonEventHandler", "녹음 하이라이트: $index")
-                appStateManager.updateHighlightState(
-                    questionHighlightIndex = -1,
-                    answerHighlightIndex = -1,
-                    answerKoHighlightIndex = -1,
-                    recordingHighlightIndex = index
-                )
-            },
             onCompletion = {
                 Log.d("ButtonEventHandler", "녹음 재생 완료")
                 appStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Idle)

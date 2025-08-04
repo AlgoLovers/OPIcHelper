@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.na982.opichelper.data.audio.AudioPlayerImpl
 import com.na982.opichelper.data.audio.AudioRecorderImpl
 import com.na982.opichelper.data.audio.GoogleTtsPlayer
+import com.na982.opichelper.data.audio.HighlightManagerImpl
 import com.na982.opichelper.data.audio.RecordingAudioPlayerImpl
 import com.na982.opichelper.data.audio.SamsungTtsPlayer
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
@@ -81,10 +82,26 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideRecordingAudioPlayer(): RecordingAudioPlayer {
-        return RecordingAudioPlayerImpl()
+    fun provideRecordingAudioPlayer(
+        recordingTimeManager: RecordingTimeManager,
+        highlightManager: com.na982.opichelper.domain.audio.HighlightManager,
+        highlightEventHandler: com.na982.opichelper.domain.event.HighlightEventHandler
+    ): RecordingAudioPlayer {
+        return RecordingAudioPlayerImpl(recordingTimeManager, highlightManager, highlightEventHandler)
     }
     
+    @Provides
+    @Singleton
+    fun provideHighlightManager(): com.na982.opichelper.domain.audio.HighlightManager {
+        return HighlightManagerImpl()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideHighlightEventHandler(appStateManager: AppStateManager): com.na982.opichelper.domain.event.HighlightEventHandler {
+        return com.na982.opichelper.domain.event.HighlightEventHandler(appStateManager)
+    }
+
     @Provides
     @Singleton
     fun provideAudioFileManager(@ApplicationContext context: Context): AudioFileManager {
@@ -351,11 +368,17 @@ object AppModule {
     @Singleton
     fun providePlayRecordingUseCase(
         recordingAudioPlayer: RecordingAudioPlayer,
-        recordingFileRepository: RecordingFileRepository
+        recordingFileRepository: RecordingFileRepository,
+        recordingTimeManager: RecordingTimeManager,
+        highlightManager: com.na982.opichelper.domain.audio.HighlightManager,
+        highlightEventHandler: com.na982.opichelper.domain.event.HighlightEventHandler
     ): com.na982.opichelper.domain.usecase.PlayRecordingUseCase {
         return com.na982.opichelper.domain.usecase.PlayRecordingUseCase(
             recordingAudioPlayer = recordingAudioPlayer,
-            recordingFileRepository = recordingFileRepository
+            recordingFileRepository = recordingFileRepository,
+            recordingTimeManager = recordingTimeManager,
+            highlightManager = highlightManager,
+            highlightEventHandler = highlightEventHandler
         )
     }
     
