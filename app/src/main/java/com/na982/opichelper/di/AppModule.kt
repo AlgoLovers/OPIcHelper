@@ -303,10 +303,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAudioControlManager(
-        ttsController: TtsController
+        ttsController: TtsController,
+        recordingAudioPlayer: RecordingAudioPlayer
     ): IAudioControlManager {
         return AudioControlManager(
-            ttsController = ttsController
+            ttsController = ttsController,
+            recordingAudioPlayer = recordingAudioPlayer
         )
     }
     

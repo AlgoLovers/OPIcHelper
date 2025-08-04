@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.na982.opichelper.domain.manager.WakeLockManager
+import com.na982.opichelper.domain.manager.IAudioControlManager
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,6 +27,9 @@ class MainActivity : ComponentActivity() {
     
     @Inject
     lateinit var wakeLockManager: WakeLockManager
+    
+    @Inject
+    lateinit var audioControlManager: IAudioControlManager
     
     private var isFinishing = false // 앱이 실제로 종료되는지 추적
     private var navController: NavHostController? = null // 네비게이션 컨트롤러 참조
@@ -164,7 +168,11 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "모든 리소스 정리 시작")
         
         try {
-            // WakeLock 해제
+            // 1. 모든 오디오 중지 (TTS + 녹음)
+            audioControlManager.stopAllAudio()
+            Log.d("MainActivity", "모든 오디오 중지 완료")
+            
+            // 2. WakeLock 해제
             wakeLockManager.releaseWakeLock()
             Log.d("MainActivity", "WakeLock 해제 완료")
             

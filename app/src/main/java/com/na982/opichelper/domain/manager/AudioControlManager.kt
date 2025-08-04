@@ -3,6 +3,7 @@ package com.na982.opichelper.domain.manager
 import android.util.Log
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.audio.TtsController
+import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,7 +16,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class AudioControlManager @Inject constructor(
-    private val ttsController: TtsController
+    private val ttsController: TtsController,
+    private val recordingAudioPlayer: RecordingAudioPlayer
 ) : IAudioControlManager {
     
     private val _error = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
@@ -81,7 +83,14 @@ class AudioControlManager @Inject constructor(
         
         CoroutineScope(Dispatchers.Main).launch {
             try {
+                // TTS 중지
                 ttsController.stopAllTts()
+                Log.d("AudioControlManager", "TTS 중지 완료")
+                
+                // 녹음 재생 중지
+                recordingAudioPlayer.stopRecording()
+                Log.d("AudioControlManager", "녹음 재생 중지 완료")
+                
                 Log.d("AudioControlManager", "모든 오디오 중지 완료")
                 
             } catch (e: Exception) {
