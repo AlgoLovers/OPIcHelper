@@ -165,15 +165,20 @@ class TtsControllerImpl @Inject constructor(
             onHighlight(highlightIndex)
         }
         
-        // 4. 재생 완료 시 TTS 상태만 업데이트 (하이라이트는 그대로 유지)
+        // 4. 재생 완료 시 TTS 상태만 업데이트
         appStateManager.updateTtsPlayingState(
             isQuestionPlaying = false,
             isAnswerPlaying = false,
             isPlaying = false
         )
         
-        // 5. 하이라이트 완전 해제하지 않음 (반복듣기에서 하이라이트 유지)
-        // appStateManager.updateHighlightState(...) 제거
+        // 5. 하이라이트 완전 해제 (정상적인 동작)
+        appStateManager.updateHighlightState(
+            questionHighlightIndex = -1,
+            answerHighlightIndex = -1,
+            answerKoHighlightIndex = -1,
+            recordingHighlightIndex = -1
+        )
         
         Log.d("TtsControllerImpl", "문장 하이라이트 TTS 재생 완료: ${duration}ms")
         return duration
