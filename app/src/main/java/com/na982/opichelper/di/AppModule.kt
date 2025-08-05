@@ -339,12 +339,14 @@ object AppModule {
     fun provideRepeatListeningUseCase(
         ttsController: TtsController,
         progressTracker: com.na982.opichelper.domain.state.MemorizationProgressTracker,
-        recordingTimeManager: RecordingTimeManager
+        recordingTimeManager: RecordingTimeManager,
+        appStateManager: AppStateManager
     ): com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase {
         return com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase(
             ttsController = ttsController,
             progressTracker = progressTracker,
-            recordingTimeManager = recordingTimeManager
+            recordingTimeManager = recordingTimeManager,
+            appStateManager = appStateManager
         )
     }
     

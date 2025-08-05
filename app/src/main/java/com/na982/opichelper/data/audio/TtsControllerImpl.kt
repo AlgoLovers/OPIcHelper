@@ -133,12 +133,12 @@ class TtsControllerImpl @Inject constructor(
         )
         
         // 2. 하이라이트 초기화
-        appStateManager.updateHighlightState(
-            questionHighlightIndex = -1,
-            answerHighlightIndex = -1,
-            answerKoHighlightIndex = -1,
-            recordingHighlightIndex = -1
-        )
+//        appStateManager.updateHighlightState(
+//            questionHighlightIndex = -1,
+//            answerHighlightIndex = -1,
+//            answerKoHighlightIndex = -1,
+//            recordingHighlightIndex = -1
+//        )
         
         // 3. 영문/한글 모두 동일하게 하이라이트 처리
         val duration = ttsOrchestrator.speakWithHighlight(text) { highlightIndex ->
@@ -162,7 +162,7 @@ class TtsControllerImpl @Inject constructor(
             }
             
             // onHighlight 콜백 호출
-            onHighlight(highlightIndex)
+            //onHighlight(highlightIndex)
         }
         
         // 4. 재생 완료 시 TTS 상태만 업데이트
@@ -172,15 +172,47 @@ class TtsControllerImpl @Inject constructor(
             isPlaying = false
         )
         
-        // 5. 하이라이트 완전 해제 (정상적인 동작)
-        appStateManager.updateHighlightState(
-            questionHighlightIndex = -1,
-            answerHighlightIndex = -1,
-            answerKoHighlightIndex = -1,
-            recordingHighlightIndex = -1
-        )
+//        // 5. 하이라이트 완전 해제 (정상적인 동작)
+//        appStateManager.updateHighlightState(
+//            questionHighlightIndex = -1,
+//            answerHighlightIndex = -1,
+//            answerKoHighlightIndex = -1,
+//            recordingHighlightIndex = -1
+//        )
         
         Log.d("TtsControllerImpl", "문장 하이라이트 TTS 재생 완료: ${duration}ms")
+        return duration
+    }
+    
+    override suspend fun playSentenceForRepeatListening(
+        text: String,
+        isKorean: Boolean
+    ): Long {
+        Log.d("TtsControllerImpl", "반복듣기 TTS 재생 시작: '${text.take(30)}...', isKorean=$isKorean")
+        
+        // 1. AppState 업데이트 (TTS 상태만)
+        appStateManager.updateTtsPlayingState(
+            isQuestionPlaying = false,
+            isAnswerPlaying = true,
+            isPlaying = true
+        )
+        
+        // 2. 하이라이트 로직 제거 - TtsOrchestrator의 speakUnified 사용
+        val duration = ttsOrchestrator.speakUnified(
+            text = text,
+            isKorean = isKorean,
+            rate = 1.0f,
+            waitForCompletion = true
+        )
+        
+        // 3. 재생 완료 시 TTS 상태만 업데이트 (하이라이트는 그대로 유지)
+        appStateManager.updateTtsPlayingState(
+            isQuestionPlaying = false,
+            isAnswerPlaying = false,
+            isPlaying = false
+        )
+        
+        Log.d("TtsControllerImpl", "반복듣기 TTS 재생 완료: ${duration}ms")
         return duration
     }
     

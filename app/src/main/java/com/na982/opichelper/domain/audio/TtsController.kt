@@ -31,6 +31,17 @@ interface TtsController {
     ): Long
     
     /**
+     * 반복듣기 전용 TTS 재생 (하이라이트 없음)
+     * @param text 재생할 텍스트
+     * @param isKorean 한글 여부
+     * @return 재생 시간 (밀리초)
+     */
+    suspend fun playSentenceForRepeatListening(
+        text: String,
+        isKorean: Boolean
+    ): Long
+    
+    /**
      * 통합 TTS 재생 (하이라이트 없음)
      * @param text 재생할 텍스트
      * @param isKorean 한글 여부

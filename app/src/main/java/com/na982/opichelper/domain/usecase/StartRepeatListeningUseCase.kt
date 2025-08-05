@@ -5,7 +5,7 @@ import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.audio.TtsController
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.RecordingTimeManager
-
+import com.na982.opichelper.domain.state.AppStateManager
 import com.na982.opichelper.domain.state.MemorizationProgressTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +25,8 @@ import javax.inject.Singleton
 class StartRepeatListeningUseCase @Inject constructor(
     private val ttsController: TtsController,
     private val progressTracker: MemorizationProgressTracker,
-    private val recordingTimeManager: RecordingTimeManager
+    private val recordingTimeManager: RecordingTimeManager,
+    private val appStateManager: AppStateManager
 ) {
     private var currentJob: Job? = null
     
@@ -120,14 +121,18 @@ class StartRepeatListeningUseCase @Inject constructor(
             uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
             delay(100) // 카드 뒤집기 애니메이션 대기
             
-            // TtsController를 통한 한글 문장 하이라이트 재생 (AppStateManager가 상태 관리)
-            ttsController.playSentenceWithHighlight(
+            // 한글 문장 하이라이트 설정 (executeRepeatListening에서 직접 관리)
+            appStateManager.updateHighlightState(
+                questionHighlightIndex = -1,
+                answerHighlightIndex = -1,
+                answerKoHighlightIndex = i,  // 문장 인덱스 직접 설정
+                recordingHighlightIndex = -1
+            )
+            
+            // TtsController를 통한 한글 문장 재생 (하이라이트 없음)
+            ttsController.playSentenceForRepeatListening(
                 text = koSentences[i],
-                isKorean = true,
-                onHighlight = { index ->
-                    // AppStateManager가 자동으로 상태 업데이트
-                    Log.d("StartRepeatListeningUseCase", "한글 문장 $i 하이라이트 콜백: $index")
-                }
+                isKorean = true
             )
             
             // 1순위: 저장된 TTS 시간 확인 (이전 영작테스트에서 저장된 시간)
@@ -174,16 +179,21 @@ class StartRepeatListeningUseCase @Inject constructor(
                 uiCallback.onCardFlip(false) // 카드를 영문으로 뒤집기
                 delay(100) // 카드 뒤집기 애니메이션 대기
                 
-                // TtsController를 통한 영문 문장 하이라이트 재생 (AppStateManager가 상태 관리)
-                val enDuration = ttsController.playSentenceWithHighlight(
+                // 첫 번째 반복에서만 영문 하이라이트 설정
+                if (j == 1) {
+                    appStateManager.updateHighlightState(
+                        questionHighlightIndex = -1,
+                        answerHighlightIndex = i,  // 문장 인덱스 직접 설정
+                        answerKoHighlightIndex = -1,
+                        recordingHighlightIndex = -1
+                    )
+                    Log.d("StartRepeatListeningUseCase", "문장 ${i + 1} 영문 하이라이트 설정 (첫 번째 반복)")
+                }
+                
+                // TtsController를 통한 영문 문장 재생 (하이라이트 없음)
+                val enDuration = ttsController.playSentenceForRepeatListening(
                     text = enSentences[i],
-                    isKorean = false,
-                    onHighlight = { index ->
-                        // 첫 번째 반복에서만 로그 출력
-                        if (j == 1) {
-                            Log.d("StartRepeatListeningUseCase", "문장 ${i + 1} 영문 하이라이트 콜백: $index (첫 번째 반복)")
-                        }
-                    }
+                    isKorean = false
                 )
                 
                 // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
