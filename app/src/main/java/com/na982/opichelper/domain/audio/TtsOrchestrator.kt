@@ -273,8 +273,8 @@ class TtsOrchestrator @Inject constructor(
         val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         Log.d("TtsOrchestrator", "📝 문장 분리 완료: ${sentences.size}개 문장")
         
-        // 하이라이트 초기화 (반복듣기에서는 하이라이트 해제하지 않음)
-        // onHighlight(-1) 제거
+        // 하이라이트 초기화 (질문/답변 재생에서는 필요)
+        onHighlight(-1)
         
         for ((idx, sentence) in sentences.withIndex()) {
             Log.d("TtsOrchestrator", "🔤 문장 ${idx + 1}/${sentences.size}: '${sentence.take(20)}...'")
@@ -301,8 +301,8 @@ class TtsOrchestrator @Inject constructor(
             kotlinx.coroutines.delay(400L)
         }
         
-        // 모든 재생 완료 후 하이라이트 해제하지 않음 (반복듣기에서 하이라이트 유지)
-        // onHighlight(-1) 제거
+        // 모든 재생 완료 후 하이라이트 해제 (질문/답변 재생에서는 필요)
+        onHighlight(-1)
         val endTime = System.currentTimeMillis()
         Log.d("TtsOrchestrator", "✅ speakWithHighlight 완료")
         return endTime - startTime
