@@ -177,16 +177,21 @@ class StartRepeatListeningUseCase @Inject constructor(
                 uiCallback.onCardFlip(false) // 카드를 영문으로 뒤집기
                 delay(100) // 카드 뒤집기 애니메이션 대기
                 
-                // 이전 하이라이트 초기화 (영문 재생 시작)
-                uiCallback.onHighlight(i)
+                // 첫 번째 반복에서만 하이라이트 설정 (나머지는 유지)
+                if (j == 1) {
+                    uiCallback.onHighlight(i)
+                    Log.d("StartRepeatListeningUseCase", "문장 ${i + 1} 영문 하이라이트 설정 (첫 번째 반복)")
+                }
 
                 // TtsController를 통한 영문 문장 하이라이트 재생
                 val enDuration = ttsController.playSentenceWithHighlight(
                     text = enSentences[i],
                     isKorean = false,
                     onHighlight = { index ->
-                        // 실시간 영문 하이라이트 - 현재 문장 인덱스 사용
-                        uiCallback.onHighlight(i)
+                        // 첫 번째 반복에서만 실시간 하이라이트 업데이트
+                        if (j == 1) {
+                            uiCallback.onHighlight(i)
+                        }
                     }
                 )
                 

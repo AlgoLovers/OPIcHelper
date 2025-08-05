@@ -172,13 +172,8 @@ class TtsControllerImpl @Inject constructor(
             isPlaying = false
         )
         
-        // 5. 하이라이트 완전 해제
-        appStateManager.updateHighlightState(
-            questionHighlightIndex = -1,
-            answerHighlightIndex = -1,
-            answerKoHighlightIndex = -1,
-            recordingHighlightIndex = -1
-        )
+        // 5. 하이라이트 완전 해제하지 않음 (반복듣기에서 하이라이트 유지)
+        // appStateManager.updateHighlightState(...) 제거
         
         Log.d("TtsControllerImpl", "문장 하이라이트 TTS 재생 완료: ${duration}ms")
         return duration
