@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.delay
 
 /**
  * TtsController 구현체
@@ -190,6 +191,14 @@ class TtsControllerImpl @Inject constructor(
     ): Long {
         Log.d("TtsControllerImpl", "반복듣기 TTS 재생 시작: '${text.take(30)}...', isKorean=$isKorean")
         
+        // 한글 TTS 재생 전 상태 확인 및 초기화
+        if (isKorean) {
+            Log.d("TtsControllerImpl", "한글 TTS 재생 전 상태 확인")
+            // TTS 오케스트레이터의 상태 초기화
+            ttsOrchestrator.resetTtsState()
+            // 상태 초기화는 resetTtsState()에서 완료됨
+        }
+        
         // 1. AppState 업데이트 (TTS 상태만)
         appStateManager.updateTtsPlayingState(
             isQuestionPlaying = false,
@@ -253,10 +262,10 @@ class TtsControllerImpl @Inject constructor(
     override suspend fun stopTts() {
         Log.d("TtsControllerImpl", "TTS 중지 시작")
         
-        // 1. TTS 중지
+        // 1. TTS 중지 (Infrastructure Layer 책임)
         ttsOrchestrator.stop()
         
-        // 2. AppState TTS 상태 초기화
+        // 2. AppState TTS 상태 초기화 (Infrastructure Layer 책임)
         appStateManager.resetTtsState()
         
         Log.d("TtsControllerImpl", "TTS 중지 완료")
@@ -265,10 +274,10 @@ class TtsControllerImpl @Inject constructor(
     override suspend fun stopAllTts() {
         Log.d("TtsControllerImpl", "모든 TTS 중지 시작")
         
-        // 1. 모든 TTS 중지
+        // 1. 모든 TTS 중지 (Infrastructure Layer 책임)
         ttsOrchestrator.stop()
         
-        // 2. AppState TTS 상태 초기화
+        // 2. AppState TTS 상태 초기화 (Infrastructure Layer 책임)
         appStateManager.resetTtsState()
         
         Log.d("TtsControllerImpl", "모든 TTS 중지 완료")

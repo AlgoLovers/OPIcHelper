@@ -88,11 +88,11 @@ class AudioControlManager @Inject constructor(
         
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                // TTS 중지 (객체는 유지)
+                // TTS 중지 (Infrastructure Layer 책임)
                 ttsController.stopAllTts()
                 Log.d("AudioControlManager", "TTS 중지 완료")
                 
-                // 녹음 재생 중지
+                // 녹음 재생 중지 (Infrastructure Layer 책임)
                 recordingAudioPlayer.stopRecording()
                 Log.d("AudioControlManager", "녹음 재생 중지 완료")
                 

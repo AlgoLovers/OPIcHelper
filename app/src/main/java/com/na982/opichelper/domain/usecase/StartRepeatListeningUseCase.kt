@@ -96,6 +96,12 @@ class StartRepeatListeningUseCase @Inject constructor(
         Log.d("StartRepeatListeningUseCase", "현재 스크립트 진행 상황: $currentProgress")
         Log.d("StartRepeatListeningUseCase", "검색한 카테고리: ${data.category}, 스크립트 인덱스: ${data.scriptIndex}")
         
+        // TTS 상태 초기화 (한글 TTS 재생 문제 해결)
+        Log.d("StartRepeatListeningUseCase", "TTS 상태 초기화 시작")
+        ttsController.stopTts()
+        // TTS 중지는 stopTts()에서 완료됨
+        Log.d("StartRepeatListeningUseCase", "TTS 상태 초기화 완료")
+        
         for (i in startIndex until count) {
             // 안전한 코루틴 취소 확인
             if (!CoroutineUtils.checkCancellation("StartRepeatListeningUseCase", "문장 처리")) {

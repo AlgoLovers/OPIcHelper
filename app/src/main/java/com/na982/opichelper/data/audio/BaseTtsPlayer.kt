@@ -6,6 +6,7 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
 import java.util.Locale
+import kotlinx.coroutines.CompletableDeferred
 
 /**
  * TTS 플레이어들의 공통 로직을 담은 베이스 클래스
@@ -21,6 +22,7 @@ abstract class BaseTtsPlayer(
     protected var tts: TextToSpeech? = null
     protected var isInitialized = false
     protected var _isPlaying = false
+    private var initializationDeferred: CompletableDeferred<Boolean>? = null
     
     init {
         initializeTts()
@@ -30,6 +32,10 @@ abstract class BaseTtsPlayer(
         val startTime = System.currentTimeMillis()
         Log.d(logTag, "$serviceName 초기화 시작")
         
+        // 이전 초기화가 진행 중이면 취소
+        initializationDeferred?.cancel()
+        initializationDeferred = CompletableDeferred()
+        
         tts = TextToSpeech(context) { status ->
             val initTime = System.currentTimeMillis() - startTime
             if (status == TextToSpeech.SUCCESS) {
@@ -37,19 +43,38 @@ abstract class BaseTtsPlayer(
                 isInitialized = result == TextToSpeech.LANG_AVAILABLE || 
                                result == TextToSpeech.LANG_COUNTRY_AVAILABLE
                 Log.d(logTag, "$serviceName 초기화 완료: $isInitialized (${initTime}ms)")
+                initializationDeferred?.complete(isInitialized)
             } else {
                 Log.e(logTag, "$serviceName 초기화 실패 (${initTime}ms)")
+                isInitialized = false
+                initializationDeferred?.complete(false)
             }
         }
     }
     
-    override fun isAvailable(): Boolean {
+    override suspend fun isAvailable(): Boolean {
         Log.d(logTag, "$serviceName 사용 가능 여부: $isInitialized (tts=${tts != null})")
         
-        // TTS 객체가 null이면 재초기화 시도
-        if (tts == null && !isInitialized) {
+        // TTS 객체가 null이거나 초기화되지 않았으면 재초기화 시도
+        if (tts == null || !isInitialized) {
             Log.d(logTag, "$serviceName 재초기화 필요 - 초기화 시작")
             initializeTts()
+            
+            // 초기화 완료까지 대기
+            try {
+                val initResult = initializationDeferred?.await() ?: false
+                Log.d(logTag, "$serviceName 재초기화 결과: $initResult")
+                return initResult
+            } catch (e: Exception) {
+                Log.e(logTag, "$serviceName 재초기화 대기 중 오류", e)
+                return false
+            }
+        }
+        
+        // TTS 객체가 여전히 null이면 false 반환
+        if (tts == null) {
+            Log.w(logTag, "$serviceName TTS 객체가 null")
+            return false
         }
         
         return isInitialized

@@ -36,7 +36,7 @@ interface TtsPlayer {
     /**
      * TTS 서비스 사용 가능 여부
      */
-    fun isAvailable(): Boolean
+    suspend fun isAvailable(): Boolean
     
     /**
      * TTS 서비스 이름

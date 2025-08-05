@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 /**
  * 새로운 아키텍처에 맞는 MainViewModel
@@ -472,8 +474,18 @@ class MainViewModel @Inject constructor(
     
     // UI에서 필요한 추가 메서드들
     fun handleBackPress() {
-        // TODO: 구현 필요
-        Log.d("MainViewModelRefactored", "백키 처리")
+        Log.d("MainViewModelRefactored", "백키 처리 - ButtonEventHandler를 통한 처리")
+        
+        // Presentation Layer에서 Domain Layer의 ButtonEventHandler 호출
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Stop 이벤트를 ButtonEventHandler에 전달
+                buttonEventHandler.handleEvent(ButtonEvent.StopClick(ButtonFunction.Stop))
+                Log.d("MainViewModelRefactored", "백키 처리 완료")
+            } catch (e: Exception) {
+                Log.e("MainViewModelRefactored", "백키 처리 중 오류", e)
+            }
+        }
     }
     
     fun handleSettingsEnter() {

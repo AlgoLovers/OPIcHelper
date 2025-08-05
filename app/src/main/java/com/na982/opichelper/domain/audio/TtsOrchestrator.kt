@@ -86,7 +86,46 @@ class TtsOrchestrator @Inject constructor(
      */
     private suspend fun speakEnglish(text: String, onComplete: (() -> Unit)?): Boolean {
         Log.d("TtsOrchestrator", "🇺🇸 영문 TTS 재생: $text")
-        return googleTtsPlayer.speak(text, onComplete)
+        
+        // 재시도 로직 포함
+        var retryCount = 0
+        val maxRetries = 3
+        
+        while (retryCount < maxRetries) {
+            try {
+                if (googleTtsPlayer.isAvailable()) {
+                    Log.d("TtsOrchestrator", "🇺🇸 Google TTS 사용 가능, 재생 시도")
+                    val success = googleTtsPlayer.speak(text, onComplete)
+                    if (success) {
+                        Log.d("TtsOrchestrator", "🇺🇸 영문 TTS 성공: Google TTS")
+                        return true
+                    } else {
+                        Log.w("TtsOrchestrator", "🇺🇸 Google TTS 재생 실패, 재시도 ${retryCount + 1}/$maxRetries")
+                        retryCount++
+                        if (retryCount < maxRetries) {
+                            kotlinx.coroutines.delay(200) // 200ms 대기 후 재시도
+                        }
+                    }
+                } else {
+                    Log.w("TtsOrchestrator", "🇺🇸 Google TTS 사용 불가, 재시도 ${retryCount + 1}/$maxRetries")
+                    retryCount++
+                    if (retryCount < maxRetries) {
+                        kotlinx.coroutines.delay(200) // 200ms 대기 후 재시도
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TtsOrchestrator", "🇺🇸 Google TTS 초기화/재생 중 오류", e)
+                retryCount++
+                if (retryCount < maxRetries) {
+                    kotlinx.coroutines.delay(200) // 200ms 대기 후 재시도
+                }
+            }
+        }
+        
+        // 최대 재시도 횟수 초과
+        Log.e("TtsOrchestrator", "🇺🇸 Google TTS 최대 재시도 횟수 초과")
+        onComplete?.invoke()
+        return false
     }
     
     /**
@@ -100,29 +139,75 @@ class TtsOrchestrator @Inject constructor(
             val player = koreanTtsPlayers[i]
             Log.d("TtsOrchestrator", "🇰🇷 시도 중: ${player.getServiceName()} (인덱스: $i)")
             
-            if (player.isAvailable()) {
-                Log.d("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 사용 가능, 재생 시도")
-                val success = player.speak(text, onComplete)
-                if (success) {
-                    currentKoreanTtsIndex = i // 성공한 서비스로 업데이트
-                    Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 성공: ${player.getServiceName()}")
-                    return true
-                } else {
-                    Log.w("TtsOrchestrator", "🇰🇷 한글 TTS 실패: ${player.getServiceName()}, 다음 서비스 시도")
-                    currentKoreanTtsIndex = i + 1
+            // TTS 서비스 사용 가능 여부 확인 (재시도 로직 포함)
+            var retryCount = 0
+            val maxRetries = 3
+            
+            while (retryCount < maxRetries) {
+                try {
+                    if (player.isAvailable()) {
+                        Log.d("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 사용 가능, 재생 시도")
+                        val success = player.speak(text, onComplete)
+                        if (success) {
+                            currentKoreanTtsIndex = i // 성공한 서비스로 업데이트
+                            Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 성공: ${player.getServiceName()}")
+                            return true
+                        } else {
+                            Log.w("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 재생 실패, 재시도 ${retryCount + 1}/$maxRetries")
+                            retryCount++
+                            if (retryCount < maxRetries) {
+                                kotlinx.coroutines.delay(200) // 200ms 대기 후 재시도
+                            }
+                        }
+                    } else {
+                        Log.w("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 사용 불가, 재시도 ${retryCount + 1}/$maxRetries")
+                        retryCount++
+                        if (retryCount < maxRetries) {
+                            kotlinx.coroutines.delay(200) // 200ms 대기 후 재시도
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 초기화/재생 중 오류", e)
+                    retryCount++
+                    if (retryCount < maxRetries) {
+                        kotlinx.coroutines.delay(200) // 200ms 대기 후 재시도
+                    }
                 }
-            } else {
-                Log.w("TtsOrchestrator", "🇰🇷 한글 TTS 서비스 사용 불가: ${player.getServiceName()}, 다음 서비스 시도")
-                currentKoreanTtsIndex = i + 1
             }
+            
+            // 최대 재시도 횟수 초과 시 다음 서비스로 넘어감
+            Log.e("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 최대 재시도 횟수 초과, 다음 서비스 시도")
+            currentKoreanTtsIndex = i + 1
         }
         
-        // 모든 서비스 실패
-        Log.e("TtsOrchestrator", "🇰🇷 모든 한글 TTS 서비스 실패")
+        // 모든 서비스 실패 시 currentKoreanTtsIndex를 0으로 리셋
+        currentKoreanTtsIndex = 0
+        Log.e("TtsOrchestrator", "🇰🇷 모든 한글 TTS 서비스 실패, 인덱스 리셋")
         onComplete?.invoke()
         return false
     }
     
+    /**
+     * TTS 재생 전 상태 초기화
+     */
+    suspend fun resetTtsState() {
+        Log.d("TtsOrchestrator", "TTS 상태 초기화")
+        try {
+            // 모든 TTS 플레이어 중지
+            googleTtsPlayer.stop()
+            for (player in koreanTtsPlayers) {
+                player.stop()
+            }
+            
+            // 한글 TTS 인덱스 리셋
+            currentKoreanTtsIndex = 0
+            
+            Log.d("TtsOrchestrator", "TTS 상태 초기화 완료")
+        } catch (e: Exception) {
+            Log.e("TtsOrchestrator", "TTS 상태 초기화 실패", e)
+        }
+    }
+
     /**
      * TTS 재생 중지
      */
@@ -248,19 +333,25 @@ class TtsOrchestrator @Inject constructor(
     /**
      * 사용 가능한 한글 TTS 서비스 목록 반환
      */
-    fun getAvailableKoreanTtsServices(): List<String> {
-        return koreanTtsPlayers.mapNotNull { player -> 
-            if (player.isAvailable()) player.getServiceName() else null 
+    suspend fun getAvailableKoreanTtsServices(): List<String> {
+        val availableServices = mutableListOf<String>()
+        for (player in koreanTtsPlayers) {
+            if (player.isAvailable()) {
+                availableServices.add(player.getServiceName())
+            }
         }
+        return availableServices
     }
     
     /**
      * 한글 TTS 서비스 상태 정보 반환
      */
-    fun getKoreanTtsServiceStatus(): List<Pair<String, Boolean>> {
-        return koreanTtsPlayers.map { player -> 
-            player.getServiceName() to player.isAvailable() 
+    suspend fun getKoreanTtsServiceStatus(): List<Pair<String, Boolean>> {
+        val statusList = mutableListOf<Pair<String, Boolean>>()
+        for (player in koreanTtsPlayers) {
+            statusList.add(player.getServiceName() to player.isAvailable())
         }
+        return statusList
     }
     
     /**

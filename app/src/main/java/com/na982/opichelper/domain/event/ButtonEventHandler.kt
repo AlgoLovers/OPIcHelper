@@ -142,11 +142,11 @@ class ButtonEventHandler @Inject constructor(
     private suspend fun handleStopClick(event: ButtonEvent.StopClick): ButtonEventResult {
         Log.d("ButtonEventHandler", "중지 이벤트 처리: ${event.buttonFunction}")
         
-        // 1. 모든 오디오 중지
+        // 1. 모든 오디오 중지 (Infrastructure Layer 호출)
         audioControlManager.stopAllAudio()
         
-        // 2. 모든 버튼 상태를 Idle로 변경
-        appStateManager.updateButtonState(event.buttonFunction, ButtonState.Idle)
+        // 2. 모든 버튼 상태를 Idle로 변경 (Domain Layer에서 처리)
+        resetAllButtonStates()
         
         return ButtonEventResult.Success
     }
@@ -161,6 +161,14 @@ class ButtonEventHandler @Inject constructor(
         audioControlManager.stopAllAudio()
         
         // 모든 버튼 상태를 Idle로 변경
+        resetAllButtonStates()
+    }
+    
+    /**
+     * 모든 버튼 상태를 Idle로 초기화 (Domain Layer 책임)
+     */
+    private suspend fun resetAllButtonStates() {
+        Log.d("ButtonEventHandler", "모든 버튼 상태를 Idle로 초기화")
         appStateManager.updateButtonState(ButtonFunction.QuestionPlay, ButtonState.Idle)
         appStateManager.updateButtonState(ButtonFunction.AnswerPlay, ButtonState.Idle)
         appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Idle)
