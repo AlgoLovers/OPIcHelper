@@ -15,7 +15,7 @@ class UserPreferencesRepositoryImpl(private val context: Context) : UserPreferen
     private val _userLevel = MutableStateFlow(UserLevel.IH)
     override val userLevel: StateFlow<UserLevel> = _userLevel
     
-    private val _selectedDataSource = MutableStateFlow(DataSource.AL)
+    private val _selectedDataSource = MutableStateFlow(DataSource.SAMPLE_SCRIPT)
     override val selectedDataSource: StateFlow<DataSource> = _selectedDataSource
     
     private val _englishTtsRate = MutableStateFlow(1.0f)
@@ -27,8 +27,8 @@ class UserPreferencesRepositoryImpl(private val context: Context) : UserPreferen
         _userLevel.value = UserLevel.valueOf(savedLevel ?: UserLevel.IH.name)
         
         // 저장된 데이터 소스 복원
-        val savedDataSource = prefs.getString("data_source", DataSource.AL.name)
-        _selectedDataSource.value = DataSource.valueOf(savedDataSource ?: DataSource.AL.name)
+        val savedDataSource = prefs.getString("data_source", DataSource.SAMPLE_SCRIPT.name)
+        _selectedDataSource.value = DataSource.valueOf(savedDataSource ?: DataSource.SAMPLE_SCRIPT.name)
         
         // 저장된 TTS 속도 복원
         val savedTtsRate = prefs.getFloat("english_tts_rate", 1.0f)

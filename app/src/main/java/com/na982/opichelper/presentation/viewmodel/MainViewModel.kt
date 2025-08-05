@@ -482,10 +482,22 @@ class MainViewModel @Inject constructor(
     }
     
     fun handleCategoryChange(category: String) {
+        Log.d("MainViewModel", "카테고리 변경: $category")
+        
+        // 1. 재생 중인 오디오 중지 (일시 중지)
+        audioControlManager.stopAllAudio()
+        
+        // 2. 카테고리 변경
         categoryManager.changeCategory(category)
     }
     
     fun handleMemorizeLevelChange(level: String) {
+        Log.d("MainViewModel", "암기레벨 변경: $level")
+        
+        // 1. 재생 중인 오디오 중지 (일시 중지)
+        audioControlManager.stopAllAudio()
+        
+        // 2. 암기레벨 변경
         selectMemorizeLevel(level)
     }
     

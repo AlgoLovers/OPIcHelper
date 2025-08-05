@@ -27,20 +27,31 @@ abstract class BaseTtsPlayer(
     }
     
     private fun initializeTts() {
+        val startTime = System.currentTimeMillis()
+        Log.d(logTag, "$serviceName 초기화 시작")
+        
         tts = TextToSpeech(context) { status ->
+            val initTime = System.currentTimeMillis() - startTime
             if (status == TextToSpeech.SUCCESS) {
                 val result = tts?.setLanguage(locale)
                 isInitialized = result == TextToSpeech.LANG_AVAILABLE || 
                                result == TextToSpeech.LANG_COUNTRY_AVAILABLE
-                Log.d(logTag, "$serviceName 초기화 완료: $isInitialized")
+                Log.d(logTag, "$serviceName 초기화 완료: $isInitialized (${initTime}ms)")
             } else {
-                Log.e(logTag, "$serviceName 초기화 실패")
+                Log.e(logTag, "$serviceName 초기화 실패 (${initTime}ms)")
             }
         }
     }
     
     override fun isAvailable(): Boolean {
-        Log.d(logTag, "$serviceName 사용 가능 여부: $isInitialized")
+        Log.d(logTag, "$serviceName 사용 가능 여부: $isInitialized (tts=${tts != null})")
+        
+        // TTS 객체가 null이면 재초기화 시도
+        if (tts == null && !isInitialized) {
+            Log.d(logTag, "$serviceName 재초기화 필요 - 초기화 시작")
+            initializeTts()
+        }
+        
         return isInitialized
     }
     
@@ -157,14 +168,29 @@ abstract class BaseTtsPlayer(
     
     override fun release() {
         try {
+            Log.d(logTag, "$serviceName 해제 시작")
+            
+            // 1. TTS 중지
             tts?.stop()
+            Log.d(logTag, "$serviceName 중지 완료")
+            
+            // 2. TTS 완전 종료
             tts?.shutdown()
+            Log.d(logTag, "$serviceName 종료 완료")
+            
+            // 3. 상태 초기화
+            tts = null
+            isInitialized = false
+            _isPlaying = false
+            
+            Log.d(logTag, "$serviceName 해제 완료")
         } catch (e: Exception) {
             Log.e(logTag, "$serviceName 해제 중 오류", e)
+            // 오류가 발생해도 상태는 초기화
+            tts = null
+            isInitialized = false
+            _isPlaying = false
         }
-        tts = null
-        isInitialized = false
-        _isPlaying = false
     }
     
     /**
@@ -176,4 +202,31 @@ abstract class BaseTtsPlayer(
      * 음성 피치 설정 (하위 클래스에서 오버라이드 가능)
      */
     protected open fun getPitch(): Float = 1.0f
+    
+    /**
+     * TTS 재초기화 (release 후 재사용 시)
+     */
+    fun reinitializeTts() {
+        Log.d(logTag, "$serviceName 재초기화 시작")
+        
+        // 기존 객체가 있으면 해제
+        if (tts != null) {
+            try {
+                tts?.stop()
+                tts?.shutdown()
+            } catch (e: Exception) {
+                Log.e(logTag, "$serviceName 기존 객체 해제 중 오류", e)
+            }
+        }
+        
+        // 상태 초기화
+        tts = null
+        isInitialized = false
+        _isPlaying = false
+        
+        // 새로운 TTS 객체 생성
+        initializeTts()
+        
+        Log.d(logTag, "$serviceName 재초기화 완료")
+    }
 } 

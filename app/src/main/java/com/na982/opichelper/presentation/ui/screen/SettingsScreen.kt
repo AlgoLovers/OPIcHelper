@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.na982.opichelper.domain.entity.DataSource
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 
@@ -50,6 +51,7 @@ fun SettingsScreen(
     var isAutoPlay by remember { mutableStateOf(true) }
     var selectedTtsService by remember { mutableStateOf("Google TTS") }
     val userLevel by userPreferencesRepository.userLevel.collectAsState()
+    val selectedDataSource by userPreferencesRepository.selectedDataSource.collectAsState()
     val scrollState = rememberScrollState()
     
     Column(
@@ -159,6 +161,53 @@ fun SettingsScreen(
                         RadioButton(
                             selected = userLevel == level,
                             onClick = { userPreferencesRepository.setUserLevel(level) }
+                        )
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // 데이터 소스 설정
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "데이터 소스",
+                    fontSize = 18.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                DataSource.values().forEach { dataSource ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = dataSource.displayName,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                            )
+                            Text(
+                                text = "폴더: ${dataSource.folderName}",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                        
+                        RadioButton(
+                            selected = selectedDataSource == dataSource,
+                            onClick = { userPreferencesRepository.setDataSource(dataSource) }
                         )
                     }
                 }

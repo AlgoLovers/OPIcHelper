@@ -25,7 +25,10 @@ interface IAudioControlManager {
     fun playAnswer(qaItem: QaItem, onCompletion: () -> Unit)
     
     /**
-     * 모든 오디오 중지
+     * 모든 오디오 중지 (일시 중지 - 재생 중단용)
+     * - 재생 중 같은 버튼 클릭
+     * - 재생 중 다른 버튼 클릭
+     * - 카테고리/암기레벨 변경 시
      */
     fun stopAllAudio()
     
@@ -33,4 +36,18 @@ interface IAudioControlManager {
      * 특정 버튼의 오디오 중지
      */
     fun stopSpecificAudio(buttonFunction: String)
+    
+    /**
+     * 모든 오디오 중지 및 TTS 플레이어 해제 (완전 종료용)
+     * - 앱 백키로 종료 시
+     * - 앱 완전 종료 시
+     */
+    fun releaseAllAudio()
+    
+    /**
+     * TTS 플레이어 재초기화 (release 후 재사용 시)
+     * - 앱 재시작 시
+     * - TTS 오류 복구 시
+     */
+    fun reinitializeTtsPlayers()
 } 

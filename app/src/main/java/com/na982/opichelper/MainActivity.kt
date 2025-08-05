@@ -100,6 +100,10 @@ class MainActivity : ComponentActivity() {
             Log.d("MainActivity", "앱 재시작 감지 - 상태 초기화")
             // MemorizationViewModel 상태 초기화는 MainScreen에서 처리
             isFinishing = false
+            
+            // TTS 플레이어 재초기화 (release 후 재사용 시)
+            audioControlManager.reinitializeTtsPlayers()
+            Log.d("MainActivity", "앱 재시작 - TTS 플레이어 재초기화 완료")
         }
         
         // 포그라운드로 복귀 시 상태 확인
@@ -159,7 +163,7 @@ class MainActivity : ComponentActivity() {
 
     /**
      * 모든 리소스를 정리하는 함수
-     * - TTS 재생 중지
+     * - TTS 재생 중지 및 플레이어 해제
      * - 하이라이트 초기화
      * - 오디오 플레이어 중지
      * - WakeLock 해제
@@ -168,9 +172,9 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "모든 리소스 정리 시작")
         
         try {
-            // 1. 모든 오디오 중지 (TTS + 녹음)
-            audioControlManager.stopAllAudio()
-            Log.d("MainActivity", "모든 오디오 중지 완료")
+            // 1. 모든 오디오 중지 및 TTS 플레이어 해제 (완전 종료용)
+            audioControlManager.releaseAllAudio()
+            Log.d("MainActivity", "모든 오디오 중지 및 TTS 플레이어 해제 완료")
             
             // 2. WakeLock 해제
             wakeLockManager.releaseWakeLock()

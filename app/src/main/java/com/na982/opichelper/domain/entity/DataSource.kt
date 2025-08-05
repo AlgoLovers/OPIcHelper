@@ -7,7 +7,8 @@ enum class DataSource(val folderName: String, val displayName: String) {
     AL("al", "AL"),
     IH("ih", "IH"),
     IH_RAW("ih_raw", "IH Raw"),
-    IM("im", "IM");
+    IM("im", "IM"),
+    SAMPLE_SCRIPT("sample_script", "Sample Script");
     
     companion object {
         fun fromFolderName(folderName: String): DataSource? {

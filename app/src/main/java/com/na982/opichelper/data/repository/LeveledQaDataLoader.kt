@@ -21,6 +21,7 @@ class LeveledQaDataLoader(private val context: Context) {
         UserLevel.AL to "al",
         UserLevel.IH to "ih", 
         UserLevel.IH_RAW to "ih_raw",  // hi_raw에서 ih_raw로 다시 변경
+        UserLevel.SAMPLE to "sample_script",
         UserLevel.IM to "im"
     )
     
@@ -29,7 +30,7 @@ class LeveledQaDataLoader(private val context: Context) {
      */
     suspend fun loadQaItemsForLevel(level: UserLevel): List<QaItem> = withContext(Dispatchers.IO) {
         try {
-            val folderName = levelFolderMapping[level] ?: "ih"
+            val folderName = levelFolderMapping[level] ?: "sample_script"
             val allQaItems = mutableListOf<QaItem>()
             
             // 정의된 카테고리 순서대로 파일 로드

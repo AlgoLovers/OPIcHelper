@@ -87,16 +87,16 @@ class ButtonEventHandler @Inject constructor(
     private suspend fun handleMemorizeTestClick(event: ButtonEvent.MemorizeTestClick): ButtonEventResult {
         Log.d("ButtonEventHandler", "암기 테스트 이벤트 처리 시작 - 레벨: ${event.memorizeLevel}")
         
-        // 1. 버튼 상태를 Loading으로 변경
-        appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Loading)
+        // 1. 다른 작업 중단 (다른 버튼이 실행 중이면 중단)
+        stopOtherOperations()
         
-        // 2. 전략 팩토리에서 적절한 전략 가져오기
-        val strategy = strategyFactory.getStrategy(event.memorizeLevel)
-        
-        // 3. 버튼 상태를 Playing으로 변경
+        // 2. 버튼 상태를 Loading으로 변경
         appStateManager.updateButtonState(ButtonFunction.MemorizeTest, ButtonState.Playing)
         
-        // 4. 선택된 전략 실행
+        // 3. 전략 팩토리에서 적절한 전략 가져오기
+        val strategy = strategyFactory.getStrategy(event.memorizeLevel)
+        
+        // 5. 선택된 전략 실행
         strategy.execute(
             category = event.category,
             scriptIndex = event.scriptIndex,
@@ -118,13 +118,10 @@ class ButtonEventHandler @Inject constructor(
         // 1. 다른 작업 중단 (다른 버튼이 실행 중이면 중단)
         stopOtherOperations()
         
-        // 2. 버튼 상태를 Loading으로 변경
-        appStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Loading)
-        
-        // 3. 버튼 상태를 Playing으로 변경
+        // 2. 버튼 상태를 Playing으로 변경 (Loading 건너뛰기)
         appStateManager.updateButtonState(ButtonFunction.RecordingPlay, ButtonState.Playing)
         
-        // 4. 녹음 재생 전용 UseCase 실행 (이벤트 기반)
+        // 3. 녹음 재생 전용 UseCase 실행 (이벤트 기반)
         playRecordingUseCase.execute(
             memorizeLevel = event.memorizeLevel,
             category = event.category,

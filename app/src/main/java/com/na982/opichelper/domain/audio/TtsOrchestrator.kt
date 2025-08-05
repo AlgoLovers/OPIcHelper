@@ -3,6 +3,7 @@ package com.na982.opichelper.domain.audio
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import com.na982.opichelper.data.audio.BaseTtsPlayer
 import com.na982.opichelper.domain.button.ButtonStateObserver
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
@@ -201,6 +202,28 @@ class TtsOrchestrator @Inject constructor(
             Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제 완료")
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 플레이어 해제 실패", e)
+        }
+    }
+    
+    /**
+     * 모든 TTS 플레이어 재초기화 (release 후 재사용 시)
+     */
+    fun reinitializeAllPlayers() {
+        Log.d("TtsOrchestrator", "모든 TTS 플레이어 재초기화")
+        try {
+            // Google TTS 재초기화
+            if (googleTtsPlayer is BaseTtsPlayer) {
+                (googleTtsPlayer as BaseTtsPlayer).reinitializeTts()
+            }
+            
+            // Samsung TTS 재초기화
+            if (samsungTtsPlayer is BaseTtsPlayer) {
+                (samsungTtsPlayer as BaseTtsPlayer).reinitializeTts()
+            }
+            
+            Log.d("TtsOrchestrator", "모든 TTS 플레이어 재초기화 완료")
+        } catch (e: Exception) {
+            Log.e("TtsOrchestrator", "TTS 플레이어 재초기화 실패", e)
         }
     }
     
