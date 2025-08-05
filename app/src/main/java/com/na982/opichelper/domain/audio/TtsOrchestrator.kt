@@ -280,7 +280,7 @@ class TtsOrchestrator @Inject constructor(
             Log.d("TtsOrchestrator", "🔤 문장 ${idx + 1}/${sentences.size}: '${sentence.take(20)}...'")
             
             // 현재 문장 하이라이트 설정
-            // onHighlight(idx)
+            onHighlight(idx)
             Log.d("TtsOrchestrator", "✨ 하이라이트 설정: 문장 $idx")
             
             val isKorean = sentence.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
