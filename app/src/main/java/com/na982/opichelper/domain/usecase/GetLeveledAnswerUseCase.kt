@@ -17,10 +17,8 @@ class GetLeveledAnswerUseCase @Inject constructor(
     fun getCurrentAnswer(qaItem: QaItem?): String {
         if (qaItem == null) return ""
         
-        val currentUserLevel = userPreferencesRepository.getUserLevel()
-        val leveledAnswer = qaItem.answers[currentUserLevel]
-        
-        return leveledAnswer?.answerEn ?: qaItem.answers.values.firstOrNull()?.answerEn ?: ""
+        // QaItem에서 직접 영어 답변 문장들을 가져옴
+        return qaItem.answerEnSentences.joinToString(" ")
     }
     
     /**
@@ -29,9 +27,7 @@ class GetLeveledAnswerUseCase @Inject constructor(
     fun getCurrentAnswerKo(qaItem: QaItem?): String {
         if (qaItem == null) return ""
         
-        val currentUserLevel = userPreferencesRepository.getUserLevel()
-        val leveledAnswer = qaItem.answers[currentUserLevel]
-        
-        return leveledAnswer?.answerKo ?: qaItem.answers.values.firstOrNull()?.answerKo ?: ""
+        // QaItem에서 직접 한국어 답변 문장들을 가져옴
+        return qaItem.answerKoSentences.joinToString(" ")
     }
 } 

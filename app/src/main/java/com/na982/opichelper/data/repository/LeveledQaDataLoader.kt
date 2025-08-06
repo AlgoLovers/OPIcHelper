@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.na982.opichelper.domain.entity.LeveledAnswer
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.util.SentenceParser
@@ -65,17 +64,21 @@ class LeveledQaDataLoader(private val context: Context) {
                         
                         // 기존 JSON 구조를 새로운 QaItem 구조로 변환
                         val items = assetItems.map { asset ->
-                            val leveledAnswer = LeveledAnswer(
-                                answerEn = asset.answer_en,
-                                answerKo = asset.answer_ko
-                            )
+                            // 4개의 문장 리스트 파싱
+                            val questionEnSentences = SentenceParser.parseEnglishSentences(asset.question_en)
+                            val questionKoSentences = SentenceParser.parseKoreanSentences(asset.question_ko)
+                            val answerEnSentences = SentenceParser.parseEnglishSentences(asset.answer_en)
+                            val answerKoSentences = SentenceParser.parseKoreanSentences(asset.answer_ko)
                             
                             QaItem(
                                 id = asset.id ?: "",
                                 category = getCategoryFromFileName(fileName),
                                 questionEn = asset.question_en,
                                 questionKo = asset.question_ko,
-                                answers = mapOf(level to leveledAnswer)
+                                questionEnSentences = questionEnSentences,
+                                questionKoSentences = questionKoSentences,
+                                answerEnSentences = answerEnSentences,
+                                answerKoSentences = answerKoSentences
                             )
                         }
                         
@@ -157,11 +160,6 @@ class LeveledQaDataLoader(private val context: Context) {
                 
                 // 기존 JSON 구조를 새로운 QaItem 구조로 변환
                 val items = assetItems.map { asset ->
-                    val leveledAnswer = LeveledAnswer(
-                        answerEn = asset.answer_en,
-                        answerKo = asset.answer_ko
-                    )
-                    
                     // 4개의 문장 리스트 파싱
                     val questionEnSentences = SentenceParser.parseEnglishSentences(asset.question_en)
                     val questionKoSentences = SentenceParser.parseKoreanSentences(asset.question_ko)
@@ -173,7 +171,6 @@ class LeveledQaDataLoader(private val context: Context) {
                         category = category,
                         questionEn = asset.question_en,
                         questionKo = asset.question_ko,
-                        answers = mapOf(level to leveledAnswer),
                         questionEnSentences = questionEnSentences,
                         questionKoSentences = questionKoSentences,
                         answerEnSentences = answerEnSentences,

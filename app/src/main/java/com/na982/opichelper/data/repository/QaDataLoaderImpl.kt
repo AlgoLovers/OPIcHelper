@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.repository.QaDataLoader
+import com.na982.opichelper.domain.util.SentenceParser
 import java.io.InputStreamReader
 import javax.inject.Inject
 
@@ -61,17 +62,22 @@ class QaDataLoaderImpl @Inject constructor(
                 // TempQaItem을 QaItem으로 변환
                 val qaItems = tempQaItems.map { temp ->
                     Log.d("QaDataLoaderImpl", "Converting item: id=${temp.id}, question_en=${temp.question_en?.take(50)}..., answer_en=${temp.answer_en?.take(50)}...")
+                    
+                    // 문장 파싱
+                    val questionEnSentences = SentenceParser.parseEnglishSentences(temp.question_en ?: "")
+                    val questionKoSentences = SentenceParser.parseKoreanSentences(temp.question_ko ?: "")
+                    val answerEnSentences = SentenceParser.parseEnglishSentences(temp.answer_en ?: "")
+                    val answerKoSentences = SentenceParser.parseKoreanSentences(temp.answer_ko ?: "")
+                    
                     QaItem(
                         id = temp.id,
                         category = categoryDisplayNames.getOrNull(index) ?: fileName,
-                        questionEn = temp.question_en ?: "", // Added null check and default
-                        questionKo = temp.question_ko ?: "", // Added null check and default
-                        answers = mapOf(
-                            com.na982.opichelper.domain.entity.UserLevel.AL to com.na982.opichelper.domain.entity.LeveledAnswer(
-                                answerEn = temp.answer_en ?: "", // Added null check and default
-                                answerKo = temp.answer_ko ?: ""  // Added null check and default
-                            )
-                        )
+                        questionEn = temp.question_en ?: "",
+                        questionKo = temp.question_ko ?: "",
+                        questionEnSentences = questionEnSentences,
+                        questionKoSentences = questionKoSentences,
+                        answerEnSentences = answerEnSentences,
+                        answerKoSentences = answerKoSentences
                     )
                 }
                 

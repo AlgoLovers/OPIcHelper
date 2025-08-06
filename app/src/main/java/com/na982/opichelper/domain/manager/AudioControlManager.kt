@@ -62,7 +62,7 @@ class AudioControlManager @Inject constructor(
                 _error.value = null
                 
                 // TTS 재생 (하이라이트 포함) - suspend 함수이므로 await
-                ttsController.playAnswer(qaItem.answers.values.first().answerEn)
+                ttsController.playAnswer(qaItem.answerEnSentences.joinToString(" "))
                 
                 // 재생 완료 시 콜백 호출
                 onCompletion()

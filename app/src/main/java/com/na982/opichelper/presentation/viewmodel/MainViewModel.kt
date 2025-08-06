@@ -232,8 +232,8 @@ class MainViewModel @Inject constructor(
                 
                 val category = currentState.currentCategory ?: return@launch
                 val scriptIndex = currentState.currentIndex
-                val answerKo = currentQaItem.answers.values.first().answerKo
-                val answerEn = currentQaItem.answers.values.first().answerEn
+                val answerKo = currentQaItem.answerKoSentences.joinToString(" ")
+                val answerEn = currentQaItem.answerEnSentences.joinToString(" ")
                 
                 Log.d("MainViewModelRefactored", "매칭된 MemorizeLevel: $memorizeLevel")
                 val event = ButtonEvent.MemorizeTestClick(
@@ -275,8 +275,8 @@ class MainViewModel @Inject constructor(
                 val currentQaItem = currentState.currentQaItem ?: return@launch
                 val category = currentState.currentCategory ?: return@launch
                 val scriptIndex = currentState.currentIndex
-                val answerKo = currentQaItem.answers.values.first().answerKo
-                val answerEn = currentQaItem.answers.values.first().answerEn
+                val answerKo = currentQaItem.answerKoSentences.joinToString(" ")
+                val answerEn = currentQaItem.answerEnSentences.joinToString(" ")
                 
                 Log.d("MainViewModelRefactored", "매칭된 MemorizeLevel: $memorizeLevel")
                 val event = ButtonEvent.RecordingPlayClick(
