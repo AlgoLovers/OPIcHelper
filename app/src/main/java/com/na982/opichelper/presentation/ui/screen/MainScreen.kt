@@ -293,23 +293,19 @@ fun MainScreenRefactored(
                     if (!isFullMemorizationMode || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
                         // 답변 카드 (기존 아름다운 디자인 복원)
                         // 하이라이트 상태는 AppState만 사용 (단일 진실 소스)
-                        val finalHighlightIndex = when {
-                            selectedLevel == "반복듣기" && appState.isAnswerCardFlipped -> appState.answerKoHighlightIndex
-                            selectedLevel == "반복듣기" -> appState.answerHighlightIndex
-                            else -> appState.answerHighlightIndex
-                        }
-                        val finalAnswerKoHighlightIndex = appState.answerKoHighlightIndex
-                        val finalRecordingHighlightIndex = appState.recordingHighlightIndex
+                        val answerHighlightIndex = appState.answerHighlightIndex
+                        val answerKoHighlightIndex = appState.answerKoHighlightIndex
+                        val recordingHighlightIndex = appState.recordingHighlightIndex
                         
-                        Log.d("MainScreenRefactored", "하이라이트 상태 - selectedLevel: $selectedLevel, isAnswerCardFlipped: ${appState.isAnswerCardFlipped}")
-                        Log.d("MainScreenRefactored", "하이라이트 상태 - finalHighlightIndex: $finalHighlightIndex, finalAnswerKoHighlightIndex: $finalAnswerKoHighlightIndex")
+                        Log.d("MainScreenRefactored", "답변 카드 하이라이트 상태: selectedLevel=$selectedLevel, appState.answerHighlightIndex=${appState.answerHighlightIndex}, finalHighlightIndex=$answerHighlightIndex")
+                        Log.d("MainScreenRefactored", "답변 카드 하이라이트 상세: TTS 상태 - isQuestionPlaying=${appState.isQuestionPlaying}, isAnswerPlaying=${appState.isAnswerPlaying}, isPlaying=${appState.isPlaying}")
                         
                         AnswerCard(
                             currentAnswer = viewModel.getCurrentAnswer(qaItem),
                             currentAnswerKo = viewModel.getCurrentAnswerKo(qaItem),
-                            highlightIndex = finalHighlightIndex,
-                            answerKoHighlightIndex = finalAnswerKoHighlightIndex,
-                            recordingHighlightIndex = finalRecordingHighlightIndex,
+                            highlightIndex = answerHighlightIndex,
+                            answerKoHighlightIndex = answerKoHighlightIndex,
+                            recordingHighlightIndex = recordingHighlightIndex,
                             isFlipped = when {
                                 isRepeatListeningCardFlipped -> true
                                 isEnglishWritingTestCardFlipped -> true
