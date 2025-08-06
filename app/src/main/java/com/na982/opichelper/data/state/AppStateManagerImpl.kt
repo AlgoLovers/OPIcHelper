@@ -158,7 +158,7 @@ class AppStateManagerImpl @Inject constructor() : AppStateManager {
     /**
      * 모든 상태 초기화
      */
-    fun resetAllState() {
+    override fun resetAllState() {
         updateState { AppState() }
     }
     
@@ -184,6 +184,154 @@ class AppStateManagerImpl @Inject constructor() : AppStateManager {
             answerHighlightIndex = -1,
             answerKoHighlightIndex = -1,
             recordingHighlightIndex = -1
+        )
+    }
+    
+    /**
+     * 답변 재생 시작 시 모든 상태를 일관되게 설정
+     */
+    override fun startAnswerPlayback() {
+        Log.d("AppStateManagerImpl", "답변 재생 시작 - 상태 일관성 설정")
+        updateState { currentState ->
+            currentState.copy(
+                isQuestionPlaying = false,
+                isAnswerPlaying = true,
+                isPlaying = true,
+                buttonStates = currentState.buttonStates.toMutableMap().apply {
+                    put(ButtonFunction.QuestionPlay, ButtonState.Idle)
+                    put(ButtonFunction.AnswerPlay, ButtonState.Playing)
+                    put(ButtonFunction.MemorizeTest, ButtonState.Idle)
+                    put(ButtonFunction.RecordingPlay, ButtonState.Idle)
+                }
+            )
+        }
+    }
+    
+    /**
+     * 질문 재생 시작 시 모든 상태를 일관되게 설정
+     */
+    override fun startQuestionPlayback() {
+        Log.d("AppStateManagerImpl", "질문 재생 시작 - 상태 일관성 설정")
+        updateState { currentState ->
+            currentState.copy(
+                isQuestionPlaying = true,
+                isAnswerPlaying = false,
+                isPlaying = true,
+                buttonStates = currentState.buttonStates.toMutableMap().apply {
+                    put(ButtonFunction.QuestionPlay, ButtonState.Playing)
+                    put(ButtonFunction.AnswerPlay, ButtonState.Idle)
+                    put(ButtonFunction.MemorizeTest, ButtonState.Idle)
+                    put(ButtonFunction.RecordingPlay, ButtonState.Idle)
+                }
+            )
+        }
+    }
+    
+    /**
+     * 모든 재생 중지 시 모든 상태를 일관되게 설정
+     */
+    override fun stopAllPlayback() {
+        Log.d("AppStateManagerImpl", "모든 재생 중지 - 상태 일관성 설정")
+        updateState { currentState ->
+            currentState.copy(
+                isQuestionPlaying = false,
+                isAnswerPlaying = false,
+                isPlaying = false,
+                buttonStates = currentState.buttonStates.toMutableMap().apply {
+                    put(ButtonFunction.QuestionPlay, ButtonState.Idle)
+                    put(ButtonFunction.AnswerPlay, ButtonState.Idle)
+                    put(ButtonFunction.MemorizeTest, ButtonState.Idle)
+                    put(ButtonFunction.RecordingPlay, ButtonState.Idle)
+                }
+            )
+        }
+    }
+    
+    /**
+     * 앱 종료 시 모든 상태를 강제로 중지 (긴급 상황용)
+     */
+    override fun forceStopAllPlayback() {
+        Log.d("AppStateManagerImpl", "🚨 앱 종료 시 모든 상태 강제 중지")
+        updateState { currentState ->
+            currentState.copy(
+                isQuestionPlaying = false,
+                isAnswerPlaying = false,
+                isPlaying = false,
+                questionHighlightIndex = -1,
+                answerHighlightIndex = -1,
+                answerKoHighlightIndex = -1,
+                recordingHighlightIndex = -1,
+                questionReadingIndex = 0,
+                answerReadingIndex = 0,
+                buttonStates = currentState.buttonStates.toMutableMap().apply {
+                    put(ButtonFunction.QuestionPlay, ButtonState.Idle)
+                    put(ButtonFunction.AnswerPlay, ButtonState.Idle)
+                    put(ButtonFunction.MemorizeTest, ButtonState.Idle)
+                    put(ButtonFunction.RecordingPlay, ButtonState.Idle)
+                }
+            )
+        }
+    }
+    
+    /**
+     * 읽기 준비 인덱스 업데이트
+     */
+    override fun updateReadingIndex(
+        questionReadingIndex: Int?,
+        answerReadingIndex: Int?
+    ) {
+        Log.d("AppStateManagerImpl", "읽기 준비 인덱스 업데이트: question=$questionReadingIndex, answer=$answerReadingIndex")
+        updateState { currentState ->
+            currentState.copy(
+                questionReadingIndex = questionReadingIndex ?: currentState.questionReadingIndex,
+                answerReadingIndex = answerReadingIndex ?: currentState.answerReadingIndex
+            )
+        }
+    }
+    
+    /**
+     * 읽기 준비 인덱스 초기화
+     */
+    override fun resetReadingIndex() {
+        Log.d("AppStateManagerImpl", "읽기 준비 인덱스 초기화")
+        updateReadingIndex(0, 0)
+    }
+    
+    /**
+     * 반복듣기 모드에서 답변 재생 시작 시 모든 상태를 일관되게 설정
+     */
+    override fun startAnswerPlaybackInRepeatListeningMode() {
+        Log.d("AppStateManagerImpl", "반복듣기 모드 답변 재생 시작 - 상태 일관성 설정")
+        updateState { currentState ->
+            currentState.copy(
+                isQuestionPlaying = false,
+                isAnswerPlaying = true,
+                isPlaying = true,
+                buttonStates = currentState.buttonStates.toMutableMap().apply {
+                    put(ButtonFunction.QuestionPlay, ButtonState.Idle)
+                    put(ButtonFunction.AnswerPlay, ButtonState.Playing)
+                    put(ButtonFunction.MemorizeTest, ButtonState.Playing) // 반복듣기 모드 유지
+                    put(ButtonFunction.RecordingPlay, ButtonState.Idle)
+                }
+            )
+        }
+    }
+    
+    /**
+     * 하이라이트만 설정 (버튼 상태는 변경하지 않음)
+     */
+    override fun setHighlightOnly(
+        questionHighlightIndex: Int,
+        answerHighlightIndex: Int,
+        answerKoHighlightIndex: Int,
+        recordingHighlightIndex: Int
+    ) {
+        Log.d("AppStateManagerImpl", "하이라이트만 설정: question=$questionHighlightIndex, answer=$answerHighlightIndex, answerKo=$answerKoHighlightIndex, recording=$recordingHighlightIndex")
+        updateHighlightState(
+            questionHighlightIndex = questionHighlightIndex,
+            answerHighlightIndex = answerHighlightIndex,
+            answerKoHighlightIndex = answerKoHighlightIndex,
+            recordingHighlightIndex = recordingHighlightIndex
         )
     }
 } 

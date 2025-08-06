@@ -115,4 +115,57 @@ interface AppStateManager {
      * TTS 관련 상태만 초기화
      */
     fun resetTtsState()
+    
+    /**
+     * 모든 상태 초기화
+     */
+    fun resetAllState()
+    
+    /**
+     * 답변 재생 시작 시 모든 상태를 일관되게 설정
+     */
+    fun startAnswerPlayback()
+    
+    /**
+     * 질문 재생 시작 시 모든 상태를 일관되게 설정
+     */
+    fun startQuestionPlayback()
+    
+    /**
+     * 반복듣기 모드에서 답변 재생 시작 시 모든 상태를 일관되게 설정
+     */
+    fun startAnswerPlaybackInRepeatListeningMode()
+    
+    /**
+     * 하이라이트만 설정 (버튼 상태는 변경하지 않음)
+     */
+    fun setHighlightOnly(
+        questionHighlightIndex: Int = -1,
+        answerHighlightIndex: Int = -1,
+        answerKoHighlightIndex: Int = -1,
+        recordingHighlightIndex: Int = -1
+    )
+    
+    /**
+     * 모든 재생 중지 시 모든 상태를 일관되게 설정
+     */
+    fun stopAllPlayback()
+    
+    /**
+     * 앱 종료 시 모든 상태를 강제로 중지 (긴급 상황용)
+     */
+    fun forceStopAllPlayback()
+    
+    /**
+     * 읽기 준비 인덱스 업데이트
+     */
+    fun updateReadingIndex(
+        questionReadingIndex: Int? = null,
+        answerReadingIndex: Int? = null
+    )
+    
+    /**
+     * 읽기 준비 인덱스 초기화
+     */
+    fun resetReadingIndex()
 } 

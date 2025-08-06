@@ -118,57 +118,31 @@ class MainViewModel @Inject constructor(
         categoryManager.changeCategory(category)
     }
     
-    /**
-     * 다음 QA 아이템으로 이동 (임시 구현)
-     */
     fun nextQaItem() {
         viewModelScope.launch {
-            try {
-                qaDataRepository.nextQaItem()
-                val qaItem = qaDataRepository.getCurrentQaItem()
-                val category = qaDataRepository.getCurrentCategory() ?: return@launch
-                val currentIndex = qaDataRepository.getCurrentIndex()
-                val itemsInCategory = qaDataRepository.getItemsInCategory(category)
-                
-                if (qaItem != null) {
-                    appStateManager.updateQaItemState(
-                        qaItem = qaItem,
-                        category = category,
-                        index = currentIndex,
-                        totalCount = itemsInCategory.size
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("MainViewModelRefactored", "다음 QA 아이템 이동 실패", e)
-                appStateManager.updateErrorState(e.message)
-            }
+            qaDataRepository.moveToNext()
+            updateAppStateFromRepository()
         }
     }
     
-    /**
-     * 이전 QA 아이템으로 이동 (임시 구현)
-     */
+    private fun updateAppStateFromRepository() {
+        val currentQaItem = qaDataRepository.getCurrentQaItem()
+        val currentCategory = qaDataRepository.getCurrentCategory()
+        val currentIndex = qaDataRepository.getCurrentIndex()
+        val itemsInCategory = qaDataRepository.getItemsInCategory(currentCategory ?: "")
+        
+        appStateManager.updateQaItemState(
+            qaItem = currentQaItem,
+            category = currentCategory,
+            index = currentIndex,
+            totalCount = itemsInCategory.size
+        )
+    }
+    
     fun previousQaItem() {
         viewModelScope.launch {
-            try {
-                qaDataRepository.previousQaItem()
-                val qaItem = qaDataRepository.getCurrentQaItem()
-                val category = qaDataRepository.getCurrentCategory() ?: return@launch
-                val currentIndex = qaDataRepository.getCurrentIndex()
-                val itemsInCategory = qaDataRepository.getItemsInCategory(category)
-                
-                if (qaItem != null) {
-                    appStateManager.updateQaItemState(
-                        qaItem = qaItem,
-                        category = category,
-                        index = currentIndex,
-                        totalCount = itemsInCategory.size
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("MainViewModelRefactored", "이전 QA 아이템 이동 실패", e)
-                appStateManager.updateErrorState(e.message)
-            }
+            qaDataRepository.moveToPrevious()
+            updateAppStateFromRepository()
         }
     }
     

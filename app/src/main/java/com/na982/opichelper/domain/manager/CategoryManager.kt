@@ -78,7 +78,7 @@ class CategoryManager @Inject constructor(
                 // 기존 작업 중단
                 stopAllOperations()
                 
-                // 카테고리 변경
+                // 카테고리 변경 (Lazy Loading 사용)
                 qaDataRepository.selectCategory(category)
                 _currentCategory.value = category
                 
@@ -94,29 +94,19 @@ class CategoryManager @Inject constructor(
                     totalCount = itemsInCategory.size
                 )
                 
-                // QA 아이템만 로드 (카테고리 선택 제거)
-                loadQaItemsOnly(category)
-                
-                // 암기 모드 상태 초기화 - ProgressManager에서 처리하도록 변경
-                // appStateManager.updateMemorizationModeState(
-                //     isRepeatListeningMode = false,
-                //     isEnglishWritingTestMode = false,
-                //     isFullMemorizationMode = false
-                // )
-                
-                Log.d("CategoryViewModel", "카테고리 변경 완료: $category")
+                Log.d("CategoryManager", "카테고리 변경 완료: $category")
                 
             } catch (e: Exception) {
-                Log.e("CategoryViewModel", "카테고리 변경 실패", e)
+                Log.e("CategoryManager", "카테고리 변경 실패", e)
                 _error.value = e.message
             }
         }
     }
     
     /**
-     * QA 아이템만 로드 (카테고리 선택 없이)
+     * 특정 카테고리의 QA 아이템 로드 (기존 인터페이스 유지)
      */
-    private fun loadQaItemsOnly(category: String) {
+    override fun loadQaItemsForCategory(category: String) {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
             try {
                 Log.d("CategoryManager", "QA 아이템 로드 시작: $category")
@@ -142,17 +132,10 @@ class CategoryManager @Inject constructor(
     }
     
     /**
-     * 특정 카테고리의 QA 아이템 로드 (기존 인터페이스 유지)
-     */
-    override fun loadQaItemsForCategory(category: String) {
-        loadQaItemsOnly(category)
-    }
-    
-    /**
      * 모든 작업 중단
      */
     private fun stopAllOperations() {
-        Log.d("CategoryViewModel", "모든 작업 중단")
+        Log.d("CategoryManager", "모든 작업 중단")
         // TTS 중지 등은 AudioControlViewModel에서 처리
         appStateManager.resetTtsState()
     }

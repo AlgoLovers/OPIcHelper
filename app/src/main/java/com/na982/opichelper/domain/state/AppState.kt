@@ -37,6 +37,10 @@ data class AppState(
     val answerKoHighlightIndex: Int = -1,
     val recordingHighlightIndex: Int = -1,
     
+    // 읽기 준비 인덱스 (이번에 읽어야 하는 문장의 인덱스)
+    val questionReadingIndex: Int = 0, // 질문 읽기 준비 인덱스
+    val answerReadingIndex: Int = 0,   // 답변 읽기 준비 인덱스
+    
     // 카드 상태
     val isQuestionCardFlipped: Boolean = false,
     val isAnswerCardFlipped: Boolean = false,
