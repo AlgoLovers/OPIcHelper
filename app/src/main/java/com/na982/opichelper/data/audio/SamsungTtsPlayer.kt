@@ -16,42 +16,13 @@ class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
     serviceName = "삼성 TTS",
     logTag = "SamsungTtsPlayer"
 ) {
-    // Android 버전별 삼성 TTS 성능 최적화 설정
+    // TTS 속도를 1.0f로 고정 (한글)
     override fun getSpeechRate(): Float {
-        return when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
-                // Android 14+ (S24 등 최신 기기): 한글 적합 속도
-                Log.d(logTag, "Android 14+ 감지 - 한글 적합 삼성 TTS 속도 적용")
-                1.1f
-            }
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
-                // Android 13 (Tab S6 Lite 등): 중간 속도
-                Log.d(logTag, "Android 13 감지 - 중간 삼성 TTS 속도 적용")
-                0.9f
-            }
-            else -> {
-                // Android 12 이하: 기본 속도
-                Log.d(logTag, "Android 12 이하 감지 - 기본 삼성 TTS 속도 적용")
-                0.8f
-            }
-        }
+        return 1.0f
     }
     
     override fun getPitch(): Float {
-        return when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
-                // Android 14+: 기본 피치
-                1.0f
-            }
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
-                // Android 13: 기본 피치
-                1.0f
-            }
-            else -> {
-                // Android 12 이하: 기본 피치
-                1.0f
-            }
-        }
+        return 1.0f
     }
     
     override suspend fun speakWithHighlight(text: String, onHighlight: (Int) -> Unit) {
@@ -63,31 +34,12 @@ class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
         val start = System.currentTimeMillis()
         val finished = kotlinx.coroutines.CompletableDeferred<Unit>()
         
-        // Android 버전별 한글 최적화
-        val optimizedRate = if (isKorean) {
-            val baseRate = when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
-                    // Android 14+: 3% 더 빠르게 (110% → 113.3%)
-                    (rate * 1.03f).coerceAtMost(1.2f)
-                }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
-                    // Android 13: 2% 더 빠르게
-                    (rate * 1.02f).coerceAtMost(1.05f)
-                }
-                else -> {
-                    // Android 12 이하: 기본 속도
-                    (rate * 1.0f).coerceAtMost(1.0f)
-                }
-            }
-            Log.d(logTag, "Android ${Build.VERSION.SDK_INT} - 한글 TTS 최적화 속도: $baseRate")
-            baseRate
-        } else {
-            rate
-        }
+        // TTS 속도를 1.0f로 고정 (한글)
+        val fixedRate = 1.0f
         
         // 임시로 속도 설정
         val originalRate = getSpeechRate()
-        tts?.setSpeechRate(optimizedRate)
+        tts?.setSpeechRate(fixedRate)
         
         speak(text) {
             // 원래 속도로 복원

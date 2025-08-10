@@ -50,4 +50,11 @@ interface IAudioControlManager {
      * - TTS 오류 복구 시
      */
     fun reinitializeTtsPlayers()
+    
+    /**
+     * 동기적 TTS 정리 (앱 종료 시 사용)
+     * - 백키로 앱 종료 시
+     * - 앱 완전 종료 시
+     */
+    suspend fun cleanupTtsSync()
 } 

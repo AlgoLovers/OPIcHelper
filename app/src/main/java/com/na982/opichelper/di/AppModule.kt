@@ -477,14 +477,16 @@ object AppModule {
         appStateManager: AppStateManager,
         strategyFactory: MemorizationStrategyFactory,
         playRecordingUseCase: com.na982.opichelper.domain.usecase.PlayRecordingUseCase,
-        progressManager: ProgressManager
+        progressManager: ProgressManager,
+        startRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
     ): ButtonEventHandler {
         return ButtonEventHandler(
             audioControlManager = audioControlManager,
             appStateManager = appStateManager,
             strategyFactory = strategyFactory,
             playRecordingUseCase = playRecordingUseCase,
-            progressManager = progressManager
+            progressManager = progressManager,
+            startRepeatListeningUseCase = startRepeatListeningUseCase
         )
     }
 } 

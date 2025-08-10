@@ -20,6 +20,7 @@ import com.na982.opichelper.domain.manager.IAudioControlManager
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -172,9 +173,11 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "모든 리소스 정리 시작")
         
         try {
-            // 1. 모든 오디오 중지 및 TTS 플레이어 해제 (완전 종료용)
-            audioControlManager.releaseAllAudio()
-            Log.d("MainActivity", "모든 오디오 중지 및 TTS 플레이어 해제 완료")
+            // 1. 동기적 TTS 정리 (앱 종료 시 즉시 정리)
+            runBlocking {
+                audioControlManager.cleanupTtsSync()
+            }
+            Log.d("MainActivity", "동기적 TTS 정리 완료")
             
             // 2. WakeLock 해제
             wakeLockManager.releaseWakeLock()

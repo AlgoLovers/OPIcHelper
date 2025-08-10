@@ -13,6 +13,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancelAndJoin
 import com.na982.opichelper.domain.util.CoroutineUtils
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -52,9 +53,7 @@ class StartRepeatListeningUseCase @Inject constructor(
                 executeRepeatListening(data, uiCallback, repeatCount)
             } catch (e: Exception) {
                 Log.e("StartRepeatListeningUseCase", "반복듣기 실행 중 오류", e)
-                // 오류 발생 시 상태 초기화
-                uiCallback.onComplete()
-                throw e
+                // 예외를 다시 던지지 않음 - 모든 경우에 동일한 플로우
             }
         }
     }
@@ -64,10 +63,17 @@ class StartRepeatListeningUseCase @Inject constructor(
      */
     suspend fun stop() {
         Log.d("StartRepeatListeningUseCase", "반복듣기 중지 요청")
+        
+        // 1. 코루틴 취소
         currentJob?.cancel()
         currentJob = null
-        // TTS도 중지
+        
+        // 2. TTS 중지
         ttsController.stopTts()
+        
+        // 3. 진행상황 초기화
+        progressTracker.clearScriptProgress("", 0, "반복 듣기")
+        
         Log.d("StartRepeatListeningUseCase", "반복듣기 중지 완료 - TTS 중지 및 코루틴 취소")
     }
     

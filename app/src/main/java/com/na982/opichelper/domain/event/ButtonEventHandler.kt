@@ -23,7 +23,8 @@ class ButtonEventHandler @Inject constructor(
     private val appStateManager: AppStateManager,
     private val strategyFactory: MemorizationStrategyFactory,
     private val playRecordingUseCase: PlayRecordingUseCase,
-    private val progressManager: ProgressManager
+    private val progressManager: ProgressManager,
+    private val startRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
 ) {
     
     /**
@@ -156,6 +157,9 @@ class ButtonEventHandler @Inject constructor(
      */
     private suspend fun stopOtherOperations() {
         Log.d("ButtonEventHandler", "다른 작업 중단")
+        
+        // 반복듣기 UseCase 중지 (코루틴 취소)
+        startRepeatListeningUseCase.stop()
         
         // 모든 오디오 중지
         audioControlManager.stopAllAudio()

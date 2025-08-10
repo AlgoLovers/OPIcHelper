@@ -185,4 +185,29 @@ class AudioControlManager @Inject constructor(
             }
         }
     }
+    
+    /**
+     * 동기적 TTS 정리 (앱 종료 시 사용)
+     * - 백키로 앱 종료 시
+     * - 앱 완전 종료 시
+     */
+    override suspend fun cleanupTtsSync() {
+        Log.d("AudioControlManager", "동기적 TTS 정리 시작")
+        
+        try {
+            // 1. TTS 중지 (동기적)
+            ttsController.stopAllTts()
+            Log.d("AudioControlManager", "TTS 중지 완료")
+            
+            // 2. TTS 플레이어 완전 해제 (동기적)
+            ttsOrchestrator.releaseAllPlayers()
+            Log.d("AudioControlManager", "TTS 플레이어 해제 완료")
+            
+            Log.d("AudioControlManager", "동기적 TTS 정리 완료")
+            
+        } catch (e: Exception) {
+            Log.e("AudioControlManager", "동기적 TTS 정리 실패", e)
+            _error.value = e.message
+        }
+    }
 } 
