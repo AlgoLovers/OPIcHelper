@@ -71,9 +71,8 @@ class MainActivity : ComponentActivity() {
             // 디버깅 로그
             Log.d("MainActivity", "다크테마: $isDarkTheme")
             
-            OPicHelperThemeWithMemorizeLevel(
-                darkTheme = isDarkTheme,
-                memorizeLevel = "" // 기본값, 실제 값은 각 Composable에서 관리
+            OPicHelperTheme(
+                darkTheme = isDarkTheme
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
