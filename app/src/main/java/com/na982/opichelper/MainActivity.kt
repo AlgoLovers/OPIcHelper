@@ -18,7 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.na982.opichelper.domain.manager.WakeLockManager
 import com.na982.opichelper.domain.manager.IAudioControlManager
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
-import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
+import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
