@@ -46,11 +46,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -117,11 +117,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("androidx.compose.ui:ui:1.0.0")
     
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
-    implementation("androidx.compose.material3:material3:1.0.0")
 
     // MockK (mock 객체 생성)
     testImplementation("io.mockk:mockk:1.13.8")
