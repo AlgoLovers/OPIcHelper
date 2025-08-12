@@ -37,16 +37,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.na982.opichelper.domain.entity.DataSource
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.presentation.viewmodel.MainViewModel
 
 @Composable
 fun SettingsScreen(
     onBackPressed: () -> Unit,
-    onLogout: () -> Unit,
-    userPreferencesRepository: UserPreferencesRepository
+    onLogout: () -> Unit
 ) {
+    // MainViewModel을 사용하여 userPreferencesRepository에 접근
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val userPreferencesRepository: UserPreferencesRepository = mainViewModel.userPreferencesRepository
+    
     var isDarkMode by remember { mutableStateOf(false) }
     var isAutoPlay by remember { mutableStateOf(true) }
     var selectedTtsService by remember { mutableStateOf("Google TTS") }

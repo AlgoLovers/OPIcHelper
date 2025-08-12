@@ -53,13 +53,14 @@ import kotlinx.coroutines.delay
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreenRefactored(
-    viewModel: MainViewModel,
-    memorizationViewModel: MemorizationViewModel? = null,
     modifier: Modifier = Modifier,
-    onSettingsClick: () -> Unit = {},
-    userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    onSettingsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    
+    // ViewModel들을 내부에서 생성
+    val viewModel: MainViewModel = hiltViewModel()
+    val memorizationViewModel: MemorizationViewModel = hiltViewModel()
     
     // 앱 초기화 (한 번만 실행)
     LaunchedEffect(Unit) {
@@ -69,7 +70,6 @@ fun MainScreenRefactored(
     
     // ===== 새로운 아키텍처 상태 =====
     val appState by viewModel.appState.collectAsState()
-    val memorizationViewModelInstance = memorizationViewModel ?: hiltViewModel<MemorizationViewModel>()
     val selectedLevel = appState.selectedMemorizeLevel
     val currentQaItemState = appState.currentQaItem
     val currentCategoryState = appState.currentCategory
@@ -78,7 +78,7 @@ fun MainScreenRefactored(
     val isQuestionCardFlipped by viewModel.isQuestionCardFlipped().collectAsState()
 
     // ===== MemorizationViewModel UI 상태 =====
-    val memorizationUiState by memorizationViewModelInstance.uiState.collectAsState()
+    val memorizationUiState by memorizationViewModel.uiState.collectAsState()
 
     // ===== 반복 듣기 (Repeat Listening) =====
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
@@ -116,7 +116,7 @@ fun MainScreenRefactored(
     // 앱 재시작 시 MemorizationViewModel 상태 초기화
     LaunchedEffect(Unit) {
         Log.d("MainScreenRefactored", "MainScreen 시작 - MemorizationViewModel 상태 초기화")
-        memorizationViewModelInstance.resetStateOnAppRestart()
+        memorizationViewModel.resetStateOnAppRestart()
     }
     
     // 스크립트 변경 시 영작테스트 병합 파일 확인
@@ -157,7 +157,7 @@ fun MainScreenRefactored(
         ) {
             // 앱 제목 (설정 버튼 포함)
             AppTitle(
-                currentLevel = userPreferencesRepository.getUserLevel().displayName,
+                currentLevel = viewModel.userPreferencesRepository.getUserLevel().displayName,
                 onSettingsClick = {
                     Log.d("MainScreenRefactored", "AppTitle 내 설정 버튼 클릭됨")
                     viewModel.handleSettingsEnter()
@@ -388,7 +388,7 @@ fun MainScreenRefactored(
                                 }
                                 Button(
                                     onClick = {
-                                        memorizationViewModelInstance.stopFullMemorizationRecording()
+                                        memorizationViewModel.stopFullMemorizationRecording()
                                     },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.error

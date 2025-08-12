@@ -49,7 +49,7 @@ class MainViewModel @Inject constructor(
     private val memorizationManager: IMemorizationManager,
     private val initializeAppUseCase: InitializeAppUseCase,
     private val getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    val userPreferencesRepository: UserPreferencesRepository,
     private val memorizationLevelMapper: MemorizationLevelMapper // Added MemorizationLevelMapper
 ) : ViewModel() {
     
