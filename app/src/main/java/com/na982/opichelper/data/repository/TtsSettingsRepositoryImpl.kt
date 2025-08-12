@@ -6,9 +6,20 @@ import com.na982.opichelper.domain.repository.TtsSettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class TtsSettingsRepositoryImpl(private val context: Context) : TtsSettingsRepository {
+class TtsSettingsRepositoryImpl private constructor(private val context: Context) : TtsSettingsRepository {
     
-    private val prefs: SharedPreferences = context.getSharedPreferences("tts_prefs", Context.MODE_PRIVATE)
+    companion object {
+        @Volatile
+        private var INSTANCE: TtsSettingsRepositoryImpl? = null
+        
+        fun getInstance(context: Context): TtsSettingsRepositoryImpl {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: TtsSettingsRepositoryImpl(context).also { INSTANCE = it }
+            }
+        }
+    }
+    
+    private val prefs: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
     
     private val _englishTtsRate = MutableStateFlow(1.0f)
     override val englishTtsRate: StateFlow<Float> = _englishTtsRate

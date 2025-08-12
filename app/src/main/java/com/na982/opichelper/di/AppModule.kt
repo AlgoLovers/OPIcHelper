@@ -214,13 +214,13 @@ object AppModule {
     @Provides
     @Singleton
     fun provideLearningPreferencesRepository(@ApplicationContext context: Context): LearningPreferencesRepository {
-        return LearningPreferencesRepositoryImpl(context)
+        return LearningPreferencesRepositoryImpl.getInstance(context)
     }
     
     @Provides
     @Singleton
     fun provideTtsSettingsRepository(@ApplicationContext context: Context): TtsSettingsRepository {
-        return TtsSettingsRepositoryImpl(context)
+        return TtsSettingsRepositoryImpl.getInstance(context)
     }
     
     @Provides

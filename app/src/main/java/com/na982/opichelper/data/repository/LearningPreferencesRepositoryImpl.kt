@@ -8,9 +8,20 @@ import com.na982.opichelper.domain.repository.LearningPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class LearningPreferencesRepositoryImpl(private val context: Context) : LearningPreferencesRepository {
+class LearningPreferencesRepositoryImpl private constructor(private val context: Context) : LearningPreferencesRepository {
     
-    private val prefs: SharedPreferences = context.getSharedPreferences("learning_prefs", Context.MODE_PRIVATE)
+    companion object {
+        @Volatile
+        private var INSTANCE: LearningPreferencesRepositoryImpl? = null
+        
+        fun getInstance(context: Context): LearningPreferencesRepositoryImpl {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: LearningPreferencesRepositoryImpl(context).also { INSTANCE = it }
+            }
+        }
+    }
+    
+    private val prefs: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
     
     private val _userLevel = MutableStateFlow(UserLevel.IH)
     override val userLevel: StateFlow<UserLevel> = _userLevel
