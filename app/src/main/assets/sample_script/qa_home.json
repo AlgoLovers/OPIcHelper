@@ -3,7 +3,7 @@
     "id": "1",
     "question_en": "Tell me where you live.\nWhat's your favorite room in your house?\nWhat does it look like, and what do you usually do there?",
     "question_ko": "당신이 어디에 사는지 알고 싶습니다.\n집에서 가장 좋아하는 방은 어디인가요?\n어떻게 생겼나요?\n주로 거기서 무엇을 하나요?",
-    "answer_en": "I really like the living room.\nI have a ten-year-old son, and that’s where I usually play with him.\nWe often spend time there playing board games.\nSometimes, I read books in the living room as well.\nI like the living room because it’s such a great place to be with my family.",
+    "answer_en": "I really like the living room.\nI have a ten-year-old son, and that’s where I usually play with him.\nWe often spend time there playing board games.\nSometimes, I read books in the living room as well.\nI like the living room because it’s such a great place to spend with my family.",
     "answer_ko": "저는 거실을 가장 좋아해요.\n저는 10살 난 아들을 키우고 있고, 아들과 함께 노는 곳이 주로 거실입니다.\n우리는 주로 보드게임을 하면서 시간을 보냅니다.\n가끔은 거실에서 책도 읽습니다.\n저는 가족과 함께 시간을 보낼 수 있는 거실이 참 좋습니다."
   },
   {
@@ -24,21 +24,28 @@
     "id": "4",
     "question_en": "Tell me about a time you made a change to your home.\nWhat was the change, and why did you make it?\nWhat was your home like afterward?\nPlease give me some details.",
     "question_ko": "당신이 집을 바꾼 것에 대해 이야기해 주세요.\n어떤 변화가 있었고 왜 그런 변화를 만들었나요?\n그 후 집은 어땠나요? 자세한 내용을 알려주세요.",
-    "answer_en": "I live in a brand-new apartment, so I haven’t made any major changes.\nHowever, I recently replaced the kitchen light.\nKitchen lights in Korean apartments are usually LED fixtures, so you can’t just change a bulb — you have to replace the whole fixture.\nI spent a few days choosing a new light to change the atmosphere of the kitchen.\nI ordered the one I liked online.\nThen, I turned off the circuit breaker and replaced it myself.\nThe process was tough, but I felt proud when I saw how bright the kitchen had become.",
-    "answer_ko": "저는 새로 지어진 아파트에 살고 있어서 특별히 바꾼 것은 없습니다.\n하지만 최근에 주방등을 교체했습니다.\n한국 아파트의 주방등은 보통 LED 등이라 전구만 교체하는 것이 아니라 전체를 교체해야 합니다.\n저는 주방 분위기를 바꾸기 위해 며칠 동안 새 등 제품을 고르며 고민했습니다.\n마음에 드는 것을 인터넷으로 구매했고, 전기 차단기를 내린 뒤 직접 교체 작업을 했습니다.\n과정은 힘들었지만, 밝아진 주방을 보니 뿌듯했습니다."
+    "answer_en": "I live in a brand-new apartment, so I haven't made any major changes.\nHowever, I recently replaced the kitchen light.\nKitchen lights in Korean apartments are usually built-in LED fixtures, so you can’t just change the light — you have to replace the whole fixture.\nI spent a few days choosing a new light to change the atmosphere of the kitchen.\nI ordered the one I liked online.\nThen, I turned off the circuit breaker and replaced it myself.\nIt was hard, but I was proud when I saw how bright the kitchen was.",
+    "answer_ko": "저는 새로 지어진 아파트에 살고 있어서 특별히 바꾼 것은 없습니다.\n하지만 최근에 주방등을 교체했습니다.\n한국 아파트의 주방등은 보통 LED 등이라 전구만 교체하는 것이 아니라 전체를 교체해야 합니다.\n저는 주방 분위기를 바꾸기 위해 며칠 동안 새 등 제품을 고르며 고민했습니다.\n마음에 드는 것을 인터넷으로 구매했습니다.\n 전기 차단기를 내린 뒤 직접 교체 작업을 했습니다.\n과정은 힘들었지만, 밝아진 주방을 보니 뿌듯했습니다."
   },
   {
     "id": "5",
     "question_en": "Tell me about the house or apartment you lived in as a child.\nHow was it different from where you live now?\nWhat were the similarities and differences?",
     "question_ko": "어렸을 때 살았던 집이나 아파트에 대해 말씀해 주세요.\n지금 살고 있는 곳과 어떻게 달랐나요?\n유사점과 차이점은 무엇인가요?",
-    "answer_en": "I remember living in a villa when I was a kid, but now I live in an apartment.\nBack then, when my friends called my name from in front of my house, I could hear them and run outside to play.\nBut now I live on the 19th floor of an apartment building, so I probably wouldn’t hear them if they called my name from outside.\nStill, both my childhood villa and my current apartment are precious places where my loved ones live.",
-    "answer_ko": "저는 어렸을 때 빌라에서 살았던 기억이 있습니다.\n그때는 집 앞에서 친구들이 제 이름을 부르면 들을 수 있었고, 바로 밖으로 나가 함께 놀았습니다.\n하지만 지금은 아파트 19층에 살고 있어서 밖에서 이름을 불러도 아마 듣지 못할 것입니다.\n그래도 어린 시절의 빌라와 지금의 아파트 모두 제 소중한 사람들이 사는 귀중한 공간입니다."
+    "answer_en": "I remember living in a villa when I was a child.\nBack then, my friends could stand in front of my house and call my name.\nI could hear them right away and run outside to play.\nNow I live high up in an apartment building, on the nineteenth floor.\nIf my friends called my name from the street, I would not be able to hear them.\nStill, both my childhood villa and my current apartment are special to me.\nThey are the places where the people I love live.",
+    "answer_ko": "저는 어렸을 때 빌라에서 살았던 기억이 있습니다.\n그때는 친구들이 집 앞에 서서 제 이름을 부를 수 있었습니다.\n저는 바로 그 소리를 듣고 밖으로 나가 함께 놀았습니다.\n지금은 아파트 고층, 19층에 살고 있습니다.\n친구들이 길에서 제 이름을 불러도 들을 수 없을 것입니다.\n그래도 어린 시절의 빌라와 지금의 아파트 모두 저에게 특별합니다.\n그곳은 제가 사랑하는 사람들이 사는 곳입니다."
   },
   {
     "id": "6",
     "question_en": "How have housing styles in your area changed over the last five or ten years?\nAre homes built today different from those built ten years ago?\nWhat developments or changes have you noticed?",
     "question_ko": "지난 5년 또는 10년 동안 당신이 사는 곳의 주택 스타일은 어떻게 변했나요?\n오늘날 지어진 집들이 10년 전에 지어진 집들과 다른가요?\n어떤 발전이나 변화를 발견하셨나요?",
-    "answer_en": "Ten years ago, I was living in an officetel.\nAt the time, I was single and living alone near my office.\nThere was a subway station nearby, and many restaurants as well.\nIt was a busy downtown area.\nNow, I’m married and live in an apartment with my wife and son.\nIt’s a quiet residential complex, a little far from downtown.\nI really like the landscaping in our apartment complex.\nSo sometimes, when I have free time, I take a walk around the complex with my family.",
-    "answer_ko": "10년 전에는 오피스텔에 살았습니다.\n그때는 결혼 전이었고, 회사 근처에서 혼자 살았습니다.\n근처에 지하철역과 많은 식당이 있었고, 번화한 도심 지역이었습니다.\n하지만 지금은 결혼해서 아내와 아들과 함께 아파트에 살고 있습니다.\n지금은 도심에서 조금 떨어진 조용한 주택 단지입니다.\n저는 아파트 단지의 조경이 무척 마음에 듭니다.\n그래서 가끔 시간이 나면 가족과 함께 단지를 산책합니다."
+    "answer_en": "Ten years ago, I lived in an studio apartment.\nBack then, I was single and lived alone near my office.\nThere was a subway station nearby, and lots of restaurants.\nIt was always a busy downtown area.\nNow, I’m married and live in an apartment with my wife and son.\nIt’s a quiet residential complex, a bit away from downtown.\nI really like the landscaping in our complex.\nSo sometimes, when I have free time, I take walks there with my family.",
+    "answer_ko": "10년 전에는 오피스텔에서 살았습니다.\n그때는 미혼이었고, 회사 근처에서 혼자 살았습니다.\n근처에 지하철역이 있었고, 식당도 많았습니다.\n그곳은 항상 붐비는 도심 지역이었습니다.\n지금은 결혼해서 아내와 아들과 함께 아파트에 살고 있습니다.\n이곳은 도심에서 조금 떨어진 조용한 주거 단지입니다.\n저는 아파트 단지의 조경이 정말 마음에 듭니다.\n그래서 가끔 시간이 나면 가족과 함께 단지를 산책합니다."
+  },
+  {
+    "id": "7",
+    "question_en": "Sometimes the issues of too many new homes or not enough new homes can create a controversy in a community.\nThink of a time when the issue regarding housing was in the news in your community.",
+    "question_ko": "때때로 너무 많은 새 집이나 부족한 새 집의 문제는 지역 사회에서 논란을 일으킬 수 있습니다.\n당신의 지역 사회에서 주택 문제가 뉴스에 나왔던 때를 생각해 보세요.",
+    "answer_en": "Well, I can't think of anything right now, but the only thing I remember is watching the news about the housing market in Korea a few months ago.\nIt was about rising housing prices which has been an ongoing issue for several years.\nThe housing prices have been skyrocketed for years.\nBecause of this, the rent prices have also risen a lot.\nDue to this issue, people have a lot of trouble finding a home.\nIt's hard to find a house at a reasonable price.\nSo, the government came up with some policies to curb housing prices.\nBut it seems like they are not always effective.\nIn fact, they sometimes backfire and the housing prices go up again.\nWell, I guess the housing price is definitely one of the biggest issues in Korea.",
+    "answer_ko": "음, 지금 당장 떠오르는 건 없지만, 몇 달 전에 한국의 부동산 시장에 관한 뉴스를 본 게 기억납니다.\n몇 년째 계속되고 있는 집값 상승 문제에 대한 내용이었어요.\n주택 가격이 수년 동안 급등해왔습니다.\n이로 인해 전세나 월세 가격도 많이 올랐어요.\n이런 문제 때문에 사람들이 집을 구하는 데 큰 어려움을 겪고 있습니다.\n합리적인 가격에 집을 찾는 것이 어렵습니다.\n그래서 정부는 집값을 잡기 위해 여러 정책을 내놓았다.\n그러나 항상 효과적인 것은 아닌 것 같습니다.\n오히려 부작용이 발생해서 집값이 다시 오르는 경우도 있습니다.\n음, 결국 부동산 가격 문제는 한국에서 가장 큰 이슈 중 하나인 것 같아요."
   }
 ]
