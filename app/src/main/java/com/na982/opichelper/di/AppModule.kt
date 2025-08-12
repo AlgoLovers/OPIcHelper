@@ -61,6 +61,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Named
 import javax.inject.Singleton
+import com.na982.opichelper.data.repository.LearningPreferencesRepositoryImpl
+import com.na982.opichelper.data.repository.TtsSettingsRepositoryImpl
+import com.na982.opichelper.domain.repository.LearningPreferencesRepository
+import com.na982.opichelper.domain.repository.TtsSettingsRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -205,6 +209,18 @@ object AppModule {
     @Singleton
     fun provideUserPreferencesRepository(@ApplicationContext context: Context): UserPreferencesRepository {
         return UserPreferencesRepositoryImpl(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideLearningPreferencesRepository(@ApplicationContext context: Context): LearningPreferencesRepository {
+        return LearningPreferencesRepositoryImpl(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideTtsSettingsRepository(@ApplicationContext context: Context): TtsSettingsRepository {
+        return TtsSettingsRepositoryImpl(context)
     }
     
     @Provides

@@ -52,15 +52,13 @@ import kotlinx.coroutines.delay
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreenRefactored(
+fun MainScreen(
+    viewModel: MainViewModel,
+    memorizationViewModel: MemorizationViewModel,
     modifier: Modifier = Modifier,
     onSettingsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    
-    // ViewModel들을 내부에서 생성
-    val viewModel: MainViewModel = hiltViewModel()
-    val memorizationViewModel: MemorizationViewModel = hiltViewModel()
     
     // 앱 초기화 (한 번만 실행)
     LaunchedEffect(Unit) {
@@ -115,14 +113,14 @@ fun MainScreenRefactored(
 
     // 앱 재시작 시 MemorizationViewModel 상태 초기화
     LaunchedEffect(Unit) {
-        Log.d("MainScreenRefactored", "MainScreen 시작 - MemorizationViewModel 상태 초기화")
+        Log.d("MainScreen", "MainScreen 시작 - MemorizationViewModel 상태 초기화")
         memorizationViewModel.resetStateOnAppRestart()
     }
     
     // 스크립트 변경 시 영작테스트 병합 파일 확인
     LaunchedEffect(appState.currentQaItem) {
         if (appState.currentQaItem != null) {
-            Log.d("MainScreenRefactored", "스크립트 변경 감지 - 영작테스트 병합 파일 확인")
+            Log.d("MainScreen", "스크립트 변경 감지 - 영작테스트 병합 파일 확인")
             viewModel.checkEnglishWritingTestMergedFile()
         }
     }
@@ -130,7 +128,7 @@ fun MainScreenRefactored(
     // 영작테스트 모드 종료 시 병합 파일 확인
     LaunchedEffect(isEnglishWritingTestMode) {
         if (!isEnglishWritingTestMode) {
-            Log.d("MainScreenRefactored", "영작테스트 모드 종료 - 병합 파일 확인")
+            Log.d("MainScreen", "영작테스트 모드 종료 - 병합 파일 확인")
             viewModel.checkEnglishWritingTestMergedFile()
         }
     }
@@ -145,7 +143,7 @@ fun MainScreenRefactored(
     ) {
         // 백키 처리
         BackHandler {
-            Log.d("MainScreenRefactored", "백키 감지 - 인터럽트 처리")
+            Log.d("MainScreen", "백키 감지 - 인터럽트 처리")
             viewModel.handleBackPress()
         }
 
@@ -157,9 +155,9 @@ fun MainScreenRefactored(
         ) {
             // 앱 제목 (설정 버튼 포함)
             AppTitle(
-                currentLevel = viewModel.userPreferencesRepository.getUserLevel().displayName,
+                currentLevel = viewModel.learningPreferencesRepository.getUserLevel().displayName,
                 onSettingsClick = {
-                    Log.d("MainScreenRefactored", "AppTitle 내 설정 버튼 클릭됨")
+                    Log.d("MainScreen", "AppTitle 내 설정 버튼 클릭됨")
                     viewModel.handleSettingsEnter()
                     onSettingsClick()
                 },
@@ -241,8 +239,8 @@ fun MainScreenRefactored(
                     // 질문 카드 (기존 아름다운 디자인 복원)
                     val questionHighlightIndex = appState.questionHighlightIndex
                     
-                    Log.d("MainScreenRefactored", "질문 카드 하이라이트 상태: selectedLevel=$selectedLevel, appState.questionHighlightIndex=${appState.questionHighlightIndex}, finalHighlightIndex=$questionHighlightIndex")
-                    Log.d("MainScreenRefactored", "질문 카드 하이라이트 상세: TTS 상태 - isQuestionPlaying=${appState.isQuestionPlaying}, isAnswerPlaying=${appState.isAnswerPlaying}, isPlaying=${appState.isPlaying}")
+                    Log.d("MainScreen", "질문 카드 하이라이트 상태: selectedLevel=$selectedLevel, appState.questionHighlightIndex=${appState.questionHighlightIndex}, finalHighlightIndex=$questionHighlightIndex")
+                    Log.d("MainScreen", "질문 카드 하이라이트 상세: TTS 상태 - isQuestionPlaying=${appState.isQuestionPlaying}, isAnswerPlaying=${appState.isAnswerPlaying}, isPlaying=${appState.isPlaying}")
                     
                     QuestionCard(
                         currentQuestion = qaItem.questionEn,
@@ -255,7 +253,7 @@ fun MainScreenRefactored(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Log.d("MainScreenRefactored", "질문 카드 상태: isFlipped=$isQuestionCardFlipped, isFullMemorizationMode=$isFullMemorizationMode")
+                    Log.d("MainScreen", "질문 카드 상태: isFlipped=$isQuestionCardFlipped, isFullMemorizationMode=$isFullMemorizationMode")
 
                     // 질문 카드 바로 아래 버튼들
                     Row(
@@ -297,8 +295,8 @@ fun MainScreenRefactored(
                         val answerKoHighlightIndex = appState.answerKoHighlightIndex
                         val recordingHighlightIndex = appState.recordingHighlightIndex
                         
-                        Log.d("MainScreenRefactored", "답변 카드 하이라이트 상태: selectedLevel=$selectedLevel, appState.answerHighlightIndex=${appState.answerHighlightIndex}, finalHighlightIndex=$answerHighlightIndex")
-                        Log.d("MainScreenRefactored", "답변 카드 하이라이트 상세: TTS 상태 - isQuestionPlaying=${appState.isQuestionPlaying}, isAnswerPlaying=${appState.isAnswerPlaying}, isPlaying=${appState.isPlaying}")
+                        Log.d("MainScreen", "답변 카드 하이라이트 상태: selectedLevel=$selectedLevel, appState.answerHighlightIndex=${appState.answerHighlightIndex}, finalHighlightIndex=$answerHighlightIndex")
+                        Log.d("MainScreen", "답변 카드 하이라이트 상세: TTS 상태 - isQuestionPlaying=${appState.isQuestionPlaying}, isAnswerPlaying=${appState.isAnswerPlaying}, isPlaying=${appState.isPlaying}")
                         
                         AnswerCard(
                             currentAnswer = viewModel.getCurrentAnswer(qaItem),

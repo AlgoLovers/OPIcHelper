@@ -40,23 +40,21 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.na982.opichelper.domain.entity.DataSource
 import com.na982.opichelper.domain.entity.UserLevel
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
-import com.na982.opichelper.presentation.viewmodel.MainViewModel
+import com.na982.opichelper.presentation.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
     onBackPressed: () -> Unit,
     onLogout: () -> Unit
 ) {
-    // MainViewModel을 사용하여 userPreferencesRepository에 접근
-    val mainViewModel: MainViewModel = hiltViewModel()
-    val userPreferencesRepository: UserPreferencesRepository = mainViewModel.userPreferencesRepository
+    // SettingsViewModel 사용
+    val viewModel: SettingsViewModel = hiltViewModel()
     
     var isDarkMode by remember { mutableStateOf(false) }
     var isAutoPlay by remember { mutableStateOf(true) }
     var selectedTtsService by remember { mutableStateOf("Google TTS") }
-    val userLevel by userPreferencesRepository.userLevel.collectAsState()
-    val selectedDataSource by userPreferencesRepository.selectedDataSource.collectAsState()
+    val userLevel by viewModel.userLevel.collectAsState()
+    val selectedDataSource by viewModel.selectedDataSource.collectAsState()
     val scrollState = rememberScrollState()
     
     Column(
@@ -165,7 +163,7 @@ fun SettingsScreen(
                         
                         RadioButton(
                             selected = userLevel == level,
-                            onClick = { userPreferencesRepository.setUserLevel(level) }
+                            onClick = { viewModel.setUserLevel(level) }
                         )
                     }
                 }
@@ -212,7 +210,7 @@ fun SettingsScreen(
                         
                         RadioButton(
                             selected = selectedDataSource == dataSource,
-                            onClick = { userPreferencesRepository.setDataSource(dataSource) }
+                            onClick = { viewModel.setDataSource(dataSource) }
                         )
                     }
                 }

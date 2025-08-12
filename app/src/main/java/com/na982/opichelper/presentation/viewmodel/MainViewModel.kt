@@ -33,6 +33,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import com.na982.opichelper.domain.repository.LearningPreferencesRepository
+import com.na982.opichelper.domain.repository.TtsSettingsRepository
 
 /**
  * 새로운 아키텍처에 맞는 MainViewModel
@@ -49,7 +51,8 @@ class MainViewModel @Inject constructor(
     private val memorizationManager: IMemorizationManager,
     private val initializeAppUseCase: InitializeAppUseCase,
     private val getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
-    val userPreferencesRepository: UserPreferencesRepository,
+    val learningPreferencesRepository: LearningPreferencesRepository,
+    private val ttsSettingsRepository: TtsSettingsRepository,
     private val memorizationLevelMapper: MemorizationLevelMapper // Added MemorizationLevelMapper
 ) : ViewModel() {
     

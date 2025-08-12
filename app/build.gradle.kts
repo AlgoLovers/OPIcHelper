@@ -11,7 +11,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.na982.opichelper"
+        applicationId = "com.na982.opichelper.refactored"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -22,7 +22,7 @@ android {
             useSupportLibrary = true
         }
     }
-
+    
     buildTypes {
         release {
             isMinifyEnabled = false
