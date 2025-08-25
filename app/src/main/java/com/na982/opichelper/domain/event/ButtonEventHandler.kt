@@ -9,20 +9,18 @@ import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.state.AppStateManager
 import com.na982.opichelper.domain.strategy.MemorizationStrategyFactory
 import com.na982.opichelper.domain.strategy.MemorizationUiCallback
-import com.na982.opichelper.domain.usecase.PlayRecordingUseCase
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 버튼 이벤트 처리기
  * 모든 버튼 클릭 이벤트를 처리하고 적절한 액션을 수행
  */
-@Singleton
+@ViewModelScoped
 class ButtonEventHandler @Inject constructor(
     private val audioControlManager: IAudioControlManager,
     private val appStateManager: AppStateManager,
     private val strategyFactory: MemorizationStrategyFactory,
-    private val playRecordingUseCase: PlayRecordingUseCase,
     private val progressManager: ProgressManager,
     private val startRepeatListeningUseCase: com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
 ) {
@@ -30,13 +28,32 @@ class ButtonEventHandler @Inject constructor(
     /**
      * 버튼 이벤트 처리
      */
+    suspend fun handleEvent(
+        event: ButtonEvent,
+        playRecordingUseCase: com.na982.opichelper.domain.usecase.PlayRecordingUseCase
+    ): ButtonEventResult {
+        return when (event) {
+            is ButtonEvent.QuestionPlayClick -> handleQuestionPlayClick(event)
+            is ButtonEvent.AnswerPlayClick -> handleAnswerPlayClick(event)
+            is ButtonEvent.MemorizeTestClick -> handleMemorizeTestClick(event)
+            is ButtonEvent.RecordingPlayClick -> handleRecordingPlayClick(event, playRecordingUseCase)
+            is ButtonEvent.StopClick -> handleStopClick(event)
+        }
+    }
+    
+    /**
+     * PlayRecordingUseCase가 필요하지 않은 이벤트들을 위한 오버로드
+     */
     suspend fun handleEvent(event: ButtonEvent): ButtonEventResult {
         return when (event) {
             is ButtonEvent.QuestionPlayClick -> handleQuestionPlayClick(event)
             is ButtonEvent.AnswerPlayClick -> handleAnswerPlayClick(event)
             is ButtonEvent.MemorizeTestClick -> handleMemorizeTestClick(event)
-            is ButtonEvent.RecordingPlayClick -> handleRecordingPlayClick(event)
             is ButtonEvent.StopClick -> handleStopClick(event)
+            is ButtonEvent.RecordingPlayClick -> {
+                // 녹음 재생은 PlayRecordingUseCase가 필요하므로 예외 발생
+                throw IllegalStateException("녹음 재생 이벤트는 PlayRecordingUseCase와 함께 호출되어야 합니다")
+            }
         }
     }
     
@@ -113,7 +130,10 @@ class ButtonEventHandler @Inject constructor(
     /**
      * 녹음 재생 이벤트 처리
      */
-    private suspend fun handleRecordingPlayClick(event: ButtonEvent.RecordingPlayClick): ButtonEventResult {
+    private suspend fun handleRecordingPlayClick(
+        event: ButtonEvent.RecordingPlayClick,
+        playRecordingUseCase: com.na982.opichelper.domain.usecase.PlayRecordingUseCase
+    ): ButtonEventResult {
         Log.d("ButtonEventHandler", "녹음 재생 이벤트 처리 시작 - 레벨: ${event.memorizeLevel}")
         
         // 1. 다른 작업 중단 (다른 버튼이 실행 중이면 중단)

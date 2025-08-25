@@ -3,14 +3,14 @@
     "id": "1",
     "question_en": "Tell me where you live.\nWhat's your favorite room in your house?\nWhat does it look like, and what do you usually do there?",
     "question_ko": "당신이 어디에 사는지 알고 싶습니다.\n집에서 가장 좋아하는 방은 어디인가요?\n어떻게 생겼나요?\n주로 거기서 무엇을 하나요?",
-    "answer_en": "I really like the living room.\nI have a ten-year-old son, and that’s where I usually play with him.\nWe often spend time there playing board games.\nSometimes, I read books in the living room as well.\nI like the living room because it’s such a great place to spend with my family.",
+    "answer_en": "I really like the living room.\nI have a ten-year-old son, and that’s where I usually play with him.\nWe often spend time there playing board games.\nSometimes, I read books in the living room as well.\nI like the living room because it’s such a great place to spend time with my family.",
     "answer_ko": "저는 거실을 가장 좋아해요.\n저는 10살 난 아들을 키우고 있고, 아들과 함께 노는 곳이 주로 거실입니다.\n우리는 주로 보드게임을 하면서 시간을 보냅니다.\n가끔은 거실에서 책도 읽습니다.\n저는 가족과 함께 시간을 보낼 수 있는 거실이 참 좋습니다."
   },
   {
     "id": "2",
     "question_en": "Tell me about the things you do at home.\nWhat are some of your daily activities?\nWhat is special about each of these activities?",
     "question_ko": "이제 집에서 하는 일들에 대해 말씀해 주세요.\n일상의 일부는 무엇인가요?\n각 활동의 특별한 점은 무엇인가요?",
-    "answer_en": "I’m a weekend dad, so I only see my family on weekends.\nMy wife works during the week while also taking care of our child.\nBecause of that, it’s hard for her to keep up with the housework.\nI also work in Seoul on weekdays, so I can’t help her then.\nWhen I get home on the weekend, I catch up on all the chores.\nI take out the recycling and do the laundry.\nI usually spend my weekends helping my wife with all the housework that’s piled up.",
+    "answer_en": "I’m a weekend dad, so I only see my family on weekends.\nMy wife works during the week while also taking care of our child.\nBecause of that, it’s hard for her to keep up with the housework.\nI also work in Seoul on weekdays, so I can’t help her then.\nSo, when I get home on the weekend, I catch up on all the chores.\nI take out the recycling and do the laundry.\nI usually spend my weekends helping my wife with all the housework that’s piled up.",
     "answer_ko": "저는 주말에만 가족과 시간을 보내는 주말부부입니다.\n아내는 평일에 직장을 다니면서 아이도 함께 돌봅니다.\n그래서 평소에는 집안일을 하기 어렵습니다.\n저도 평일에는 서울에서 일하기 때문에 아내를 도울 수 없습니다.\n그래서 주말에 집에 오면 주로 밀려 있는 집안일을 합니다.\n분리수거도 하고 빨래도 합니다.\n저는 주말에 시간이 나면 아내를 돕기 위해 밀린 집안일을 합니다."
   },
   {
@@ -31,14 +31,14 @@
     "id": "5",
     "question_en": "Tell me about the house or apartment you lived in as a child.\nHow was it different from where you live now?\nWhat were the similarities and differences?",
     "question_ko": "어렸을 때 살았던 집이나 아파트에 대해 말씀해 주세요.\n지금 살고 있는 곳과 어떻게 달랐나요?\n유사점과 차이점은 무엇인가요?",
-    "answer_en": "I remember living in a villa when I was a child.\nBack then, my friends could stand in front of my house and call my name.\nI could hear them right away and run outside to play.\nNow I live high up in an apartment building, on the nineteenth floor.\nIf my friends called my name from the street, I would not be able to hear them.\nStill, both my childhood villa and my current apartment are special to me.\nThey are the places where the people I love live.",
-    "answer_ko": "저는 어렸을 때 빌라에서 살았던 기억이 있습니다.\n그때는 친구들이 집 앞에 서서 제 이름을 부를 수 있었습니다.\n저는 바로 그 소리를 듣고 밖으로 나가 함께 놀았습니다.\n지금은 아파트 고층, 19층에 살고 있습니다.\n친구들이 길에서 제 이름을 불러도 들을 수 없을 것입니다.\n그래도 어린 시절의 빌라와 지금의 아파트 모두 저에게 특별합니다.\n그곳은 제가 사랑하는 사람들이 사는 곳입니다."
+    "answer_en": "I remember living in a villa when I was a child.\nBack then, my friends could stand in front of my house and call my name.\nI could hear them right away and run outside to play.\nNow I live high up in an apartment building, on the nineteenth floor.\nIf my friends called my name from the street, I wouldn't be able to hear them.\nStill, both places are special to me.\nThey’re home to the people I love.",
+    "answer_ko": "저는 어렸을 때 빌라에서 살았던 기억이 있습니다.\n그때는 친구들이 집 앞에 서서 제 이름을 부를 수 있었습니다.\n저는 바로 그 소리를 듣고 밖으로 나가 함께 놀았습니다.\n지금은 아파트 고층, 19층에 살고 있습니다.\n친구들이 길에서 제 이름을 불러도 들을 수 없을 것입니다.\n그래도, 두곳 모두 저에게 특별합니다.\n그곳은 제가 사랑하는 사람들이 사는 곳입니다."
   },
   {
     "id": "6",
     "question_en": "How have housing styles in your area changed over the last five or ten years?\nAre homes built today different from those built ten years ago?\nWhat developments or changes have you noticed?",
     "question_ko": "지난 5년 또는 10년 동안 당신이 사는 곳의 주택 스타일은 어떻게 변했나요?\n오늘날 지어진 집들이 10년 전에 지어진 집들과 다른가요?\n어떤 발전이나 변화를 발견하셨나요?",
-    "answer_en": "Ten years ago, I lived in an studio apartment.\nBack then, I was single and lived alone near my office.\nThere was a subway station nearby, and lots of restaurants.\nIt was always a busy downtown area.\nNow, I’m married and live in an apartment with my wife and son.\nIt’s a quiet residential complex, a bit away from downtown.\nI really like the landscaping in our complex.\nSo sometimes, when I have free time, I take walks there with my family.",
+    "answer_en": "Ten years ago, I lived in a studio apartment.\nBack then, I was single and lived alone near my office.\nThere was a subway station nearby, and lots of restaurants.\nIt was always a busy downtown area.\nNow, I’m married and live in an apartment with my wife and son.\nIt’s a quiet residential complex, a bit away from downtown.\nI really like the landscaping in our complex.\nSo sometimes, when I have free time, I take walks there with my family.",
     "answer_ko": "10년 전에는 오피스텔에서 살았습니다.\n그때는 미혼이었고, 회사 근처에서 혼자 살았습니다.\n근처에 지하철역이 있었고, 식당도 많았습니다.\n그곳은 항상 붐비는 도심 지역이었습니다.\n지금은 결혼해서 아내와 아들과 함께 아파트에 살고 있습니다.\n이곳은 도심에서 조금 떨어진 조용한 주거 단지입니다.\n저는 아파트 단지의 조경이 정말 마음에 듭니다.\n그래서 가끔 시간이 나면 가족과 함께 단지를 산책합니다."
   },
   {

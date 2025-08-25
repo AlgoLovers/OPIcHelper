@@ -7,13 +7,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 버튼 상태 관리자
  * 책임: 각 버튼의 상태를 관리하고 관찰자들에게 알림
  */
-@Singleton
+@ViewModelScoped
 class ButtonStateManager @Inject constructor() {
     
     // 각 버튼의 상태를 관리하는 StateFlow

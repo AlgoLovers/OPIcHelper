@@ -18,7 +18,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ActivityScoped
 import com.na982.opichelper.domain.audio.EnglishWritingUiCallback
 
 /**
@@ -29,7 +29,7 @@ import com.na982.opichelper.domain.audio.EnglishWritingUiCallback
  * - Infrastructure Layer에 의존
  * - 실제 비즈니스 로직 처리
  */
-@Singleton
+@ActivityScoped
 class EnglishWritingTestRepositoryImpl @Inject constructor(
     private val qaDataRepository: QaDataRepository,
     private val ttsController: TtsController,

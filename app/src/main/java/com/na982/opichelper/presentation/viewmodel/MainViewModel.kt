@@ -18,6 +18,7 @@ import com.na982.opichelper.domain.usecase.LoadCategoriesUseCase
 import com.na982.opichelper.domain.usecase.GetLeveledAnswerUseCase
 import com.na982.opichelper.domain.usecase.InitializeAppUseCase
 import com.na982.opichelper.domain.usecase.LoadQaItemsUseCase
+import com.na982.opichelper.domain.usecase.PlayRecordingUseCase
 import com.na982.opichelper.domain.manager.ICategoryManager
 import com.na982.opichelper.domain.manager.IAudioControlManager
 import com.na982.opichelper.domain.manager.IMemorizationManager
@@ -53,7 +54,8 @@ class MainViewModel @Inject constructor(
     private val getCurrentAnswerUseCase: GetLeveledAnswerUseCase,
     val learningPreferencesRepository: LearningPreferencesRepository,
     private val ttsSettingsRepository: TtsSettingsRepository,
-    private val memorizationLevelMapper: MemorizationLevelMapper // Added MemorizationLevelMapper
+    private val memorizationLevelMapper: MemorizationLevelMapper, // Added MemorizationLevelMapper
+    private val playRecordingUseCase: PlayRecordingUseCase
 ) : ViewModel() {
     
     // 앱 상태를 직접 관찰
@@ -189,7 +191,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val event = ButtonEvent.QuestionPlayClick(currentQaItem)
-                buttonEventHandler.handleEvent(event)
+                buttonEventHandler.handleEvent(event, playRecordingUseCase)
             } catch (e: Exception) {
                 Log.e("MainViewModel", "질문 재생 실패", e)
                 appStateManager.updateErrorState(e.message)
@@ -207,7 +209,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val event = ButtonEvent.AnswerPlayClick(currentQaItem)
-                buttonEventHandler.handleEvent(event)
+                buttonEventHandler.handleEvent(event, playRecordingUseCase)
             } catch (e: Exception) {
                 Log.e("MainViewModel", "답변 재생 실패", e)
                 appStateManager.updateErrorState(e.message)
@@ -248,7 +250,7 @@ class MainViewModel @Inject constructor(
                 )
                 
                 Log.d("MainViewModelRefactored", "암기 테스트 이벤트 발생: $event")
-                buttonEventHandler.handleEvent(event)
+                buttonEventHandler.handleEvent(event, playRecordingUseCase)
                 Log.d("MainViewModelRefactored", "암기 테스트 이벤트 처리 완료")
                 
             } catch (e: Exception) {
@@ -291,7 +293,7 @@ class MainViewModel @Inject constructor(
                 )
                 
                 Log.d("MainViewModelRefactored", "녹음 재생 이벤트 발생: $event")
-                buttonEventHandler.handleEvent(event)
+                buttonEventHandler.handleEvent(event, playRecordingUseCase)
                 Log.d("MainViewModelRefactored", "녹음 재생 이벤트 처리 완료")
                 
             } catch (e: Exception) {

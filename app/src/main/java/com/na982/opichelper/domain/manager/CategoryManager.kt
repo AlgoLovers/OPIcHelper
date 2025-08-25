@@ -11,13 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 카테고리 관리 전담 클래스
  * 책임: 카테고리 목록 관리, 카테고리 변경, QA 아이템 로딩
  */
-@Singleton
+@ViewModelScoped
 class CategoryManager @Inject constructor(
     private val qaDataRepository: QaDataRepository,
     private val appStateManager: AppStateManager,

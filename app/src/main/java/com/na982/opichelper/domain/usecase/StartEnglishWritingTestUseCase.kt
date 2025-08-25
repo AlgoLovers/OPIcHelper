@@ -4,7 +4,7 @@ import android.util.Log
 import com.na982.opichelper.domain.audio.EnglishWritingUiCallback
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 영작 테스트 시작 UseCase
@@ -16,7 +16,7 @@ import javax.inject.Singleton
  * - Repository 인터페이스에만 의존
  * - 단일 책임 원칙 준수
  */
-@Singleton
+@ViewModelScoped
 class StartEnglishWritingTestUseCase @Inject constructor(
     private val englishWritingTestRepository: EnglishWritingTestRepository
 ) {

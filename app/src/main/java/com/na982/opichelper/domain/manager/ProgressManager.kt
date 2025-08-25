@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 진행상황 저장/복원 + 암기테스트 로직을 통합 관리하는 클래스
@@ -20,7 +20,7 @@ import javax.inject.Singleton
  * 2. 암기테스트 로직 (영작테스트, 반복듣기, 통암기)
  * 3. 현재 진행상황 상태 관리
  */
-@Singleton
+@ViewModelScoped
 class ProgressManager @Inject constructor(
     private val progressPersistenceService: ProgressPersistenceService,
     private val englishWritingUseCase: StartEnglishWritingTestUseCase,

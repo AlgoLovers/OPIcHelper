@@ -3,7 +3,7 @@ package com.na982.opichelper.domain.strategy
 import android.util.Log
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 암기 전략 팩토리
@@ -14,7 +14,7 @@ import javax.inject.Singleton
  * - 새로운 전략 추가 시 Map만 수정하면 됨
  * - 에러 처리 개선
  */
-@Singleton
+@ViewModelScoped
 class MemorizationStrategyFactory @Inject constructor(
     private val repeatListeningStrategy: RepeatListeningStrategy,
     private val englishWritingStrategy: EnglishWritingStrategy,

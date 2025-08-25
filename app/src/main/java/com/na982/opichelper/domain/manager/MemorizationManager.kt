@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 현재 실행 중인 모드를 나타내는 enum
@@ -94,7 +94,7 @@ data class MemorizationUiState(
  * 암기 테스트 관리 전담 클래스
  * 책임: 반복듣기, 영작테스트, 통암기 모드 관리
  */
-@Singleton
+@ViewModelScoped
 class MemorizationManager @Inject constructor(
     private val executeRepeatListeningUseCase: StartRepeatListeningUseCase,
     private val executeEnglishWritingTestUseCase: StartEnglishWritingTestUseCase,

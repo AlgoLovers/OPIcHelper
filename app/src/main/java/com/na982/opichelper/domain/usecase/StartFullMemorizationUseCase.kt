@@ -4,7 +4,7 @@ import android.util.Log
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
 import kotlinx.coroutines.delay
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 전체 암기 테스트 시작 UseCase
@@ -14,7 +14,7 @@ import javax.inject.Singleton
  * - Repository에 의존하여 데이터 처리
  * - 상태 관리와 플로우 조율 담당
  */
-@Singleton
+@ViewModelScoped
 class StartFullMemorizationUseCase @Inject constructor(
     private val fullMemorizationRepository: FullMemorizationRepository
 ) {

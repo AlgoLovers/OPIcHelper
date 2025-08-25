@@ -16,13 +16,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancelAndJoin
 import com.na982.opichelper.domain.util.CoroutineUtils
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 반복 듣기 테스트 시작 UseCase
  * 책임: 반복 듣기 테스트 실행, 진행 상황 관리, TTS 제어
  */
-@Singleton
+@ViewModelScoped
 class StartRepeatListeningUseCase @Inject constructor(
     private val ttsController: TtsController,
     private val progressTracker: MemorizationProgressTracker,

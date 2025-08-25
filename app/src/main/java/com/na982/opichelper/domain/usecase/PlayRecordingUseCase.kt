@@ -20,7 +20,6 @@ import javax.inject.Singleton
  * - 통암기: 통암기 녹음 파일 재생
  * - 반복듣기: 녹음 재생 없음
  */
-@Singleton
 class PlayRecordingUseCase @Inject constructor(
     private val recordingAudioPlayer: RecordingAudioPlayer,
     private val recordingFileRepository: RecordingFileRepository,

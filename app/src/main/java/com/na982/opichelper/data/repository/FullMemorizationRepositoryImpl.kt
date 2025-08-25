@@ -9,9 +9,9 @@ import com.na982.opichelper.domain.repository.FullMemorizationRepository
 import com.na982.opichelper.domain.repository.QaDataRepository
 import java.io.File
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ActivityScoped
 
-@Singleton
+@ActivityScoped
 class FullMemorizationRepositoryImpl @Inject constructor(
     private val ttsController: TtsController,
     private val audioRecorder: AudioRecorder,

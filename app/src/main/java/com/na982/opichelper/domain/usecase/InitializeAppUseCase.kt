@@ -6,11 +6,13 @@ import com.na982.opichelper.domain.repository.QaDataRepository
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.state.AppStateManager
 import javax.inject.Inject
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 앱 초기화를 담당하는 UseCase
  * 클린 아키텍처의 UseCase 계층에서 앱 시작 시 필요한 모든 초기화를 처리
  */
+@ViewModelScoped
 class InitializeAppUseCase @Inject constructor(
     private val qaDataRepository: QaDataRepository,
     private val userPreferencesRepository: UserPreferencesRepository,

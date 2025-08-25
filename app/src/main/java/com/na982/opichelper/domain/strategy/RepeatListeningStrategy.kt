@@ -5,12 +5,12 @@ import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.usecase.StartRepeatListeningUseCase
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 반복듣기 전략 구현
  */
-@Singleton
+@ViewModelScoped
 class RepeatListeningStrategy @Inject constructor(
     private val repeatListeningUseCase: StartRepeatListeningUseCase
 ) : MemorizationStrategy {

@@ -5,12 +5,12 @@ import com.na982.opichelper.domain.audio.EnglishWritingUiCallback
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.StartEnglishWritingTestUseCase
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 영작테스트 전략 구현
  */
-@Singleton
+@ViewModelScoped
 class EnglishWritingStrategy @Inject constructor(
     private val englishWritingUseCase: StartEnglishWritingTestUseCase
 ) : MemorizationStrategy {

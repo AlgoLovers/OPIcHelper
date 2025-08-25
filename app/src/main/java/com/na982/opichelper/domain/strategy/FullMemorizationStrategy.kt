@@ -4,12 +4,12 @@ import android.util.Log
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.StartFullMemorizationUseCase
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 통암기 전략 구현
  */
-@Singleton
+@ViewModelScoped
 class FullMemorizationStrategy @Inject constructor(
     private val fullMemorizationUseCase: StartFullMemorizationUseCase
 ) : MemorizationStrategy {

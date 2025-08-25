@@ -3,7 +3,7 @@ package com.na982.opichelper.domain.strategy
 import android.util.Log
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 암기 레벨 매핑 전용 클래스
@@ -14,7 +14,7 @@ import javax.inject.Singleton
  * - 단일 책임 원칙 준수
  * - 중복 코드 제거
  */
-@Singleton
+@ViewModelScoped
 class MemorizationLevelMapper @Inject constructor() {
     
     /**

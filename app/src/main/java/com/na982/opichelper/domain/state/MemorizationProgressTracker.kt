@@ -8,13 +8,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 
 /**
  * 암기 테스트 진행 상황을 추적하는 싱글톤 클래스
  * 모든 스크립트의 진행 상황을 메모리에 보관하고, 앱 종료 시에만 변경된 항목을 저장
  */
-@Singleton
+@ViewModelScoped
 class MemorizationProgressTracker @Inject constructor(
     private val progressPersistenceService: ProgressPersistenceService
 ) {
