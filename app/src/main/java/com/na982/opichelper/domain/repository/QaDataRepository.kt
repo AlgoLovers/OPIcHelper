@@ -235,16 +235,43 @@ class QaDataRepository @Inject constructor(
     
     private suspend fun restoreLastCategory() {
         val lastCategory = prefs?.getString(PREF_KEY_LAST_CATEGORY, null)
-        if (lastCategory != null && loadedCategories.containsKey(lastCategory)) {
-            setCurrentCategory(lastCategory)
-            Log.d("QaDataRepository", "마지막 카테고리 복원: $lastCategory (인덱스: ${itemIndexByCategory[lastCategory] ?: 0})")
-        } else {
-            // 기본 카테고리 선택
-            val firstCategory = _categories.value.firstOrNull()
-            if (firstCategory != null) {
-                selectCategory(firstCategory)
-                Log.d("QaDataRepository", "기본 카테고리 선택: $firstCategory")
+        val lastIndex = prefs?.getInt(PREF_KEY_LAST_INDEX, 0) ?: 0
+        
+        if (lastCategory != null) {
+            try {
+                Log.d("QaDataRepository", "마지막 카테고리 복원 시도: $lastCategory (인덱스: $lastIndex)")
+                
+                // 1. 카테고리 데이터 로드 (Lazy Loading)
+                loadCategoryData(lastCategory)
+                
+                // 2. 인덱스 복원
+                itemIndexByCategory[lastCategory] = lastIndex
+                
+                // 3. 카테고리 설정 (데이터가 로드된 후)
+                setCurrentCategory(lastCategory)
+                
+                Log.d("QaDataRepository", "마지막 카테고리 복원 성공: $lastCategory (인덱스: $lastIndex)")
+            } catch (e: Exception) {
+                Log.e("QaDataRepository", "마지막 카테고리 복원 실패: $lastCategory", e)
+                // 복원 실패 시 기본 카테고리로 폴백
+                fallbackToDefaultCategory()
             }
+        } else {
+            Log.d("QaDataRepository", "저장된 마지막 카테고리 없음, 기본 카테고리 선택")
+            fallbackToDefaultCategory()
+        }
+    }
+    
+    /**
+     * 기본 카테고리로 폴백
+     */
+    private suspend fun fallbackToDefaultCategory() {
+        val firstCategory = _categories.value.firstOrNull()
+        if (firstCategory != null) {
+            selectCategory(firstCategory)
+            Log.d("QaDataRepository", "기본 카테고리 선택: $firstCategory")
+        } else {
+            Log.w("QaDataRepository", "사용 가능한 카테고리가 없음")
         }
     }
     

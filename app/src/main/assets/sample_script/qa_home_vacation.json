@@ -1,37 +1,45 @@
 [
   {
     "id": "1",
+    "question_en": "You indicated that you take vacations at home. \nWho do you meet when you spend vacations at home?\nWhat do you do with them?\nPlus, who do you want to meet in the future for your vacation?\nWhy is that?",
     "question_ko": "당신은 집에서 휴가를 보낸다고 했는데요.\n그렇다면 집에서 휴가를 보낼 때는 누구를 만나나요?\n그들과는 무엇을 하며 시간을 보내세요?\n또한, 앞으로의 휴가 때 누구를 만나고 싶은가요?\n그 이유는 무엇인가요?",
-    "question_en": "You said you spend your vacations at home.\nSo, who do you meet when you take vacations at home?\nWhat do you do with them?\nAlso, who would you like to meet on your future vacation?\nWhy is that?",
     "answer_ko": "저는 주말부부입니다.\n그래서 평일에는 가족과 함께할 시간이 없습니다.\n그 점이 항상 아쉽습니다.\n그래서 휴가를 내면 가족이 사는 곳으로 가서 집에서 시간을 보냅니다.\n요즘에는 아들과 주로 보드게임을 합니다.\n그리고 아내에게는 요리를 해 주거나 분위기 좋은 카페에 같이 갑니다.\n저는 주말부부이기 때문에 휴가 때는 무조건 가족과 시간을 보냅니다.",
     "answer_en": "I am a weekend husband.\nSo, I don’t have time to be with my family on weekdays.\nI always feel sad about that.\nThat’s why when I take a vacation, I go to where my family lives and spend time at home.\nThese days, I usually play board games with my son.\nI also cook for my wife or go to a nice café with her.\nSince I am a weekend husband, I always spend my vacations with my family."
   },
   {
     "id": "2",
+    "question_en": "Tell me about what you did during your last vacation.\nHow did your vacation start and how did it end? \nWhat did you do on each day?\nTell me everything about the things you did on your last vacation at home.",
     "question_ko": "지난 휴가 동안 무엇을 했는지 이야기해 주세요.\n휴가는 어떻게 시작되었고, 어떻게 마무리되었나요?\n하루하루 어떤 일을 했는지 알려 주세요.\n집에서 보낸 지난 휴가 동안 했던 모든 일을 자세히 말해 주세요.",
-    "question_en": "Tell me what you did during your last vacation.\nHow did it start and how did it end?\nWhat did you do each day?\nPlease tell me in detail about everything you did during your last vacation at home.",
     "answer_ko": "지난 휴가 때는 가족과 캠핑을 갔습니다.\n우리 가족은 캠핑을 좋아합니다.\n주로 금요일부터 일요일까지 2박 3일로 갑니다.\n제가 사는 동네에는 캠핑장이 많습니다.\n차로 한 시간 정도 거리에만 50개가 넘는 캠핑장이 있습니다.\n우선 캠핑 짐을 차에 싣고 가는 길에 장을 봅니다.\n고기와 술, 그리고 아이가 좋아하는 간식도 삽니다.\n캠핑장에 도착하면 저는 텐트를 치고 아이는 놀이터에서 처음 만난 친구들과 놉니다.\n그 후에 식사 준비를 하고 함께 식사를 합니다.\n나라별로 캠핑 스타일이 다르지만 한국의 캠핑은 보통 이렇게 합니다.",
     "answer_en": "On my last vacation, I went camping with my family.\nWe enjoy camping.\nWe usually go for two nights and three days, from Friday to Sunday.\nThere are many campgrounds near where I live.\nWithin about an hour’s drive, there are over 50 campgrounds.\nFirst, we load the camping gear into the car and shop for groceries on the way.\nWe buy meat, drinks, and snacks my child likes.\nWhen we arrive, I set up the tent while my child plays with new friends at the playground.\nAfter that, we prepare the meal and eat together.\nCamping styles are different in each country, but in Korea, it’s usually like this."
   },
   {
     "id": "3",
-    "question_ko": "이제는 집에서 보낸 휴가 중 특별하거나 예상치 못했던 경험에 대해 말해 주세요.\n왜 그 일이 기억에 남았나요?\n누구와 함께 있었나요?\n어디에 있었나요?\n무엇을 했나요?\n기억에 남는 장면이나 사건이 있다면 어떤 것이 있나요?",
-    "question_en": "Now, tell me about a special or unexpected experience you had during a vacation at home.\nWhy was it memorable?\nWho were you with?\nWhere were you?\nWhat did you do?\nWhat are some moments or events you remember?",
-    "answer_ko": "얼마 전 아들의 초등학교 친구와 그 친구의 아버지를 집에 초대했습니다.\n그날은 제 아내와 그 친구의 어머니는 집에 없었습니다.\n각자 친구를 만나러 나간 것 같습니다.\n그 집도 주말부부이기 때문에 가끔은 엄마들에게 이렇게 휴가를 주는 게 좋다고 생각합니다.\n그래서 그날은 아빠들끼리 아이들을 데리고 우리 집에서 휴가를 보냈습니다.\n제가 생선을 회로 준비했고 그 아버지는 육회를 가지고 왔습니다.\n문제는 음식이 너무 많아졌다는 것이었습니다.\n열심히 먹었지만 끝내 다 먹지 못하고 우리의 만남은 마무리되었습니다.\n아이를 키우다 보니 아이의 친구 아버지와도 친구가 될 수 있다는 게 신기했습니다.",
-    "answer_en": "Not long ago, I invited my son’s elementary school friend and his father to our home.\nThat day, my wife and the friend’s mother were not at home.\nI think they each went to meet their own friends.\nThat family is also a weekend family, so I think it’s nice to sometimes give the moms a break.\nSo that day, the dads spent the vacation with the kids at my house.\nI prepared sashimi, and the other dad brought beef tartare.\nThe problem was that we ended up with too much food.\nWe tried hard to eat it all but couldn’t finish, and our gathering came to an end.\nWhile raising a child, I found it interesting that you can become friends with your child’s friend’s dad."
+    "question_en": "Now, tell me about an unusual or unexpected experience you had during a vacation you pent at home.\nWhy was it memorable? \nWho were you with?\nWhere were you at?\nWhat did you do?\nWhat are some things or events that you remember?",
+    "question_ko": "이제는 집에서 보낸 휴가 중 특별하거나 예상치 못했던 경험에 대해 말해 주세요.\n왜 그 일이 기억에 남았나요?\n누구와 함께 있었나요?\n어디에 있었나요?무엇을 했나요?\n기억에 남는 장면이나 사건이 있다면 어떤 것이 있나요?",
+    "answer_ko": "최근에 아들의 친구와 아버지를 집에 초대했습니다.\n그날 아내는 친구를 만나러 나갔습니다.\n그래서 우리 아빠들과 아이들이 집에서 함께 놀았습니다.\n저는 피자를 준비했고, 그 아버지는 치킨을 가져왔습니다.\n음식이 많아서 다 먹지는 못했습니다.\n아이 덕분에 다른 아버지와 친해질 수 있어서 즐거웠습니다.",
+    "answer_en": "Recently, I invited my son’s friend and his dad to our home.\nThat day, my wife went out to meet her friend.\nSo the dads and kids played together at my house.\nI prepared pizza, and the other dad brought chicken.\nWe had a lot of food, so we couldn’t finish it.\nThanks to my son, I became close with another dad, and it was fun."
   },
   {
     "id": "4",
-    "question_ko": "당신은 집에서 휴가를 보낸다고 했습니다.\n당신 나라 사람들은 일반적으로 휴가 동안 무엇을 하나요?\n그들이 휴가를 보내는 방식은 시간이 지나면서 어떻게 달라졌나요?\n구체적인 예시를 들어 주세요.",
-    "question_en": "You said you spend your vacations at home.\nWhat do people in your country usually do during their vacations?\nHow has the way they spend vacations changed over time?\nPlease give me specific examples.",
-    "answer_ko": "사람마다 휴가를 즐기는 방법이 다릅니다.\n저 역시 상황에 따라 휴가를 보내는 방법이 달라졌습니다.\n아이가 태어나기 전과 후가 많이 달랐습니다.\n아이가 없을 때는 아내와 단둘이 여행하며 맛있는 음식을 먹었습니다.\n하지만 아이가 생기고 나서는 모든 휴가가 아이 중심이 되었습니다.\n아이와 함께할 수 있는 공간에서 아이와 함께 먹을 수 있는 음식을 먹으며 휴가를 보냅니다.\n그래도 휴가는 항상 가족과 함께할 수 있는 즐거운 시간입니다.",
-    "answer_en": "People enjoy vacations in different ways.\nFor me, the way I spend vacations has changed depending on my situation.\nIt changed a lot before and after my child was born.\nBefore having a child, my wife and I traveled together and enjoyed delicious food.\nBut after having a child, all our vacations became focused on our kid.\nWe spend them in places where we can be with him and eat meals together.\nStill, vacations are always a happy time to be with my family."
+    "question_ko": "당신은 집에서 휴가를 보낸다고 했습니다.\n당신의 나라 사람들은 일반적으로 휴가 동안 무엇을 하나요?\n그들이 휴가를 보내는 방식은 시간이 지나면서 어떻게 달라졌나요?\n구체적인 예시를 들어 주세요.",
+    "question_en": "You said you spend your vacations at home.\nWhat do people in your country usually do during vacations?\nHow has the way they spend vacations changed over time?\nPlease give me some examples.",
+    "answer_ko": "사람마다 휴가를 즐기는 방법이 다릅니다.\n저도 상황에 따라 휴가를 보내는 방법이 달라졌습니다.\n아이가 태어나기 전과 후가 많이 달랐습니다.\n아이가 없을 때는 아내와 여행을 다니며 맛있는 음식을 먹었습니다.\n하지만 아이가 생기고 나서는 모든 휴가가 아이 중심이 되었습니다.\n우리는 아이와 함께 놀 수 있는 곳으로 갑니다.\n그리고 가족이 함께 식사하며 즐거운 시간을 보냅니다.\n그래서 휴가는 항상 가족과 함께할 수 있는 행복한 시간입니다.",
+    "answer_en": "People enjoy vacations in different ways.\nFor me, the way I spend vacations has changed over time.\nIt was very different before and after my child was born.\nBefore having a child, my wife and I traveled and enjoyed good food.\nBut after having a child, all my vacations focused on my kid.\nWe go to places where we can play with our child.\nWe eat together and have a good time as a family.\nSo vacations are always a happy time to be with my family."
+  },
+  {
+    "id": "5",
+    "question_en": "Experts state that vacations are important for one's health and one's relationships with others.\nTake a minute to discuss your view on the importance of vacations.",
+    "question_ko": "전문가들은 휴가가 건강과 다른 사람들과의 관계에 중요하다고 말합니다.\n휴가의 중요성에 대한 당신의 생각을 1분 정도 이야기해 보세요.",
+    "answer_ko": "휴가는 모든 사람이 좋아하지만 특히 저 같은 주말부부에게는 매우 특별하고 중요합니다.\n휴가가 없다면 주말부부 생활을 유지하기 힘들고 둘 중 한 명은 일을 그만둬야 할 것입니다.\n휴가 없이 주말부부로는 아이를 절대 키울 수 없습니다.\n저에게 휴가는 가족과 함께할 시간을 만들어 줍니다.\n또한 아이가 아프거나 아내가 아플 때 제가 휴가를 내서 가족을 돌볼 수 있게 해 줍니다.\n주말부부에게 휴가는 정말로 소중합니다.",
+    "answer_en": "Everyone loves vacations, but for someone like me who is a weekend husband, they are very special and important.\nWithout vacations, it would be hard to keep this lifestyle, and one of us might have to quit our job.\nIt’s impossible to raise a child this way without vacations.\nFor me, vacations give me time to be with my family.\nThey also let me take time off to care for my wife or child when they are sick.\nFor weekend couples, vacations are truly precious."
   },
   {
     "id": "5",
     "question_ko": "전문가들은 휴가가 건강과 다른 사람들과의 관계에 중요하다고 말합니다.\n휴가의 중요성에 대한 당신의 생각을 1분 정도 이야기해 보세요.",
-    "question_en": "Experts say vacations are important for your health and your relationships with others.\nPlease share your thoughts on the importance of vacations for about one minute.",
-    "answer_ko": "휴가는 모든 사람이 좋아하지만 특히 저 같은 주말부부에게는 매우 특별하고 중요합니다.\n휴가가 없다면 주말부부 생활을 유지하기 힘들고 둘 중 한 명은 일을 그만둬야 할 것입니다.\n휴가 없이 주말부부로는 아이를 절대 키울 수 없습니다.\n저에게 휴가는 가족과 함께할 시간을 만들어 줍니다.\n또한 아이가 아프거나 아내가 아플 때 제가 휴가를 내서 가족을 돌볼 수 있게 해 줍니다.\n주말부부에게 휴가는 정말로 소중합니다.",
-    "answer_en": "Everyone loves vacations, but for someone like me who is a weekend husband, they are very special and important.\nWithout vacations, it would be hard to keep this lifestyle, and one of us might have to quit our job.\nIt’s impossible to raise a child this way without vacations.\nFor me, vacations give me time to be with my family.\nThey also let me take time off to care for my wife or child when they are sick.\nFor weekend couples, vacations are truly precious."
+    "question_en": "Experts say vacations are important for health and relationships.\nPlease share your thoughts on why vacations are important.",
+    "answer_ko": "휴가는 모든 사람에게 필요하지만, 저 같은 주말부부에게는 더 중요합니다.\n휴가가 없다면 가족과 함께 시간을 보낼 수 없습니다.\n저는 평일에 가족을 볼 수 없기 때문입니다.\n그래서 휴가는 가족을 만날 수 있는 소중한 시간입니다.\n또한 가족이 아플 때 제가 휴가를 내서 도와줄 수 있습니다.\n주말부부에게 휴가는 정말 특별한 시간입니다.",
+    "answer_en": "Vacations are important for everyone, but they are more important for people like me who live away from family.\nWithout vacations, I can’t spend time with my family.\nI can’t see them during the week.\nSo vacations are special time to be with them.\nAlso, when my family is sick, I stay home to take care of them.\nFor weekend couples, vacations are very special and important."
   }
+
 ]

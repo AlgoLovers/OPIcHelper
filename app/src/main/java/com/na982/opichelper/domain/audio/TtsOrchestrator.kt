@@ -5,7 +5,12 @@ import android.os.Build
 import android.util.Log
 import com.na982.opichelper.data.audio.BaseTtsPlayer
 import com.na982.opichelper.domain.button.ButtonStateObserver
+import com.na982.opichelper.domain.manager.TtsHealthMonitor
+import com.na982.opichelper.domain.state.AppStateManager
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -16,7 +21,9 @@ import javax.inject.Inject
 class TtsOrchestrator @Inject constructor(
     private val context: Context,
     private val googleTtsPlayer: TtsPlayer,
-    private val samsungTtsPlayer: TtsPlayer
+    private val samsungTtsPlayer: TtsPlayer,
+    private val ttsHealthMonitor: TtsHealthMonitor,
+    private val appStateManager: AppStateManager
 ) : ButtonStateObserver {
     
     // 한글 TTS 플레이어들 (폴백 순서)
@@ -62,12 +69,79 @@ class TtsOrchestrator @Inject constructor(
     }
     
     /**
+     * TTS 초기화 (모니터링 시작 포함)
+     */
+    fun initialize() {
+        Log.d("TtsOrchestrator", "TTS 초기화 시작")
+        try {
+            // TTS 모니터링 시작 및 복구 콜백 설정
+            ttsHealthMonitor.onTtsRecoveryNeeded = { 
+                CoroutineScope(Dispatchers.Main).launch { recoverTts() }
+            }
+            ttsHealthMonitor.startMonitoring()
+            Log.d("TtsOrchestrator", "TTS 초기화 완료")
+        } catch (e: Exception) {
+            Log.e("TtsOrchestrator", "TTS 초기화 실패", e)
+        }
+    }
+    
+    /**
+     * TTS 슬립 상태 복구
+     */
+    private suspend fun recoverTts() {
+        try {
+            Log.d("TtsOrchestrator", "TTS 슬립 상태 복구 시작")
+            
+            // 1. 현재 TTS 중지
+            stop()
+            
+            // 2. 잠시 대기 (TTS 서비스 안정화)
+            kotlinx.coroutines.delay(500)
+            
+            // 3. TTS 재초기화
+            initialize()
+            
+            // 4. 마지막 재생 요청 복구
+            val currentState = appStateManager.state.value
+            val currentQaItem = currentState.currentQaItem
+            
+            if (currentQaItem != null) {
+                if (currentState.isQuestionPlaying) {
+                    // 질문 재생 복구
+                    if (currentQaItem.questionEn.isNotEmpty()) {
+                        Log.d("TtsOrchestrator", "질문 재생 복구: ${currentQaItem.questionEn}")
+                        speak(currentQaItem.questionEn, null)
+                    }
+                } else if (currentState.isAnswerPlaying) {
+                    // 답변 재생 복구 - 첫 번째 답변 문장 사용
+                    val firstAnswerSentence = currentQaItem.answerEnSentences.firstOrNull()
+                    if (firstAnswerSentence != null) {
+                        Log.d("TtsOrchestrator", "답변 재생 복구: $firstAnswerSentence")
+                        speak(firstAnswerSentence, null)
+                    }
+                }
+            }
+            
+            // 5. TTS 활동 시간 업데이트
+            ttsHealthMonitor.updateTtsActivity()
+            
+            Log.d("TtsOrchestrator", "TTS 슬립 상태 복구 완료")
+            
+        } catch (e: Exception) {
+            Log.e("TtsOrchestrator", "TTS 슬립 상태 복구 실패", e)
+        }
+    }
+    
+    /**
      * 텍스트 언어를 감지하여 적절한 TTS 플레이어로 재생
      * @param text 재생할 텍스트
      * @param onComplete 재생 완료 콜백
      * @return 재생 성공 여부
      */
     suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
+        // TTS 활동 시간 업데이트 (모니터링용)
+        ttsHealthMonitor.updateTtsActivity()
+        
         val isKorean = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
         
         Log.d("TtsOrchestrator", "🔍 언어 감지: 텍스트='${text.take(20)}...', 한글여부=$isKorean")
@@ -202,6 +276,9 @@ class TtsOrchestrator @Inject constructor(
             // 한글 TTS 인덱스 리셋
             currentKoreanTtsIndex = 0
             
+            // TTS 모니터링 시작
+            ttsHealthMonitor.startMonitoring()
+            
             Log.d("TtsOrchestrator", "TTS 상태 초기화 완료")
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 상태 초기화 실패", e)
@@ -219,6 +296,9 @@ class TtsOrchestrator @Inject constructor(
             for (player in koreanTtsPlayers) {
                 player.stop()
             }
+            
+            // TTS 모니터링 중지
+            ttsHealthMonitor.stopMonitoring()
             
             // 상태 초기화 (ButtonStateObserver로 이동했으므로 여기서는 제거)
             
@@ -282,6 +362,9 @@ class TtsOrchestrator @Inject constructor(
     fun releaseAllPlayers() {
         Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제")
         try {
+            // TTS 모니터링 중지
+            ttsHealthMonitor.stopMonitoring()
+            
             googleTtsPlayer.release()
             samsungTtsPlayer.release()
             Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제 완료")
@@ -358,6 +441,9 @@ class TtsOrchestrator @Inject constructor(
      * 문장별 하이라이트와 함께 TTS 재생
      */
     suspend fun speakWithHighlight(text: String, onHighlight: (Int) -> Unit): Long {
+        // TTS 활동 시간 업데이트 (모니터링용)
+        ttsHealthMonitor.updateTtsActivity()
+        
         Log.d("TtsOrchestrator", "🎯 speakWithHighlight 호출됨: '${text.take(30)}...'")
         
         val startTime = System.currentTimeMillis()
@@ -488,6 +574,9 @@ class TtsOrchestrator @Inject constructor(
         onHighlight: ((Int) -> Unit)? = null,
         waitForCompletion: Boolean = true
     ): Long {
+        // TTS 활동 시간 업데이트 (모니터링용)
+        ttsHealthMonitor.updateTtsActivity()
+        
         Log.d("TtsOrchestrator", "🎯 speakUnified 호출: '${text.take(30)}...', isKorean=$isKorean, rate=$rate, hasHighlight=${onHighlight != null}")
 
         System.currentTimeMillis()

@@ -1,9 +1,9 @@
 [
   {
     "id": "1",
-    "question_en": "You indicated that you enjoy listening to music.\nWhat kind of music do you like to listen to?\nIn addition, who is your favorite singer or composer?\nWhat's special about their music?",
+    "question_en": "You indicated that you like to listen to music.\nWhat type of music do you like listening to?\nPlus, who is your favorite singer or composer?\nWhat is special about his or her music?",
     "question_ko": "당신은 음악 듣는 것을 좋아한다고 표시했습니다.\n어떤 종류의 음악을 듣는 것을 좋아하세요?\n게다가, 당신이 가장 좋아하는 가수나 작곡가는 누구인가요?\n그의 음악에서 특별한 점은 무엇인가요?",
-    "answer_en": "I do not have one favorite kind of music.\nI usually listen to the Top One Hundred songs that Melon recommends.\nMelon is the most popular music streaming service in Korea.\nI think Spotify is popular in the U.S.\nI do not have a favorite singer or composer.\nBut there is one kind I do not like: old‑style Korean pop.\nWhen that kind comes on, I skip to the next song.\nSo I like almost all music, except that old style.",
+    "answer_en": "I don't have one favorite kind of music.\nI usually listen to the Top One Hundred songs that Melon recommends.\nMelon is the most popular music streaming service in Korea.\nI think Spotify is popular in the U.S.\nI don't have a favorite singer or composer.\nBut there is one kind I don't like: old‑style Korean pop.\nWhen that kind comes on, I skip to the next song.\nSo I like almost all music, except that old style.",
     "answer_ko": "나는 한 가지 음악만 좋아하는 건 아니야.\n보통 멜론이 추천하는 인기 노래 탑백을 들어.\n멜론은 한국에서 가장 인기 있는 음악 스트리밍 서비스야.\n미국에서는 스포티파이가 인기 있는 걸로 알고 있어.\n좋아하는 가수나 작곡가는 따로 없어.\n하지만 내가 안 좋아하는 스타일이 하나 있어, 한국의 옛 느낌 팝이야.\n그런 노래가 나오면 바로 다음 곡으로 넘겨.\n그래서 그 스타일만 빼고는 거의 모든 음악을 좋아해."
   },
   {
@@ -15,30 +15,30 @@
   },
   {
     "id": "3",
-    "question_en": "Please describe any new electronic devices or equipment that people who enjoy music are currently interested in.\nWhat hot topics or trends are they discussing?\nTell me about the exciting new products and why.",
+    "question_en": "Explain some of the new electronic gadgets or equipment that people who enjoy music are currently interested in.\nWhat hot topics or trends are they discussing?\nDescribe some of the new products that they are excited about and why.",
     "question_ko": "음악을 즐기는 사람들이 현재 관심을 갖고 있는 새로운 전자 기기나 장비에 대해 설명해 주세요.\n그들은 어떤 뜨거운 주제나 트렌드에 대해 논의하고 있습니까?\n그들이 신나는 신제품들과 그 이유를 설명해 주세요.",
-    "answer_en": "These days, most people use smartphones with wireless earphones to listen to music.\nAlmost everyone has a smartphone, so it is easy.\nWireless earphones let you enjoy music anywhere.\nAt first, some people kept wired earphones because wireless ones did not sound good.\nNow the sound of wireless earphones is much better.\nSo most people use them now.\nThe trend is a smartphone plus wireless earphones because it is simple.",
-    "answer_ko": "요즘은 대부분 스마트폰에 무선 이어폰을 연결해 음악을 들어.\n거의 모두가 스마트폰을 가지고 있어서 쓰기 쉬워.\n무선 이어폰을 쓰면 어디서든 음악을 즐길 수 있어.\n처음에는 무선 이어폰 소리가 별로여서 유선 이어폰을 쓰는 사람도 있었어.\n지금은 무선 이어폰 소리가 많이 좋아졌어.\n그래서 요즘은 대부분 무선 이어폰을 써.\n요즘 트렌드는 스마트폰에 무선 이어폰 조합이야, 간단해서 좋아."
+    "answer_en": "These days, most people connect wireless earphones to their smartphones to listen to music.\nAlmost everyone has a smartphone, so wireless earphones are very common.\nWith them, you can enjoy music anywhere.\nIn the beginning, people kept using wired earphones since the audio quality of wireless ones wasn’t impressive.\nNow the sound has improved a lot. So most people prefer wireless ones.\nThe trend these days is a smartphone with wireless earphones, because it’s simple and easy.",
+    "answer_ko": "요즘은 대부분 스마트폰에 무선 이어폰을 연결해 음악을 들어.\n거의 모두가 스마트폰을 가지고 있고, 그리고 무선이어폰도 매우 흔해졌어.\n무선 이어폰을 쓰면 어디서든 음악을 즐길 수 있어.\n처음에는 무선 이어폰 소리가 별로여서 유선 이어폰을 쓰는 사람도 있었어.\n지금은 무선 이어폰 소리가 많이 좋아졌어.\n그래서 요즘은 대부분 무선 이어폰을 써.\n요즘 트렌드는 스마트폰에 무선 이어폰 조합이야, 간단해서 좋아."
   },
   {
     "id": "4",
-    "question_en": "Tell me about a time you went to listen to live music.\nPerhaps it was at a concert or a live music cafe.\nWhat was the music like there, and how did it make you feel?",
+    "question_en": "Tell me about a time when you went to listen to some live music.\nPerhaps it was at a concert or a live cafe.\nWhat was the mood like and how did you like the music you listened there?",
     "question_ko": "라이브 음악을 들으러 갔던 때에 대해 말씀해 주세요.\n아마도 콘서트나 라이브 카페에서였을 것입니다.\n그곳에서 들은 음악은 어땠나요? 기분이 어땠나요?",
-    "answer_en": "I heard live music for the first time in high school.\nA close friend played guitar in a band.\nI went to see his band play.\nIt was loud rock; I do not like that now, but back then I loved it.\nThe strong beat and my friend’s show made my school stress feel lighter.",
+    "answer_en": "I heard live music for the first time in high school.\nA close friend played guitar in a band.\nI went to see his band perform.\nIt was loud rock; I don’t like that now, but back then I loved it.\nThe strong beat and my friend’s performance made my school stress feel lighter.",
     "answer_ko": "나는 고등학교 때 처음으로 라이브 음악을 들었어.\n친한 친구가 밴드에서 기타를 쳤거든.\n그래서 그 밴드 공연을 보러 갔어.\n시끄러운 록 공연이었는데, 지금은 잘 안 좋아하지만 그때는 정말 좋았어.\n강한 비트와 친구의 무대 덕분에 학교 스트레스가 가벼워졌어."
   },
   {
     "id": "5",
-    "question_en": "Now, pick two singers or composers that you like.\nWhat is special about their music?\nWhat are the similarities and differences between the two?",
+    "question_en": "Now, pick two singers or composers you like.\nWhat is special about their music?\nWhat are some similarities and differences between the two singers or composers?",
     "question_ko": "이제, 당신이 좋아하는 가수나 작곡가 두 명을 골라보세요.\n그들의 음악은 무엇이 특별한가요?\n두 가수나 작곡가 사이에는 어떤 공통점과 차이점이 있나요?",
-    "answer_en": "I do not have a favorite singer now.\nLong ago I liked a singer named Seo Taiji.\nHe is retired now, but he was once very famous in Korea.\nHis songs still sound cool after thirty years.\nIn college, I listened to Psy a lot.\nYou may know him because \"Gangnam Style\" was a big hit worldwide.\nHis videos are funny and easy to enjoy.\nSo they are both famous, but their styles are different.",
-    "answer_ko": "지금은 특별히 좋아하는 가수가 없어.\n예전에는 서태지라는 가수를 좋아했어.\n지금은 은퇴했지만 한때 한국에서 아주 유명했어.\n그의 노래는 30년이 지나도 여전히 멋지게 들려.\n대학생 때는 싸이 노래를 많이 들었어.\n‘강남스타일’이 전 세계적으로 크게 히트해서 알 수도 있어.\n그의 영상은 웃기고 쉽게 즐길 수 있어.\n둘 다 유명하지만 스타일은 달라."
+    "answer_en": "I don’t have a favorite singer right now.\nIn the past, I liked a singer named Seo Taiji.\nHe retired, but he was once very famous in Korea.\nHis songs still sound great even after 30 years.\nWhen I was in college, I often listened to Psy’s songs.\nYou may know him because ‘Gangnam Style’ was a big hit worldwide.\nHis videos are funny and easy to enjoy.\nBoth are famous, but their styles are different.",
+    "answer_ko": "지금은 특별히 좋아하는 가수가 없어.\n예전에는 서태지라는 가수를 좋아했어.\n그는 은퇴했지만 한때 한국에서 아주 유명했어.\n그의 노래는 30년이 지나도 여전히 멋지게 들려.\n대학생 때는 싸이 노래를 자주 들었어.\n‘강남스타일’이 전 세계적으로 크게 히트해서 알 수도 있어.\n그의 영상은 웃기고 쉽게 즐길 수 있어.\n둘 다 유명하지만 스타일은 달라."
   },
   {
     "id": "6",
-    "question_en": "What kind of music did you listen to when you were a child?\nHow is the music you listened to back then different from the music you listen to now?\nHow has your interest in music changed over time?",
+    "question_en": "What kind of music did you listen to when you were young?\nHow was that music different from the music you listen to today?\nHow has your interest in music changed over the years?",
     "question_ko": "어렸을 때는 어떤 종류의 음악을 들었나요?\n그때 들었던 음악은 지금 듣는 음악과 어떻게 다른가요?\n시간이 지나면서 음악에 대한 관심은 어떻게 변했나요?",
-    "answer_en": "When I was a kid, I liked singers like Seo Taiji and Psy.\nNow I do not have the energy to search for singers like that.\nThese days, I just listen to the Top One Hundred songs on Melon.\nFinding new artists by myself feels like too much work.\nOver time, I started to enjoy music in a simple, relaxed way.",
-    "answer_ko": "어렸을 때는 서태지나 싸이 같은 가수를 좋아했어.\n지금은 그런 가수를 찾아볼 에너지가 없어.\n요즘은 그냥 멜론에서 인기 많은 헌드레드 노래를 들어.\n새 가수를 내가 직접 찾는 건 너무 번거롭게 느껴져.\n시간이 지나면서 음악을 단순하고 편하게 즐기게 된 것 같아."
+    "answer_en": "When I was young, I liked singers like Seo Taiji and Psy.\nBut now I am too busy with work and family to look for singers I like.\nSo I just listen to the songs recommended on streaming services like Melon.\nFinding a singer that fits my style feels too tiring for me.\nNow I listen to music mainly to relax, not to spend energy searching for it.",
+    "answer_ko": "어릴때 나는 서태지나 싸이 같은 가수를 좋아했어.\n그러나 지금은 회사일과 육아에 너무 바빠져서 좋아하는 가수를 찾아볼 에너지가 없어.\n그래서 그냥 멜론 같은 스트리밍 서비스에서 추천해주는 노래를 들어.\n내 스타일에 맞는 가수를 찾는일은 나에게는 너무 큰 에너지가 필요한 일이 되어버렸어.\n음악을 듣는 이유는 휴식을 하기 위해서 인데 가수를 찾는 에너지를 소모하고 싶지 않아."
   }
 ]

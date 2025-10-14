@@ -32,6 +32,7 @@ import com.na982.opichelper.domain.manager.ICategoryManager
 import com.na982.opichelper.domain.manager.IAudioControlManager
 import com.na982.opichelper.domain.manager.IMemorizationManager
 import com.na982.opichelper.domain.manager.ProgressManager
+import com.na982.opichelper.domain.manager.TtsHealthMonitor
 import com.na982.opichelper.domain.audio.AudioFileManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.FullMemorizationRepository
@@ -116,9 +117,19 @@ object AppModule {
     fun provideTtsOrchestrator(
         @ApplicationContext context: Context,
         @Named("google") googleTtsPlayer: TtsPlayer,
-        @Named("samsung") samsungTtsPlayer: TtsPlayer
+        @Named("samsung") samsungTtsPlayer: TtsPlayer,
+        ttsHealthMonitor: TtsHealthMonitor,
+        appStateManager: AppStateManager
     ): TtsOrchestrator {
-        return TtsOrchestrator(context, googleTtsPlayer, samsungTtsPlayer)
+        return TtsOrchestrator(context, googleTtsPlayer, samsungTtsPlayer, ttsHealthMonitor, appStateManager)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideTtsHealthMonitor(
+        appStateManager: AppStateManager
+    ): TtsHealthMonitor {
+        return TtsHealthMonitor(appStateManager)
     }
     
     @Provides
