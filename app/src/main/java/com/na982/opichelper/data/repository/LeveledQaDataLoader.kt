@@ -24,113 +24,7 @@ class LeveledQaDataLoader(private val context: Context) {
         UserLevel.SAMPLE to "sample_script",
         UserLevel.IM to "im"
     )
-    
-    /**
-     * 특정 레벨의 데이터를 로드
-     */
-    suspend fun loadQaItemsForLevel(level: UserLevel): List<QaItem> = withContext(Dispatchers.IO) {
-        try {
-            val folderName = levelFolderMapping[level] ?: "sample_script"
-            val allQaItems = mutableListOf<QaItem>()
-            
-            // 정의된 카테고리 순서대로 파일 로드
-            val orderedFileNames = listOf(
-                "qa_home.json",
-                "qa_music.json", 
-                "qa_home_vacation.json",
-                "qa_movie.json",
-                "qa_restaurants.json",
-                "qa_beach.json",
-                "qa_internet.json",
-                "qa_industry_career.json",
-                "qa_bank.json",
-                "qa_transportation.json",
-                "qa_fashion.json",
-                "qa_family_friends.json",
-                "qa_furniture.json",
-                "qa_reservation.json",
-                "qa_holiday.json"
-            )
-            
-            orderedFileNames.forEach { fileName ->
-                try {
-                    val filePath = "$folderName/$fileName"
-                    Log.d("LeveledQaDataLoader", "파일 로드 시도: $filePath")
-                    
-                    if (context.assets.list(folderName)?.contains(fileName) == true) {
-                        val jsonString = context.assets.open(filePath).bufferedReader().use { it.readText() }
-                        val type = object : TypeToken<List<QaItemAsset>>() {}.type
-                        val assetItems: List<QaItemAsset> = gson.fromJson(jsonString, type) ?: emptyList()
-                        
-                        // 기존 JSON 구조를 새로운 QaItem 구조로 변환
-                        val items = assetItems.map { asset ->
-                            // 4개의 문장 리스트 파싱
-                            val questionEnSentences = SentenceParser.parseEnglishSentences(asset.question_en)
-                            val questionKoSentences = SentenceParser.parseKoreanSentences(asset.question_ko)
-                            val answerEnSentences = SentenceParser.parseEnglishSentences(asset.answer_en)
-                            val answerKoSentences = SentenceParser.parseKoreanSentences(asset.answer_ko)
-                            
-                            QaItem(
-                                id = asset.id ?: "",
-                                category = getCategoryFromFileName(fileName),
-                                questionEn = asset.question_en,
-                                questionKo = asset.question_ko,
-                                questionEnSentences = questionEnSentences,
-                                questionKoSentences = questionKoSentences,
-                                answerEnSentences = answerEnSentences,
-                                answerKoSentences = answerKoSentences
-                            )
-                        }
-                        
-                        allQaItems.addAll(items)
-                        Log.d("LeveledQaDataLoader", "카테고리 '${getCategoryFromFileName(fileName)}'에서 ${items.size}개 항목 로드됨")
-                    } else {
-                        Log.w("LeveledQaDataLoader", "파일이 존재하지 않음: $filePath")
-                    }
-                } catch (e: Exception) {
-                    Log.e("LeveledQaDataLoader", "파일 로드 실패: $fileName", e)
-                }
-            }
-            
-            Log.d("LeveledQaDataLoader", "레벨 $level 데이터 로드 완료: 총 ${allQaItems.size}개 항목")
-            allQaItems
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
-    }
-    
-    /**
-     * 파일명에서 카테고리 추출
-     */
-    private fun getCategoryFromFileName(fileName: String): String {
-        return when (fileName) {
-            "qa_home.json" -> "집"
-            "qa_music.json" -> "음악"
-            "qa_home_vacation.json" -> "집에서 보내는 휴가"
-            "qa_movie.json" -> "영화"
-            "qa_restaurants.json" -> "레스토랑"
-            "qa_beach.json" -> "해변"
-            "qa_internet.json" -> "인터넷"
-            "qa_industry_career.json" -> "산업,커리어"
-            "qa_bank.json" -> "은행"
-            "qa_transportation.json" -> "교통"
-            "qa_fashion.json" -> "패션"
-            "qa_family_friends.json" -> "가족,친구"
-            "qa_furniture.json" -> "가구"
-            "qa_reservation.json" -> "예약"
-            "qa_holiday.json" -> "명절"
-            else -> {
-                // 파일명에서 qa_ 접두사와 .json 접미사 제거
-                val categoryName = fileName.removePrefix("qa_").removeSuffix(".json")
-                // 언더스코어를 공백으로 변경하고 첫 글자 대문자로
-                categoryName.replace("_", " ").split(" ").joinToString("") { 
-                    it.replaceFirstChar { char -> char.uppercase() }
-                }
-            }
-        }
-    }
-    
+
     /**
      * 기존 JSON 구조를 위한 데이터 클래스
      */
@@ -195,6 +89,8 @@ class LeveledQaDataLoader(private val context: Context) {
      */
     private fun getFileNameFromCategory(category: String): String {
         return when (category) {
+            "자기소개" -> "qa_intro.json"
+            "롤플레이" -> "qa_roleplay.json"
             "집" -> "qa_home.json"
             "음악" -> "qa_music.json"
             "집에서 보내는 휴가" -> "qa_home_vacation.json"

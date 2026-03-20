@@ -1,51 +1,58 @@
 [
   {
     "id": "1",
-    "question_en": "I would like to know where you live. Which is your favorite room at home?\nWhat does it look like? What do you mostly do there?",
-    "question_ko": "당신이 어디에 사는지 알고 싶습니다. 집에서 가장 좋아하는 방은 어디인가요?어떻게 생겼나요? 주로 거기서 무엇을 하나요?",
-    "answer_en": "I really like the living room.\nI have a ten-year-old son, and that’s where I usually play with him.\nWe often spend time there playing board games.\nSometimes, I read books in the living room as well.\nI like the living room because it’s such a great place to spend time with my family.",
-    "answer_ko": "저는 거실을 가장 좋아해요.\n저는 10살 난 아들을 키우고 있고, 아들과 함께 노는 곳이 주로 거실입니다.\n우리는 주로 보드게임을 하면서 시간을 보냅니다.\n가끔은 거실에서 책도 읽습니다.\n저는 가족과 함께 시간을 보낼 수 있는 거실이 참 좋습니다."
+    "theme": "Home - Favorite Room",
+    "question_en": "I would like to know where you live. Which is your favorite room at home? What does it look like? What do you mostly do there?",
+    "question_ko": "당신이 어디에 사는지 알고 싶습니다. 집에서 가장 좋아하는 방은 어디인가요? 어떻게 생겼나요? 주로 거기서 무엇을 하나요?",
+    "answer_en": "Actually, the living room is my absolute favorite place at home.\nSince I'm a weekend dad, I try to spend as much time as possible with my son there.\nWe usually sit on the rug and play board games together for hours.\nThe best part is the large window because it lets in a lot of sunlight.\nThere is also a big, comfortable couch where I can just relax.\nI feel so peaceful and happy whenever I am in that room.\nOverall, the living room is definitely the heart of my home.",
+    "answer_ko": "사실, 거실은 제가 집에서 단연코 가장 좋아하는 장소입니다.\n제가 주말 아빠이다 보니, 그곳에서 아들과 가능한 한 많은 시간을 보내려고 노력합니다.\n우리는 보통 카페트 위에 앉아 몇 시간 동안 함께 보드게임을 합니다.\n가장 좋은 부분은 큰 창문인데, 햇빛이 정말 많이 들어오거든요.\n거기에는 제가 그냥 편하게 쉴 수 있는 크고 편안한 소파도 있습니다.\n그 방에 있을 때마다 저는 정말 평온하고 행복함을 느낍니다.\n전반적으로, 거실은 확실히 우리 집의 중심 같은 곳입니다."
   },
   {
     "id": "2",
-    "question_en": "Now, tell me about the things that you do at home.\nWhat are some parts of your daily routine? What is special about each activity?",
-    "question_ko": "이제 집에서 하는 일들에 대해 말씀해 주세요.\n일상의 일부는 무엇인가요? 각 활동의 특별한 점은 무엇인가요?",
-    "answer_en": "I’m a weekend dad, so I only see my family on weekends.\nMy wife works during the week while also taking care of our child.\nBecause of that, it’s hard for her to keep up with the housework.\nI also work in Seoul on weekdays, so I can’t help her then.\nSo, when I get home on the weekend, I catch up on all the chores.\nI take out the recycling and do the laundry.\nI usually spend my weekends helping my wife with all the housework that’s piled up.",
-    "answer_ko": "저는 주말에만 가족과 시간을 보내는 주말부부입니다.\n아내는 평일에 직장을 다니면서 아이도 함께 돌봅니다.\n그래서 평소에는 집안일을 하기 어렵습니다.\n저도 평일에는 서울에서 일하기 때문에 아내를 도울 수 없습니다.\n그래서 주말에 집에 오면 주로 밀려 있는 집안일을 합니다.\n분리수거도 하고 빨래도 합니다.\n저는 주말에 시간이 나면 아내를 돕기 위해 밀린 집안일을 합니다."
+    "theme": "Home - Daily Routine",
+    "question_en": "Now, tell me about the things that you do at home. What are some parts of your daily routine? What is special about each activity?",
+    "question_ko": "이제 집에서 하는 일들에 대해 말씀해 주세요. 일상의 일부는 무엇인가요? 각 활동의 특별한 점은 무엇인가요?",
+    "answer_en": "Actually, my home life is all about being a weekend dad.\nSince I work in Seoul, I usually rush back home on Friday night.\nYou know, I try to stay there as long as I can until late Sunday night.\nOn Saturdays, it is really important to focus on spending time with my son.\nWe often go to the park together or just mess around in the living room.\nSpending time with my son is much better than any other activities.\nAlso, I help my wife with chores because she works really hard these days.\nThese simple routines are the most meaningful parts of my weekend.",
+    "answer_ko": "사실, 제 집에서의 생활은 '주말 아빠'가 되는 것이 전부예요.\n제가 서울에서 일하기 때문에, 보통 금요일 밤에 서둘러 집으로 돌아갑니다.\n있잖아요, 저는 일요일 밤 늦게까지 최대한 오래 그곳에 머물려고 노력합니다.\n토요일에 제 아들과 시간을 보내는 데 집중하는 것은 정말 중요합니다.\n우리는 자주 공원에 함께 가거나 거실에서 그냥 장난치며 놉니다.\n아들과 시간을 보내는 것은 다른 어떤 활동보다 훨씬 좋습니다.\n또한, 제 아내가 요즘 정말 열심히 일하기 때문에 그녀의 집안일을 돕습니다.\n이러한 단순한 루틴들이 제 주말에서 가장 의미 있는 부분들입니다."
   },
   {
     "id": "3",
-    "question_en": "Tell me about how you usually clean your house.\nHow often do you clean? What is your favorite part of cleaning the house?",
-    "question_ko": "평소 집 청소를 어떻게 하는지 알려주세요.\n얼마나 자주 청소하시나요? 집안 청소에서 가장 좋아하는 부분은 무엇인가요?",
-    "answer_en": "Well, I’m a weekend dad, so I only see my family on weekends.\nMy wife works and takes care of our son during the week, so it’s hard for her to handle all the housework.\nI also work in Seoul on weekdays, so I can’t help her then.\nBecause of that, I usually take care of all the chores that have piled up when I get home on the weekend.\nI take out the recycling and do the laundry.\nYou could say I spend my weekends helping my wife with all the chores we’ve fallen behind on.",
-    "answer_ko": "저는 주말에만 가족과 시간을 보내는 주말부부입니다.\n아내는 평일에 직장을 다니면서 아이를 함께 돌봅니다.\n그래서 평소에는 집안일을 하기 어렵습니다.\n저도 평일에는 서울에서 일하기 때문에 아내를 도울 수 없습니다.\n그래서 주말에 집에 오면 주로 밀려 있는 집안일을 합니다.\n분리수거도 하고 빨래도 합니다.\n저는 주말에 시간이 나면 아내를 돕기 위해 밀린 집안일을 합니다."
+    "theme": "Home - Cleaning",
+    "question_en": "Tell me about how you usually clean your house. How often do you clean? What is your favorite part of cleaning the house?",
+    "question_ko": "평소 집 청소를 어떻게 하는지 알려주세요. 얼마나 자주 청소하시나요? 집안 청소에서 가장 좋아하는 부분은 무엇인가요?",
+    "answer_en": "Well, cleaning the house is a very important task for a weekend dad.\nBecause I have limited time, I usually do a big cleaning on Saturdays.\nI start by opening all the windows wide to let some fresh air in.\nThen, you know, I grab the vacuum cleaner and clean every corner.\nI mean, my favorite part is mopping the floor until it really shines.\nIt is a bit hard, but I feel so good when the house looks spotless.\nThat is how I keep my home healthy and comfortable for my family.",
+    "answer_ko": "음, 집을 청소하는 것은 주말 아빠에게 매우 중요한 업무입니다.\n시간이 한정되어 있기 때문에, 저는 보통 토요일에 대청소를 합니다.\n우선 신선한 공기가 들어오도록 모든 창문을 활짝 여는 것으로 시작합니다.\n그 다음엔, 아시다시피, 청소기를 들고 모든 구석을 청소합니다.\n제 말은, 제가 가장 좋아하는 부분은 바닥이 정말 반짝일 때까지 닦는 것입니다.\n조금 힘들긴 하지만, 집이 아주 깨끗해 보이면 기분이 정말 좋습니다.\n그것이 제가 가족을 위해 집을 건강하고 편안하게 유지하는 방식입니다."
   },
   {
     "id": "4",
-    "question_en": "Tell me about a change you made to your home.\nWhat was the change and why did you make that change?\nHow did your home look likeafterwards? Give me some details.",
-    "question_ko": "당신이 집을 바꾼 것에 대해 이야기해 주세요.\n어떤 변화가 있었고 왜 그런 변화를 만들었나요?\n그 후 집은 어땠나요? 자세한 내용을 알려주세요.",
-    "answer_en": "I live in a brand-new apartment, so I haven't made any major changes.\nHowever, I recently replaced the kitchen light.\nKitchen lights in Korean apartments are usually built-in LED fixtures, so you can’t just change the light — you have to replace the whole fixture.\nI spent a few days choosing a new light to change the atmosphere of the kitchen.\nI ordered the one I liked online.\nThen, I turned off the circuit breaker and replaced it myself.\nIt was hard, but I was proud when I saw how bright the kitchen was.",
-    "answer_ko": "저는 새로 지어진 아파트에 살고 있어서 특별히 바꾼 것은 없습니다.\n하지만 최근에 주방등을 교체했습니다.\n한국 아파트의 주방등은 보통 LED 등이라 전구만 교체하는 것이 아니라 전체를 교체해야 합니다.\n저는 주방 분위기를 바꾸기 위해 며칠 동안 새 등 제품을 고르며 고민했습니다.\n마음에 드는 것을 인터넷으로 구매했습니다.\n 전기 차단기를 내린 뒤 직접 교체 작업을 했습니다.\n과정은 힘들었지만, 밝아진 주방을 보니 뿌듯했습니다."
+    "theme": "Home - Changes",
+    "question_en": "Tell me about a change you made to your home. What was the change and why did you make that change? How did your home look like afterwards?",
+    "question_ko": "당신이 집을 바꾼 것에 대해 이야기해 주세요. 어떤 변화가 있었고 왜 그런 변화를 만들었나요? 그 후 집은 어땠나요?",
+    "answer_en": "Actually, I want to tell you about a small change I made to my kitchen.\nI recently decided to replace the kitchen light by myself to change the mood.\nYou know, the old light was a bit dark, so I really hated it.\nI searched for a new LED light and bought a very stylish one.\nWell, to be honest, the installation was much harder than I thought.\nBut I felt so proud and happy when I finally finished the work.\nMy wife also said the kitchen looks way more modern and brighter now.\nThis small change really improved the atmosphere of our home.",
+    "answer_ko": "사실, 제가 주방에 주었던 작은 변화에 대해 말씀드리고 싶습니다.\n최근에 분위기를 바꾸기 위해 주방등을 직접 교체하기로 결심했습니다.\n있잖아요, 기존 전등은 약간 어두워서 그게 정말 싫었거든요.\n새로운 LED 전등을 검색해서 아주 세련된 것으로 샀습니다.\n음, 솔직히 말해서, 설치 과정은 생각했던 것보다 훨씬 더 어려웠습니다.\n하지만 마침내 작업을 마쳤을 때 저는 정말 뿌듯하고 행복했습니다.\n아내도 주방이 이제 훨씬 더 현대적이고 밝아 보인다고 말했습니다.\n이 작은 변화가 우리 집의 분위기를 정말 개선해 주었습니다."
   },
   {
     "id": "5",
-    "question_en": "Tell me about the house or apartment you lived in when you were a child.\nHow was it different from the one you live in now?\nWhat are the similarities and the difference?",
-    "question_ko": "어렸을 때 살았던 집이나 아파트에 대해 말씀해 주세요.\n지금 살고 있는 곳과 어떻게 달랐나요?\n유사점과 차이점은 무엇인가요?",
-    "answer_en": "I remember living in a villa when I was a child.\nBack then, my friends could stand in front of my house and call my name.\nI could hear them right away and run outside to play.\nNow I live high up in an apartment building, on the nineteenth floor.\nIf my friends called my name from the street, I wouldn't be able to hear them.\nStill, both places are special to me.\nThey’re home to the people I love.",
-    "answer_ko": "저는 어렸을 때 빌라에서 살았던 기억이 있습니다.\n그때는 친구들이 집 앞에 서서 제 이름을 부를 수 있었습니다.\n저는 바로 그 소리를 듣고 밖으로 나가 함께 놀았습니다.\n지금은 아파트 고층, 19층에 살고 있습니다.\n친구들이 길에서 제 이름을 불러도 들을 수 없을 것입니다.\n그래도, 두곳 모두 저에게 특별합니다.\n그곳은 제가 사랑하는 사람들이 사는 곳입니다."
+    "theme": "Home - Childhood Memory",
+    "question_en": "Tell me about the house or apartment you lived in when you were a child. How was it different from the one you live in now?",
+    "question_ko": "어렸을 때 살았던 집이나 아파트에 대해 말씀해 주세요. 지금 살고 있는 곳과 어떻게 달랐나요?",
+    "answer_en": "Well, there are many clear differences between my old home and my current house.\nWhen I was a child, I lived in a small villa with my parents.\nAt that time, you know, my friends could just call my name from outside.\nI mean, I could hear them easily and ran outside to play right away.\nBut now, I live on the 19th floor of a high-rise apartment.\nIt is much quieter and private, so I cannot hear anything from the street.\nAlso, my current home is way more convenient than before because of smart technology.\nLooking back, I have great memories of both of these places.",
+    "answer_ko": "음, 제가 예전에 살던 집과 지금 살고 있는 집 사이에는 많은 분명한 차이점이 있습니다.\n어렸을 때 저는 부모님과 함께 작은 빌라에서 살았습니다.\n그 당시에는, 아시다시피, 친구들이 밖에서 그냥 제 이름을 부를 수 있었습니다.\n제 말은, 그 소리를 쉽게 들을 수 있었고 곧바로 함께 놀기 위해 밖으로 달려 나갔습니다.\n하지만 지금은, 고층 아파트의 19층에 살고 있습니다.\n훨씬 더 조용하고 사생활이 보호되어서 길거리 소음은 아무것도 들리지 않습니다.\n또한 지금의 집은 스마트 기술 덕분에 이전보다 훨씬 더 편리합니다.\n되돌아보니, 이 두 곳 모두 저에게는 소중한 추억들이 있네요."
   },
   {
     "id": "6",
-    "question_en": "How has the style of homes changed over the past 5 or 10 years at where you live?\nAre the homes being built today different from the homes built 10 years ago?\nWhat developments or changes have you noticed?",
-    "question_ko": "지난 5년 또는 10년 동안 당신이 사는 곳의 주택 스타일은 어떻게 변했나요?\n오늘날 지어진 집들이 10년 전에 지어진 집들과 다른가요?\n어떤 발전이나 변화를 발견하셨나요?",
-    "answer_en": "Ten years ago, I lived in a studio apartment.\nBack then, I was single and lived alone near my office.\nThere was a subway station nearby, and lots of restaurants.\nIt was always a busy downtown area.\nNow, I’m married and live in an apartment with my wife and son.\nIt’s a quiet residential complex, a bit away from downtown.\nI really like the landscaping in our complex.\nSo sometimes, when I have free time, I take walks there with my family.",
-    "answer_ko": "10년 전에는 오피스텔에서 살았습니다.\n그때는 미혼이었고, 회사 근처에서 혼자 살았습니다.\n근처에 지하철역이 있었고, 식당도 많았습니다.\n그곳은 항상 붐비는 도심 지역이었습니다.\n지금은 결혼해서 아내와 아들과 함께 아파트에 살고 있습니다.\n이곳은 도심에서 조금 떨어진 조용한 주거 단지입니다.\n저는 아파트 단지의 조경이 정말 마음에 듭니다.\n그래서 가끔 시간이 나면 가족과 함께 단지를 산책합니다."
+    "theme": "Home - Industry Trends",
+    "question_en": "How has the style of homes changed over the past 10 years? Are the homes being built today different from before?",
+    "question_ko": "지난 10년 동안 주택 스타일은 어떻게 변했나요? 오늘날 지어진 집들이 예전과 다른가요?",
+    "answer_en": "Well, I think the style of homes has changed and became really convenient.\nTen years ago, you know, houses were mostly just simple places to live.\nBut these days, almost every new apartment is a high-tech smart home.\nFor example, I can easily control the lights and heater with my phone.\nAlso, apartment complexes now focus much more on nature and safety.\nYou know, there are no cars on the ground level, so it feels like a huge park.\nIt is so much safer for my son to run around, which is great.\nIn my opinion, these changes have made our lives way more comfortable.",
+    "answer_ko": "음, 제 생각에 주택 스타일은 변했고 정말 편리해졌습니다.\n10년 전에는, 아시다시피, 집은 대개 그저 살기 위한 단순한 장소였습니다.\n하지만 요즘은, 거의 모든 신축 아파트가 하이테크 스마트 홈입니다.\n예를 들어, 저는 핸드폰으로 전등과 히터를 쉽게 조절할 수 있습니다.\n또한, 아파트 단지들은 이제 자연과 안전에 훨씬 더 많이 집중합니다.\n아시다시피, 이제 지상에는 차가 없어서 정말 거대한 공원처럼 느껴집니다.\n제 아들이 뛰어놀기에 훨씬 안전해서 정말 좋습니다.\n제 생각에, 이러한 변화들이 우리의 삶을 훨씬 더 편안하게 만들어준 것 같습니다."
   },
   {
     "id": "7",
-    "question_en": "Sometimes the issues of too many new homes or not enough new homes can create a controversy in a community.\nThink of a time when the issue regarding housing was in the news in your community.",
-    "question_ko": "때때로 너무 많은 새 집이나 부족한 새 집의 문제는 지역 사회에서 논란을 일으킬 수 있습니다.\n당신의 지역 사회에서 주택 문제가 뉴스에 나왔던 때를 생각해 보세요.",
-    "answer_en": "Well, I can't think of anything right now, but the only thing I remember is watching the news about the housing market in Korea a few months ago.\nIt was about rising housing prices which has been an ongoing issue for several years.\nThe housing prices have been skyrocketed for years.\nBecause of this, the rent prices have also risen a lot.\nDue to this issue, people have a lot of trouble finding a home.\nIt's hard to find a house at a reasonable price.\nSo, the government came up with some policies to curb housing prices.\nBut it seems like they are not always effective.\nIn fact, they sometimes backfire and the housing prices go up again.\nWell, I guess the housing price is definitely one of the biggest issues in Korea.",
-    "answer_ko": "음, 지금 당장 떠오르는 건 없지만, 몇 달 전에 한국의 부동산 시장에 관한 뉴스를 본 게 기억납니다.\n몇 년째 계속되고 있는 집값 상승 문제에 대한 내용이었어요.\n주택 가격이 수년 동안 급등해왔습니다.\n이로 인해 전세나 월세 가격도 많이 올랐어요.\n이런 문제 때문에 사람들이 집을 구하는 데 큰 어려움을 겪고 있습니다.\n합리적인 가격에 집을 찾는 것이 어렵습니다.\n그래서 정부는 집값을 잡기 위해 여러 정책을 내놓았다.\n그러나 항상 효과적인 것은 아닌 것 같습니다.\n오히려 부작용이 발생해서 집값이 다시 오르는 경우도 있습니다.\n음, 결국 부동산 가격 문제는 한국에서 가장 큰 이슈 중 하나인 것 같아요."
+    "theme": "Home - Housing Issues",
+    "question_en": "Think of a time when the issue regarding housing was in the news in your community.",
+    "question_ko": "당신의 지역 사회에서 주택 문제가 뉴스에 나왔던 때를 생각해 보세요.",
+    "answer_en": "Well, the housing market is currently one of the biggest issues in Korea.\nYou know, the biggest problem is that housing prices have gone up so much lately.\nBecause of this, it is really difficult for young people to buy their own homes.\nAlso, rent prices have skyrocketed, which is a huge burden for many people.\nI mean, I often talk about this serious issue with my colleagues at work.\nI really hope the government finds a way to stabilize the market soon.\nThis is definitely a serious concern for everyone in my country.",
+    "answer_ko": "음, 부동산 시장은 현재 한국에서 가장 큰 이슈 중 하나입니다.\n아시다시피, 가장 큰 문제는 최근 주택 가격이 너무 많이 올랐다는 점입니다.\n이 때문에, 젊은 사람들이 자기 집을 사는 것이 정말 어렵습니다.\n또한 임대료도 급등했는데, 이는 많은 사람에게 커다란 부담입니다.\n제 말은, 저 또한 직장 동료들과 이 심각한 문제에 대해 자주 이야기합니다.\n정부가 곧 시장을 안정시킬 방법을 찾기를 정말 바랍니다.\n이것은 확실히 우리나라 모든 사람에게 심각한 걱정거리입니다."
   }
 ]

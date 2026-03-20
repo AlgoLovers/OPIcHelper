@@ -21,13 +21,13 @@ class QaDataLoaderImpl @Inject constructor(
     
     private val gson = Gson()
     private val categoryDisplayNames = listOf(
-        "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", 
+        "자기소개", "롤플레이", "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷",
         "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
 
     )
     
     private val categoryFileNames = listOf(
-        "qa_home", "qa_music", "qa_home_vacation", "qa_movie", "qa_restaurants", 
+        "qa_intro", "roleplay", "qa_home", "qa_music", "qa_home_vacation", "qa_movie", "qa_restaurants",
         "qa_beach", "qa_internet", "qa_industry_career", "qa_bank", "qa_transportation", 
         "qa_fashion", "qa_family_friends", "qa_furniture", "qa_reservation", "qa_holiday"
     )
