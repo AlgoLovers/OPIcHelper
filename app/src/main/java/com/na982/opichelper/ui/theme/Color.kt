@@ -1,6 +1,7 @@
 package com.na982.opichelper.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import com.na982.opichelper.domain.entity.MemorizeLevel
 
 // Modern Color Palette for OPic Helper
 val Purple40 = Color(0xFF6650a4)
@@ -112,34 +113,25 @@ object MemorizeLevelColors {
  * 암기레벨과 테마에 따라 배경색을 반환하는 함수
  */
 fun getMemorizeLevelBackground(level: String, isDarkTheme: Boolean): Color {
-    return when (level) {
-        "반복 듣기" -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.backgroundDark else MemorizeLevelColors.RepeatListening.backgroundLight
-        "영작 테스트" -> if (isDarkTheme) MemorizeLevelColors.WritingTest.backgroundDark else MemorizeLevelColors.WritingTest.backgroundLight
-        "통암기" -> if (isDarkTheme) MemorizeLevelColors.FullMemorization.backgroundDark else MemorizeLevelColors.FullMemorization.backgroundLight
-        else -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.backgroundDark else MemorizeLevelColors.RepeatListening.backgroundLight
+    return when (MemorizeLevel.fromDisplayName(level)) {
+        MemorizeLevel.REPEAT_LISTENING -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.backgroundDark else MemorizeLevelColors.RepeatListening.backgroundLight
+        MemorizeLevel.ENGLISH_WRITING -> if (isDarkTheme) MemorizeLevelColors.WritingTest.backgroundDark else MemorizeLevelColors.WritingTest.backgroundLight
+        MemorizeLevel.FULL_MEMORIZATION -> if (isDarkTheme) MemorizeLevelColors.FullMemorization.backgroundDark else MemorizeLevelColors.FullMemorization.backgroundLight
     }
 }
 
-/**
- * 암기레벨과 테마에 따라 서피스 색상을 반환하는 함수
- */
 fun getMemorizeLevelSurface(level: String, isDarkTheme: Boolean): Color {
-    return when (level) {
-        "반복 듣기" -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.surfaceDark else MemorizeLevelColors.RepeatListening.surfaceLight
-        "영작 테스트" -> if (isDarkTheme) MemorizeLevelColors.WritingTest.surfaceDark else MemorizeLevelColors.WritingTest.surfaceLight
-        "통암기" -> if (isDarkTheme) MemorizeLevelColors.FullMemorization.surfaceDark else MemorizeLevelColors.FullMemorization.surfaceLight
-        else -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.surfaceDark else MemorizeLevelColors.RepeatListening.surfaceLight
+    return when (MemorizeLevel.fromDisplayName(level)) {
+        MemorizeLevel.REPEAT_LISTENING -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.surfaceDark else MemorizeLevelColors.RepeatListening.surfaceLight
+        MemorizeLevel.ENGLISH_WRITING -> if (isDarkTheme) MemorizeLevelColors.WritingTest.surfaceDark else MemorizeLevelColors.WritingTest.surfaceLight
+        MemorizeLevel.FULL_MEMORIZATION -> if (isDarkTheme) MemorizeLevelColors.FullMemorization.surfaceDark else MemorizeLevelColors.FullMemorization.surfaceLight
     }
 }
 
-/**
- * 암기레벨과 테마에 따라 카드 색상을 반환하는 함수
- */
 fun getMemorizeLevelCard(level: String, isDarkTheme: Boolean): Color {
-    return when (level) {
-        "반복 듣기" -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.cardDark else MemorizeLevelColors.RepeatListening.cardLight
-        "영작 테스트" -> if (isDarkTheme) MemorizeLevelColors.WritingTest.cardDark else MemorizeLevelColors.WritingTest.cardLight
-        "통암기" -> if (isDarkTheme) MemorizeLevelColors.FullMemorization.cardDark else MemorizeLevelColors.FullMemorization.cardLight
-        else -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.cardDark else MemorizeLevelColors.RepeatListening.cardLight
+    return when (MemorizeLevel.fromDisplayName(level)) {
+        MemorizeLevel.REPEAT_LISTENING -> if (isDarkTheme) MemorizeLevelColors.RepeatListening.cardDark else MemorizeLevelColors.RepeatListening.cardLight
+        MemorizeLevel.ENGLISH_WRITING -> if (isDarkTheme) MemorizeLevelColors.WritingTest.cardDark else MemorizeLevelColors.WritingTest.cardLight
+        MemorizeLevel.FULL_MEMORIZATION -> if (isDarkTheme) MemorizeLevelColors.FullMemorization.cardDark else MemorizeLevelColors.FullMemorization.cardLight
     }
 }

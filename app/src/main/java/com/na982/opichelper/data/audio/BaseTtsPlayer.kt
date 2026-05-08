@@ -21,6 +21,7 @@ abstract class BaseTtsPlayer(
     
     protected var tts: TextToSpeech? = null
     protected var isInitialized = false
+    @Volatile
     protected var _isPlaying = false
     
     init {

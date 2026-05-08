@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.ScriptProgress
+import com.na982.opichelper.domain.entity.CategoryProgress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -134,7 +135,7 @@ class MemorizeTestProgressTracker @Inject constructor(
             if (changedProgress.isNotEmpty()) {
                 // CategoryProgress로 변환하여 저장
                 changedProgress.forEach { scriptProgress: ScriptProgress ->
-                    val categoryProgress = com.na982.opichelper.domain.repository.CategoryProgress(
+                    val categoryProgress = CategoryProgress(
                         category = scriptProgress.category,
                         scriptIndex = scriptProgress.scriptIndex,
                         memorizeLevel = scriptProgress.memorizeLevel,

@@ -3,33 +3,39 @@ package com.na982.opichelper.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.na982.opichelper.domain.entity.UserLevel
+import com.na982.opichelper.domain.repository.UserPreferencesRepository as DomainUserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class UserPreferencesRepository(private val context: Context) {
-    
+class UserPreferencesRepository(private val context: Context) : DomainUserPreferencesRepository {
+
     private val prefs: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-    
+
     private val _userLevel = MutableStateFlow(UserLevel.IH)
-    val userLevel: StateFlow<UserLevel> = _userLevel
-    
+    override val userLevel: StateFlow<UserLevel> = _userLevel
+
+    private val _englishTtsRate = MutableStateFlow(0.8f)
+    override val englishTtsRate: StateFlow<Float> = _englishTtsRate
+
     init {
-        // 저장된 사용자 레벨 복원
         val savedLevel = prefs.getString("user_level", UserLevel.IH.name)
         _userLevel.value = UserLevel.valueOf(savedLevel ?: UserLevel.IH.name)
+
+        val savedRate = prefs.getFloat("english_tts_rate", 0.8f)
+        _englishTtsRate.value = savedRate
     }
-    
-    fun setUserLevel(level: UserLevel) {
+
+    override fun setUserLevel(level: UserLevel) {
         _userLevel.value = level
-        
-        // SharedPreferences에 저장
-        prefs.edit().apply {
-            putString("user_level", level.name)
-            apply()
-        }
+        prefs.edit().putString("user_level", level.name).apply()
     }
-    
-    fun getUserLevel(): UserLevel {
-        return _userLevel.value
+
+    override fun getUserLevel(): UserLevel = _userLevel.value
+
+    override fun setEnglishTtsRate(rate: Float) {
+        _englishTtsRate.value = rate
+        prefs.edit().putFloat("english_tts_rate", rate).apply()
     }
-} 
+
+    override fun getEnglishTtsRate(): Float = _englishTtsRate.value
+}

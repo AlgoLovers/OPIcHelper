@@ -92,8 +92,9 @@ class TtsOrchestrator @Inject constructor(
             }
         }
         
-        // 모든 서비스 실패
-        Log.e("TtsOrchestrator", "🇰🇷 모든 한글 TTS 서비스 실패")
+        // 모든 서비스 실패 — 인덱스 리셋하여 다음 호출에서 재시도 가능하게
+        Log.e("TtsOrchestrator", "🇰🇷 모든 한글 TTS 서비스 실패 — 인덱스 리셋")
+        currentKoreanTtsIndex = 0
         onComplete?.invoke()
         return false
     }
@@ -169,34 +170,29 @@ class TtsOrchestrator @Inject constructor(
      * 문장별 하이라이트와 함께 TTS 재생
      */
     suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
-        Log.d("TtsOrchestrator", "🎯 speakWithHighlight 호출됨: '${text.take(30)}...'")
-        
         val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-        Log.d("TtsOrchestrator", "📝 문장 분리 완료: ${sentences.size}개 문장")
-        
-        for ((idx, sentence) in sentences.withIndex()) {
-            Log.d("TtsOrchestrator", "🔤 문장 ${idx + 1}/${sentences.size}: '${sentence.take(20)}...'")
-            
-            onHighlight(idx)
-            val isKorean = sentence.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
-            
-            Log.d("TtsOrchestrator", "🔍 문장 ${idx + 1} 언어 감지: 한글여부=$isKorean")
-            
-            val finished = kotlinx.coroutines.CompletableDeferred<Unit>()
-            if (isKorean) {
-                Log.d("TtsOrchestrator", "🇰🇷 문장 ${idx + 1} 한글 TTS로 재생")
-                // 한글 TTS가 모두 실패하면 안내만 하고 넘어감
-                val success = speakKorean(sentence) { finished.complete(Unit) }
-                if (!success) finished.complete(Unit)
-            } else {
-                Log.d("TtsOrchestrator", "🇺🇸 문장 ${idx + 1} 영문 TTS로 재생")
-                speakEnglish(sentence) { finished.complete(Unit) }
+
+        try {
+            for ((idx, sentence) in sentences.withIndex()) {
+                onHighlight(idx)
+                val isKorean = sentence.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
+
+                val finished = kotlinx.coroutines.CompletableDeferred<Unit>()
+                if (isKorean) {
+                    val success = speakKorean(sentence) { finished.complete(Unit) }
+                    if (!success) finished.complete(Unit)
+                } else {
+                    speakEnglish(sentence) { finished.complete(Unit) }
+                }
+                finished.await()
+                kotlinx.coroutines.delay(400L)
             }
-            finished.await()
-            kotlinx.coroutines.delay(400L)
+            onHighlight(null)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            stop()
+            onHighlight(null)
+            throw e
         }
-        onHighlight(null)
-        Log.d("TtsOrchestrator", "✅ speakWithHighlight 완료")
     }
     
     /**

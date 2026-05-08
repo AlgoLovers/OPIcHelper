@@ -14,9 +14,9 @@
 - 기존 MainViewModel이 모든 Presentation Layer 상태와 로직을 담당하던 구조에서,
   - **TtsViewModel**: TTS 관련 상태/로직 담당
   - **MemorizationViewModel**: 암기 테스트(반복듣기, 영작 테스트, 통암기 등) 관련 상태/로직 담당
-  - **QaDataViewModel**: QA 데이터 및 진행상황 관련 상태/로직 담당
-- **MainViewModel**은 더 이상 암기 테스트 관련 상태/메서드를 포함하지 않음
-- 각 ViewModel은 UI 계층(Compose, Fragment 등)에서 각각 생성하여 조합
+  - **QaDataViewModel**: QA 데이터 및 진행상황 관련 상태/로직 담당 (계획되었으나 미구현, QA 데이터는 QaDataManager에서 직접 관리)
+- **MainViewModel**은 암기 테스트 상태는 위임했으나 영작테스트 병합 파일 재생 로직은 아직 보유
+- 각 ViewModel은 UI 계층(Compose)에서 각각 hiltViewModel()로 생성하여 조합
 
 ### 2.2 DI 정책 준수
 - ViewModel 간 직접 DI(생성자 주입) 금지
@@ -36,7 +36,7 @@
 val mainViewModel: MainViewModel = hiltViewModel()
 val ttsViewModel: TtsViewModel = hiltViewModel()
 val memorizationViewModel: MemorizationViewModel = hiltViewModel()
-val qaDataViewModel: QaDataViewModel = hiltViewModel()
+// QaDataViewModel은 구현되지 않음 - QA 데이터는 QaDataManager에서 직접 관리
 ```
 - **암기 테스트 관련 UI/로직은 MemorizationViewModel의 StateFlow/메서드를 직접 사용**
 - 예시:

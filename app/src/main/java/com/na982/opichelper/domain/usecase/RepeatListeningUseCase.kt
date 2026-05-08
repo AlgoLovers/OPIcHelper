@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.RecordingTimeManager
@@ -12,11 +13,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 반복 듣기 테스트용 Service
+ * 반복 듣기 테스트용 UseCase
  * 책임: 반복 듣기 테스트 실행, 진행 상황 관리, TTS 제어
  */
 @Singleton
-class RepeatListeningService @Inject constructor(
+class RepeatListeningUseCase @Inject constructor(
     private val ttsOrchestrator: TtsOrchestrator,
     private val progressTracker: MemorizeTestProgressTracker,
     private val recordingTimeManager: RecordingTimeManager
@@ -38,7 +39,7 @@ class RepeatListeningService @Inject constructor(
         val count = minOf(koSentences.size, enSentences.size)
         
         // 복원된 앱 상태에서 시작 인덱스 가져오기 (암기레벨별)
-        val currentProgress = progressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
+        val currentProgress = progressTracker.getScriptProgress(data.category, data.scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
         
         val startIndex = if (currentProgress != null) {
             currentProgress.currentSentenceIndex
@@ -63,7 +64,7 @@ class RepeatListeningService @Inject constructor(
             progressTracker.updateProgress(
                 category = data.category,
                 scriptIndex = data.scriptIndex,
-                memorizeLevel = "반복 듣기",
+                memorizeLevel = MemorizeLevel.REPEAT_LISTENING.displayName,
                 currentSentenceIndex = i,
                 totalSentences = count,
                 isMemorizeTestRunning = true
@@ -145,7 +146,7 @@ class RepeatListeningService @Inject constructor(
         uiCallback.onHighlight(null)
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
-        progressTracker.clearScriptProgress(data.category, data.scriptIndex, "반복 듣기")
+        progressTracker.clearScriptProgress(data.category, data.scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
         
         // 완료 콜백 호출
         uiCallback.onComplete()

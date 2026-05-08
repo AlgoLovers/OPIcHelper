@@ -6,10 +6,11 @@ import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.entity.LeveledAnswer
+import com.na982.opichelper.domain.repository.QaDataLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class LeveledQaDataLoader(private val context: Context) {
+class LeveledQaDataLoader(private val context: Context) : QaDataLoader {
     
     private val gson = Gson()
     
@@ -26,7 +27,7 @@ class LeveledQaDataLoader(private val context: Context) {
     /**
      * 특정 레벨의 데이터를 로드
      */
-    suspend fun loadQaItemsForLevel(level: UserLevel): List<QaItem> = withContext(Dispatchers.IO) {
+    override suspend fun loadQaItemsForLevel(level: UserLevel): List<QaItem> = withContext(Dispatchers.IO) {
         try {
             val folderName = levelFolderMapping[level] ?: "ih"
             val allQaItems = mutableListOf<QaItem>()

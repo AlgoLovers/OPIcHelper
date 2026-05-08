@@ -1,5 +1,6 @@
 package com.na982.opichelper.ui.theme
 
+import com.na982.opichelper.domain.entity.MemorizeLevel
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -116,29 +117,24 @@ fun OPicHelperTheme(
 @Composable
 fun OPicHelperThemeWithMemorizeLevel(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    memorizeLevel: String = "반복 듣기",
+    memorizeLevel: String = MemorizeLevel.REPEAT_LISTENING.displayName,
     content: @Composable () -> Unit
 ) {
     val baseColorScheme = when {
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-    
-    // 암기레벨별 색상 적용 (다크 테마 고려)
+
+    val level = MemorizeLevel.fromDisplayName(memorizeLevel)
     val backgroundColor = getMemorizeLevelBackground(memorizeLevel, darkTheme)
     val surfaceColor = getMemorizeLevelSurface(memorizeLevel, darkTheme)
     val cardColor = getMemorizeLevelCard(memorizeLevel, darkTheme)
-    val primaryColor = when (memorizeLevel) {
-        "반복 듣기" -> if (darkTheme) MemorizeLevelColors.RepeatListening.primaryDark else MemorizeLevelColors.RepeatListening.primaryLight
-        "영작 테스트" -> if (darkTheme) MemorizeLevelColors.WritingTest.primaryDark else MemorizeLevelColors.WritingTest.primaryLight
-        "통암기" -> if (darkTheme) MemorizeLevelColors.FullMemorization.primaryDark else MemorizeLevelColors.FullMemorization.primaryLight
-        else -> if (darkTheme) MemorizeLevelColors.RepeatListening.primaryDark else MemorizeLevelColors.RepeatListening.primaryLight
+    val primaryColor = when (level) {
+        MemorizeLevel.REPEAT_LISTENING -> if (darkTheme) MemorizeLevelColors.RepeatListening.primaryDark else MemorizeLevelColors.RepeatListening.primaryLight
+        MemorizeLevel.ENGLISH_WRITING -> if (darkTheme) MemorizeLevelColors.WritingTest.primaryDark else MemorizeLevelColors.WritingTest.primaryLight
+        MemorizeLevel.FULL_MEMORIZATION -> if (darkTheme) MemorizeLevelColors.FullMemorization.primaryDark else MemorizeLevelColors.FullMemorization.primaryLight
     }
-    
-    // 디버깅 로그
-    android.util.Log.d("Theme", "암기레벨: $memorizeLevel, 다크테마: $darkTheme")
-    android.util.Log.d("Theme", "배경색: $backgroundColor, 서피스색: $surfaceColor, 카드색: $cardColor, 주색: $primaryColor")
-    
+
     val dynamicColorScheme = baseColorScheme.copy(
         background = backgroundColor,
         surface = surfaceColor,
