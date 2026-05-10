@@ -1,5 +1,6 @@
 [
   {
+    "title": "레스토랑",
     "id": "1",
     "category": "restaurants",
     "question_en": "I would like to know about restaurants in your country. What kind of food do they commonly serve? How are the people who work there? Give me all the details about a typical restaurant in your country.",
@@ -8,6 +9,7 @@
     "answer_ko": "대부분의 식당들은 번화가에 있어요.\n저는 한식당에 가는 것을 선호해요.\n한식당에서는 사람들이 바닥에 앉을 수 있어요.\n낮은 테이블에서 식사를 해요.\n새로운 식당들에는 테이블과 의자가 있어요.\n하지만 일부 장소에서는 여전히 좌식 공간도 있어요.\n메인 요리가 소량의 반찬과 함께 나와요.\n밥도 함께 나와요.\n모든 한식당에서는 김치가 나와요.\n이게 한국 식당들의 모습이에요."
   },
   {
+    "title": "레스토랑",
     "id": "2",
     "category": "restaurants",
     "question_en": "Tell me about a restaurant you ate out at recently. What kind of restaurant was it? What was on their menu and what did you eat? Who did you go with? Did you like how the food tasted? Give me all the details.",
@@ -16,6 +18,7 @@
     "answer_ko": "이태원의 피자집에서 친구들과 피자를 먹었어요.\n그곳까지 가는 데 약 30분 걸렸어요.\n포테이토 피자 하나를 시켰어요.\n해산물 파스타도 시켰어요.\n치킨 텐더 샐러드도 시켰어요.\n음식이 훌륭했어요.\n우리 모두가 매우 배고팠어요.\n하지만 마음에 들지 않는 점들도 있었어요.\n식당이 꽤 작았어요.\n테이블이 많지 않았어요.\n자리에 앉는 데 30분을 기다려야 했어요.\n음식이 나오는 데 또 30분을 기다려야 했어요.\n친구들과 함께 정말 즐거운 시간을 보냈어요."
   },
   {
+    "title": "레스토랑",
     "id": "3",
     "category": "restaurants",
     "question_en": "Now, tell me about a restaurant you used to go to as a child. What was it like? What did you eat? Who did you go with? What do you remember most about that place? Tell me about that restaurant in as much detail as possible",
@@ -24,6 +27,7 @@
     "answer_ko": "우리 가족이 예전에 자주 가던 한식 바비큐 식당이 있었어요.\n그곳은 정말 맛있는 양념 바비큐를 내놓았어요.\n우리는 고기를 불판에 구웠어요.\n바로 먹었어요.\n한 달에 적어도 한 번은 그곳에서 식사를 했어요.\n항상 완전히 만족한 채 나왔어요.\n제가 어렸을 때는 주인아저씨가 무료로 아이스크림을 주셨어요.\n사탕도 주셨어요.\n저와 사촌들이 놀게도 해주셨어요.\n주차장 옆에 있는 작은 놀이터에서 놀았어요.\n주인아저씨는 2층에 사셨어요.\n자녀들을 위해 그 놀이터를 만드신 거였어요.\n저는 여전히 다른 한식 바비큐 식당에 가끔 가요.\n하지만 그곳 음식이 최고였어요.\n그 식당은 제가 가본 곳 중에 단연코 최고의 식당이었어요."
   },
   {
+    "title": "레스토랑",
     "id": "4",
     "category": "restaurants",
     "question_en": "Many restaurants are changing their menus to suit customers who are more health-conscious. Talk about the changes you notice about restaurants in your country related to this trend.",
@@ -32,6 +36,7 @@
     "answer_ko": "우리나라의 식당들이 메뉴를 바꾸고 있어요.\n건강에 신경 쓰는 고객들을 맞추려고 해요.\n많은 식당들이 이제 건강한 옵션을 제공해요.\n더 많은 채소를 내놓아요.\n요리할 때 기름을 덜 써요.\n일부 식당들은 채식 요리를 제공해요.\n유기농 음식도 내놓아요.\n많은 사람들이 건강한 음식을 먹고 싶어해요.\n그래서 식당들이 이 추세에 반응하고 있어요.\n건강한 메뉴 항목들을 추가하고 있어요.\n이것이 식당 업계의 큰 변화예요."
   },
   {
+    "title": "레스토랑",
     "id": "5",
     "category": "restaurants",
     "question_en": "What are the latest trends people are talking about related to take-out or delivery food options? Perhaps, it has to do with ordering online or an app. Discuss the changes that you have observed recently regarding take-out or delivery food options.",

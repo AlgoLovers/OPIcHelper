@@ -1,5 +1,6 @@
 [
   {
+    "title": "해변",
     "id": "1",
     "question_en": "You indicated that you like to go to the beach. Which beach do you like to go to?\nWhere is it? What does it look like? How often do you go to this beach?\nHow do people get there? Does it get crowded?",
     "question_ko": "당신은 해변에 가는 것을 좋아한다고 말씀하셨습니다. 어떤 해변에 가는 것을 좋아하나요? 그곳은 어디에 있나요? 어떻게 생겼나요? 그 해변에 얼마나 자주 가나요? 사람들은 그곳에 어떻게 가나요? 붐비는 편인가요?",
@@ -7,6 +8,7 @@
     "answer_ko": "저의 고향은 해안가 근처에 있어서, 근처에 해변이 많습니다.\n하지만 저는 주문진 해변에 가장 자주 갑니다.\n제가 사는 곳에서 15분밖에 걸리지 않기 때문입니다.\n그곳은 여름에 부드러운 백사장과 시원한 물로 유명해서 꽤 인기 있는 해변입니다.\n또한, 먹고 마실 곳도 많이 있습니다.\n해변을 따라 식당과 카페들이 줄지어 있습니다.\n많은 사람들이 휴가를 즐기러 그곳에 갑니다.\n성수기가 되면 매우 붐빕니다.\n해변에는 친구, 가족 그리고 많은 커플들도 있습니다.\n사람들은 해변을 따라 걷거나 사진을 찍습니다.\n그래서, 집과 가깝고 꽤 좋기 때문에 주문진은 제가 가장 좋아하는 해변 중 하나입니다.\n그게 다입니다. 다시 말해, 제가 가장 좋아하는 해변 중 하나는 확실히 주문진 해변입니다."
   },
   {
+    "title": "해변",
     "id": "2",
     "question_en": "When you go to the beach, what do you usually do there? Who do you go with?\nTell me everything about what you can do at the beach.",
     "question_ko": "해변에 가면 보통 무엇을 하나요? 누구와 함께 가나요? 해변에서 할 수 있는 모든 것에 대해 말해주세요.",
@@ -14,6 +16,7 @@
     "answer_ko": "저는 워낙 해변 가는 것을 좋아해서 보통 친구들, 가족, 심지어 강아지들과 함께 해변에 갑니다.\n해변에 도착하면 물에 뛰어들어 수영하고 더위를 식힙니다.\n가끔 태닝도 합니다.\n또한 아름다운 해변을 따라 걷거나 조깅하는 것을 좋아합니다.\n가끔 바다에서 서핑을 즐기기도 합니다.\n어두워지면 해변을 따라 잠시 드라이브를 하고 해변 근처에서 해산물을 먹습니다.\n불꽃놀이를 하는 것도 즐깁니다.\n그래서, 이것들이 제가 해변에 있을 때 보통 하는 일들입니다."
   },
   {
+    "title": "해변",
     "id": "3",
     "question_en": "Tell me about a particularly memorable trip to the beach. Who were you with?\nWhich beach were you at? What did you do there? What made this trip to the beach so memorable or special? Tell me everything you did from the moment you arrived there.",
     "question_ko": "특히 기억에 남는 해변 여행에 대해 이야기해주세요. 누구와 함께 있었나요? 어느 해변에 있었나요? 그곳에서 무엇을 했나요? 무엇이 이 해변 여행을 그렇게 기억에 남고 특별하게 만들었나요? 그곳에 도착한 순간부터 했던 모든 것을 말해주세요.",

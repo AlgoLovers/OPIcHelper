@@ -242,7 +242,10 @@ fun MainScreen(
                     QuestionCard(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
-                        highlightIndex = fullMemorizationHighlightIndex,
+                        highlightIndex = when {
+                            (isFullMemorizationMode && isFullMemorizationPlaying) -> fullMemorizationHighlightIndex
+                            else -> uiState.questionHighlightIndex
+                        },
                         currentIndex = currentIndex,
                         totalCount = totalCount,
                         isFlipped = isQuestionCardFlipped,
@@ -258,16 +261,8 @@ fun MainScreen(
                             currentQuestion = qaItem.questionEn,
                             isPlaying = uiState.isQuestionPlaying,
                             onPlayClick = {
-                                if (isFullMemorizationMode) {
-                                    viewModel.setQuestionCardFlipped(false)
-                                    coroutineScope.launch {
-                                        delay(300L)
-                                        memorizationViewModelInstance.startFullMemorizationMode()
-                                    }
-                                } else {
-                                    memorizationViewModelInstance.stopMemorization()
-                                    viewModel.playQuestion(qaItem.questionEn)
-                                }
+                                memorizationViewModelInstance.stopMemorization()
+                                viewModel.playQuestion(qaItem.questionEn)
                             },
                             onStopClick = { viewModel.stopAllTts() },
                             modifier = Modifier.weight(1f)

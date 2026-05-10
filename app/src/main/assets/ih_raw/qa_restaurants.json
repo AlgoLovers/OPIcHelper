@@ -1,5 +1,6 @@
 [
   {
+    "title": "레스토랑",
     "id": "1",
     "category": "restaurants",
     "question_en": "I would like to know about restaurants in your country. What kind of food do they commonly serve? How are the people who work there? Give me all the details about a typical restaurant in your country.",
@@ -8,6 +9,7 @@
     "answer_ko": "대부분의 식당들은 보통 유동 인구가 많은 번화가에 있어요.\n여러 종류의 식당들 중에서 저는 한식당에 가는 것을 선호합니다.\n첫째, 한식당에서는 사람들이 바닥에 앉아 낮은 테이블에서 식사를 할 수 있어요.\n새롭고 최근에 문을 연 식당들에는 테이블과 의자가 있지만, 일부 장소에서는 여전히 좌식 공간도 이용할 수 있습니다.\n또 다른 차이점은 한식당에서는 메인 요리가 소량의 반찬과 밥과 함께 제공된다는 점이에요.\n또한, 모든 한식당에서는 김치가 나옵니다.\n음, 이게 한국 식당들의 모습입니다.\n지금으로서는 이 정도만 생각나네요."
   },
   {
+    "title": "레스토랑",
     "id": "2",
     "category": "restaurants",
     "question_en": "Tell me about a restaurant you ate out at recently. What kind of restaurant was it? What was on their menu and what did you eat? Who did you go with? Did you like how the food tasted? Give me all the details.",
@@ -16,6 +18,7 @@
     "answer_ko": "제가 마지막으로 피자를 먹었던 것은 이태원의 피자집에서 친구들과 함께였어요.\n제가 사는 곳에서 그곳까지 가는 데 약 30분 정도 걸렸습니다.\n우리는 포테이토 피자 하나, 해산물 파스타, 그리고 치킨 텐더 샐러드까지 시켰어요.\n전반적으로 음식은 훌륭했어요, 아마 우리 모두가 매우 배고팠기 때문일 거예요.\n하지만, 몇 가지 마음에 들지 않는 점들도 있었습니다.\n식당은 꽤 작았고, 테이블도 많지 않았어요.\n자리에 앉는 데 약 30분을 기다려야 했고, 음식이 나오는 데 또 30분을 기다려야 했습니다.\n그게 다예요. 전반적으로, 친구들과 함께 그 식당에서 정말 즐거운 시간을 보냈습니다."
   },
   {
+    "title": "레스토랑",
     "id": "3",
     "category": "restaurants",
     "question_en": "Now, tell me about a restaurant you used to go to as a child. What was it like? What did you eat? Who did you go with? What do you remember most about that place? Tell me about that restaurant in as much detail as possible",
@@ -24,6 +27,7 @@
     "answer_ko": "우리 가족이 예전에 자주 가던 한식 바비큐 식당이 있었어요.\n그곳은 정말 맛있는 양념 바비큐를 내놓았죠.\n우리는 고기를 불판에 구워서 바로 먹었어요.\n한 달에 적어도 한 번은 그 식당에서 식사를 했고, 항상 완전히 만족한 채 나왔습니다.\n제가 어렸을 때는 주인아저씨가 무료로 아이스크림과 사탕도 주셨어요.\n주차장 옆에 있는 작은 놀이터에서 저와 사촌들이 놀게도 해주셨고요.\n주인아저씨는 2층에 사셨는데, 자녀들을 위해 그 놀이터를 만드신 거였어요.\n저는 여전히 다른 한식 바비큐 식당에 가끔 가지만, 그곳 음식이 최고였어요.\n다시 한번 말하지만, 그 식당은 제가 가본 곳 중에 단연코 최고의 식당이었습니다."
   },
   {
+    "title": "레스토랑",
     "id": "4",
     "category": "restaurants",
     "question_en": "Many restaurants are changing their menus to suit customers who are more health-conscious. Talk about the changes you notice about restaurants in your country related to this trend.",
@@ -32,6 +36,7 @@
     "answer_ko": "우리 가족이 예전에 자주 가던 한식 바비큐 식당이 있었어요.\n그곳은 정말 맛있는 양념 바비큐를 내놓았죠.\n우리는 고기를 불판에 구워서 바로 먹었어요.\n한 달에 적어도 한 번은 그 식당에서 식사를 했고, 항상 완전히 만족한 채 나왔습니다.\n제가 어렸을 때는 주인아저씨가 무료로 아이스크림과 사탕도 주셨어요.\n주차장 옆에 있는 작은 놀이터에서 저와 사촌들이 놀게도 해주셨고요.\n주인아저씨는 2층에 사셨는데, 자녀들을 위해 그 놀이터를 만드신 거였어요.\n저는 여전히 다른 한식 바비큐 식당에 가끔 가지만, 그곳 음식이 최고였어요.\n다시 한번 말하지만, 그 식당은 제가 가본 곳 중에 단연코 최고의 식당이었습니다."
   },
   {
+    "title": "레스토랑",
     "id": "5",
     "category": "restaurants",
     "question_en": "What are the latest trends people are talking about related to take-out or delivery food options? Perhaps, it has to do with ordering online or an app. Discuss the changes that you have observed recently regarding take-out or delivery food options.",

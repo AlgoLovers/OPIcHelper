@@ -1,5 +1,6 @@
 [
   {
+    "title": "패션",
     "id": "1",
     "question_en": "I would like to know how people dress in your country.\nWhat kind of clothes do they wear?\nWhat is special about the fashion styles in your country?\n",
     "question_ko": "귀하의 나라 사람들이 어떻게 옷을 입는지 알고 싶습니다.\n그들은 어떤 종류의 옷을 입습니까?\n귀하의 나라 패션 스타일에 특별한 점은 무엇입니까?\n",
@@ -7,6 +8,7 @@
     "answer_ko": "한국 사람들은 패션에 매우 민감해요.\n사람들은 상황에 따라 다른 옷을 입어요.\n주중에는 대부분의 사람들이 비즈니스 복장을 입어요.\n대부분의 회사에는 복장 규정이 있어요.\n사람들은 직장에서 전문적인 옷을 입어요.\n주말에는 사람들이 캐주얼한 옷을 입어요.\n사람들은 청바지와 셔츠를 입는 것을 좋아해요.\n주말에는 운동복도 입어요.\n그게 우리나라 사람들이 옷을 입는 방식이에요."
   },
   {
+    "title": "패션",
     "id": "2",
     "question_en": "How have fashion trends in your country changed over the years?\nDo you think people in your country follow the latest fashions?\nIf so, tell me why.\n",
     "question_ko": "귀하의 나라 패션 트렌드는 수년에 걸쳐 어떻게 변했습니까?\n귀하의 나라 사람들이 최신 패션을 따른다고 생각하십니까?\n그렇다면, 그 이유를 말해주세요.\n",
@@ -14,6 +16,7 @@
     "answer_ko": "패션 트렌드는 수년간 많이 바뀌었어요.\n예전에는 사람들이 편안한 옷을 입었어요.\n사람들은 입는 옷에 신경 쓰지 않았어요.\n하지만 지금은 상황이 바뀌었어요.\n요즘 대부분의 한국인들은 패션에 매우 민감해요.\n패션은 TV와 잡지에서 시작돼요.\n사람들은 연예인들이 입는 옷에 관심을 가져요.\n사람들은 TV에서 본 옷을 사요.\n제품이 TV에 나오면 인기가 생겨요.\n저는 잡지를 읽고 그곳에서 옷을 선택해요.\n그렇게 우리나라 패션이 바뀌었어요."
   },
   {
+    "title": "패션",
     "id": "3",
     "question_en": "Talk about a time when you went shopping for some clothes.\nWhere did you go and what did you buy?\nWhat was memorable about that shopping experience?\nTell me everything about that time when you bought some clothes.\n",
     "question_ko": "옷을 사러 쇼핑 갔던 때에 대해 이야기해 주세요.\n어디에 갔고 무엇을 샀습니까?\n그 쇼핑 경험에서 기억에 남는 것은 무엇이었습니까?\n옷을 샀던 그 시간에 대해 모든 것을 말해주세요.\n",
