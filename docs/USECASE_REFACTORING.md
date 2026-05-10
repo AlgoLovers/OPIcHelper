@@ -58,12 +58,14 @@ class FullMemorizationService @Inject constructor(
 
 ### 3. 구체적 변경 내역
 
-| 기존 | 변경 후 | 패턴 | 책임 |
-|------|---------|------|------|
-| `SaveUserPreferencesUseCase` | `UserPreferencesService` | Service | 사용자 설정 관리 |
-| `FullMemorizationUseCase` | `FullMemorizationService` | Service | 통암기 기능 |
-| `EnglishWritingTestUseCase` | `EnglishWritingTestService` | Service | 영작 테스트 |
-| `RepeatListeningUseCase` | `RepeatListeningService` | Service | 반복 듣기 테스트 |
+| 기존 | 변경 후 | 패턴 | 책임 | 비고 |
+|------|---------|------|------|------|
+| `SaveUserPreferencesUseCase` | `UserPreferencesRepository` | Repository | 사용자 설정 관리 | Service가 아닌 Repository로 최종 결정 |
+| `FullMemorizationUseCase` | `FullMemorizationUseCase` (유지) | UseCase | 통암기 기능 | 파일명은 UseCase 유지, 내부적으로는 Service 역할 |
+| `EnglishWritingTestUseCase` | `EnglishWritingTestUseCase` (유지) | UseCase | 영작 테스트 | 파일명은 UseCase 유지 |
+| `RepeatListeningUseCase` | `RepeatListeningUseCase` = `RepeatListeningService` | Service | 반복 듣기 테스트 | 클래스명이 RepeatListeningService로 변경됨 (파일명은 RepeatListeningUseCase.kt) |
+
+> **주의**: Service 이름 변경이 일부만 적용되었습니다. FullMemorizationUseCase와 EnglishWritingTestUseCase는 파일명이 UseCase로 유지되어 있으며, RepeatListeningUseCase.kt 파일 내의 클래스명은 RepeatListeningService로 변경되었습니다.
 
 ### 4. MainViewModel 업데이트
 

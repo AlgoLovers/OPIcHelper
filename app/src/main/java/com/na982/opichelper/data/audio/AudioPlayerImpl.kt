@@ -88,16 +88,16 @@ class AudioPlayerImpl : AudioPlayer {
     }
     
     override fun getDuration(filePath: String): Int {
+        val mediaPlayer = MediaPlayer()
         return try {
-            val mediaPlayer = MediaPlayer()
             mediaPlayer.setDataSource(filePath)
             mediaPlayer.prepare()
-            val duration = mediaPlayer.duration
-            mediaPlayer.release()
-            duration
+            mediaPlayer.duration
         } catch (e: Exception) {
             Log.e("AudioPlayerImpl", "getDuration 실패: $filePath", e)
             0
+        } finally {
+            mediaPlayer.release()
         }
     }
     

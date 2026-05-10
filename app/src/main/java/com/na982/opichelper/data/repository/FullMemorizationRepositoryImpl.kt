@@ -134,6 +134,13 @@ class FullMemorizationRepositoryImpl @Inject constructor(
     }
 
     override fun clearRecording() {
+        currentRecordingPath?.let { path ->
+            val file = File(path)
+            if (file.exists()) {
+                file.delete()
+                Log.d("FullMemorizationRepositoryImpl", "녹음 파일 삭제: $path")
+            }
+        }
         currentRecordingPath = null
     }
 } 

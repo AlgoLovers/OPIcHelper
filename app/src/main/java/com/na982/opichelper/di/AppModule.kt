@@ -90,24 +90,18 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
-        return QaDataLoaderImpl(context)
-    }
-    
-    @Provides
-    @Singleton
     fun provideProgressPersistenceService(@ApplicationContext context: Context): ProgressPersistenceService {
-        return ProgressPersistenceService(context)
+        return com.na982.opichelper.data.repository.ProgressPersistenceServiceImpl(context)
     }
     
     @Provides
     @Singleton
     fun provideQaDataManager(
         progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
-        leveledQaDataLoader: LeveledQaDataLoader,
-        userPreferencesRepository: UserPreferencesRepository
+        qaDataLoader: QaDataLoader,
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
     ): QaDataManager {
-        return QaDataManager(progressTracker, leveledQaDataLoader, userPreferencesRepository)
+        return QaDataManager(progressTracker, qaDataLoader, userPreferencesRepository)
     }
     
     @Provides
@@ -148,13 +142,13 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideUserPreferencesRepository(@ApplicationContext context: Context): UserPreferencesRepository {
-        return UserPreferencesRepository(context)
+    fun provideUserPreferencesRepository(@ApplicationContext context: Context): com.na982.opichelper.domain.repository.UserPreferencesRepository {
+        return com.na982.opichelper.data.repository.UserPreferencesRepository(context)
     }
     
     @Provides
     @Singleton
-    fun provideLeveledQaDataLoader(@ApplicationContext context: Context): LeveledQaDataLoader {
+    fun provideQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
         return LeveledQaDataLoader(context)
     }
     

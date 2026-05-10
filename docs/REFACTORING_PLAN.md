@@ -48,25 +48,25 @@
 - 불필요한 중복 메서드 제거 및 시그니처 통일
 - Lint/빌드 오류 수정
 
-## 3단계: Presentation Layer 정리 🔄 **다음 단계**
+## 3단계: Presentation Layer 정리 ✅ **완료 (부분적)**
 
-### 3.1 ViewModel 정리
-- **목표**: ViewModel의 책임과 상태 관리 정리
-- **예상 변경사항**:
-  - 상태 관리 로직 분리
-  - 메서드 네이밍 개선
-  - 불필요한 코드 제거
+### 3.1 ViewModel 분리 ✅
+- MainViewModel → MainViewModel + TtsViewModel + MemorizationViewModel 분리 완료
+- Composition Pattern 적용 (각 ViewModel이 독립적으로 Hilt 주입)
+- DI 정책 준수: ViewModel 간 직접 의존 없이 Repository/UseCase/StateFlow로 소통
 
-### 3.2 UI 컴포넌트 정리
-- **목표**: UI 컴포넌트들의 책임과 네이밍 정리
-- **예상 변경사항**:
-  - 컴포넌트 분리
-  - 네이밍 개선
-  - 재사용성 향상
+### 3.2 UI 컴포넌트 분리 ✅
+- MainScreen 내 14개 컴포넌트를 MainScreenComponentsUI/로 추출
+- FlipCard, HighlightText 등 재사용 컴포넌트 분리
+
+### 3.3 미해결 사항
+- QaDataViewModel은 계획되었으나 실제로는 생성되지 않음 (QA 데이터는 QaDataManager에서 직접 관리)
+- MainViewModel이 여전히 영작테스트 병합 파일 재생 로직을 보유 (MemorizationViewModel로 이동 필요)
+- TtsViewModel과 TtsPlaybackController의 상태가 중복 관리됨
 
 ## 진행 상황
 - ✅ 1.1 Entity 정리 완료
 - ✅ 1.2 Repository 정리 완료
 - ✅ 1.3 UseCase 정리 완료
 - ✅ 2단계 Data Layer 정리 완료
-- 🔄 3단계 Presentation Layer 정리 (다음 단계) 
+- ✅ 3단계 Presentation Layer 정리 완료 (부분적, 상기 미해결 사항 남음) 

@@ -3,6 +3,7 @@ package com.na982.opichelper.domain.repository
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,11 +12,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.io.InputStreamReader
-import com.na982.opichelper.data.repository.LeveledQaDataLoader
-import com.na982.opichelper.data.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -25,10 +27,12 @@ import kotlinx.coroutines.launch
 @Singleton
 class QaDataManager @Inject constructor(
     private val progressTracker: MemorizeTestProgressTracker,
-    private val leveledQaDataLoader: LeveledQaDataLoader,
+    private val qaDataLoader: QaDataLoader,
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
-    
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var userLevelJob: Job? = null
+
     private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
     private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
     
@@ -67,11 +71,10 @@ class QaDataManager @Inject constructor(
      * 사용자 레벨 변경 감지 및 데이터 재로드
      */
     private fun setupUserLevelObserver() {
-        // 코루틴 스코프에서 사용자 레벨 변경 감지
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+        userLevelJob?.cancel()
+        userLevelJob = scope.launch {
             userPreferencesRepository.userLevel.collect { newLevel ->
                 Log.d("QaDataManager", "사용자 레벨 변경 감지: $newLevel")
-                // 레벨이 변경되면 데이터를 다시 로드
                 application?.let { app ->
                     loadQaItemsFromAssets(app)
                     restoreLastCategory()
@@ -95,7 +98,7 @@ class QaDataManager @Inject constructor(
         Log.d("QaDataManager", "데이터 로딩 시작 - 현재 사용자 레벨: $currentUserLevel")
         
         // 현재 레벨에 맞는 데이터 로드
-        val allLeveledItems = leveledQaDataLoader.loadQaItemsForLevel(currentUserLevel)
+        val allLeveledItems = qaDataLoader.loadQaItemsForLevel(currentUserLevel)
         Log.d("QaDataManager", "레벨별 데이터 로드 완료 - 총 ${allLeveledItems.size}개 항목")
         
         // 카테고리별로 아이템 분류
@@ -280,6 +283,12 @@ class QaDataManager @Inject constructor(
         _error.value = null
     }
 
+    fun release() {
+        userLevelJob?.cancel()
+        userLevelJob = null
+        scope.cancel()
+    }
+
     /**
      * 현재 스크립트의 진행상황 저장
      * @param memorizeLevel 현재 활성화된 암기레벨
@@ -290,24 +299,14 @@ class QaDataManager @Inject constructor(
         
         if (category != null) {
             // 현재 진행상황 확인
-            val currentProgress = progressTracker.getScriptProgress(category, currentIndex, memorizeLevel ?: "반복 듣기")
-            
+            val currentProgress = progressTracker.getScriptProgress(category, currentIndex, memorizeLevel ?: MemorizeLevel.REPEAT_LISTENING.displayName)
+
             if (currentProgress != null) {
-                // 진행상황이 있으면 저장
                 progressTracker.persistChangedProgress()
-                Log.d("QaDataManager", "현재 진행상황 저장: $category (인덱스: $currentIndex, 레벨: ${memorizeLevel ?: "반복 듣기"})")
+                Log.d("QaDataManager", "현재 진행상황 저장: $category (인덱스: $currentIndex, 레벨: ${memorizeLevel ?: MemorizeLevel.REPEAT_LISTENING.displayName})")
             } else {
                 Log.d("QaDataManager", "저장할 진행상황 없음: $category (인덱스: $currentIndex)")
             }
         }
     }
-    
-    // Asset 데이터 클래스
-    private data class QaItemAsset(
-        val id: String?,
-        val question_en: String,
-        val question_ko: String,
-        val answer_en: String,
-        val answer_ko: String
-    )
-} 
+}

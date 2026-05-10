@@ -12,11 +12,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.currentCoroutineContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import android.util.Log
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Singleton
 class FullMemorizationUseCase @Inject constructor(
@@ -28,13 +30,16 @@ class FullMemorizationUseCase @Inject constructor(
 ) {
     private val _highlightIndex = MutableStateFlow<Int?>(null)
     val highlightIndex: StateFlow<Int?> = _highlightIndex.asStateFlow()
-    private var isRecording = false
-    private var isPlaying = false
-    private var currentRecordingPath: String? = null
 
-    /**
-     * 통암기 테스트 시작 (질문 재생 후 녹음)
-     */
+    private val _isRecording = AtomicBoolean(false)
+    private val _isPlaying = AtomicBoolean(false)
+
+    private var currentRecordingPath: String? = null
+    private var playbackJob: Job? = null
+
+    fun isRecording(): Boolean = _isRecording.get()
+    fun isPlaying(): Boolean = _isPlaying.get()
+
     suspend fun startFullMemorization(
         category: String,
         scriptIndex: Int,
@@ -42,168 +47,113 @@ class FullMemorizationUseCase @Inject constructor(
         onPlayingStateChange: (Boolean) -> Unit
     ) {
         try {
-            Log.d("FullMemorizationUseCase", "통암기 테스트 시작: $category, $scriptIndex")
-            
-            // 1. 질문 재생
-            Log.d("FullMemorizationUseCase", "질문 재생 시작")
             onPlayingStateChange(true)
-            
+
             val qaItem = qaDataManager.getCurrentQaItem()
             if (qaItem != null) {
-                // 영어 질문 TTS 재생 (표준화된 방식 사용)
-                val questionDuration = ttsOrchestrator.speakAndWaitForCompletion(qaItem.questionEn, isKorean = false, rate = 1.0f)
-                
-                Log.d("FullMemorizationUseCase", "영어 질문 TTS 재생 완료: ${questionDuration}ms")
-                
-                // TTS 완료 후 약간의 지연 (GUI 업데이트 대기)
+                ttsOrchestrator.speakAndWaitForCompletion(qaItem.questionEn, isKorean = false, rate = 1.0f)
                 delay(500L)
-                Log.d("FullMemorizationUseCase", "TTS 완료 후 지연 완료")
-                
-                // 2. 녹음 파일 생성
+
                 currentRecordingPath = recordingFileRepository.createRecordingFile(category, scriptIndex)
-                
-                // 3. 녹음 시작
-                isRecording = true
+
+                _isRecording.set(true)
                 onRecordingStateChange(true)
-                
-                Log.d("FullMemorizationUseCase", "녹음 시작: $currentRecordingPath")
-                
+
                 audioRecorder.startRecording(currentRecordingPath!!)
-                
             }
         } catch (e: Exception) {
             Log.e("FullMemorizationUseCase", "통암기 테스트 시작 실패", e)
-            isRecording = false
+            _isRecording.set(false)
             onRecordingStateChange(false)
         }
     }
-    
-    /**
-     * 녹음 종료
-     */
+
     suspend fun stopRecording() {
         try {
-            if (isRecording && currentRecordingPath != null) {
-                Log.d("FullMemorizationUseCase", "녹음 종료")
-                
+            if (_isRecording.get() && currentRecordingPath != null) {
                 audioRecorder.stopRecording()
-                isRecording = false
-                
-                Log.d("FullMemorizationUseCase", "녹음 완료: $currentRecordingPath")
+                _isRecording.set(false)
             }
         } catch (e: Exception) {
             Log.e("FullMemorizationUseCase", "녹음 종료 실패", e)
-            isRecording = false
+            _isRecording.set(false)
         }
     }
-    
-    /**
-     * 녹음 파일 재생 (하이라이트 포함)
-     */
+
     suspend fun playRecordingWithHighlight(
         onPlayingStateChange: (Boolean) -> Unit
     ) {
         try {
-            val qaItem = qaDataManager.getCurrentQaItem()
-            if (qaItem == null) {
-                Log.e("FullMemorizationUseCase", "재생할 QA 아이템이 없음")
-                return
-            }
+            val qaItem = qaDataManager.getCurrentQaItem() ?: return
             val category = qaItem.category
             val scriptIndex = qaDataManager.getCurrentIndex()
-            if (recordingFileRepository.hasRecordingFile(category, scriptIndex)) {
-                Log.d("FullMemorizationUseCase", "녹음 재생 시작 (하이라이트 포함)")
-                isPlaying = true
-                onPlayingStateChange(true)
-                
-                // 녹음 재생과 하이라이트를 동시에 시작
-                val filePath = recordingFileRepository.getRecordingFilePath(category, scriptIndex)
-                if (filePath != null) {
-                    // 녹음 재생 시작 (비동기)
-                    CoroutineScope(Dispatchers.IO).launch {
-                        recordingFileRepository.playRecordingFileSimple(category, scriptIndex) { playing ->
-                            if (!playing) isPlaying = false
-                        }
+
+            if (!recordingFileRepository.hasRecordingFile(category, scriptIndex)) return
+
+            _isPlaying.set(true)
+            onPlayingStateChange(true)
+
+            val filePath = recordingFileRepository.getRecordingFilePath(category, scriptIndex)
+            if (filePath != null) {
+                // 녹음 재생 — withContext로 올바른 스코프 관리
+                playbackJob?.cancel()
+                playbackJob = CoroutineScope(Dispatchers.IO).launch {
+                    recordingFileRepository.playRecordingFileSimple(category, scriptIndex) { playing ->
+                        if (!playing) _isPlaying.set(false)
                     }
-                    
-                    // 하이라이트 시작 전 약간의 지연 (오디오와 싱크 맞추기)
-                    delay(1200L)
-                    Log.d("FullMemorizationUseCase", "하이라이트 루프 시작")
-                    
-                    val times = if (recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
-                        recordingTimeManager.getAllRecordingTimes(category, scriptIndex)
-                    } else {
-                        listOf(2000L, 2000L, 2000L, 2000L, 2000L)
-                    }
-                    
-                    for (i in times.indices) {
-                        if (!currentCoroutineContext().isActive) break
-                        _highlightIndex.value = i
-                        Log.d("FullMemorizationUseCase", "녹음 재생 하이라이트: $i (시간: ${times[i]}ms)")
-                        delay(times[i])
-                    }
-                    _highlightIndex.value = null
-                    Log.d("FullMemorizationUseCase", "하이라이트 루프 완료")
                 }
-                onPlayingStateChange(false)
-                Log.d("FullMemorizationUseCase", "녹음 재생 완료 (하이라이트 포함)")
-            } else {
-                Log.d("FullMemorizationUseCase", "재생할 녹음 파일이 없음")
+
+                delay(1200L)
+
+                val times = if (recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
+                    recordingTimeManager.getAllRecordingTimes(category, scriptIndex)
+                } else {
+                    listOf(2000L, 2000L, 2000L, 2000L, 2000L)
+                }
+
+                for (i in times.indices) {
+                    if (!currentCoroutineContext().isActive) break
+                    _highlightIndex.value = i
+                    delay(times[i])
+                }
+                _highlightIndex.value = null
             }
+            onPlayingStateChange(false)
         } catch (e: Exception) {
             Log.e("FullMemorizationUseCase", "녹음 재생 실패", e)
-            isPlaying = false
+            _isPlaying.set(false)
             onPlayingStateChange(false)
             _highlightIndex.value = null
         }
     }
-    
-    /**
-     * 녹음 파일 재생 (하이라이트 없음)
-     */
+
     suspend fun playRecordingSimple(
         onPlayingStateChange: (Boolean) -> Unit
     ) {
         try {
-            val qaItem = qaDataManager.getCurrentQaItem()
-            if (qaItem == null) {
-                Log.e("FullMemorizationUseCase", "재생할 QA 아이템이 없음")
-                return
-            }
-            
+            val qaItem = qaDataManager.getCurrentQaItem() ?: return
             val category = qaItem.category
             val scriptIndex = qaDataManager.getCurrentIndex()
-            
-            if (recordingFileRepository.hasRecordingFile(category, scriptIndex)) {
-                Log.d("FullMemorizationUseCase", "녹음 재생 시작 (하이라이트 없음)")
-                isPlaying = true
-                
-                recordingFileRepository.playRecordingFileSimple(
-                    category = category,
-                    scriptIndex = scriptIndex,
-                    onPlayingStateChange = { isPlaying ->
-                        Log.d("FullMemorizationUseCase", "녹음 재생 상태 변경: isPlaying=$isPlaying")
-                        onPlayingStateChange(isPlaying)
-                        if (!isPlaying) {
-                            this.isPlaying = false
-                        }
-                    }
-                )
-                
-                Log.d("FullMemorizationUseCase", "녹음 재생 완료")
-            } else {
-                Log.d("FullMemorizationUseCase", "재생할 녹음 파일이 없음")
-            }
+
+            if (!recordingFileRepository.hasRecordingFile(category, scriptIndex)) return
+
+            _isPlaying.set(true)
+
+            recordingFileRepository.playRecordingFileSimple(
+                category = category,
+                scriptIndex = scriptIndex,
+                onPlayingStateChange = { playing ->
+                    onPlayingStateChange(playing)
+                    if (!playing) _isPlaying.set(false)
+                }
+            )
         } catch (e: Exception) {
             Log.e("FullMemorizationUseCase", "녹음 재생 실패", e)
-            isPlaying = false
+            _isPlaying.set(false)
             onPlayingStateChange(false)
         }
     }
-    
-    /**
-     * 녹음 파일 존재 여부 확인
-     */
+
     suspend fun hasRecording(): Boolean {
         val qaItem = qaDataManager.getCurrentQaItem()
         return if (qaItem != null) {
@@ -212,24 +162,18 @@ class FullMemorizationUseCase @Inject constructor(
             false
         }
     }
-    
-    /**
-     * 녹음 파일 삭제
-     */
+
     suspend fun clearRecording() {
         val qaItem = qaDataManager.getCurrentQaItem()
         if (qaItem != null) {
             recordingFileRepository.deleteRecordingFile(qaItem.category, qaDataManager.getCurrentIndex())
         }
     }
-    
-    /**
-     * 현재 녹음 상태
-     */
-    fun isRecording(): Boolean = isRecording
-    
-    /**
-     * 현재 재생 상태
-     */
-    fun isPlaying(): Boolean = isPlaying
-} 
+
+    fun cancelPlayback() {
+        playbackJob?.cancel()
+        playbackJob = null
+        _isPlaying.set(false)
+        _highlightIndex.value = null
+    }
+}

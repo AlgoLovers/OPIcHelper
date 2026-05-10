@@ -2,6 +2,7 @@ package com.na982.opichelper.data.repository
 
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
@@ -38,7 +39,7 @@ class RepeatListeningRepositoryImpl @Inject constructor(
         val count = minOf(koSentences.size, enSentences.size)
         
         // 복원된 앱 상태에서 시작 인덱스 가져오기 (암기레벨별)
-        val currentProgress = progressTracker.getScriptProgress(data.category, data.scriptIndex, "반복 듣기")
+        val currentProgress = progressTracker.getScriptProgress(data.category, data.scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
         
         val startIndex = if (currentProgress != null) {
             currentProgress.currentSentenceIndex
@@ -63,7 +64,7 @@ class RepeatListeningRepositoryImpl @Inject constructor(
             progressTracker.updateProgress(
                 category = data.category,
                 scriptIndex = data.scriptIndex,
-                memorizeLevel = "반복 듣기",
+                memorizeLevel = MemorizeLevel.REPEAT_LISTENING.displayName,
                 currentSentenceIndex = i,
                 totalSentences = count,
                 isMemorizeTestRunning = true
@@ -145,7 +146,7 @@ class RepeatListeningRepositoryImpl @Inject constructor(
         uiCallback.onHighlight(null)
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
-        progressTracker.clearScriptProgress(data.category, data.scriptIndex, "반복 듣기")
+        progressTracker.clearScriptProgress(data.category, data.scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
         
         // 완료 콜백 호출
         uiCallback.onComplete()
@@ -154,7 +155,7 @@ class RepeatListeningRepositoryImpl @Inject constructor(
     }
     
     override suspend fun getCurrentProgress(category: String, scriptIndex: Int): ProgressData? {
-        val progress = progressTracker.getScriptProgress(category, scriptIndex, "반복 듣기")
+        val progress = progressTracker.getScriptProgress(category, scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
         return progress?.let {
             ProgressData(
                 category = it.category,
@@ -179,6 +180,6 @@ class RepeatListeningRepositoryImpl @Inject constructor(
     }
     
     override suspend fun clearProgress(category: String, scriptIndex: Int) {
-        progressTracker.clearScriptProgress(category, scriptIndex, "반복 듣기")
+        progressTracker.clearScriptProgress(category, scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
     }
 } 

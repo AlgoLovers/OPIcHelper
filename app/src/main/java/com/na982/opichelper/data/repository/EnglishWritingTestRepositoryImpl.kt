@@ -3,6 +3,7 @@ package com.na982.opichelper.data.repository
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.AudioRecorder
+import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
@@ -52,7 +53,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         val count = minOf(koSentences.size, enSentences.size)
         
         // 복원된 앱 상태에서 시작 인덱스 가져오기 (암기레벨별)
-        val currentProgress = progressTracker.getScriptProgress(category, scriptIndex, "영작 테스트")
+        val currentProgress = progressTracker.getScriptProgress(category, scriptIndex, MemorizeLevel.ENGLISH_WRITING.displayName)
         
         val startIndex = if (currentProgress?.isMemorizeTestRunning == true) {
             currentProgress.currentSentenceIndex
@@ -77,7 +78,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             progressTracker.updateProgress(
                 category = category,
                 scriptIndex = scriptIndex,
-                memorizeLevel = "영작 테스트",
+                memorizeLevel = MemorizeLevel.ENGLISH_WRITING.displayName,
                 currentSentenceIndex = idx,
                 totalSentences = count,
                 isMemorizeTestRunning = true
@@ -169,13 +170,13 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         }
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
-        progressTracker.clearScriptProgress(category, scriptIndex, "영작 테스트")
+        progressTracker.clearScriptProgress(category, scriptIndex, MemorizeLevel.ENGLISH_WRITING.displayName)
         
         Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 완료")
     }
     
     override suspend fun getCurrentProgress(category: String, scriptIndex: Int): ProgressData? {
-        val progress = progressTracker.getScriptProgress(category, scriptIndex, "영작 테스트")
+        val progress = progressTracker.getScriptProgress(category, scriptIndex, MemorizeLevel.ENGLISH_WRITING.displayName)
         return progress?.let {
             ProgressData(
                 category = it.category,
@@ -200,6 +201,6 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
     }
     
     override suspend fun clearProgress(category: String, scriptIndex: Int) {
-        progressTracker.clearScriptProgress(category, scriptIndex, "영작 테스트")
+        progressTracker.clearScriptProgress(category, scriptIndex, MemorizeLevel.ENGLISH_WRITING.displayName)
     }
 } 
