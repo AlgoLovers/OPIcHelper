@@ -1,5 +1,6 @@
 [
   {
+    "title": "영화",
     "id": "1",
     "question_en": "You indicated that you like to go to the movies.\nWhat is your favorite genre?\nWhy do you like that type of movie?",
     "question_ko": "당신은 영화를 보러 가는 걸 좋아한다고 했죠.\n가장 좋아하는 영화 장르는 무엇인가요?\n그 장르의 영화를 왜 좋아하나요?",
@@ -7,6 +8,7 @@
     "answer_ko": "저는 특정 장르보다는 다양한 영화 장르를 즐기는 편이에요.\n주로 기분과 상황에 따라 선택하는 경향이 있어요.\n가끔은 향수를 불러일으켜서 로맨틱 코미디에 끌릴 때가 있어요.\n다른 때는 스트레스 해소와 오락을 위해 액션 영화를 선호하기도 해요.\n예를 들어, 최근에 본 아이언맨은 단순한 줄거리와 흥미진진한 액션 장면으로 저를 사로잡았어요.\n가끔은 현대 영화의 흐름을 따라가기 위해 인기 영화를 보기도 해요.\n주로 그 시기에 유행하는 영화를 보기 위해 극장에 가죠.\n전반적으로 상황에 따라 다양한 장르를 즐겨요.\n"
   },
   {
+    "title": "영화",
     "id": "2",
     "question_en": "Tell me about the movie theater you typically go to.\nWhat is it like?\nDescribe a movie theater you often visit in as much detail as possible.",
     "question_ko": "보통 자주 가는 영화관에 대해 이야기해 주세요.\n그 영화관은 어떤가요?\n자주 가는 영화관에 대해 가능한 한 자세히 묘사해 주세요.",
@@ -14,6 +16,7 @@
     "answer_ko": "저는 직장 바로 맞은편에 있는 CGV 멀티플렉스 극장을 자주 이용해요.\n위치가 퇴근 후 오락에 매우 편리하죠.\n회사에서 도보로 약 10분 정도 거리예요.\n극장은 항상 활기찬 분위기를 유지하며 관객이 많아요.\n주변에는 음식점, 카페, 상점 등 다양한 식당과 쇼핑 공간이 있어요.\n시설에는 전통적인 매표소와 사람들이 자주 줄 서는 여러 개의 자동 발권기도 있어요.\n이런 편의 시설들이 이 극장을 선호하는 중요한 이유예요.\n"
   },
   {
+    "title": "영화",
     "id": "3",
     "question_en": "What was the most memorable movie you've watched?\nWhat was it about?\nWhat was so special about that movie?\nWould you recommend that movie to other people?",
     "question_ko": "지금까지 본 영화 중 가장 기억에 남는 영화는 무엇이었나요?\n그 영화는 어떤 내용이었나요?\n그 영화가 특별했던 점은 무엇이었나요?\n다른 사람들에게 그 영화를 추천하고 싶나요?",
@@ -21,6 +24,7 @@
     "answer_ko": "영화를 정말 즐겁게 보면 자연스럽게 출연진에 대한 애정이 생겨요.\n이런 애정이 전체적인 관람 경험을 더욱 풍부하게 만들어주죠.\n가장 기억에 남는 영화 중 하나는 로버트 다우니 주니어가 출연한 액션 영화 아이언맨이에요.\n그의 아이언맨 연기는 완벽한 캐스팅이었고, 단순한 줄거리와 스릴 넘치는 액션 장면을 특히 즐겼어요.\n또 다른 잊을 수 없는 영화는 봉준호 감독의 한국 걸작 '기생충'이에요.\n한국의 최고 배우들이 출연했고 사회 계층 문제를 교묘하게 풍자했죠.\n이 영화는 아카데미 시상식에서 4관왕을 수상하며 역사를 만들었어요.\n스토리가 절대적으로 매혹적이어서 다른 사람들에게 강력히 추천하고 싶어요.\n제가 본 영화 중 최고 중 하나라고 생각해요.\n"
   },
   {
+    "title": "영화",
     "id": "4",
     "question_en": "Could you compare the movies made today to the movies you saw while you were growing up?\nHow have movies changed over the years?\nWhat are some similarities and differences?",
     "question_ko": "당신이 어렸을 때 보았던 영화들과 오늘날 만들어지는 영화들을 비교해 줄 수 있나요?\n지난 몇 년간 영화는 어떻게 변해왔고,\n어떤 공통점과 차이점이 있나요?",
@@ -28,6 +32,7 @@
     "answer_ko": "한국 영화는 수년간 놀라운 진화를 경험했어요.\n가장 중요한 발전은 컴퓨터 그래픽 기술이에요.\n과거에는 CGI가 상대적으로 미발달해서 사용이 쉽게 감지되고 다소 어색했어요.\n하지만 최근 몇 년간 CGI 기술이 발전하면서 영화 산업에서 엄청난 개선이 있었어요.\n현대 영화들은 이제 초자연적 요소와 상상 속 생명체들을 놀라운 현실감으로 표현할 수 있어요.\n한국 영화는 확실히 이전 수십 년보다 훨씬 더 정교해졌어요.\n"
   },
   {
+    "title": "영화",
     "id": "5",
     "question_en": "Tell me about one of the actors who was in the news recently because of some issue.\nWhat was the issue about?\nHow did the news affect your impression of that actor?",
     "question_ko": "최근 어떤 이슈로 뉴스에 언급된 배우 한 명에 대해 이야기해 주세요.\n그 이슈는 무엇이었고,\n그 뉴스가 그 배우에 대한 당신의 인상에 어떻게 영향을 미쳤나요?",

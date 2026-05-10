@@ -1,5 +1,6 @@
 [
   {
+    "title": "집",
     "id": "1",
     "question_en": "I would like to know where you live. Which is your favorite room at home?\nWhat does it look like? What do you mostly do there?",
     "question_ko": "당신이 어디에 사는지 알고 싶습니다. 집에서 가장 좋아하는 방은 어디인가요?어떻게 생겼나요? 주로 거기서 무엇을 하나요?",
@@ -7,6 +8,7 @@
     "answer_ko": "제가 가장 좋아하는 방 중 하나는 제 침실이에요.\n그곳에서 정말 많은 일을 할 수 있어요.\n보통 TV를 봐요.\n책을 읽어요.\n심지어 출근 준비를 하면서 음식을 먹기도 해요.\n가장 좋아하는 것은 침대에 누워있는 것이에요.\n침대가 정말 편해서 게으르게 쉬는 것을 좋아해요.\n프라이버시를 지키는 것도 좋아해요.\n하루 종일 일하고 나면 혼자만의 시간을 보내는 걸 즐겨요.\n제 침실은 그걸 위한 최고의 장소예요.\n그래서 제 침실이 집에서 가장 좋은 곳이라고 생각해요."
   },
   {
+    "title": "집",
     "id": "2",
     "question_en": "Now, tell me about the things that you do at home.\nWhat are some parts of your daily routine? What is special about each activity?",
     "question_ko": "이제 집에서 하는 일들에 대해 말씀해 주세요.\n일상의 일부는 무엇인가요? 각 활동의 특별한 점은 무엇인가요?",
@@ -14,6 +16,7 @@
     "answer_ko": "요즘 회사 일이 너무 바빠요.\n밖에 나가는 걸 별로 좋아하지 않아요.\n대신 집에 머물면서 다른 활동을 해요.\n시간이 나면 집을 청소하는 걸 좋아해요.\n먼저 모든 창문을 열어요.\n그 다음 바닥을 진공청소기로 청소하고 물걸레질을 해요.\n이 과정은 보통 20분 정도 걸려요.\n그 후에는 보통 욕실 청소를 해요.\n바닥에 물을 뿌리고 변기를 깨끗이 닦아요.\n욕실을 항상 깨끗하게 유지하는 걸 좋아해요.\n청소가 끝나면 가끔 세탁도 해요.\n보통 흰 옷과 색깔 옷을 구분해요.\n세탁기에 넣어요.\n집안일은 시간이 날 때만 할 수 있어요.\n집에 있을 때 보통 이렇게 시간을 보내요."
   },
   {
+    "title": "집",
     "id": "3",
     "question_en": "Tell me about how you usually clean your house.\nHow often do you clean? What is your favorite part of cleaning the house?",
     "question_ko": "평소 집 청소를 어떻게 하는지 알려주세요.\n얼마나 자주 청소하시나요? 집안 청소에서 가장 좋아하는 부분은 무엇인가요?",
@@ -21,6 +24,7 @@
     "answer_ko": "요즘 회사 일이 너무 바빠요.\n밖에 나가는 걸 별로 좋아하지 않아요.\n대신 집에 머물면서 다른 활동을 해요.\n시간이 나면 집을 청소하는 걸 좋아해요.\n먼저 모든 창문을 열어요.\n그 다음 바닥을 진공청소기로 청소하고 물걸레질을 해요.\n이 과정은 보통 20분 정도 걸려요.\n그 후에는 보통 욕실 청소를 해요.\n바닥에 물을 뿌리고 변기를 깨끗이 닦아요.\n욕실을 항상 깨끗하게 유지하는 걸 좋아해요.\n청소가 끝나면 가끔 세탁도 해요.\n보통 흰 옷과 색깔 옷을 구분해요.\n세탁기에 넣어요.\n집안일은 시간이 날 때만 할 수 있어요.\n집에 있을 때 보통 이렇게 시간을 보내요."
   },
   {
+    "title": "집",
     "id": "4",
     "question_en": "Tell me about a change you made to your home.\nWhat was the change and why did you make that change?\nHow did your home look likeafterwards? Give me some details.",
     "question_ko": "당신이 집을 바꾼 것에 대해 이야기해 주세요.\n어떤 변화가 있었고 왜 그런 변화를 만들었나요?\n그 후 집은 어땠나요? 자세한 내용을 알려주세요.",
@@ -28,6 +32,7 @@
     "answer_ko": "이와 관련해서 특별한 경험은 없어요.\n하지만 부모님이 주방 리모델링을 결정했을 때를 기억해요.\n주방이 오래되어서 부모님이 뭔가 변화를 주고 싶어 하셨어요.\n짐을 싸는 데 시간이 좀 걸렸어요.\n우리가 몰랐던 오래된 냄비와 프라이팬도 발견했어요.\n공사가 시작되자 거의 매일 외식을 해야 했어요.\n공사는 거의 2주 정도 걸렸어요.\n하지만 기다린 보람이 있었어요.\n주방의 모든 것이 새것으로 바뀌었거든요.\n부모님이 주방을 새로 고치기로 결정하셔서 정말 기뻐요."
   },
   {
+    "title": "집",
     "id": "5",
     "question_en": "Tell me about the house or apartment you lived in when you were a child.\nHow was it different from the one you live in now?\nWhat are the similarities and the difference?",
     "question_ko": "어렸을 때 살았던 집이나 아파트에 대해 말씀해 주세요.\n지금 살고 있는 곳과 어떻게 달랐나요?\n유사점과 차이점은 무엇인가요?",
@@ -35,6 +40,7 @@
     "answer_ko": "어렸을 때 아파트 단지에 살았던 기억이 나요.\n그때는 이웃들과 항상 어울려 놀곤 했어요.\n시골 지역에 살았어요.\n집 근처에 큰 강과 많은 산들이 있었어요.\n하지만 지금은 상황이 많이 달라졌어요.\n여전히 아파트 단지에 살고 있어요.\n하지만 어릴 때 살던 곳과는 달라요.\n둘 다 아파트 단지이긴 하지만, 지금 사는 곳은 멋진 도시 전망이 있어요.\n가장 좋아하는 것은 맥주 한 병을 마시는 것이에요.\n도시 풍경을 바라보며 즐겨요.\n대중교통도 편리해요.\n예전보다 훨씬 좋아졌어요.\n그냥 밖으로 나가면 5분 안에 지하철을 탈 수 있어요.\n아파트 단지에 사는 것을 즐겨요."
   },
   {
+    "title": "집",
     "id": "6",
     "question_en": "How has the style of homes changed over the past 5 or 10 years at where you live?\nAre the homes being built today different from the homes built 10 years ago?\nWhat developments or changes have you noticed?",
     "question_ko": "지난 5년 또는 10년 동안 당신이 사는 곳의 주택 스타일은 어떻게 변했나요?\n오늘날 지어진 집들이 10년 전에 지어진 집들과 다른가요?\n어떤 발전이나 변화를 발견하셨나요?",
@@ -42,6 +48,7 @@
     "answer_ko": "어렸을 때 아파트 단지에 살았던 기억이 나요.\n그때는 이웃들과 항상 어울려 놀곤 했어요.\n시골 지역에 살았어요.\n집 근처에 큰 강과 많은 산들이 있었어요.\n하지만 지금은 상황이 많이 달라졌어요.\n여전히 아파트 단지에 살고 있어요.\n하지만 어릴 때 살던 곳과는 달라요.\n둘 다 아파트 단지이긴 하지만, 지금 사는 곳은 멋진 도시 전망이 있어요.\n가장 좋아하는 것은 맥주 한 병을 마시는 것이에요.\n도시 풍경을 바라보며 즐겨요.\n대중교통도 편리해요.\n예전보다 훨씬 좋아졌어요.\n그냥 밖으로 나가면 5분 안에 지하철을 탈 수 있어요.\n아파트 단지에 사는 것을 즐겨요."
   },
   {
+    "title": "집",
     "id": "7",
     "question_en": "Sometimes the issues of too many new homes or not enough new homes can create a controversy in a community.\nThink of a time when the issue regarding housing was in the news in your community.",
     "question_ko": "때때로 너무 많은 새 집이나 부족한 새 집의 문제는 지역 사회에서 논란을 일으킬 수 있습니다.\n당신의 지역 사회에서 주택 문제가 뉴스에 나왔던 때를 생각해 보세요.",

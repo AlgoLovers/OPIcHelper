@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.currentCoroutineContext
@@ -36,6 +37,7 @@ class FullMemorizationUseCase @Inject constructor(
 
     private var currentRecordingPath: String? = null
     private var playbackJob: Job? = null
+    private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
     fun isRecording(): Boolean = _isRecording.get()
     fun isPlaying(): Boolean = _isPlaying.get()
@@ -51,7 +53,11 @@ class FullMemorizationUseCase @Inject constructor(
 
             val qaItem = qaDataManager.getCurrentQaItem()
             if (qaItem != null) {
-                ttsOrchestrator.speakAndWaitForCompletion(qaItem.questionEn, isKorean = false, rate = 1.0f)
+                ttsOrchestrator.speakWithHighlight(
+                    text = qaItem.questionEn,
+                    onHighlight = { index -> _highlightIndex.value = index }
+                )
+                _highlightIndex.value = null
                 delay(500L)
 
                 currentRecordingPath = recordingFileRepository.createRecordingFile(category, scriptIndex)
@@ -65,6 +71,7 @@ class FullMemorizationUseCase @Inject constructor(
             Log.e("FullMemorizationUseCase", "통암기 테스트 시작 실패", e)
             _isRecording.set(false)
             onRecordingStateChange(false)
+            _highlightIndex.value = null
         }
     }
 
@@ -97,7 +104,7 @@ class FullMemorizationUseCase @Inject constructor(
             if (filePath != null) {
                 // 녹음 재생 — withContext로 올바른 스코프 관리
                 playbackJob?.cancel()
-                playbackJob = CoroutineScope(Dispatchers.IO).launch {
+                playbackJob = scope.launch {
                     recordingFileRepository.playRecordingFileSimple(category, scriptIndex) { playing ->
                         if (!playing) _isPlaying.set(false)
                     }

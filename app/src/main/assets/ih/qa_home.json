@@ -1,5 +1,6 @@
 [
   {
+    "title": "집",
     "id": "1",
     "theme": "Home - Favorite Room",
     "question_en": "I would like to know where you live. Which is your favorite room at home? What does it look like? What do you mostly do there?",
@@ -8,6 +9,7 @@
     "answer_ko": "사실, 거실은 제가 집에서 단연코 가장 좋아하는 장소입니다.\n제가 주말 아빠이다 보니, 그곳에서 아들과 가능한 한 많은 시간을 보내려고 노력합니다.\n우리는 보통 카페트 위에 앉아 몇 시간 동안 함께 보드게임을 합니다.\n가장 좋은 부분은 큰 창문인데, 햇빛이 정말 많이 들어오거든요.\n거기에는 제가 그냥 편하게 쉴 수 있는 크고 편안한 소파도 있습니다.\n그 방에 있을 때마다 저는 정말 평온하고 행복함을 느낍니다.\n전반적으로, 거실은 확실히 우리 집의 중심 같은 곳입니다."
   },
   {
+    "title": "집",
     "id": "2",
     "theme": "Home - Daily Routine",
     "question_en": "Now, tell me about the things that you do at home. What are some parts of your daily routine? What is special about each activity?",
@@ -16,6 +18,7 @@
     "answer_ko": "사실, 제 집에서의 생활은 '주말 아빠'가 되는 것이 전부예요.\n제가 서울에서 일하기 때문에, 보통 금요일 밤에 서둘러 집으로 돌아갑니다.\n있잖아요, 저는 일요일 밤 늦게까지 최대한 오래 그곳에 머물려고 노력합니다.\n토요일에 제 아들과 시간을 보내는 데 집중하는 것은 정말 중요합니다.\n우리는 자주 공원에 함께 가거나 거실에서 그냥 장난치며 놉니다.\n아들과 시간을 보내는 것은 다른 어떤 활동보다 훨씬 좋습니다.\n또한 제 아내가 요즘 정말 열심히 일하기 때문에 그녀의 집안일을 돕습니다.\n이러한 단순한 루틴들이 제 주말에서 가장 의미 있는 부분들입니다."
   },
   {
+    "title": "집",
     "id": "3",
     "theme": "Home - Cleaning",
     "question_en": "Tell me about how you usually clean your house. How often do you clean? What is your favorite part of cleaning the house?",
@@ -24,6 +27,7 @@
     "answer_ko": "음, 집을 청소하는 것은 주말 아빠에게 매우 중요한 업무입니다.\n시간이 한정되어 있기 때문에, 저는 보통 토요일에 대청소를 합니다.\n우선 신선한 공기가 들어오도록 모든 창문을 활짝 여는 것으로 시작합니다.\n그 다음엔, 아시다시피, 청소기를 들고 모든 구석을 청소합니다.\n제 말은, 제가 가장 좋아하는 부분은 바닥이 정말 반짝일 때까지 닦는 것입니다.\n조금 힘들긴 하지만, 집이 아주 깨끗해 보이면 기분이 정말 좋습니다.\n그것이 제가 가족을 위해 집을 건강하고 편안하게 유지하는 방식입니다."
   },
   {
+    "title": "집",
     "id": "4",
     "theme": "Home - Changes",
     "question_en": "Tell me about a change you made to your home. What was the change and why did you make that change? How did your home look like afterwards?",
@@ -32,6 +36,7 @@
     "answer_ko": "사실, 제가 주방에 주었던 작은 변화에 대해 말씀드리고 싶습니다.\n최근에 분위기를 바꾸기 위해 주방등을 직접 교체하기로 결심했습니다.\n있잖아요, 기존 전등은 약간 어두워서 그게 정말 싫었거든요.\n인터넷에서 새로운 LED 전등을 검색해서 세련된 것으로 샀습니다.\n음, 솔직히 말해서, 설치 과정은 생각했던 것보다 훨씬 더 어려웠습니다.\n하지만 마침내 작업을 마쳤을 때 저는 정말 뿌듯하고 행복했습니다.\n아내도 주방이 이제 훨씬 더 현대적이고 밝아 보인다고 말했습니다.\n이 작은 변화가 우리 집의 분위기를 정말 개선해 주었습니다."
   },
   {
+    "title": "집",
     "id": "5",
     "theme": "Home - Childhood Memory",
     "question_en": "Tell me about the house or apartment you lived in when you were a child. How was it different from the one you live in now?",
@@ -40,6 +45,7 @@
     "answer_ko": "음, 제가 예전에 살던 집과 지금 살고 있는 집 사이에는 많은 분명한 차이점이 있습니다.\n어렸을 때 저는 부모님과 함께 작은 빌라에서 살았습니다.\n그 당시에는, 아시다시피, 친구들이 밖에서 그냥 제 이름을 부를 수 있었습니다.\n제 말은, 그 소리를 쉽게 들을 수 있었고 곧바로 함께 놀기 위해 밖으로 달려 나갔습니다.\n하지만 지금은 고층 아파트의 19층에 살고 있습니다.\n훨씬 더 조용하고 사생활이 보호되어서 길거리 소음은 들리지 않습니다.\n또한 지금의 집은 스마트 기술 덕분에 예전보다 훨씬 더 편리합니다.\n되돌아보니, 이 두 곳 모두 저에게는 소중한 추억들이 있네요."
   },
   {
+    "title": "집",
     "id": "6",
     "theme": "Home - Industry Trends",
     "question_en": "How has the style of homes changed over the past 10 years? Are the homes being built today different from before?",
@@ -48,6 +54,7 @@
     "answer_ko": "음, 제 생각에 주택 스타일은 변했고 정말 편리해졌습니다.\n10년 전에는, 아시다시피, 집은 대개 그저 살기 위한 단순한 장소였습니다.\n하지만 요즘은, 거의 모든 신축 아파트가 하이테크 스마트 홈입니다.\n예를 들어, 저는 핸드폰으로 전등과 히터를 쉽게 조절할 수 있습니다.\n또한, 아파트 단지들은 이제 자연과 안전에 훨씬 더 많이 집중합니다.\n아시다시피, 지상에는 차가 없어서 정말 거대한 공원처럼 느껴집니다.\n제 아들이 뛰어놀기에 훨씬 안전해서 그 점이 저를 행복하게 합니다.\n제 생각에, 이러한 변화들이 우리의 삶을 훨씬 더 편안하게 만들어준 것 같습니다."
   },
   {
+    "title": "집",
     "id": "7",
     "theme": "Home - Housing Issues",
     "question_en": "Think of a time when the issue regarding housing was in the news in your community.",

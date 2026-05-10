@@ -84,43 +84,35 @@ class QaDataManager @Inject constructor(
     }
     
     suspend fun loadQaItemsFromAssets(application: Application) {
-        // application 매개변수는 향후 확장을 위해 유지
-        
-        // Define the desired category order and display names
-        val categoryDisplayNames = listOf(
-            "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷", "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절"
+        val preferredOrder = listOf(
+            "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷",
+            "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절", "롤플레이"
         )
-        
-        val categories = categoryDisplayNames
-        
-        // 현재 사용자 레벨 가져오기
+
         val currentUserLevel = userPreferencesRepository.getUserLevel()
         Log.d("QaDataManager", "데이터 로딩 시작 - 현재 사용자 레벨: $currentUserLevel")
-        
-        // 현재 레벨에 맞는 데이터 로드
+
         val allLeveledItems = qaDataLoader.loadQaItemsForLevel(currentUserLevel)
         Log.d("QaDataManager", "레벨별 데이터 로드 완료 - 총 ${allLeveledItems.size}개 항목")
-        
-        // 카테고리별로 아이템 분류
-        for (displayName in categoryDisplayNames) {
-            val categoryItems = allLeveledItems.filter { item ->
-                // 카테고리명으로 정확히 필터링
-                item.category == displayName
-            }
-            
-            if (categoryItems.isNotEmpty()) {
-                itemsByCategory[displayName] = categoryItems
-                itemIndexByCategory[displayName] = 0
-                Log.d("QaDataManager", "카테고리 로드 완료: $displayName (${categoryItems.size}개 항목, 레벨: $currentUserLevel)")
-            } else {
-                Log.w("QaDataManager", "카테고리에 항목 없음: $displayName (레벨: $currentUserLevel)")
-                itemsByCategory[displayName] = emptyList()
-                itemIndexByCategory[displayName] = 0
-            }
+
+        // JSON의 title 필드에서 동적으로 카테고리 추출
+        val loadedCategories = allLeveledItems.map { it.category }.distinct()
+
+        // 우선순위 정렬: 기존 순서 유지, 새 카테고리는 끝에 추가
+        val sortedCategories = loadedCategories.sortedBy { category ->
+            val index = preferredOrder.indexOf(category)
+            if (index >= 0) index else Int.MAX_VALUE
         }
-        
-        _categories.value = categories
-        Log.d("QaDataManager", "모든 카테고리 로드 완료: ${categories.size}개 카테고리 (레벨: $currentUserLevel)")
+
+        for (category in sortedCategories) {
+            val categoryItems = allLeveledItems.filter { it.category == category }
+            itemsByCategory[category] = categoryItems
+            itemIndexByCategory[category] = 0
+            Log.d("QaDataManager", "카테고리 로드 완료: $category (${categoryItems.size}개 항목, 레벨: $currentUserLevel)")
+        }
+
+        _categories.value = sortedCategories
+        Log.d("QaDataManager", "모든 카테고리 로드 완료: ${sortedCategories.size}개 카테고리 (레벨: $currentUserLevel)")
     }
     
     fun getCurrentIndex(): Int {

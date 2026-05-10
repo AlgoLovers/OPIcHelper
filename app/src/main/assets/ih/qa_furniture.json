@@ -1,5 +1,6 @@
 [
   {
+    "title": "가구",
     "id": "1",
     "question_en": "What kind of furniture do you have at home?\nTell me about each type of furniture.\nPlus, what is your favorite piece of furniture?\nWhy do you like it?\nWhen did you get it?\n",
     "question_ko": "집에 어떤 종류의 가구가 있나요?\n각 가구의 종류에 대해 말해주세요.\n게다가, 가장 좋아하는 가구는 무엇인가요?\n왜 그것을 좋아하나요?\n언제 그것을 얻었나요?\n",
@@ -7,6 +8,7 @@
     "answer_ko": "제 거주지에는 수많은 가구 조각들이 있어요.\n선호하는 가구 중 하나는 확실히 제 침대예요, 여러 기능을 제공하기 때문이에요.\n주로 텔레비전을 보거나 문학 작품을 읽고, 가끔은 출근 준비를 하면서 식사를 해요.\n선호하는 활동은 침대에 누워서 그 뛰어난 편안함 덕분에 휴식을 취하는 것이에요.\n또한 제공하는 프라이버시도 소중히 여겨요.\n요구가 많은 하루를 보낸 후에는 자주 고독을 즐기는데, 제 침대가 완벽한 안식처를 제공해요.\n결과적으로 제 침대를 방에서 가장 좋아하는 가구 조각이라고 생각해요.\n"
   },
   {
+    "title": "가구",
     "id": "2",
     "question_en": "Tell me about the furniture you had when you were young.\nHow is it different from the furniture you have today?\nGive me specific examples of the differences.\n",
     "question_ko": "어렸을 때 가지고 있었던 가구에 대해 말해주세요.\n그것이 오늘날 당신이 가지고 있는 가구와 어떻게 다른가요?\n차이점에 대한 구체적인 예를 들어주세요.\n",
@@ -14,6 +16,7 @@
     "answer_ko": "어린 시절부터 같은 거주지에 살았지만, 제 방의 가구들은 상당한 변화를 겪었어요.\n젊었을 때는 제 방의 대부분 가구가 현재 조각들보다 상당히 작았어요.\n예를 들어, 제 침대는 밤에 자주 떨어져서 낮은 프레임을 특징으로 했어요.\n한번은 침대에서 떨어져서 손목 염좌를 입었고, 몇 주 동안 깁스를 해야 했어요.\n현재 제 방에는 상당히 큰 치수의 수많은 가구 조각들이 있어요.\n테이블, 의자, 그리고 자연스럽게 편안한 침대를 소유하고 있어요.\n이제는 방에 에어컨도 있어요.\n이것은 원할 때 온도 조절을 가능하게 해요.\n이것들이 제 이전 가구와 현재 가구의 주요 차이점들을 나타내요.\n"
   },
   {
+    "title": "가구",
     "id": "3",
     "question_en": "Tell me about a time when you had problems with your furniture.\nPerhaps it got damaged for some reason.\nTell me what exactly happened and how you solved the problem.\n",
     "question_ko": "가구에 문제가 생겼던 때에 대해 말해주세요.\n어쩌면 어떤 이유로 손상되었을 수도 있습니다.\n정확히 무슨 일이 일어났고 어떻게 문제를 해결했는지 말해주세요.\n",

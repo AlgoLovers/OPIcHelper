@@ -354,12 +354,7 @@ class MainViewModel @Inject constructor(
     // ===== 헬퍼 =====
 
     private fun loadMemorizeLevel() {
-        val savedLevel = prefs?.getString(PREF_KEY_LAST_MEMORIZE_LEVEL, "")
-        if (!savedLevel.isNullOrEmpty()) {
-            setSelectedMemorizeLevel(savedLevel)
-        } else {
-            setSelectedMemorizeLevel(MemorizeLevel.REPEAT_LISTENING.displayName)
-        }
+        setSelectedMemorizeLevel(MemorizeLevel.REPEAT_LISTENING.displayName)
     }
 
     fun getCurrentAnswer(qaItem: QaItem?): String {
