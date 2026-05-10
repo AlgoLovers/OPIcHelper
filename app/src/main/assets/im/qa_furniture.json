@@ -1,26 +1,26 @@
-[
-  {
-    "title": "가구",
-    "id": "1",
-    "question_en": "What kind of furniture do you have at home?\nTell me about each type of furniture.\nPlus, what is your favorite piece of furniture?\nWhy do you like it?\nWhen did you get it?\n",
-    "question_ko": "집에 어떤 종류의 가구가 있나요?\n각 가구의 종류에 대해 말해주세요.\n게다가, 가장 좋아하는 가구는 무엇인가요?\n왜 그것을 좋아하나요?\n언제 그것을 얻었나요?\n",
-    "answer_en": "I have many pieces of furniture in my house.\nMy favorite furniture is my bed.\nI can do many things on my bed.\nI watch TV on my bed.\nI read books on my bed.\nI can eat on my bed.\nI like lying on my bed.\nIt is very comfortable.\nI like having privacy.\nAfter work, I enjoy being alone.\nMy bed is the perfect place for that.\nThat's why my bed is my favorite furniture.",
-    "answer_ko": "저희 집에는 많은 가구가 있어요.\n제가 가장 좋아하는 가구는 침대예요.\n침대에서 많은 일을 할 수 있어요.\n침대에서 TV를 봐요.\n침대에서 책을 읽어요.\n침대에서 식사할 수도 있어요.\n침대에 누워있는 것을 좋아해요.\n매우 편안해요.\n사생활을 가지는 것을 좋아해요.\n일과 후에는 혼자 있는 것을 즐겨요.\n침대가 그런 시간을 위한 완벽한 장소예요."
-  },
-  {
-    "title": "가구",
-    "id": "2",
-    "question_en": "Tell me about the furniture you had when you were young.\nHow is it different from the furniture you have today?\nGive me specific examples of the differences.\n",
-    "question_ko": "어렸을 때 가지고 있었던 가구에 대해 말해주세요.\n그것이 오늘날 당신이 가지고 있는 가구와 어떻게 다른가요?\n차이점에 대한 구체적인 예를 들어주세요.\n",
-    "answer_en": "I have lived in the same house since I was young.\nBut the furniture in my room has changed a lot.\nWhen I was young, the furniture was smaller.\nMy bed had a low frame.\nI often fell off my bed at night.\nOnce I sprained my wrist from falling.\nI had to wear a cast for weeks.\nNow my furniture is bigger.\nI have a table and a chair.\nI have a comfortable bed.\nI even have an air-conditioner in my room.\nIt helps me cool off anytime.\nThese are the main differences between my old and new furniture.",
-    "answer_ko": "어렸을 때부터 같은 집에 살았어요.\n하지만 제 방의 가구는 많이 바뀌었어요.\n어렸을 때는 가구가 더 작았어요.\n제 침대는 프레임이 낮았어요.\n밤에 침대에서 자주 떨어졌어요.\n한번은 떨어져서 손목을 삐었어요.\n몇 주 동안 깁스를 해야 했어요.\n지금은 가구가 더 커졌어요.\n테이블과 의자가 있어요.\n편안한 침대가 있어요.\n방에 에어컨도 있어요.\n원할 때마다 시원하게 해줘요.\n이것들이 제 옛날 가구와 새 가구의 주요 차이점이에요."
-  },
-  {
-    "title": "가구",
-    "id": "3",
-    "question_en": "Tell me about a time when you had problems with your furniture.\nPerhaps it got damaged for some reason.\nTell me what exactly happened and how you solved the problem.\n",
-    "question_ko": "가구에 문제가 생겼던 때에 대해 말해주세요.\n어쩌면 어떤 이유로 손상되었을 수도 있습니다.\n정확히 무슨 일이 일어났고 어떻게 문제를 해결했는지 말해주세요.\n",
-    "answer_en": "I remember when my family moved to a new apartment.\nWe called a moving company.\nThey moved everything for us.\nBut after they left, I found a broken dresser.\nThere were scratches on my desk.\nI was very disappointed.\nI had to repair it myself.\nI fixed the damage.\nI painted the scratches with bright colors.\nAfter that, it looked new.\nI was very satisfied with my work.\nSince then, I don't trust moving companies.\nThat's the only problem I had with my furniture.",
-    "answer_ko": "우리 가족이 새 아파트로 이사했을 때가 기억나요.\n이사 회사를 불렀어요.\n그들이 모든 것을 옮겨줬어요.\n하지만 그들이 떠난 후, 부서진 서랍장을 발견했어요.\n책상에 긁힌 자국이 있었어요.\n매우 실망했어요.\n제가 직접 수리해야 했어요.\n손상된 부분을 고쳤어요.\n긁힌 자국을 밝은 색으로 칠했어요.\n그 후에 새것처럼 보였어요.\n제가 한 일에 매우 만족했어요.\n그 이후로는 이사 회사를 믿지 않아요.\n그게 제 가구에서 일어난 유일한 문제예요."
-  }
-]
+{
+  "title": "가구",
+  "items": [
+    {
+      "id": "1",
+      "question_en": "What kind of furniture do you have at home?\nTell me about each type of furniture.\nPlus, what is your favorite piece of furniture?\nWhy do you like it?\nWhen did you get it?\n",
+      "question_ko": "집에 어떤 종류의 가구가 있나요?\n각 가구의 종류에 대해 말해주세요.\n게다가, 가장 좋아하는 가구는 무엇인가요?\n왜 그것을 좋아하나요?\n언제 그것을 얻었나요?\n",
+      "answer_en": "I have many pieces of furniture in my house.\nMy favorite furniture is my bed.\nI can do many things on my bed.\nI watch TV on my bed.\nI read books on my bed.\nI can eat on my bed.\nI like lying on my bed.\nIt is very comfortable.\nI like having privacy.\nAfter work, I enjoy being alone.\nMy bed is the perfect place for that.\nThat's why my bed is my favorite furniture.",
+      "answer_ko": "저희 집에는 많은 가구가 있어요.\n제가 가장 좋아하는 가구는 침대예요.\n침대에서 많은 일을 할 수 있어요.\n침대에서 TV를 봐요.\n침대에서 책을 읽어요.\n침대에서 식사할 수도 있어요.\n침대에 누워있는 것을 좋아해요.\n매우 편안해요.\n사생활을 가지는 것을 좋아해요.\n일과 후에는 혼자 있는 것을 즐겨요.\n침대가 그런 시간을 위한 완벽한 장소예요."
+    },
+    {
+      "id": "2",
+      "question_en": "Tell me about the furniture you had when you were young.\nHow is it different from the furniture you have today?\nGive me specific examples of the differences.\n",
+      "question_ko": "어렸을 때 가지고 있었던 가구에 대해 말해주세요.\n그것이 오늘날 당신이 가지고 있는 가구와 어떻게 다른가요?\n차이점에 대한 구체적인 예를 들어주세요.\n",
+      "answer_en": "I have lived in the same house since I was young.\nBut the furniture in my room has changed a lot.\nWhen I was young, the furniture was smaller.\nMy bed had a low frame.\nI often fell off my bed at night.\nOnce I sprained my wrist from falling.\nI had to wear a cast for weeks.\nNow my furniture is bigger.\nI have a table and a chair.\nI have a comfortable bed.\nI even have an air-conditioner in my room.\nIt helps me cool off anytime.\nThese are the main differences between my old and new furniture.",
+      "answer_ko": "어렸을 때부터 같은 집에 살았어요.\n하지만 제 방의 가구는 많이 바뀌었어요.\n어렸을 때는 가구가 더 작았어요.\n제 침대는 프레임이 낮았어요.\n밤에 침대에서 자주 떨어졌어요.\n한번은 떨어져서 손목을 삐었어요.\n몇 주 동안 깁스를 해야 했어요.\n지금은 가구가 더 커졌어요.\n테이블과 의자가 있어요.\n편안한 침대가 있어요.\n방에 에어컨도 있어요.\n원할 때마다 시원하게 해줘요.\n이것들이 제 옛날 가구와 새 가구의 주요 차이점이에요."
+    },
+    {
+      "id": "3",
+      "question_en": "Tell me about a time when you had problems with your furniture.\nPerhaps it got damaged for some reason.\nTell me what exactly happened and how you solved the problem.\n",
+      "question_ko": "가구에 문제가 생겼던 때에 대해 말해주세요.\n어쩌면 어떤 이유로 손상되었을 수도 있습니다.\n정확히 무슨 일이 일어났고 어떻게 문제를 해결했는지 말해주세요.\n",
+      "answer_en": "I remember when my family moved to a new apartment.\nWe called a moving company.\nThey moved everything for us.\nBut after they left, I found a broken dresser.\nThere were scratches on my desk.\nI was very disappointed.\nI had to repair it myself.\nI fixed the damage.\nI painted the scratches with bright colors.\nAfter that, it looked new.\nI was very satisfied with my work.\nSince then, I don't trust moving companies.\nThat's the only problem I had with my furniture.",
+      "answer_ko": "우리 가족이 새 아파트로 이사했을 때가 기억나요.\n이사 회사를 불렀어요.\n그들이 모든 것을 옮겨줬어요.\n하지만 그들이 떠난 후, 부서진 서랍장을 발견했어요.\n책상에 긁힌 자국이 있었어요.\n매우 실망했어요.\n제가 직접 수리해야 했어요.\n손상된 부분을 고쳤어요.\n긁힌 자국을 밝은 색으로 칠했어요.\n그 후에 새것처럼 보였어요.\n제가 한 일에 매우 만족했어요.\n그 이후로는 이사 회사를 믿지 않아요.\n그게 제 가구에서 일어난 유일한 문제예요."
+    }
+  ]
+}

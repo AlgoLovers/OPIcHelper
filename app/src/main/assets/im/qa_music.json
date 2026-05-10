@@ -1,50 +1,47 @@
-[
-  {
-    "title": "음악",
-    "id": "1",
-    "question_en": "You indicated that you like to listen to music.\nWhat type of music do you like listening to?\nPlus, who is your favorite singer or composer?\nWhat is special about his or her music?",
-    "question_ko": "당신은 음악 듣는 것을 좋아한다고 표시했습니다.\n어떤 종류의 음악을 듣는 것을 좋아하세요?\n게다가, 당신이 가장 좋아하는 가수나 작곡가는 누구인가요?\n그의 음악에서 특별한 점은 무엇인가요?",
-    "answer_en": "I like pop music.\nI also like rock music.\nI listen to fast songs when I exercise.\nI listen to slow songs when I study.\nMy favorite singer is BTS.\nThey are a Korean boy group.\nI like their songs.\nTheir music makes me happy.\nI listen to their songs every day.",
-    "answer_ko": "저는 팝 음악을 좋아해요.\n록 음악도 좋아해요.\n운동할 때는 빠른 노래를 들어요.\n공부할 때는 느린 노래를 들어요.\n제가 제일 좋아하는 가수는 BTS예요.\n그들은 한국 보이 그룹이에요.\n그들의 노래를 좋아해요.\n그들의 음악을 들으면 기분이 좋아져요.\n매일 그들의 노래를 들어요."
-  },
-  {
-    "title": "음악",
-    "id": "2",
-    "question_en": "When and where do you like to listen to music?\nWhy do you listen to music?",
-    "question_ko": "언제 어디서 음악을 듣는 것을 좋아하십니까?\n왜 음악을 듣나요?",
-    "answer_en": "I listen to music on my phone.\nI listen to music when I go to work.\nI listen to music on the subway.\nI listen to music at home.\nI listen to music when I cook.\nI listen to music because it makes me feel good.\nMusic helps me relax.\nWhen I am sad, music makes me happy.\nI listen to music almost every day.",
-    "answer_ko": "저는 휴대폰으로 음악을 들어요.\n출근할 때 음악을 들어요.\n지하철에서 음악을 들어요.\n집에서도 음악을 들어요.\n요리할 때 음악을 들어요.\n음악을 듣는 이유는 기분이 좋아져서예요.\n음악을 들으면 편해져요.\n슬플 때 음악을 들으면 기분이 좋아져요.\n거의 매일 음악을 들어요."
-  },
-  {
-    "title": "음악",
-    "id": "3",
-    "question_en": "Explain some of the new electronic gadgets or equipment that people who enjoy music are currently interested in.\nWhat hot topics or trends are they discussing?\nDescribe some of the new products that they are excited about and why.",
-    "question_ko": "음악을 즐기는 사람들이 현재 관심을 갖고 있는 새로운 전자 기기나 장비에 대해 설명해 주세요.\n그들은 어떤 뜨거운 주제나 트렌드에 대해 논의하고 있습니까?\n그들이 신나는 신제품들과 그 이유를 설명해 주세요.",
-    "answer_en": "Many people use smartphones to listen to music.\nSmartphones are very popular.\nPeople also use wireless earphones.\nWireless earphones are convenient.\nYou don't need wires.\nSome people use smart speakers.\nSmart speakers can play music with voice.\nMany people use music apps.\nSpotify and Apple Music are popular.\nThese apps have many songs.\nYou can listen to any song you want.",
-    "answer_ko": "많은 사람들이 스마트폰으로 음악을 들어요.\n스마트폰이 많이 인기가 있어요.\n사람들은 무선 이어폰도 써요.\n무선 이어폰은 편해요.\n더 이상 선이 필요 없어요.\n어떤 사람들은 스마트 스피커를 써요.\n스마트 스피커는 말로 음악을 틀 수 있어요.\n많은 사람들이 음악 앱을 써요.\n스포티파이랑 애플 뮤직이 인기가 있어요.\n이 앱들은 노래가 많아요.\n원하는 노래를 다 들을 수 있어요."
-  },
-  {
-    "title": "음악",
-    "id": "4",
-    "question_en": "Tell me about a time when you went to listen to some live music.\nPerhaps it was at a concert or a live cafe.\nWhat was the mood like and how did you like the music you listened there?",
-    "question_ko": "라이브 음악을 들으러 갔던 때에 대해 말씀해 주세요.\n아마도 콘서트나 라이브 카페에서였을 것입니다.\n그곳에서 들은 음악은 어땠나요? 기분이 어땠나요?",
-    "answer_en": "I went to a concert last year.\nIt was my first concert.\nI went with my friend.\nThe concert was at a big stadium.\nMany people were there.\nThe singer was very famous.\nI was very excited.\nThe music was very loud.\nEveryone was singing.\nI also sang with them.\nThe atmosphere was great.\nI had a great time.\nI want to go to another concert.",
-    "answer_ko": "작년에 콘서트에 갔어요.\n처음 가본 콘서트였어요.\n친구랑 같이 갔어요.\n콘서트는 큰 경기장에서 열렸어요.\n사람이 정말 많았어요.\n가수가 유명했어요.\n저는 정말 신났어요.\n음악이 시끄러웠어요.\n모든 사람이 따라 불렀어요.\n저도 같이 불렀어요.\n분위기가 정말 좋았어요.\n정말 재미있었어요.\n다른 콘서트에도 가고 싶어요."
-  },
-  {
-    "title": "음악",
-    "id": "5",
-    "question_en": "Now, pick two singers or composers you like.\nWhat is special about their music?\nWhat are some similarities and differences between the two singers or composers?",
-    "question_ko": "이제, 당신이 좋아하는 가수나 작곡가 두 명을 골라보세요.\n그들의 음악은 무엇이 특별한가요?\n두 가수나 작곡가 사이에는 어떤 공통점과 차이점이 있나요?",
-    "answer_en": "I like two singers.\nThe first one is IU.\nShe is a Korean singer.\nShe has a beautiful voice.\nHer songs are emotional.\nI like her because she sings well.\nThe second one is BTS.\nThey are a Korean boy group.\nThey have seven members.\nTheir songs are energetic.\nI like them because they dance well.\nBoth singers are Korean.\nBoth are popular.\nBut IU sings alone.\nBTS sings together.\nThat's the difference.",
-    "answer_ko": "저는 가수 두 명을 좋아해요.\n첫 번째는 아이유예요.\n그녀는 한국 가수예요.\n그녀는 목소리가 예뻐요.\n그녀의 노래는 감정이 많아요.\n노래를 잘 부르니까 그녀를 좋아해요.\n두 번째는 BTS예요.\n그들은 한국 보이 그룹이에요.\n그들은 일곱 명이에요.\n그들의 노래는 활기차요.\n춤을 잘 추니까 그들을 좋아해요.\n두 가수 다 한국인이에요.\n둘 다 인기가 많아요.\n하지만 아이유는 혼자 노래해요.\nBTS는 같이 노래해요.\n그게 차이점이에요."
-  },
-  {
-    "title": "음악",
-    "id": "6",
-    "question_en": "What kind of music did you listen to when you were young?\nHow was that music different from the music you listen to today?\nHow has your interest in music changed over the years?",
-    "question_ko": "어렸을 때는 어떤 종류의 음악을 들었나요?\n그때 들었던 음악은 지금 듣는 음악과 어떻게 다른가요?\n시간이 지나면서 음악에 대한 관심은 어떻게 변했나요?",
-    "answer_en": "When I was young, I only listened to pop music.\nI liked boy bands and girl groups.\nI didn't know about other types of music.\nI only listened to Korean music.\nNow I listen to many different types.\nI listen to rock music sometimes.\nI also listen to classical music.\nI listen to music from other countries.\nMy taste in music has changed.\nI am more open to new music now.\nI like trying new songs.\nI think my music taste has improved.",
-    "answer_ko": "어렸을 때는 팝 음악만 들었어요.\n보이 그룹이랑 걸 그룹을 좋아했어요.\n다른 음악은 몰랐어요.\n한국 음악만 들었어요.\n지금은 여러 가지 음악을 들어요.\n가끔은 록 음악도 들어요.\n클래식 음악도 들어요.\n다른 나라 음악도 들어요.\n제 음악 취향이 바뀌었어요.\n지금은 새 음악에 더 열려있어요.\n새 노래를 시도하는 걸 좋아해요.\n제 음악 취향이 좋아졌다고 생각해요."
-  }
-]
+{
+  "title": "음악",
+  "items": [
+    {
+      "id": "1",
+      "question_en": "You indicated that you like to listen to music.\nWhat type of music do you like listening to?\nPlus, who is your favorite singer or composer?\nWhat is special about his or her music?",
+      "question_ko": "당신은 음악 듣는 것을 좋아한다고 표시했습니다.\n어떤 종류의 음악을 듣는 것을 좋아하세요?\n게다가, 당신이 가장 좋아하는 가수나 작곡가는 누구인가요?\n그의 음악에서 특별한 점은 무엇인가요?",
+      "answer_en": "I like pop music.\nI also like rock music.\nI listen to fast songs when I exercise.\nI listen to slow songs when I study.\nMy favorite singer is BTS.\nThey are a Korean boy group.\nI like their songs.\nTheir music makes me happy.\nI listen to their songs every day.",
+      "answer_ko": "저는 팝 음악을 좋아해요.\n록 음악도 좋아해요.\n운동할 때는 빠른 노래를 들어요.\n공부할 때는 느린 노래를 들어요.\n제가 제일 좋아하는 가수는 BTS예요.\n그들은 한국 보이 그룹이에요.\n그들의 노래를 좋아해요.\n그들의 음악을 들으면 기분이 좋아져요.\n매일 그들의 노래를 들어요."
+    },
+    {
+      "id": "2",
+      "question_en": "When and where do you like to listen to music?\nWhy do you listen to music?",
+      "question_ko": "언제 어디서 음악을 듣는 것을 좋아하십니까?\n왜 음악을 듣나요?",
+      "answer_en": "I listen to music on my phone.\nI listen to music when I go to work.\nI listen to music on the subway.\nI listen to music at home.\nI listen to music when I cook.\nI listen to music because it makes me feel good.\nMusic helps me relax.\nWhen I am sad, music makes me happy.\nI listen to music almost every day.",
+      "answer_ko": "저는 휴대폰으로 음악을 들어요.\n출근할 때 음악을 들어요.\n지하철에서 음악을 들어요.\n집에서도 음악을 들어요.\n요리할 때 음악을 들어요.\n음악을 듣는 이유는 기분이 좋아져서예요.\n음악을 들으면 편해져요.\n슬플 때 음악을 들으면 기분이 좋아져요.\n거의 매일 음악을 들어요."
+    },
+    {
+      "id": "3",
+      "question_en": "Explain some of the new electronic gadgets or equipment that people who enjoy music are currently interested in.\nWhat hot topics or trends are they discussing?\nDescribe some of the new products that they are excited about and why.",
+      "question_ko": "음악을 즐기는 사람들이 현재 관심을 갖고 있는 새로운 전자 기기나 장비에 대해 설명해 주세요.\n그들은 어떤 뜨거운 주제나 트렌드에 대해 논의하고 있습니까?\n그들이 신나는 신제품들과 그 이유를 설명해 주세요.",
+      "answer_en": "Many people use smartphones to listen to music.\nSmartphones are very popular.\nPeople also use wireless earphones.\nWireless earphones are convenient.\nYou don't need wires.\nSome people use smart speakers.\nSmart speakers can play music with voice.\nMany people use music apps.\nSpotify and Apple Music are popular.\nThese apps have many songs.\nYou can listen to any song you want.",
+      "answer_ko": "많은 사람들이 스마트폰으로 음악을 들어요.\n스마트폰이 많이 인기가 있어요.\n사람들은 무선 이어폰도 써요.\n무선 이어폰은 편해요.\n더 이상 선이 필요 없어요.\n어떤 사람들은 스마트 스피커를 써요.\n스마트 스피커는 말로 음악을 틀 수 있어요.\n많은 사람들이 음악 앱을 써요.\n스포티파이랑 애플 뮤직이 인기가 있어요.\n이 앱들은 노래가 많아요.\n원하는 노래를 다 들을 수 있어요."
+    },
+    {
+      "id": "4",
+      "question_en": "Tell me about a time when you went to listen to some live music.\nPerhaps it was at a concert or a live cafe.\nWhat was the mood like and how did you like the music you listened there?",
+      "question_ko": "라이브 음악을 들으러 갔던 때에 대해 말씀해 주세요.\n아마도 콘서트나 라이브 카페에서였을 것입니다.\n그곳에서 들은 음악은 어땠나요? 기분이 어땠나요?",
+      "answer_en": "I went to a concert last year.\nIt was my first concert.\nI went with my friend.\nThe concert was at a big stadium.\nMany people were there.\nThe singer was very famous.\nI was very excited.\nThe music was very loud.\nEveryone was singing.\nI also sang with them.\nThe atmosphere was great.\nI had a great time.\nI want to go to another concert.",
+      "answer_ko": "작년에 콘서트에 갔어요.\n처음 가본 콘서트였어요.\n친구랑 같이 갔어요.\n콘서트는 큰 경기장에서 열렸어요.\n사람이 정말 많았어요.\n가수가 유명했어요.\n저는 정말 신났어요.\n음악이 시끄러웠어요.\n모든 사람이 따라 불렀어요.\n저도 같이 불렀어요.\n분위기가 정말 좋았어요.\n정말 재미있었어요.\n다른 콘서트에도 가고 싶어요."
+    },
+    {
+      "id": "5",
+      "question_en": "Now, pick two singers or composers you like.\nWhat is special about their music?\nWhat are some similarities and differences between the two singers or composers?",
+      "question_ko": "이제, 당신이 좋아하는 가수나 작곡가 두 명을 골라보세요.\n그들의 음악은 무엇이 특별한가요?\n두 가수나 작곡가 사이에는 어떤 공통점과 차이점이 있나요?",
+      "answer_en": "I like two singers.\nThe first one is IU.\nShe is a Korean singer.\nShe has a beautiful voice.\nHer songs are emotional.\nI like her because she sings well.\nThe second one is BTS.\nThey are a Korean boy group.\nThey have seven members.\nTheir songs are energetic.\nI like them because they dance well.\nBoth singers are Korean.\nBoth are popular.\nBut IU sings alone.\nBTS sings together.\nThat's the difference.",
+      "answer_ko": "저는 가수 두 명을 좋아해요.\n첫 번째는 아이유예요.\n그녀는 한국 가수예요.\n그녀는 목소리가 예뻐요.\n그녀의 노래는 감정이 많아요.\n노래를 잘 부르니까 그녀를 좋아해요.\n두 번째는 BTS예요.\n그들은 한국 보이 그룹이에요.\n그들은 일곱 명이에요.\n그들의 노래는 활기차요.\n춤을 잘 추니까 그들을 좋아해요.\n두 가수 다 한국인이에요.\n둘 다 인기가 많아요.\n하지만 아이유는 혼자 노래해요.\nBTS는 같이 노래해요.\n그게 차이점이에요."
+    },
+    {
+      "id": "6",
+      "question_en": "What kind of music did you listen to when you were young?\nHow was that music different from the music you listen to today?\nHow has your interest in music changed over the years?",
+      "question_ko": "어렸을 때는 어떤 종류의 음악을 들었나요?\n그때 들었던 음악은 지금 듣는 음악과 어떻게 다른가요?\n시간이 지나면서 음악에 대한 관심은 어떻게 변했나요?",
+      "answer_en": "When I was young, I only listened to pop music.\nI liked boy bands and girl groups.\nI didn't know about other types of music.\nI only listened to Korean music.\nNow I listen to many different types.\nI listen to rock music sometimes.\nI also listen to classical music.\nI listen to music from other countries.\nMy taste in music has changed.\nI am more open to new music now.\nI like trying new songs.\nI think my music taste has improved.",
+      "answer_ko": "어렸을 때는 팝 음악만 들었어요.\n보이 그룹이랑 걸 그룹을 좋아했어요.\n다른 음악은 몰랐어요.\n한국 음악만 들었어요.\n지금은 여러 가지 음악을 들어요.\n가끔은 록 음악도 들어요.\n클래식 음악도 들어요.\n다른 나라 음악도 들어요.\n제 음악 취향이 바뀌었어요.\n지금은 새 음악에 더 열려있어요.\n새 노래를 시도하는 걸 좋아해요.\n제 음악 취향이 좋아졌다고 생각해요."
+    }
+  ]
+}
