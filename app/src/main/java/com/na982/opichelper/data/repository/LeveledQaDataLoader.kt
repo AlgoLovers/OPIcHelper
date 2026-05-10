@@ -30,10 +30,10 @@ class LeveledQaDataLoader(private val context: Context) : QaDataLoader {
                 if (fileName.endsWith(".json")) {
                     try {
                         val jsonString = context.assets.open("$folderName/$fileName").bufferedReader().use { it.readText() }
-                        val type = object : TypeToken<List<QaItemAsset>>() {}.type
-                        val assetItems: List<QaItemAsset> = gson.fromJson(jsonString, type) ?: emptyList()
+                        val type = object : TypeToken<QaCategoryAsset>() {}.type
+                        val categoryAsset: QaCategoryAsset = gson.fromJson(jsonString, type) ?: return@forEach
 
-                        val items = assetItems.map { asset ->
+                        val items = categoryAsset.items.map { asset ->
                             val leveledAnswer = LeveledAnswer(
                                 answerEn = asset.answer_en,
                                 answerKo = asset.answer_ko
@@ -41,7 +41,7 @@ class LeveledQaDataLoader(private val context: Context) : QaDataLoader {
 
                             QaItem(
                                 id = asset.id ?: "",
-                                category = asset.title,
+                                category = categoryAsset.title,
                                 questionEn = asset.question_en,
                                 questionKo = asset.question_ko,
                                 answers = mapOf(level to leveledAnswer)
@@ -62,8 +62,12 @@ class LeveledQaDataLoader(private val context: Context) : QaDataLoader {
         }
     }
 
-    private data class QaItemAsset(
+    private data class QaCategoryAsset(
         val title: String,
+        val items: List<QaItemAsset>
+    )
+
+    private data class QaItemAsset(
         val id: String?,
         val question_en: String,
         val question_ko: String,

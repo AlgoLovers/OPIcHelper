@@ -1,47 +1,45 @@
-[
-  {
-    "title": "레스토랑",
-    "id": "1",
-    "category": "restaurants",
-    "question_en": "I would like to know about restaurants in your country. What kind of food do they commonly serve? How are the people who work there? Give me all the details about a typical restaurant in your country.",
-    "question_ko": "당신 나라의 식당에 대해 알고 싶어요. 그들은 보통 어떤 종류의 음식을 제공하나요? 거기서 일하는 사람들은 어떤가요? 당신 나라의 전형적인 식당에 대한 모든 세부사항을 알려주세요.",
-    "answer_en": "Restaurants in my country are typically located in bustling commercial districts with high pedestrian traffic.\nAmong the diverse dining establishments, I particularly favor Korean restaurants.\nThese establishments offer traditional floor seating arrangements with low tables, though modern venues also provide conventional table and chair seating.\nA distinctive feature is the presentation of main dishes accompanied by various side dishes and rice.\nKimchi is invariably served at every Korean restaurant.\nThese characteristics define the typical Korean dining experience.\n",
-    "answer_ko": "우리나라의 식당들은 보통 유동 인구가 많은 번화가에 위치해 있어요.\n다양한 음식점들 중에서 저는 특히 한식당을 선호해요.\n이런 시설들은 낮은 테이블과 함께 전통적인 좌식 공간을 제공하지만, 현대적인 장소들은 일반적인 테이블과 의자도 함께 제공해요.\n독특한 특징은 메인 요리가 다양한 반찬과 밥과 함께 제공된다는 점이에요.\n모든 한식당에서는 김치가 반드시 나와요.\n이런 특징들이 전형적인 한국 식당 경험을 정의해요.\n"
-  },
-  {
-    "title": "레스토랑",
-    "id": "2",
-    "category": "restaurants",
-    "question_en": "Tell me about a restaurant you ate out at recently. What kind of restaurant was it? What was on their menu and what did you eat? Who did you go with? Did you like how the food tasted? Give me all the details.",
-    "question_ko": "최근에 외식했던 식당에 대해 이야기해 주세요. 어떤 종류의 식당이었나요? 메뉴에는 무엇이 있었고 당신은 무엇을 먹었나요? 누구와 함께 갔나요? 음식 맛은 어땠나요? 모든 세부사항을 알려주세요",
-    "answer_en": "I recently dined at a pizzeria in Itaewon with my friends.\nThe journey from my residence took approximately thirty minutes.\nWe ordered a potato pizza, seafood pasta, and a chicken tender salad.\nThe culinary experience was exceptional, likely due to our collective hunger.\nHowever, certain aspects were less than satisfactory.\nThe establishment was rather compact with limited seating capacity.\nWe endured a thirty-minute wait for seating, followed by an additional thirty-minute wait for our meals.\nDespite these inconveniences, I thoroughly enjoyed the dining experience with my companions.\n",
-    "answer_ko": "최근에 친구들과 함께 이태원의 피자집에서 식사를 했어요.\n집에서 그곳까지의 여정은 약 30분 정도 걸렸어요.\n포테이토 피자, 해산물 파스타, 치킨 텐더 샐러드를 주문했어요.\n우리 모두의 배고픔 덕분에 요리 경험이 특별했어요.\n하지만 몇 가지 만족스럽지 않은 측면들도 있었어요.\n시설이 다소 좁고 좌석 용량이 제한적이었어요.\n좌석을 위해 30분을 기다린 후, 식사가 나오기까지 추가로 30분을 기다려야 했어요.\n이런 불편함에도 불구하고, 동반자들과 함께하는 식사 경험을 정말 즐겼어요.\n"
-  },
-  {
-    "title": "레스토랑",
-    "id": "3",
-    "category": "restaurants",
-    "question_en": "Now, tell me about a restaurant you used to go to as a child. What was it like? What did you eat? Who did you go with? What do you remember most about that place? Tell me about that restaurant in as much detail as possible",
-    "question_ko": "이제, 당신이 어렸을 때 자주 가던 식당에 대해 이야기해 주세요. 그곳은 어땠나요? 무엇을 먹었나요? 누구와 함께 갔나요? 그곳에 대해 가장 기억나는 것은 무엇인가요? 그 식당에 대해 가능한 한 자세히 설명해 주세요.",
-    "answer_en": "My family frequented a Korean barbecue establishment during my childhood.\nThe establishment served exceptional marinated barbecue dishes.\nWe would grill the meat at our table and consume it immediately.\nWe visited the restaurant at least monthly and always departed completely satisfied.\nDuring my youth, the proprietor generously provided complimentary ice cream and confectionery.\nHe also permitted my cousins and me to utilize the small playground adjacent to the parking facility.\nThe proprietor resided on the second floor and had constructed the playground for his children.\nWhile I occasionally visit other Korean barbecue establishments, the culinary offerings at that particular venue remain unparalleled.\nThat restaurant undoubtedly represents the finest dining establishment I have ever experienced.\n",
-    "answer_ko": "어린 시절 우리 가족이 자주 방문했던 한식 바비큐 식당이 있었어요.\n그 시설은 뛰어난 양념 바비큐 요리를 제공했어요.\n테이블에서 고기를 구워서 바로 섭취했어요.\n최소 월 한 번은 그 식당을 방문했고 항상 완전히 만족한 채 떠났어요.\n어린 시절에는 주인이 관대하게 무료 아이스크림과 사탕을 제공해 주셨어요.\n또한 사촌들과 제가 주차 시설 옆의 작은 놀이터를 이용할 수 있게 해주셨어요.\n주인은 2층에 거주하셨고 자녀들을 위해 그 놀이터를 건설하셨어요.\n다른 한식 바비큐 식당들을 가끔 방문하지만, 그 특정 장소의 요리는 여전히 비교할 수 없어요.\n그 식당은 확실히 제가 경험한 최고의 식당을 대표해요.\n"
-  },
-  {
-    "title": "레스토랑",
-    "id": "4",
-    "category": "restaurants",
-    "question_en": "Many restaurants are changing their menus to suit customers who are more health-conscious. Talk about the changes you notice about restaurants in my country related to this trend.",
-    "question_ko": "많은 식당들이 건강에 더 신경 쓰는 고객들을 위해 메뉴를 바꾸고 있습니다. 이러한 추세와 관련하여 당신 나라의 식당에서 눈치챈 변화에 대해 이야기해 주세요.",
-    "answer_en": "Restaurants in my country are increasingly adapting their menus to accommodate health-conscious consumers.\nMany establishments now offer nutritious alternatives and incorporate more vegetables into their dishes.\nSome venues have introduced vegetarian options and organic ingredients.\nThis shift reflects the growing demand for healthier dining choices.\nEstablishments are responding to this trend by incorporating wellness-focused menu items.\nThis represents a significant transformation in the restaurant industry.\n",
-    "answer_ko": "우리나라의 식당들이 점점 더 건강에 신경 쓰는 소비자들을 수용하기 위해 메뉴를 조정하고 있어요.\n많은 시설들이 이제 영양가 있는 대안을 제공하고 요리에 더 많은 채소를 포함해요.\n일부 장소들은 채식 옵션과 유기농 재료를 도입했어요.\n이 변화는 더 건강한 식사 선택에 대한 증가하는 수요를 반영해요.\n시설들이 웰빙 중심의 메뉴 항목들을 포함함으로써 이 추세에 반응하고 있어요.\n이것은 식당 업계의 중요한 변화를 나타내요.\n"
-  },
-  {
-    "title": "레스토랑",
-    "id": "5",
-    "category": "restaurants",
-    "question_en": "What are the latest trends people are talking about related to take-out or delivery food options? Perhaps, it has to do with ordering online or an app. Discuss the changes that you have observed recently regarding take-out or delivery food options.",
-    "question_ko": "테이크아웃이나 배달 음식 옵션과 관련하여 사람들이 이야기하는 최신 트렌드는 무엇인가요? 아마도 온라인이나 앱으로 주문하는 것과 관련이 있을 수 있습니다. 최근 테이크아웃이나 배달 음식 옵션에 관해 당신이 관찰한 변화를 논의해 주세요.",
-    "answer_en": "Digital food ordering has become a prominent topic of discussion.\nMany restaurants now provide take-out and delivery services.\nCustomers can place orders through mobile applications or online platforms.\nThis convenience eliminates the need for physical restaurant visits.\nOrders can be placed via smartphone, with meals delivered directly to residences.\nNumerous individuals utilize these services for their time and effort efficiency.\nThis represents a significant trend in the food service industry.\nAn increasing number of establishments are embracing this digital transformation.\n",
-    "answer_ko": "디지털 음식 주문이 논의의 주요 주제가 되었어요.\n많은 식당들이 이제 테이크아웃과 배달 서비스를 제공해요.\n고객들은 모바일 애플리케이션이나 온라인 플랫폼을 통해 주문할 수 있어요.\n이 편의성은 실제 식당 방문의 필요성을 제거해요.\n스마트폰을 통해 주문할 수 있고, 식사가 집으로 직접 배달돼요.\n많은 개인들이 시간과 노력 효율성을 위해 이런 서비스들을 이용해요.\n이것은 음식 서비스 업계의 중요한 트렌드를 나타내요.\n점점 더 많은 시설들이 이 디지털 변화를 수용하고 있어요.\n"
-  }
-]
+{
+  "title": "레스토랑",
+  "items": [
+    {
+      "id": "1",
+      "category": "restaurants",
+      "question_en": "I would like to know about restaurants in your country. What kind of food do they commonly serve? How are the people who work there? Give me all the details about a typical restaurant in your country.",
+      "question_ko": "당신 나라의 식당에 대해 알고 싶어요. 그들은 보통 어떤 종류의 음식을 제공하나요? 거기서 일하는 사람들은 어떤가요? 당신 나라의 전형적인 식당에 대한 모든 세부사항을 알려주세요.",
+      "answer_en": "Restaurants in my country are typically located in bustling commercial districts with high pedestrian traffic.\nAmong the diverse dining establishments, I particularly favor Korean restaurants.\nThese establishments offer traditional floor seating arrangements with low tables, though modern venues also provide conventional table and chair seating.\nA distinctive feature is the presentation of main dishes accompanied by various side dishes and rice.\nKimchi is invariably served at every Korean restaurant.\nThese characteristics define the typical Korean dining experience.\n",
+      "answer_ko": "우리나라의 식당들은 보통 유동 인구가 많은 번화가에 위치해 있어요.\n다양한 음식점들 중에서 저는 특히 한식당을 선호해요.\n이런 시설들은 낮은 테이블과 함께 전통적인 좌식 공간을 제공하지만, 현대적인 장소들은 일반적인 테이블과 의자도 함께 제공해요.\n독특한 특징은 메인 요리가 다양한 반찬과 밥과 함께 제공된다는 점이에요.\n모든 한식당에서는 김치가 반드시 나와요.\n이런 특징들이 전형적인 한국 식당 경험을 정의해요.\n"
+    },
+    {
+      "id": "2",
+      "category": "restaurants",
+      "question_en": "Tell me about a restaurant you ate out at recently. What kind of restaurant was it? What was on their menu and what did you eat? Who did you go with? Did you like how the food tasted? Give me all the details.",
+      "question_ko": "최근에 외식했던 식당에 대해 이야기해 주세요. 어떤 종류의 식당이었나요? 메뉴에는 무엇이 있었고 당신은 무엇을 먹었나요? 누구와 함께 갔나요? 음식 맛은 어땠나요? 모든 세부사항을 알려주세요",
+      "answer_en": "I recently dined at a pizzeria in Itaewon with my friends.\nThe journey from my residence took approximately thirty minutes.\nWe ordered a potato pizza, seafood pasta, and a chicken tender salad.\nThe culinary experience was exceptional, likely due to our collective hunger.\nHowever, certain aspects were less than satisfactory.\nThe establishment was rather compact with limited seating capacity.\nWe endured a thirty-minute wait for seating, followed by an additional thirty-minute wait for our meals.\nDespite these inconveniences, I thoroughly enjoyed the dining experience with my companions.\n",
+      "answer_ko": "최근에 친구들과 함께 이태원의 피자집에서 식사를 했어요.\n집에서 그곳까지의 여정은 약 30분 정도 걸렸어요.\n포테이토 피자, 해산물 파스타, 치킨 텐더 샐러드를 주문했어요.\n우리 모두의 배고픔 덕분에 요리 경험이 특별했어요.\n하지만 몇 가지 만족스럽지 않은 측면들도 있었어요.\n시설이 다소 좁고 좌석 용량이 제한적이었어요.\n좌석을 위해 30분을 기다린 후, 식사가 나오기까지 추가로 30분을 기다려야 했어요.\n이런 불편함에도 불구하고, 동반자들과 함께하는 식사 경험을 정말 즐겼어요.\n"
+    },
+    {
+      "id": "3",
+      "category": "restaurants",
+      "question_en": "Now, tell me about a restaurant you used to go to as a child. What was it like? What did you eat? Who did you go with? What do you remember most about that place? Tell me about that restaurant in as much detail as possible",
+      "question_ko": "이제, 당신이 어렸을 때 자주 가던 식당에 대해 이야기해 주세요. 그곳은 어땠나요? 무엇을 먹었나요? 누구와 함께 갔나요? 그곳에 대해 가장 기억나는 것은 무엇인가요? 그 식당에 대해 가능한 한 자세히 설명해 주세요.",
+      "answer_en": "My family frequented a Korean barbecue establishment during my childhood.\nThe establishment served exceptional marinated barbecue dishes.\nWe would grill the meat at our table and consume it immediately.\nWe visited the restaurant at least monthly and always departed completely satisfied.\nDuring my youth, the proprietor generously provided complimentary ice cream and confectionery.\nHe also permitted my cousins and me to utilize the small playground adjacent to the parking facility.\nThe proprietor resided on the second floor and had constructed the playground for his children.\nWhile I occasionally visit other Korean barbecue establishments, the culinary offerings at that particular venue remain unparalleled.\nThat restaurant undoubtedly represents the finest dining establishment I have ever experienced.\n",
+      "answer_ko": "어린 시절 우리 가족이 자주 방문했던 한식 바비큐 식당이 있었어요.\n그 시설은 뛰어난 양념 바비큐 요리를 제공했어요.\n테이블에서 고기를 구워서 바로 섭취했어요.\n최소 월 한 번은 그 식당을 방문했고 항상 완전히 만족한 채 떠났어요.\n어린 시절에는 주인이 관대하게 무료 아이스크림과 사탕을 제공해 주셨어요.\n또한 사촌들과 제가 주차 시설 옆의 작은 놀이터를 이용할 수 있게 해주셨어요.\n주인은 2층에 거주하셨고 자녀들을 위해 그 놀이터를 건설하셨어요.\n다른 한식 바비큐 식당들을 가끔 방문하지만, 그 특정 장소의 요리는 여전히 비교할 수 없어요.\n그 식당은 확실히 제가 경험한 최고의 식당을 대표해요.\n"
+    },
+    {
+      "id": "4",
+      "category": "restaurants",
+      "question_en": "Many restaurants are changing their menus to suit customers who are more health-conscious. Talk about the changes you notice about restaurants in my country related to this trend.",
+      "question_ko": "많은 식당들이 건강에 더 신경 쓰는 고객들을 위해 메뉴를 바꾸고 있습니다. 이러한 추세와 관련하여 당신 나라의 식당에서 눈치챈 변화에 대해 이야기해 주세요.",
+      "answer_en": "Restaurants in my country are increasingly adapting their menus to accommodate health-conscious consumers.\nMany establishments now offer nutritious alternatives and incorporate more vegetables into their dishes.\nSome venues have introduced vegetarian options and organic ingredients.\nThis shift reflects the growing demand for healthier dining choices.\nEstablishments are responding to this trend by incorporating wellness-focused menu items.\nThis represents a significant transformation in the restaurant industry.\n",
+      "answer_ko": "우리나라의 식당들이 점점 더 건강에 신경 쓰는 소비자들을 수용하기 위해 메뉴를 조정하고 있어요.\n많은 시설들이 이제 영양가 있는 대안을 제공하고 요리에 더 많은 채소를 포함해요.\n일부 장소들은 채식 옵션과 유기농 재료를 도입했어요.\n이 변화는 더 건강한 식사 선택에 대한 증가하는 수요를 반영해요.\n시설들이 웰빙 중심의 메뉴 항목들을 포함함으로써 이 추세에 반응하고 있어요.\n이것은 식당 업계의 중요한 변화를 나타내요.\n"
+    },
+    {
+      "id": "5",
+      "category": "restaurants",
+      "question_en": "What are the latest trends people are talking about related to take-out or delivery food options? Perhaps, it has to do with ordering online or an app. Discuss the changes that you have observed recently regarding take-out or delivery food options.",
+      "question_ko": "테이크아웃이나 배달 음식 옵션과 관련하여 사람들이 이야기하는 최신 트렌드는 무엇인가요? 아마도 온라인이나 앱으로 주문하는 것과 관련이 있을 수 있습니다. 최근 테이크아웃이나 배달 음식 옵션에 관해 당신이 관찰한 변화를 논의해 주세요.",
+      "answer_en": "Digital food ordering has become a prominent topic of discussion.\nMany restaurants now provide take-out and delivery services.\nCustomers can place orders through mobile applications or online platforms.\nThis convenience eliminates the need for physical restaurant visits.\nOrders can be placed via smartphone, with meals delivered directly to residences.\nNumerous individuals utilize these services for their time and effort efficiency.\nThis represents a significant trend in the food service industry.\nAn increasing number of establishments are embracing this digital transformation.\n",
+      "answer_ko": "디지털 음식 주문이 논의의 주요 주제가 되었어요.\n많은 식당들이 이제 테이크아웃과 배달 서비스를 제공해요.\n고객들은 모바일 애플리케이션이나 온라인 플랫폼을 통해 주문할 수 있어요.\n이 편의성은 실제 식당 방문의 필요성을 제거해요.\n스마트폰을 통해 주문할 수 있고, 식사가 집으로 직접 배달돼요.\n많은 개인들이 시간과 노력 효율성을 위해 이런 서비스들을 이용해요.\n이것은 음식 서비스 업계의 중요한 트렌드를 나타내요.\n점점 더 많은 시설들이 이 디지털 변화를 수용하고 있어요.\n"
+    }
+  ]
+}

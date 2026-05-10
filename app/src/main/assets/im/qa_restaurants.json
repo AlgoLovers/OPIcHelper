@@ -1,47 +1,45 @@
-[
-  {
-    "title": "레스토랑",
-    "id": "1",
-    "category": "restaurants",
-    "question_en": "I would like to know about restaurants in your country. What kind of food do they commonly serve? How are the people who work there? Give me all the details about a typical restaurant in your country.",
-    "question_ko": "당신 나라의 식당에 대해 알고 싶어요. 그들은 보통 어떤 종류의 음식을 제공하나요? 거기서 일하는 사람들은 어떤가요? 당신 나라의 전형적인 식당에 대한 모든 세부사항을 알려주세요.",
-    "answer_en": "Most restaurants are on busy streets.\nI prefer going to Korean restaurants.\nIn Korean restaurants, people can sit on the floor.\nThey eat at low tables.\nNew restaurants have tables and chairs.\nBut some places still have floor seating.\nThe main dish comes with small side dishes.\nRice is also served.\nKimchi is served at every Korean restaurant.\nThese are what Korean restaurants look like.",
-    "answer_ko": "대부분의 식당들은 번화가에 있어요.\n저는 한식당에 가는 것을 선호해요.\n한식당에서는 사람들이 바닥에 앉을 수 있어요.\n낮은 테이블에서 식사를 해요.\n새로운 식당들에는 테이블과 의자가 있어요.\n하지만 일부 장소에서는 여전히 좌식 공간도 있어요.\n메인 요리가 소량의 반찬과 함께 나와요.\n밥도 함께 나와요.\n모든 한식당에서는 김치가 나와요.\n이게 한국 식당들의 모습이에요."
-  },
-  {
-    "title": "레스토랑",
-    "id": "2",
-    "category": "restaurants",
-    "question_en": "Tell me about a restaurant you ate out at recently. What kind of restaurant was it? What was on their menu and what did you eat? Who did you go with? Did you like how the food tasted? Give me all the details.",
-    "question_ko": "최근에 외식했던 식당에 대해 이야기해 주세요. 어떤 종류의 식당이었나요? 메뉴에는 무엇이 있었고 당신은 무엇을 먹었나요? 누구와 함께 갔나요? 음식 맛은 어땠나요? 모든 세부사항을 알려주세요",
-    "answer_en": "I had pizza at a pizza place in Itaewon with my friends.\nIt took about 30 minutes to get there.\nWe ordered one potato pizza.\nWe also ordered seafood pasta.\nWe ordered chicken tender salad too.\nThe food was great.\nWe were all very hungry.\nBut there were some things we didn't like.\nThe restaurant was quite small.\nThey didn't have many tables.\nWe had to wait 30 minutes to be seated.\nWe waited another 30 minutes for our food.\nI had a great time with my friends.",
-    "answer_ko": "이태원의 피자집에서 친구들과 피자를 먹었어요.\n그곳까지 가는 데 약 30분 걸렸어요.\n포테이토 피자 하나를 시켰어요.\n해산물 파스타도 시켰어요.\n치킨 텐더 샐러드도 시켰어요.\n음식이 훌륭했어요.\n우리 모두가 매우 배고팠어요.\n하지만 마음에 들지 않는 점들도 있었어요.\n식당이 꽤 작았어요.\n테이블이 많지 않았어요.\n자리에 앉는 데 30분을 기다려야 했어요.\n음식이 나오는 데 또 30분을 기다려야 했어요.\n친구들과 함께 정말 즐거운 시간을 보냈어요."
-  },
-  {
-    "title": "레스토랑",
-    "id": "3",
-    "category": "restaurants",
-    "question_en": "Now, tell me about a restaurant you used to go to as a child. What was it like? What did you eat? Who did you go with? What do you remember most about that place? Tell me about that restaurant in as much detail as possible",
-    "question_ko": "이제, 당신이 어렸을 때 자주 가던 식당에 대해 이야기해 주세요. 그곳은 어땠나요? 무엇을 먹었나요? 누구와 함께 갔나요? 그곳에 대해 가장 기억나는 것은 무엇인가요? 그 식당에 대해 가능한 한 자세히 설명해 주세요.",
-    "answer_en": "There was a Korean barbeque restaurant my family used to go to.\nThat place served amazing marinated barbeque.\nWe grilled the meat on a grill.\nWe ate right away.\nWe ate there at least once a month.\nWe always left with complete satisfaction.\nWhen I was a kid, the owner gave us free ice cream.\nHe also gave us candy.\nHe allowed me and my cousins to play.\nWe played at the small playground next to the parking lot.\nThe owner lived on the second floor.\nHe made the playground for his kids.\nI still go to other Korean barbeque restaurants.\nBut the food at that place was the best.\nThat restaurant was definitely the best I've ever been to.",
-    "answer_ko": "우리 가족이 예전에 자주 가던 한식 바비큐 식당이 있었어요.\n그곳은 정말 맛있는 양념 바비큐를 내놓았어요.\n우리는 고기를 불판에 구웠어요.\n바로 먹었어요.\n한 달에 적어도 한 번은 그곳에서 식사를 했어요.\n항상 완전히 만족한 채 나왔어요.\n제가 어렸을 때는 주인아저씨가 무료로 아이스크림을 주셨어요.\n사탕도 주셨어요.\n저와 사촌들이 놀게도 해주셨어요.\n주차장 옆에 있는 작은 놀이터에서 놀았어요.\n주인아저씨는 2층에 사셨어요.\n자녀들을 위해 그 놀이터를 만드신 거였어요.\n저는 여전히 다른 한식 바비큐 식당에 가끔 가요.\n하지만 그곳 음식이 최고였어요.\n그 식당은 제가 가본 곳 중에 단연코 최고의 식당이었어요."
-  },
-  {
-    "title": "레스토랑",
-    "id": "4",
-    "category": "restaurants",
-    "question_en": "Many restaurants are changing their menus to suit customers who are more health-conscious. Talk about the changes you notice about restaurants in your country related to this trend.",
-    "question_ko": "많은 식당들이 건강에 더 신경 쓰는 고객들을 위해 메뉴를 바꾸고 있습니다. 이러한 추세와 관련하여 당신 나라의 식당에서 눈치챈 변화에 대해 이야기해 주세요.",
-    "answer_en": "Restaurants in my country are changing their menus.\nThey are trying to suit health-conscious customers.\nMany restaurants now offer healthy options.\nThey serve more vegetables.\nThey use less oil in cooking.\nSome restaurants offer vegetarian dishes.\nThey also serve organic food.\nMany people want to eat healthy food.\nSo restaurants are responding to this trend.\nThey are adding healthy menu items.\nThis is a big change in the restaurant industry.",
-    "answer_ko": "우리나라의 식당들이 메뉴를 바꾸고 있어요.\n건강에 신경 쓰는 고객들을 맞추려고 해요.\n많은 식당들이 이제 건강한 옵션을 제공해요.\n더 많은 채소를 내놓아요.\n요리할 때 기름을 덜 써요.\n일부 식당들은 채식 요리를 제공해요.\n유기농 음식도 내놓아요.\n많은 사람들이 건강한 음식을 먹고 싶어해요.\n그래서 식당들이 이 추세에 반응하고 있어요.\n건강한 메뉴 항목들을 추가하고 있어요.\n이것이 식당 업계의 큰 변화예요."
-  },
-  {
-    "title": "레스토랑",
-    "id": "5",
-    "category": "restaurants",
-    "question_en": "What are the latest trends people are talking about related to take-out or delivery food options? Perhaps, it has to do with ordering online or an app. Discuss the changes that you have observed recently regarding take-out or delivery food options.",
-    "question_ko": "테이크아웃이나 배달 음식 옵션과 관련하여 사람들이 이야기하는 최신 트렌드는 무엇인가요? 아마도 온라인이나 앱으로 주문하는 것과 관련이 있을 수 있습니다. 최근 테이크아웃이나 배달 음식 옵션에 관해 당신이 관찰한 변화를 논의해 주세요.",
-    "answer_en": "People are talking about online food ordering.\nMany restaurants now offer take-out and delivery.\nYou can order food through apps.\nYou can also order online.\nThis is very convenient.\nYou don't have to go to the restaurant.\nYou can order from your phone.\nThe food is delivered to your home.\nMany people use these services.\nIt saves time and effort.\nThis is a big trend in the food industry.\nMore restaurants are joining this trend.",
-    "answer_ko": "사람들이 온라인 음식 주문에 대해 이야기해요.\n많은 식당들이 이제 테이크아웃과 배달을 제공해요.\n앱을 통해 음식을 주문할 수 있어요.\n온라인으로도 주문할 수 있어요.\n이것은 매우 편리해요.\n식당에 갈 필요가 없어요.\n휴대폰으로 주문할 수 있어요.\n음식이 집으로 배달돼요.\n많은 사람들이 이런 서비스를 이용해요.\n시간과 노력을 절약해요.\n이것이 음식 업계의 큰 트렌드예요.\n더 많은 식당들이 이 추세에 참여하고 있어요."
-  }
-]
+{
+  "title": "레스토랑",
+  "items": [
+    {
+      "id": "1",
+      "category": "restaurants",
+      "question_en": "I would like to know about restaurants in your country. What kind of food do they commonly serve? How are the people who work there? Give me all the details about a typical restaurant in your country.",
+      "question_ko": "당신 나라의 식당에 대해 알고 싶어요. 그들은 보통 어떤 종류의 음식을 제공하나요? 거기서 일하는 사람들은 어떤가요? 당신 나라의 전형적인 식당에 대한 모든 세부사항을 알려주세요.",
+      "answer_en": "Most restaurants are on busy streets.\nI prefer going to Korean restaurants.\nIn Korean restaurants, people can sit on the floor.\nThey eat at low tables.\nNew restaurants have tables and chairs.\nBut some places still have floor seating.\nThe main dish comes with small side dishes.\nRice is also served.\nKimchi is served at every Korean restaurant.\nThese are what Korean restaurants look like.",
+      "answer_ko": "대부분의 식당들은 번화가에 있어요.\n저는 한식당에 가는 것을 선호해요.\n한식당에서는 사람들이 바닥에 앉을 수 있어요.\n낮은 테이블에서 식사를 해요.\n새로운 식당들에는 테이블과 의자가 있어요.\n하지만 일부 장소에서는 여전히 좌식 공간도 있어요.\n메인 요리가 소량의 반찬과 함께 나와요.\n밥도 함께 나와요.\n모든 한식당에서는 김치가 나와요.\n이게 한국 식당들의 모습이에요."
+    },
+    {
+      "id": "2",
+      "category": "restaurants",
+      "question_en": "Tell me about a restaurant you ate out at recently. What kind of restaurant was it? What was on their menu and what did you eat? Who did you go with? Did you like how the food tasted? Give me all the details.",
+      "question_ko": "최근에 외식했던 식당에 대해 이야기해 주세요. 어떤 종류의 식당이었나요? 메뉴에는 무엇이 있었고 당신은 무엇을 먹었나요? 누구와 함께 갔나요? 음식 맛은 어땠나요? 모든 세부사항을 알려주세요",
+      "answer_en": "I had pizza at a pizza place in Itaewon with my friends.\nIt took about 30 minutes to get there.\nWe ordered one potato pizza.\nWe also ordered seafood pasta.\nWe ordered chicken tender salad too.\nThe food was great.\nWe were all very hungry.\nBut there were some things we didn't like.\nThe restaurant was quite small.\nThey didn't have many tables.\nWe had to wait 30 minutes to be seated.\nWe waited another 30 minutes for our food.\nI had a great time with my friends.",
+      "answer_ko": "이태원의 피자집에서 친구들과 피자를 먹었어요.\n그곳까지 가는 데 약 30분 걸렸어요.\n포테이토 피자 하나를 시켰어요.\n해산물 파스타도 시켰어요.\n치킨 텐더 샐러드도 시켰어요.\n음식이 훌륭했어요.\n우리 모두가 매우 배고팠어요.\n하지만 마음에 들지 않는 점들도 있었어요.\n식당이 꽤 작았어요.\n테이블이 많지 않았어요.\n자리에 앉는 데 30분을 기다려야 했어요.\n음식이 나오는 데 또 30분을 기다려야 했어요.\n친구들과 함께 정말 즐거운 시간을 보냈어요."
+    },
+    {
+      "id": "3",
+      "category": "restaurants",
+      "question_en": "Now, tell me about a restaurant you used to go to as a child. What was it like? What did you eat? Who did you go with? What do you remember most about that place? Tell me about that restaurant in as much detail as possible",
+      "question_ko": "이제, 당신이 어렸을 때 자주 가던 식당에 대해 이야기해 주세요. 그곳은 어땠나요? 무엇을 먹었나요? 누구와 함께 갔나요? 그곳에 대해 가장 기억나는 것은 무엇인가요? 그 식당에 대해 가능한 한 자세히 설명해 주세요.",
+      "answer_en": "There was a Korean barbeque restaurant my family used to go to.\nThat place served amazing marinated barbeque.\nWe grilled the meat on a grill.\nWe ate right away.\nWe ate there at least once a month.\nWe always left with complete satisfaction.\nWhen I was a kid, the owner gave us free ice cream.\nHe also gave us candy.\nHe allowed me and my cousins to play.\nWe played at the small playground next to the parking lot.\nThe owner lived on the second floor.\nHe made the playground for his kids.\nI still go to other Korean barbeque restaurants.\nBut the food at that place was the best.\nThat restaurant was definitely the best I've ever been to.",
+      "answer_ko": "우리 가족이 예전에 자주 가던 한식 바비큐 식당이 있었어요.\n그곳은 정말 맛있는 양념 바비큐를 내놓았어요.\n우리는 고기를 불판에 구웠어요.\n바로 먹었어요.\n한 달에 적어도 한 번은 그곳에서 식사를 했어요.\n항상 완전히 만족한 채 나왔어요.\n제가 어렸을 때는 주인아저씨가 무료로 아이스크림을 주셨어요.\n사탕도 주셨어요.\n저와 사촌들이 놀게도 해주셨어요.\n주차장 옆에 있는 작은 놀이터에서 놀았어요.\n주인아저씨는 2층에 사셨어요.\n자녀들을 위해 그 놀이터를 만드신 거였어요.\n저는 여전히 다른 한식 바비큐 식당에 가끔 가요.\n하지만 그곳 음식이 최고였어요.\n그 식당은 제가 가본 곳 중에 단연코 최고의 식당이었어요."
+    },
+    {
+      "id": "4",
+      "category": "restaurants",
+      "question_en": "Many restaurants are changing their menus to suit customers who are more health-conscious. Talk about the changes you notice about restaurants in your country related to this trend.",
+      "question_ko": "많은 식당들이 건강에 더 신경 쓰는 고객들을 위해 메뉴를 바꾸고 있습니다. 이러한 추세와 관련하여 당신 나라의 식당에서 눈치챈 변화에 대해 이야기해 주세요.",
+      "answer_en": "Restaurants in my country are changing their menus.\nThey are trying to suit health-conscious customers.\nMany restaurants now offer healthy options.\nThey serve more vegetables.\nThey use less oil in cooking.\nSome restaurants offer vegetarian dishes.\nThey also serve organic food.\nMany people want to eat healthy food.\nSo restaurants are responding to this trend.\nThey are adding healthy menu items.\nThis is a big change in the restaurant industry.",
+      "answer_ko": "우리나라의 식당들이 메뉴를 바꾸고 있어요.\n건강에 신경 쓰는 고객들을 맞추려고 해요.\n많은 식당들이 이제 건강한 옵션을 제공해요.\n더 많은 채소를 내놓아요.\n요리할 때 기름을 덜 써요.\n일부 식당들은 채식 요리를 제공해요.\n유기농 음식도 내놓아요.\n많은 사람들이 건강한 음식을 먹고 싶어해요.\n그래서 식당들이 이 추세에 반응하고 있어요.\n건강한 메뉴 항목들을 추가하고 있어요.\n이것이 식당 업계의 큰 변화예요."
+    },
+    {
+      "id": "5",
+      "category": "restaurants",
+      "question_en": "What are the latest trends people are talking about related to take-out or delivery food options? Perhaps, it has to do with ordering online or an app. Discuss the changes that you have observed recently regarding take-out or delivery food options.",
+      "question_ko": "테이크아웃이나 배달 음식 옵션과 관련하여 사람들이 이야기하는 최신 트렌드는 무엇인가요? 아마도 온라인이나 앱으로 주문하는 것과 관련이 있을 수 있습니다. 최근 테이크아웃이나 배달 음식 옵션에 관해 당신이 관찰한 변화를 논의해 주세요.",
+      "answer_en": "People are talking about online food ordering.\nMany restaurants now offer take-out and delivery.\nYou can order food through apps.\nYou can also order online.\nThis is very convenient.\nYou don't have to go to the restaurant.\nYou can order from your phone.\nThe food is delivered to your home.\nMany people use these services.\nIt saves time and effort.\nThis is a big trend in the food industry.\nMore restaurants are joining this trend.",
+      "answer_ko": "사람들이 온라인 음식 주문에 대해 이야기해요.\n많은 식당들이 이제 테이크아웃과 배달을 제공해요.\n앱을 통해 음식을 주문할 수 있어요.\n온라인으로도 주문할 수 있어요.\n이것은 매우 편리해요.\n식당에 갈 필요가 없어요.\n휴대폰으로 주문할 수 있어요.\n음식이 집으로 배달돼요.\n많은 사람들이 이런 서비스를 이용해요.\n시간과 노력을 절약해요.\n이것이 음식 업계의 큰 트렌드예요.\n더 많은 식당들이 이 추세에 참여하고 있어요."
+    }
+  ]
+}
