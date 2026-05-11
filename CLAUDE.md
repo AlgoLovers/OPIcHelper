@@ -15,18 +15,56 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 ```
 
 ### ViewModel 구조
-- `MainViewModel`: 통합 상태 관리 (AppState 단일 StateFlow)
+- `MainViewModel` (**AndroidViewModel**): 통합 상태 관리 (AppState 단일 StateFlow, 의존성 6개)
 - `MemorizationViewModel`: 암기 테스트 로직 (반복듣기/영작테스트/통암기)
-- `TtsViewModel`: TTS 재생 상태 (TtsPlaybackController 구독)
+- TTS 상태는 MainViewModel이 TtsPlaybackController 직접 구독 (별도 TtsViewModel 없음)
 
 ### TTS 구조
 - `TtsOrchestrator`: 언어 감지 → Google TTS(영문) / Samsung TTS(한글) 라우팅
-- `TtsPlaybackController`: 재생 상태 관리 (StateFlow)
+- `TtsPlaybackController`: 재생 상태 관리 (4개 highlightIndex StateFlow)
 - `BaseTtsPlayer` → `GoogleTtsPlayer`, `SamsungTtsPlayer`
 
 ### DI
 - 모든 싱글톤 바인딩은 `di/AppModule.kt`
 - ViewModel은 `@HiltViewModel` + `@Inject constructor`
+
+### 모듈별 상세 문서
+- `data/CLAUDE.md` — Data 계층 구현체 & 인프라
+- `domain/CLAUDE.md` — Domain 계층 엔티티, 유스케이스, 인터페이스
+- `presentation/CLAUDE.md` — Presentation 계층 UI, ViewModel, 네비게이션
+- `di/CLAUDE.md` — Hilt DI 바인딩 설정
+
+## 앱 진입점 & 루트 파일
+
+| 파일 | 역할 |
+|------|------|
+| `OPicHelperApplication.kt` | `@HiltAndroidApp`. TtsOrchestrator 싱글톤 보유 |
+| `SplashActivity.kt` | 런처 Activity. 2초 스플래시 후 MainActivity 이동 |
+| `MainActivity.kt` | `@AndroidEntryPoint`. RECORD_AUDIO 권한, WakeLock 수명주기, 백버튼 리소스 정리 |
+
+## Assets 구조
+
+```
+assets/
+  al/           — Advanced Low 레벨 (15개 JSON)
+  ih/           — Intermediate High 레벨 (16개 JSON, qa_roleplay 포함)
+  ih_raw/       — IH Raw 레벨 (15개 JSON)
+  im/           — Intermediate Mid 레벨 (15개 JSON)
+```
+
+JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, question_ko, answer_en, answer_ko }] }`
+`theme` 필드는 일부 JSON에만 존재하며 파싱 시 무시됨.
+새 JSON 추가 시 코드 수정 없이 assets에 넣기만 하면 자동 인식 (동적 카테고리 로딩).
+
+## 테스트 구조
+
+### 단위 테스트 (`app/src/test/`)
+`TtsOrchestratorTest`, `TtsPlaybackControllerTest`, `EnglishWritingTestUseCaseTest`, `RepeatListeningUseCaseTest`, `BaseTtsPlayerTest`, `AudioFileRepositoryImplTest`, `MainViewModelTest`, `TtsViewModelTest`(고아), `MemorizationViewModelTest`
+
+### 계측 테스트 (`app/src/androidTest/`)
+`SimpleTtsTest`, `RepeatListeningModeTest`, `RepeatListeningProgressTest`, `TtsStateIntegrationTest`, `EnglishWritingTestMergedFileTest`, `EnglishWritingTestProgressTest`, `SequentialAudioPlaybackTest`, `TtsIntegrationTest`, `FlipCardInstrumentedTest`, `TtsRegressionTest`
+
+**주의**: `TtsViewModelTest`는 TtsViewModel이 삭제된 후 남은 고아 테스트. 정리 필요.
 
 ## 코딩 컨벤션
 
@@ -34,8 +72,8 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 - **SRP**: 각 클래스는 하나의 변경 이유만 가져야 함. ViewModel이 비대해지면 새 ViewModel로 분리
 - **OCP**: TTS 플레이어 추가 시 `TtsPlayer` 인터페이스 구현체만 추가 (Orchestrator 수정 불필요)
 - **LSP**: BaseTtsPlayer 하위 클래스는 치환 가능해야 함
-- **ISP**: Repository 인터페이스는 UI 콜백을 받지 않아야 함 (현재 위반 — 리팩토링 필요)
-- **DIP**: Domain 계층은 Data 계층을 직접 참조하지 않아야 함 (현재 QaDataManager 위반 — 수정 필요)
+- **ISP**: Repository 인터페이스는 UI 콜백을 받지 않아야 함 (현재 RepeatListeningRepository, EnglishWritingTestRepository 위반 — 리팩토링 필요)
+- **DIP**: Domain 계층은 Data 계층을 직접 참조하지 않아야 함 (현재 QaDataManager가 SharedPreferences, Application 직접 사용 — 수정 필요)
 
 ### 네이밍
 - Repository 인터페이스: `domain/repository/`에 정의
@@ -75,11 +113,16 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 
 | 항목 | 상태 | 우선순위 |
 |------|------|----------|
-| QaDataManager data 계층 참조 (LeveledQaDataLoader) | 미해결 | 중간 |
-| Repository 인터페이스 UI 콜백 결합 | 미해결 | 높음 |
-| MainViewModel God Class (9개 의존성) | 미해결 | 높음 |
+| QaDataManager Android 의존성 (SharedPreferences, Application) | 미해결 | 높음 |
+| Repository 인터페이스 UI 콜백 결합 (RepeatListening, EnglishWritingTest) | 미해결 | 높음 |
+| MainViewModel God Class 경향 | 미해결 | 높음 |
 | MemorizationViewModel SRP 위반 (3개 모드 통합) | 미해결 | 중간 |
+| FullMemorization UseCase 중복 (Execute vs 직접) | 미해결 | 중간 |
+| QaDataLoaderImpl 미사용 래퍼 | 미해결 | 낮음 |
+| PlaybackEvent 미사용 코드 | 미해결 | 낮음 |
+| TtsViewModelTest 고아 테스트 | 미해결 | 낮음 |
 | ScriptProgress가 domain/repository에 위치 | 미해결 | 낮음 |
+| Domain 계층 Android import (Log, Context) | 미해결 | 낮음 |
 | WakeLock deprecated API | @Suppress 처리 | 낮음 |
 | LoginScreen 미작동 (인증 로직 비활성) | 미해결 | 낮음 |
 
