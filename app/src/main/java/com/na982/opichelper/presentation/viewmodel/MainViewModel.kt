@@ -22,6 +22,7 @@ import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 data class AppState(
@@ -255,10 +256,7 @@ class MainViewModel @Inject constructor(
     fun stopAllTts() {
         viewModelScope.launch {
             ttsPlaybackController.stopAllTts()
-            _uiState.value = _uiState.value.copy(
-                isEnglishWritingTestMergedFilePlaying = false,
-                englishWritingTestMergedFileHighlightIndex = null
-            )
+            playMergedFileUseCase.stop()
             ttsPlaybackController.clearHighlight()
         }
     }
@@ -282,6 +280,8 @@ class MainViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        ttsPlaybackController.cleanupTts()
+        playMergedFileUseCase.stop()
         playMergedFileUseCase.release()
         qaDataManager.release()
     }
@@ -316,13 +316,13 @@ class MainViewModel @Inject constructor(
             Log.e("MainViewModel", "앱 종료 시 리소스 정리 중 오류", e)
         }
 
-        // 비동기 저장은 별도 스레드에서 보장
-        viewModelScope.launch {
-            try {
+        // 앱 종료 시 동기적으로 진행상황 저장 보장
+        try {
+            runBlocking {
                 progressTracker.persistChangedProgress()
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "진행상황 저장 실패", e)
             }
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "진행상황 저장 실패", e)
         }
     }
 

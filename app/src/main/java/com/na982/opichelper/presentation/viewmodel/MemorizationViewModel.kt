@@ -228,6 +228,7 @@ class MemorizationViewModel @Inject constructor(
     fun stopFullMemorizationPlaying() {
         viewModelScope.launch {
             try {
+                executeFullMemorizationUseCase.cancelPlayback()
                 startMode(CurrentMode.FULL_MEMORIZATION)
                 updateFullMemorizationRecordingStatus()
             } catch (e: Exception) {
@@ -283,6 +284,7 @@ class MemorizationViewModel @Inject constructor(
     private fun startRepeatListening() {
         viewModelScope.launch {
             try {
+                currentUseCaseJob?.cancel()
                 val currentItem = qaDataManager.getCurrentQaItem()
                 if (currentItem != null) {
                     currentUseCaseJob = launch {
@@ -344,19 +346,16 @@ class MemorizationViewModel @Inject constructor(
                             }
                         },
                         onMergedFileCreated = {
-                            viewModelScope.launch {
-                                _englishWritingTestCompleted.value = true
-                                stopMode()
-                                _uiState.value = _uiState.value.copy(
-                                    isEnglishWritingTestRunning = false,
-                                    isEnglishWritingTestMode = false
-                                )
-                            }
+                            _englishWritingTestCompleted.value = true
+                            stopMode()
+                            _uiState.value = _uiState.value.copy(
+                                isEnglishWritingTestRunning = false,
+                                isEnglishWritingTestMode = false
+                            )
                         }
                     )
                 } catch (e: Exception) {
                     Log.e("MemorizationViewModel", "영작 테스트 실행 중 오류", e)
-                } finally {
                     stopMode()
                 }
             }
@@ -499,10 +498,12 @@ class MemorizationViewModel @Inject constructor(
     }
 
     override fun onCardFlip(isKorean: Boolean) {
+        if (currentUseCaseJob?.isActive != true) return
         _uiState.value = _uiState.value.copy(isRepeatListeningCardFlipped = isKorean)
     }
 
     override fun onHighlight(index: Int?) {
+        if (currentUseCaseJob?.isActive != true) return
         if (index != null) {
             ttsPlaybackController.setAnswerHighlightIndex(index)
         } else {
@@ -511,6 +512,7 @@ class MemorizationViewModel @Inject constructor(
     }
 
     override fun onKoreanHighlight(index: Int?) {
+        if (currentUseCaseJob?.isActive != true) return
         if (index != null) {
             ttsPlaybackController.setAnswerKoHighlightIndex(index)
         } else {
@@ -519,6 +521,7 @@ class MemorizationViewModel @Inject constructor(
     }
 
     override fun onComplete() {
+        if (currentUseCaseJob?.isActive != true) return
         stopMode()
     }
 }
