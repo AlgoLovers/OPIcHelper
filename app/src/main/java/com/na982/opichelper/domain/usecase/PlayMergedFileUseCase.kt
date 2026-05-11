@@ -132,5 +132,8 @@ class PlayMergedFileUseCase @Inject constructor(
     fun release() {
         playJob?.cancel()
         playJob = null
+        _isPlaying.value = false
+        _highlightIndex.value = null
+        audioPlayer.stop()
     }
 }

@@ -3,25 +3,20 @@ package com.na982.opichelper.domain.audio
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * TTS 재생 제어 전담 클래스
- * 책임: TTS 재생 제어, 하이라이트 관리, 재생 상태 관리
- */
 @Singleton
 class TtsPlaybackController @Inject constructor() {
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var currentPlayJob: Job? = null
 
-    // 재생 상태 관리
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
@@ -31,7 +26,6 @@ class TtsPlaybackController @Inject constructor() {
     private val _isAnswerPlaying = MutableStateFlow(false)
     val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
 
-    // 하이라이트 상태 관리
     private val _questionHighlightIndex = MutableStateFlow<Int?>(null)
     val questionHighlightIndex: StateFlow<Int?> = _questionHighlightIndex.asStateFlow()
 
@@ -51,17 +45,9 @@ class TtsPlaybackController @Inject constructor() {
     }
 
     fun playQuestion(question: String) {
-        currentPlayJob?.cancel()
+        forceStopTts()
         currentPlayJob = coroutineScope.launch {
-            if (_isQuestionPlaying.value) {
-                stopTtsSync()
-                return@launch
-            }
-
-            if (_isAnswerPlaying.value || (_isPlaying.value && !_isQuestionPlaying.value)) {
-                stopTtsSync()
-            }
-
+            val myJob = this.coroutineContext[Job]
             try {
                 _isPlaying.value = true
                 _isQuestionPlaying.value = true
@@ -72,25 +58,19 @@ class TtsPlaybackController @Inject constructor() {
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
             } finally {
-                _isPlaying.value = false
-                _isQuestionPlaying.value = false
-                _questionHighlightIndex.value = null
+                if (currentPlayJob == myJob) {
+                    _isPlaying.value = false
+                    _isQuestionPlaying.value = false
+                    _questionHighlightIndex.value = null
+                }
             }
         }
     }
 
     fun playAnswer(answer: String) {
-        currentPlayJob?.cancel()
+        forceStopTts()
         currentPlayJob = coroutineScope.launch {
-            if (_isAnswerPlaying.value) {
-                stopTtsSync()
-                return@launch
-            }
-
-            if (_isQuestionPlaying.value || (_isPlaying.value && !_isAnswerPlaying.value)) {
-                stopTtsSync()
-            }
-
+            val myJob = this.coroutineContext[Job]
             try {
                 _isPlaying.value = true
                 _isAnswerPlaying.value = true
@@ -101,20 +81,19 @@ class TtsPlaybackController @Inject constructor() {
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
             } finally {
-                _isPlaying.value = false
-                _isAnswerPlaying.value = false
-                _answerHighlightIndex.value = null
+                if (currentPlayJob == myJob) {
+                    _isPlaying.value = false
+                    _isAnswerPlaying.value = false
+                    _answerHighlightIndex.value = null
+                }
             }
         }
     }
 
     fun playMergedAudio(question: String, answer: String) {
-        currentPlayJob?.cancel()
+        forceStopTts()
         currentPlayJob = coroutineScope.launch {
-            if (_isQuestionPlaying.value || _isAnswerPlaying.value || _isPlaying.value) {
-                stopTtsSync()
-            }
-
+            val myJob = this.coroutineContext[Job]
             try {
                 _isPlaying.value = true
 
@@ -136,13 +115,19 @@ class TtsPlaybackController @Inject constructor() {
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
             } finally {
-                _isPlaying.value = false
-                _isQuestionPlaying.value = false
-                _isAnswerPlaying.value = false
-                _questionHighlightIndex.value = null
-                _answerHighlightIndex.value = null
+                if (currentPlayJob == myJob) {
+                    _isPlaying.value = false
+                    _isQuestionPlaying.value = false
+                    _isAnswerPlaying.value = false
+                    _questionHighlightIndex.value = null
+                    _answerHighlightIndex.value = null
+                }
             }
         }
+    }
+
+    fun stopTts() {
+        stopTtsSync()
     }
 
     private fun stopTtsSync() {
@@ -155,10 +140,6 @@ class TtsPlaybackController @Inject constructor() {
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 재생 중지 실패", e)
         }
-    }
-
-    fun stopTts() {
-        stopTtsSync()
     }
 
     private fun resetPlayState() {

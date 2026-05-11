@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.launch
 
 /**
@@ -33,8 +34,8 @@ class QaDataManager @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var userLevelJob: Job? = null
 
-    private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
-    private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
+    private val itemsByCategory: MutableMap<String, List<QaItem>> = ConcurrentHashMap()
+    private val itemIndexByCategory: MutableMap<String, Int> = ConcurrentHashMap()
     
     private var prefs: SharedPreferences? = null
     private var application: Application? = null

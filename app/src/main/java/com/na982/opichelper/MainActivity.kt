@@ -37,10 +37,10 @@ class MainActivity : ComponentActivity() {
     
     @Inject
     lateinit var wakeLockManager: WakeLockManager
-    
-    private var isFinishing = false // 앱이 실제로 종료되는지 추적
-    private var viewModel: MainViewModel? = null // ViewModel 참조 저장
-    private var navController: NavHostController? = null // 네비게이션 컨트롤러 참조
+
+    private var isFinishing = false
+    private var viewModel: MainViewModel? = null
+    private var navController: NavHostController? = null
     
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -70,6 +70,8 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             val navController = rememberNavController()
+            val mainViewModel: MainViewModel = hiltViewModel()
+            this@MainActivity.viewModel = mainViewModel
             this@MainActivity.navController = navController
             
             // 다크 테마 감지
