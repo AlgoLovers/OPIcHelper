@@ -286,7 +286,7 @@ class MainViewModel @Inject constructor(
         qaDataManager.release()
     }
 
-    fun cleanupOnAppExit() {
+    suspend fun cleanupOnAppExit() {
         try {
             val selectedMemorizeLevel = _uiState.value.selectedMemorizeLevel
 
@@ -295,19 +295,17 @@ class MainViewModel @Inject constructor(
                 val answerText = getCurrentAnswer(currentItem)
                 val totalSentences = answerText.split(".").size
 
-                runBlocking {
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)
-                    val currentSentenceIndex = currentProgress?.currentSentenceIndex ?: 0
+                val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)
+                val currentSentenceIndex = currentProgress?.currentSentenceIndex ?: 0
 
-                    progressTracker.updateProgress(
-                        category = currentItem.category,
-                        scriptIndex = qaDataManager.getCurrentIndex(),
-                        memorizeLevel = selectedMemorizeLevel,
-                        currentSentenceIndex = currentSentenceIndex,
-                        totalSentences = totalSentences,
-                        isMemorizeTestRunning = false
-                    )
-                }
+                progressTracker.updateProgress(
+                    category = currentItem.category,
+                    scriptIndex = qaDataManager.getCurrentIndex(),
+                    memorizeLevel = selectedMemorizeLevel,
+                    currentSentenceIndex = currentSentenceIndex,
+                    totalSentences = totalSentences,
+                    isMemorizeTestRunning = false
+                )
             }
 
             qaDataManager.saveCurrentIndex(qaDataManager.getCurrentIndex())
@@ -318,11 +316,8 @@ class MainViewModel @Inject constructor(
             Log.e("MainViewModel", "앱 종료 시 리소스 정리 중 오류", e)
         }
 
-        // 앱 종료 시 동기적으로 진행상황 저장 보장
         try {
-            runBlocking {
-                progressTracker.persistChangedProgress()
-            }
+            progressTracker.persistChangedProgress()
         } catch (e: Exception) {
             Log.e("MainViewModel", "진행상황 저장 실패", e)
         }
