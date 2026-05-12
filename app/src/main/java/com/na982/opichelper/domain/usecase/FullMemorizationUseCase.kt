@@ -35,7 +35,9 @@ class FullMemorizationUseCase @Inject constructor(
     private val _isRecording = AtomicBoolean(false)
     private val _isPlaying = AtomicBoolean(false)
 
+    @Volatile
     private var currentRecordingPath: String? = null
+    @Volatile
     private var playbackJob: Job? = null
     private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 

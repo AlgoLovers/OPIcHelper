@@ -3,6 +3,7 @@ package com.na982.opichelper.domain.audio
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 /**
@@ -23,7 +24,7 @@ class TtsOrchestrator @Inject constructor(
         // KakaoTtsPlayer(context),    // 3순위: 카카오 음성 (유료 - 요금 불명)
     )
     
-    private var currentKoreanTtsIndex = 0
+    private val currentKoreanTtsIndex = AtomicInteger(0)
     
     init {
         // Android 버전 정보 로깅
@@ -69,32 +70,31 @@ class TtsOrchestrator @Inject constructor(
      */
     private suspend fun speakKorean(text: String, onComplete: (() -> Unit)?): Boolean {
         Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 재생 시작 (현재 서비스: ${getCurrentKoreanTtsServiceName()})")
-        
-        // 현재 서비스부터 순차적으로 시도
-        for (i in currentKoreanTtsIndex until koreanTtsPlayers.size) {
+
+        val startIndex = currentKoreanTtsIndex.get()
+        for (i in startIndex until koreanTtsPlayers.size) {
             val player = koreanTtsPlayers[i]
             Log.d("TtsOrchestrator", "🇰🇷 시도 중: ${player.getServiceName()} (인덱스: $i)")
-            
+
             if (player.isAvailable()) {
                 Log.d("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 사용 가능, 재생 시도")
                 val success = player.speak(text, onComplete)
                 if (success) {
-                    currentKoreanTtsIndex = i // 성공한 서비스로 업데이트
+                    currentKoreanTtsIndex.set(i)
                     Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 성공: ${player.getServiceName()}")
                     return true
                 } else {
                     Log.w("TtsOrchestrator", "🇰🇷 한글 TTS 실패: ${player.getServiceName()}, 다음 서비스 시도")
-                    currentKoreanTtsIndex = i + 1
+                    currentKoreanTtsIndex.set(i + 1)
                 }
             } else {
                 Log.w("TtsOrchestrator", "🇰🇷 한글 TTS 서비스 사용 불가: ${player.getServiceName()}, 다음 서비스 시도")
-                currentKoreanTtsIndex = i + 1
+                currentKoreanTtsIndex.set(i + 1)
             }
         }
-        
-        // 모든 서비스 실패 — 인덱스 리셋하여 다음 호출에서 재시도 가능하게
+
         Log.e("TtsOrchestrator", "🇰🇷 모든 한글 TTS 서비스 실패 — 인덱스 리셋")
-        currentKoreanTtsIndex = 0
+        currentKoreanTtsIndex.set(0)
         onComplete?.invoke()
         return false
     }
@@ -141,8 +141,9 @@ class TtsOrchestrator @Inject constructor(
      * 현재 사용 중인 한글 TTS 서비스 이름 반환
      */
     fun getCurrentKoreanTtsServiceName(): String {
-        return if (currentKoreanTtsIndex < koreanTtsPlayers.size) {
-            koreanTtsPlayers[currentKoreanTtsIndex].getServiceName()
+        val index = currentKoreanTtsIndex.get()
+        return if (index < koreanTtsPlayers.size) {
+            koreanTtsPlayers[index].getServiceName()
         } else {
             "없음"
         }

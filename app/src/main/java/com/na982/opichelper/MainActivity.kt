@@ -181,15 +181,15 @@ class MainActivity : ComponentActivity() {
      */
     private fun cleanupAllResources() {
         Log.d("MainActivity", "모든 리소스 정리 시작")
-        
+
         try {
-            // ViewModel의 정리 함수 호출
-            viewModel?.cleanupOnAppExit()
-            
-            // WakeLock 해제
+            lifecycleScope.launch {
+                viewModel?.cleanupOnAppExit()
+            }
+
             wakeLockManager.releaseWakeLock()
             Log.d("MainActivity", "WakeLock 해제 완료")
-            
+
             Log.d("MainActivity", "모든 리소스 정리 완료")
         } catch (e: Exception) {
             Log.e("MainActivity", "리소스 정리 중 오류 발생", e)
