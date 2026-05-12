@@ -489,8 +489,13 @@ class MemorizationViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            var isFirst = true
             qaDataManager.currentQaItem.collect { currentItem ->
                 if (currentItem != null) {
+                    if (isFirst) {
+                        isFirst = false
+                        return@collect
+                    }
                     updateFullMemorizationRecordingStatus()
                 }
             }

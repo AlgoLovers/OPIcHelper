@@ -182,7 +182,8 @@ class TtsOrchestrator @Inject constructor(
                     val success = speakKorean(sentence) { finished.complete(Unit) }
                     if (!success) finished.complete(Unit)
                 } else {
-                    speakEnglish(sentence) { finished.complete(Unit) }
+                    val success = speakEnglish(sentence) { finished.complete(Unit) }
+                    if (!success) finished.complete(Unit)
                 }
                 finished.await()
                 kotlinx.coroutines.delay(400L)
