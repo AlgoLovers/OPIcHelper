@@ -61,33 +61,38 @@ abstract class BaseTtsPlayer(
                 }
 
                 Log.d(logTag, "$serviceName 시작: $text")
-                _isPlaying = true
 
                 // 기본 설정 적용
                 tts?.setSpeechRate(getSpeechRate())
                 tts?.setPitch(getPitch())
 
                 val utteranceId = "${logTag.lowercase()}_${System.currentTimeMillis()}"
-                val params = HashMap<String, String>()
-                params[TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID] = utteranceId
+                val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
+                var started = false
 
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(utteranceId: String?) {}
+                    override fun onStart(utteranceId: String?) {
+                        started = true
+                        _isPlaying = true
+                    }
                     override fun onDone(utteranceId: String?) {
                         Log.d(logTag, "$serviceName 재생 완료")
                         _isPlaying = false
                         onComplete?.invoke()
+                        completionDeferred.complete(Unit)
                     }
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         Log.e(logTag, "$serviceName 재생 오류")
                         _isPlaying = false
                         onComplete?.invoke()
+                        completionDeferred.complete(Unit)
                     }
                     override fun onError(utteranceId: String?, errorCode: Int) {
                         Log.e(logTag, "$serviceName 재생 오류: $errorCode")
                         _isPlaying = false
                         onComplete?.invoke()
+                        completionDeferred.complete(Unit)
                     }
                 })
 
@@ -95,9 +100,35 @@ abstract class BaseTtsPlayer(
                 if (result == TextToSpeech.ERROR) {
                     Log.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
                     _isPlaying = false
+                    completionDeferred.complete(Unit)
                     onComplete?.invoke()
                     return false
                 }
+
+                // onStart 콜백 대기 (최대 2초) — 실제 재생 시작 확인
+                val startDeadline = System.currentTimeMillis() + 2000
+                while (!started && System.currentTimeMillis() < startDeadline) {
+                    kotlinx.coroutines.delay(50)
+                }
+                if (!started) {
+                    Log.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
+                    _isPlaying = false
+                    completionDeferred.complete(Unit)
+                    onComplete?.invoke()
+                    return false
+                }
+
+                // 재생 완료까지 대기 (최대 30초 안전 타임아웃)
+                try {
+                    kotlinx.coroutines.withTimeout(30000L) {
+                        completionDeferred.await()
+                    }
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    Log.e(logTag, "$serviceName 재생 완료 타임아웃")
+                    _isPlaying = false
+                    onComplete?.invoke()
+                }
+
                 true
             } catch (e: Exception) {
                 Log.e(logTag, "$serviceName 오류", e)
