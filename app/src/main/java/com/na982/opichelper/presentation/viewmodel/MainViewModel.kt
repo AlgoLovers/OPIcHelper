@@ -295,17 +295,19 @@ class MainViewModel @Inject constructor(
                 val answerText = getCurrentAnswer(currentItem)
                 val totalSentences = answerText.split(".").size
 
-                val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)
-                val currentSentenceIndex = currentProgress?.currentSentenceIndex ?: 0
+                runBlocking {
+                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)
+                    val currentSentenceIndex = currentProgress?.currentSentenceIndex ?: 0
 
-                progressTracker.updateProgress(
-                    category = currentItem.category,
-                    scriptIndex = qaDataManager.getCurrentIndex(),
-                    memorizeLevel = selectedMemorizeLevel,
-                    currentSentenceIndex = currentSentenceIndex,
-                    totalSentences = totalSentences,
-                    isMemorizeTestRunning = false
-                )
+                    progressTracker.updateProgress(
+                        category = currentItem.category,
+                        scriptIndex = qaDataManager.getCurrentIndex(),
+                        memorizeLevel = selectedMemorizeLevel,
+                        currentSentenceIndex = currentSentenceIndex,
+                        totalSentences = totalSentences,
+                        isMemorizeTestRunning = false
+                    )
+                }
             }
 
             qaDataManager.saveCurrentIndex(qaDataManager.getCurrentIndex())
