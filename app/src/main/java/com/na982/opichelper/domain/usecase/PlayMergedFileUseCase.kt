@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +26,7 @@ class PlayMergedFileUseCase @Inject constructor(
     private val audioFileManager: AudioFileManager,
     private val qaDataManager: QaDataManager,
     private val recordingTimeManager: RecordingTimeManager
-) {
+) : java.io.Closeable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var playJob: Job? = null
 
@@ -135,5 +136,10 @@ class PlayMergedFileUseCase @Inject constructor(
         _isPlaying.value = false
         _highlightIndex.value = null
         audioPlayer.stop()
+    }
+
+    override fun close() {
+        release()
+        scope.cancel()
     }
 }
