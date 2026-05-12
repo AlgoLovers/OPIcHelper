@@ -8,7 +8,6 @@ import com.na982.opichelper.data.repository.QaDataLoaderImpl
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
-import com.na982.opichelper.data.repository.FullMemorizationRepositoryImpl
 import com.na982.opichelper.domain.audio.*
 import com.na982.opichelper.domain.manager.WakeLockManager
 import com.na982.opichelper.domain.repository.AudioFileManager
@@ -17,7 +16,6 @@ import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
-import com.na982.opichelper.domain.repository.FullMemorizationRepository
 import com.na982.opichelper.data.repository.LeveledQaDataLoader
 import com.na982.opichelper.data.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
@@ -185,24 +183,6 @@ object AppModule {
             recordingTimeManager = recordingTimeManager
         )
     }
-    
-    @Provides
-    @Singleton
-    fun provideFullMemorizationRepository(
-        ttsOrchestrator: TtsOrchestrator,
-        audioRecorder: AudioRecorder,
-        audioPlayer: AudioPlayer,
-        audioFileManager: AudioFileManager,
-        qaDataManager: QaDataManager
-    ): FullMemorizationRepository {
-        return FullMemorizationRepositoryImpl(
-            ttsOrchestrator = ttsOrchestrator,
-            audioRecorder = audioRecorder,
-            audioPlayer = audioPlayer,
-            audioFileManager = audioFileManager,
-            qaDataManager = qaDataManager
-        )
-    }
-    
+
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
 } 

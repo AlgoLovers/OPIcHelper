@@ -26,7 +26,7 @@ class MemorizationViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
     private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
     private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
-    private val executeFullMemorizationUseCase: FullMemorizationUseCase,
+    private val fullMemorizationUseCase: FullMemorizationUseCase,
     private val progressTracker: MemorizeTestProgressTracker
 ) : ViewModel(), RepeatListeningUiCallback {
 
@@ -34,7 +34,7 @@ class MemorizationViewModel @Inject constructor(
         super.onCleared()
         currentUseCaseJob?.cancel()
         currentUseCaseJob = null
-        executeFullMemorizationUseCase.cancelPlayback()
+        fullMemorizationUseCase.cancelPlayback()
     }
 
     private val _memorizeLevels = MutableStateFlow(MemorizeLevel.allDisplayNames)
@@ -55,7 +55,7 @@ class MemorizationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MemorizationUiState())
     val uiState: StateFlow<MemorizationUiState> = _uiState.asStateFlow()
 
-    val fullMemorizationHighlightIndex: StateFlow<Int?> = executeFullMemorizationUseCase.highlightIndex
+    val fullMemorizationHighlightIndex: StateFlow<Int?> = fullMemorizationUseCase.highlightIndex
 
     private var currentUseCaseJob: Job? = null
 
@@ -171,7 +171,7 @@ class MemorizationViewModel @Inject constructor(
                 val category = qaDataManager.getCurrentCategory() ?: ""
                 val scriptIndex = qaDataManager.getCurrentIndex()
 
-                executeFullMemorizationUseCase.startFullMemorization(
+                fullMemorizationUseCase.startFullMemorization(
                     category = category,
                     scriptIndex = scriptIndex,
                     onRecordingStateChange = { isRecording ->
@@ -199,7 +199,7 @@ class MemorizationViewModel @Inject constructor(
     fun stopFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                executeFullMemorizationUseCase.stopRecording()
+                fullMemorizationUseCase.stopRecording()
                 updateFullMemorizationRecordingStatus()
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 녹음 종료 실패", e)
@@ -210,9 +210,9 @@ class MemorizationViewModel @Inject constructor(
     fun playFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                if (executeFullMemorizationUseCase.hasRecording()) {
+                if (fullMemorizationUseCase.hasRecording()) {
                     startMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
-                    executeFullMemorizationUseCase.playRecordingWithHighlight { isPlaying ->
+                    fullMemorizationUseCase.playRecordingWithHighlight { isPlaying ->
                         if (!isPlaying) {
                             startMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
                         }
@@ -228,7 +228,7 @@ class MemorizationViewModel @Inject constructor(
     fun stopFullMemorizationPlaying() {
         viewModelScope.launch {
             try {
-                executeFullMemorizationUseCase.cancelPlayback()
+                fullMemorizationUseCase.cancelPlayback()
                 startMode(CurrentMode.FULL_MEMORIZATION)
                 updateFullMemorizationRecordingStatus()
             } catch (e: Exception) {
@@ -245,7 +245,7 @@ class MemorizationViewModel @Inject constructor(
     fun updateFullMemorizationRecordingStatus() {
         viewModelScope.launch {
             try {
-                val hasRecording = executeFullMemorizationUseCase.hasRecording()
+                val hasRecording = fullMemorizationUseCase.hasRecording()
                 _currentMode.value = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION
                 updateUiState()
             } catch (e: Exception) {
@@ -256,7 +256,7 @@ class MemorizationViewModel @Inject constructor(
 
     private suspend fun checkFullMemorizationRecordingStatus() {
         try {
-            val hasRecording = executeFullMemorizationUseCase.hasRecording()
+            val hasRecording = fullMemorizationUseCase.hasRecording()
             _currentMode.value = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION
             updateUiState()
         } catch (e: Exception) {
@@ -273,7 +273,7 @@ class MemorizationViewModel @Inject constructor(
     fun deleteFullMemorizationRecording() {
         viewModelScope.launch {
             try {
-                executeFullMemorizationUseCase.clearRecording()
+                fullMemorizationUseCase.clearRecording()
                 updateFullMemorizationRecordingStatus()
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 녹음 파일 삭제 실패", e)
