@@ -44,12 +44,17 @@ class TtsPlaybackController @Inject constructor() {
         ttsOrchestrator = orchestrator
     }
 
+    private fun stopCurrentAndPrepare() {
+        currentPlayJob?.cancel()
+        currentPlayJob = null
+        resetPlayState()
+    }
+
     fun playQuestion(question: String) {
-        forceStopTts()
+        stopCurrentAndPrepare()
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
-                kotlinx.coroutines.delay(150)
                 _isPlaying.value = true
                 _isQuestionPlaying.value = true
 
@@ -69,11 +74,10 @@ class TtsPlaybackController @Inject constructor() {
     }
 
     fun playAnswer(answer: String) {
-        forceStopTts()
+        stopCurrentAndPrepare()
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
-                kotlinx.coroutines.delay(150)
                 _isPlaying.value = true
                 _isAnswerPlaying.value = true
 
@@ -93,11 +97,10 @@ class TtsPlaybackController @Inject constructor() {
     }
 
     fun playMergedAudio(question: String, answer: String) {
-        forceStopTts()
+        stopCurrentAndPrepare()
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
-                kotlinx.coroutines.delay(150)
                 _isPlaying.value = true
 
                 _isQuestionPlaying.value = true

@@ -185,7 +185,13 @@ class TtsOrchestrator @Inject constructor(
                     val success = speakEnglish(sentence) { finished.complete(Unit) }
                     if (!success) finished.complete(Unit)
                 }
-                finished.await()
+                try {
+                    kotlinx.coroutines.withTimeout(15000L) {
+                        finished.await()
+                    }
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    Log.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 타임아웃")
+                }
                 kotlinx.coroutines.delay(400L)
             }
             onHighlight(null)
@@ -219,18 +225,23 @@ class TtsOrchestrator @Inject constructor(
     suspend fun speakAndWaitForCompletion(text: String, isKorean: Boolean, rate: Float): Long {
         val startTime = System.currentTimeMillis()
         val isKoreanText = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
-        
+
         val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
-        
+
         val success = if (isKoreanText) {
             speakKorean(text) { completionDeferred.complete(Unit) }
         } else {
             speakEnglish(text) { completionDeferred.complete(Unit) }
         }
-        
+
         if (success) {
-            // TTS 재생 완료까지 대기
-            completionDeferred.await()
+            try {
+                kotlinx.coroutines.withTimeout(30000L) {
+                    completionDeferred.await()
+                }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                Log.e("TtsOrchestrator", "speakAndWaitForCompletion 타임아웃")
+            }
             val endTime = System.currentTimeMillis()
             return endTime - startTime
         } else {
