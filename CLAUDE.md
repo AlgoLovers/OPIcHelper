@@ -1,5 +1,21 @@
 # CLAUDE.md - OPIc Helper 개발 가이드
 
+## 가이드 사용법
+
+이 파일은 프로젝트 전체 개요와 규칙을 담습니다. 모듈별 상세 정보는 각 계층의 CLAUDE.md를 참조:
+
+- **코드 수정 시**: 수정 대상 계층의 CLAUDE.md를 먼저 읽고 해당 모듈의 구조와 규칙을 파악
+- **신규 기능 추가 시**: 관련 계층 3개(data/domain/presentation)의 CLAUDE.md를 모두 확인
+- **버그 수정 시**: 루트의 "알려진 기술 부채"와 해당 계층의 주의사항 확인
+- **DI 변경 시**: `di/CLAUDE.md`에서 바인딩 규칙 확인
+
+| 계층 | 파일 | 내용 |
+|------|------|------|
+| Data | `data/CLAUDE.md` | TTS 플레이어 구현체, Repository 구현체, SharedPreferences 키 맵 |
+| Domain | `domain/CLAUDE.md` | Entity, UseCase, Repository 인터페이스, TTS 오케스트레이터, 재생 컨트롤러 |
+| Presentation | `presentation/CLAUDE.md` | ViewModel, Compose UI, 네비게이션, 상태 흐름 |
+| DI | `di/CLAUDE.md` | Hilt 바인딩 전체 목록, 제공 방식, 주의사항 |
+
 ## 프로젝트 개요
 
 OPIc 영어 말하기 시험 대비 Android 앱. Clean Architecture + MVVM, Hilt DI, Jetpack Compose.
@@ -14,25 +30,38 @@ OPIc 영어 말하기 시험 대비 Android 앱. Clean Architecture + MVVM, Hilt
 Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository Interface) ← Data (Repository Impl + TTS Players + File Manager)
 ```
 
+의존성은 항상 외부(Data) → 내부(Domain) 방향. Domain은 Data를 직접 참조하지 않음.
+
 ### ViewModel 구조
-- `MainViewModel` (**AndroidViewModel**): 통합 상태 관리 (AppState 단일 StateFlow, 의존성 6개)
-- `MemorizationViewModel`: 암기 테스트 로직 (반복듣기/영작테스트/통암기)
+- `MainViewModel` (**AndroidViewModel**): 통합 상태 관리. AppState 단일 StateFlow. 의존성 6개
+- `MemorizationViewModel`: 암기 테스트 3모드 로직. CurrentMode 상태 머신 관리
 - TTS 상태는 MainViewModel이 TtsPlaybackController 직접 구독 (별도 TtsViewModel 없음)
 
-### TTS 구조
-- `TtsOrchestrator`: 언어 감지 → Google TTS(영문) / Samsung TTS(한글) 라우팅
-- `TtsPlaybackController`: 재생 상태 관리 (4개 highlightIndex StateFlow)
-- `BaseTtsPlayer` → `GoogleTtsPlayer`, `SamsungTtsPlayer`
+### TTS 재생 흐름 (핵심 경로)
+```
+UI 버튼 클릭
+  → MainViewModel.playQuestion() / playAnswer()
+    → TtsPlaybackController.playQuestion() / playAnswer()
+      → stopCurrentAndPrepare() (기존 Job 취소 + 상태 리셋)
+      → 코루틴 시작 → TtsOrchestrator.speakWithHighlight()
+        → 문장 분할 후 루프: onHighlight(idx) → speakKorean/speakEnglish()
+          → BaseTtsPlayer.speak()
+            → isSpeaking 폴링 대기 → tts.speak() → onStart 확인 → 재생 완료 대기
+```
+
+**주의**: `forceStopTts()` 대신 `stopCurrentAndPrepare()` 사용. 이중 stop 호출은 TTS 엔진을 불안정하게 만듦. 자세한 내용은 `domain/CLAUDE.md`의 TtsPlaybackController 섹션 참조.
 
 ### DI
-- 모든 싱글톤 바인딩은 `di/AppModule.kt`
-- ViewModel은 `@HiltViewModel` + `@Inject constructor`
+- 싱글톤 바인딩: `di/AppModule.kt` (@Provides)
+- 자동 제공: `@Singleton` + `@Inject constructor` (TtsPlaybackController, MemorizeTestProgressTracker 등)
+- ViewModel: `@HiltViewModel` + `@Inject constructor`
 
-### 모듈별 상세 문서
-- `data/CLAUDE.md` — Data 계층 구현체 & 인프라
-- `domain/CLAUDE.md` — Domain 계층 엔티티, 유스케이스, 인터페이스
-- `presentation/CLAUDE.md` — Presentation 계층 UI, ViewModel, 네비게이션
-- `di/CLAUDE.md` — Hilt DI 바인딩 설정
+### 네비게이션
+```
+SplashActivity → MainActivity
+                  ├── MainScreen (startDestination)
+                  └── SettingsScreen
+```
 
 ## 앱 진입점 & 루트 파일
 
@@ -56,16 +85,6 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 `theme` 필드는 일부 JSON에만 존재하며 파싱 시 무시됨.
 새 JSON 추가 시 코드 수정 없이 assets에 넣기만 하면 자동 인식 (동적 카테고리 로딩).
 
-## 테스트 구조
-
-### 단위 테스트 (`app/src/test/`)
-`TtsOrchestratorTest`, `TtsPlaybackControllerTest`, `EnglishWritingTestUseCaseTest`, `RepeatListeningUseCaseTest`, `BaseTtsPlayerTest`, `AudioFileRepositoryImplTest`, `MainViewModelTest`, `TtsViewModelTest`(고아), `MemorizationViewModelTest`
-
-### 계측 테스트 (`app/src/androidTest/`)
-`SimpleTtsTest`, `RepeatListeningModeTest`, `RepeatListeningProgressTest`, `TtsStateIntegrationTest`, `EnglishWritingTestMergedFileTest`, `EnglishWritingTestProgressTest`, `SequentialAudioPlaybackTest`, `TtsIntegrationTest`, `FlipCardInstrumentedTest`, `TtsRegressionTest`
-
-**주의**: `TtsViewModelTest`는 TtsViewModel이 삭제된 후 남은 고아 테스트. 정리 필요.
-
 ## 코딩 컨벤션
 
 ### SOLID 원칙
@@ -78,13 +97,13 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 ### 네이밍
 - Repository 인터페이스: `domain/repository/`에 정의
 - Repository 구현체: `data/repository/`에 `~Impl` 접미사
-- UseCase: `domain/usecase/`에 `~UseCase` 접미사 (Service 패턴 혼용 주의)
+- UseCase: `domain/usecase/`에 `~UseCase` 접미사
 - StateFlow: `_` 접두사는 private, 공개는 읽기 전용
 
 ### Compose
-- UI 컴포넌트는 `presentation/ui/screen/MainScreenComponentsUI/`에 분리
-- 재사용 컴포넌트는 `presentation/ui/component/`
-- 상태는 ViewModel의 StateFlow를 `collectAsState()`로 구독
+- UI 컴포넌트: `presentation/ui/screen/MainScreenComponentsUI/`
+- 재사용 컴포넌트: `presentation/ui/component/`
+- 상태 구독: ViewModel의 StateFlow를 `collectAsState()`로 구독
 
 ### 로깅
 - Tag: 클래스명 사용
@@ -94,20 +113,16 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 
 ### 필수 확인
 - [ ] Domain 계층이 Data 계층을 직접 import하지 않는지
+- [ ] Data 계층이 Domain 구현체(UseCase, QaDataManager)를 직접 import하지 않는지
 - [ ] Repository 인터페이스에 UI 콜백이 없는지
 - [ ] CoroutineScope가 적절히 취소되는지 (메모리 누수 방지)
 - [ ] StateFlow 업데이트가 스레드 안전한지
-- [ ] 하드코딩된 문자열이 string resource로 분리되었는지
+- [ ] TTS stop() 후 speak() 호출 시 경쟁 상태가 없는지
 
 ### 보안 확인
 - [ ] API 키, 비밀번호 등이 코드에 하드코딩되지 않았는지
 - [ ] SharedPreferences에 민감 정보를 평문 저장하지 않는지
 - [ ] 권한이 최소한으로 선언되었는지
-
-### 테스트
-- 단위 테스트: `app/src/test/`
-- 계측 테스트: `app/src/androidTest/`
-- 실행: `./gradlew testDebugUnitTest`
 
 ## 알려진 기술 부채
 
@@ -115,16 +130,16 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 |------|------|----------|
 | QaDataManager Android 의존성 (SharedPreferences, Application) | 미해결 | 높음 |
 | Repository 인터페이스 UI 콜백 결합 (RepeatListening, EnglishWritingTest) | 미해결 | 높음 |
+| Data→Domain 구현체 직접 참조 (RepeatListeningRepositoryImpl, EnglishWritingTestRepositoryImpl → MemorizeTestProgressTracker) | 미해결 | 높음 |
 | MainViewModel God Class 경향 | 미해결 | 높음 |
 | MemorizationViewModel SRP 위반 (3개 모드 통합) | 미해결 | 중간 |
 | FullMemorization UseCase 중복 (Execute vs 직접) | 미해결 | 중간 |
-| QaDataLoaderImpl 미사용 래퍼 | 미해결 | 낮음 |
+| QaDataLoaderImpl 미사용 래퍼 (AppModule에 미사용 import 잔존) | 미해결 | 낮음 |
 | PlaybackEvent 미사용 코드 | 미해결 | 낮음 |
 | TtsViewModelTest 고아 테스트 | 미해결 | 낮음 |
 | ScriptProgress가 domain/repository에 위치 | 미해결 | 낮음 |
 | Domain 계층 Android import (Log, Context) | 미해결 | 낮음 |
-| WakeLock deprecated API | @Suppress 처리 | 낮음 |
-| LoginScreen 미작동 (인증 로직 비활성) | 미해결 | 낮음 |
+| WakeLock deprecated API (@Suppress("DEPRECATION") 처리) | 완화 | 낮음 |
 
 ## Git 커밋 규칙
 
@@ -139,13 +154,6 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 <type>: <한글 설명>
 
 Patch: 000X-xxx.patch
-```
-
-### 예시
-```
-fix: TTS 음성 재생 불가 버그 수정 및 초기 진입 화면 수정
-
-Patch: 0008-tts-and-ui-bugfix.patch
 ```
 
 ## 빌드 명령어
