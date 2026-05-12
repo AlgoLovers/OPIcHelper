@@ -4,7 +4,7 @@ OPIc 영어 말하기 시험 대비 학습 Android 애플리케이션. Clean Arc
 
 ## 주요 기능
 
-- **OPIc 질문/답변 연습**: 레벨별(AL/IH/IM) 카테고리 QA 데이터 제공
+- **OPIc 질문/답변 연습**: 레벨별(AL/IH/IH_RAW/IM) 카테고리 QA 데이터 제공
 - **TTS 재생**: Google TTS(영문) + Samsung TTS(한글) 자동 전환, 문장별 하이라이트
 - **반복 듣기 모드**: 한글-영문 교차 반복 재생
 - **영작 테스트 모드**: 한글 듣기 → 영작 녹음 → 병합 파일 재생
@@ -42,11 +42,12 @@ app/src/main/java/com/na982/opichelper/
 │   │   ├── AudioRecorderImpl.kt       # 오디오 녹음 구현
 │   │   └── RecordingAudioPlayerImpl.kt # 녹음 파일 재생 구현
 │   └── repository/
-│       ├── QaDataLoaderImpl.kt        # QA JSON 로더
-│       ├── LeveledQaDataLoader.kt     # 레벨별 QA 로더
+│       ├── LeveledQaDataLoader.kt     # 레벨별 QA JSON 로더
+│       ├── QaDataLoaderImpl.kt        # 미사용 래퍼 (제거 대상)
 │       ├── AudioFileManagerImpl.kt    # 오디오 파일 관리
 │       ├── AuthRepository.kt          # 인증 상태 관리
 │       ├── UserPreferencesRepository.kt # 사용자 설정
+│       ├── ProgressPersistenceServiceImpl.kt # 진행상황 영속화
 │       ├── RecordingFileRepositoryImpl.kt # 녹음 파일 관리
 │       ├── RecordingTimeManagerImpl.kt # 녹음 시간 관리
 │       ├── EnglishWritingTestRepositoryImpl.kt
@@ -64,20 +65,19 @@ app/src/main/java/com/na982/opichelper/
 │   │   ├── AudioPlayer.kt             # 오디오 재생 인터페이스
 │   │   ├── AudioRecorder.kt           # 오디오 녹음 인터페이스
 │   │   ├── RecordingAudioPlayer.kt    # 녹음 재생 인터페이스
+│   │   ├── PlaybackEvent.kt           # 재생 이벤트 (미사용)
 │   │   └── RepeatListeningUiCallback.kt # 반복듣기 UI 콜백
 │   ├── entity/
 │   │   ├── QaItem.kt                  # QA 데이터 모델
-│   │   ├── QuestionCategory.kt        # 카테고리 enum (미사용)
-│   │   ├── PlaybackState.kt           # 재생 상태
+│   │   ├── UserLevel.kt               # 사용자 레벨 enum
+│   │   ├── MemorizeLevel.kt           # 암기 모드 enum
 │   │   ├── RepeatListeningData.kt     # 반복듣기 데이터
-│   │   ├── Result.kt                  # 결과 래퍼
-│   │   ├── TtsConstants.kt            # TTS 상수
-│   │   └── UserLevel.kt               # 사용자 레벨 enum
+│   │   └── ProgressData.kt            # 진행상황 데이터 (AppExitState, CategoryProgress)
 │   ├── manager/
 │   │   └── WakeLockManager.kt         # 화면 켜짐 유지
-│   ├── repository/                    # 리포지토리 인터페이스
+│   ├── repository/                    # 리포지토리 인터페이스 + QaDataManager
 │   │   ├── QaDataLoader.kt
-│   │   ├── QaDataManager.kt
+│   │   ├── QaDataManager.kt           # 인터페이스 아님, 구현체 (Android 의존)
 │   │   ├── AudioFileManager.kt
 │   │   ├── ProgressPersistenceService.kt
 │   │   ├── RecordingFileRepository.kt
@@ -86,18 +86,15 @@ app/src/main/java/com/na982/opichelper/
 │   │   ├── RepeatListeningRepository.kt
 │   │   ├── FullMemorizationRepository.kt
 │   │   ├── UserPreferencesRepository.kt
-│   │   ├── AppExitState.kt
-│   │   └── ScriptProgress.kt
+│   │   └── ScriptProgress.kt          # 진행상황 데이터 클래스
 │   └── usecase/
 │       ├── ExecuteRepeatListeningUseCase.kt
 │       ├── ExecuteEnglishWritingTestUseCase.kt
+│       ├── ExecuteFullMemorizationUseCase.kt
 │       ├── FullMemorizationUseCase.kt
 │       ├── RepeatListeningUseCase.kt
-│       ├── EnglishWritingTestUseCase.kt
-│       ├── MemorizeTestProgressTracker.kt
-│       ├── LoadQaItemsUseCase.kt
-│       ├── GetCategoriesUseCase.kt
-│       └── SelectCategoryUseCase.kt
+│       ├── PlayMergedFileUseCase.kt
+│       └── MemorizeTestProgressTracker.kt
 │
 └── presentation/                      # Presentation Layer
     ├── ui/
@@ -105,7 +102,6 @@ app/src/main/java/com/na982/opichelper/
     │   │   └── AppNavigation.kt       # Compose Navigation
     │   ├── screen/
     │   │   ├── MainScreen.kt          # 메인 화면
-    │   │   ├── LoginScreen.kt         # 로그인 화면
     │   │   ├── SettingsScreen.kt      # 설정 화면
     │   │   └── MainScreenComponentsUI/ # 메인 화면 UI 컴포넌트들
     │   │       ├── AnswerCard.kt
@@ -113,6 +109,7 @@ app/src/main/java/com/na982/opichelper/
     │   │       ├── AppTitle.kt
     │   │       ├── CategorySelector.kt
     │   │       ├── MemorizeLevelSelector.kt
+    │   │       ├── MemorizeLevelPlaybackButton.kt
     │   │       ├── NavigationSection.kt
     │   │       ├── NextQuestionButton.kt
     │   │       ├── PreviousQuestionButton.kt
@@ -128,7 +125,8 @@ app/src/main/java/com/na982/opichelper/
     └── viewmodel/
         ├── MainViewModel.kt           # 메인 상태 관리
         ├── MemorizationViewModel.kt   # 암기 테스트 상태 관리
-        └── TtsViewModel.kt            # TTS 재생 상태 관리
+        ├── MemorizationUiState.kt     # 암기 테스트 UI 상태
+        └── CurrentMode.kt             # 암기 테스트 모드 Enum
 ```
 
 ## 아키텍처
@@ -147,17 +145,13 @@ app/src/main/java/com/na982/opichelper/
 ```
 
 ### 데이터 흐름
-- **QA 데이터**: JSON Assets → QaDataLoader → QaDataManager → ViewModel → UI
+- **QA 데이터**: JSON Assets → LeveledQaDataLoader → QaDataManager → ViewModel → UI
 - **TTS 재생**: UI → ViewModel → TtsPlaybackController → TtsOrchestrator → GoogleTtsPlayer/SamsungTtsPlayer
 - **녹음**: UI → ViewModel → UseCase → AudioRecorder → AudioFileManager
 
 ## 빌드 및 실행
 
 ```bash
-# 프로젝트 클론
-git clone <repository-url>
-cd OPIcHelper
-
 # 단위 테스트
 ./gradlew testDebugUnitTest
 
@@ -172,7 +166,3 @@ cd OPIcHelper
 - Android Studio Hedgehog 이상
 - Kotlin 1.9.22, JDK 11+
 - minSdk 24, targetSdk 34
-
-## 문서
-
-자세한 내용은 [docs/](./docs/) 디렉토리를 참조하세요.
