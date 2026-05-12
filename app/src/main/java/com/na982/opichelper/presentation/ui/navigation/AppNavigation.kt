@@ -6,12 +6,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.na982.opichelper.presentation.ui.screen.MainScreen
 import com.na982.opichelper.presentation.ui.screen.SettingsScreen
-import com.na982.opichelper.presentation.ui.screen.LoginScreen
 
 sealed class Screen(val route: String) {
     object Main : Screen("main")
     object Settings : Screen("settings")
-    object Login : Screen("login")
 }
 
 @Composable
@@ -27,7 +25,7 @@ fun AppNavigation(navController: NavHostController) {
                 }
             )
         }
-        
+
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onNavigateBack = {
@@ -35,13 +33,5 @@ fun AppNavigation(navController: NavHostController) {
                 }
             )
         }
-        
-        composable(Screen.Login.route) {
-            LoginScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
     }
-} 
+}
