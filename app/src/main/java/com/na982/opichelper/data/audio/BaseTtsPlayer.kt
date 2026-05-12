@@ -7,6 +7,7 @@ import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
 import kotlinx.coroutines.*
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * TTS 플레이어들의 공통 로직을 담은 베이스 클래스
@@ -68,7 +69,14 @@ abstract class BaseTtsPlayer(
 
                 val utteranceId = "${logTag.lowercase()}_${System.currentTimeMillis()}"
                 val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
+                val completed = AtomicBoolean(false)
                 var started = false
+
+                fun safeComplete() {
+                    if (completed.compareAndSet(false, true)) {
+                        completionDeferred.complete(Unit)
+                    }
+                }
 
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {
@@ -79,20 +87,20 @@ abstract class BaseTtsPlayer(
                         Log.d(logTag, "$serviceName 재생 완료")
                         _isPlaying = false
                         onComplete?.invoke()
-                        completionDeferred.complete(Unit)
+                        safeComplete()
                     }
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         Log.e(logTag, "$serviceName 재생 오류")
                         _isPlaying = false
                         onComplete?.invoke()
-                        completionDeferred.complete(Unit)
+                        safeComplete()
                     }
                     override fun onError(utteranceId: String?, errorCode: Int) {
                         Log.e(logTag, "$serviceName 재생 오류: $errorCode")
                         _isPlaying = false
                         onComplete?.invoke()
-                        completionDeferred.complete(Unit)
+                        safeComplete()
                     }
                 })
 
@@ -100,7 +108,7 @@ abstract class BaseTtsPlayer(
                 if (result == TextToSpeech.ERROR) {
                     Log.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
                     _isPlaying = false
-                    completionDeferred.complete(Unit)
+                    safeComplete()
                     onComplete?.invoke()
                     return false
                 }
@@ -113,7 +121,7 @@ abstract class BaseTtsPlayer(
                 if (!started) {
                     Log.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
                     _isPlaying = false
-                    completionDeferred.complete(Unit)
+                    safeComplete()
                     onComplete?.invoke()
                     return false
                 }
@@ -151,11 +159,14 @@ abstract class BaseTtsPlayer(
     override suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long {
         val start = System.currentTimeMillis()
         val finished = kotlinx.coroutines.CompletableDeferred<Unit>()
-        
+        val done = AtomicBoolean(false)
+
         speak(text) {
-            finished.complete(Unit)
+            if (done.compareAndSet(false, true)) {
+                finished.complete(Unit)
+            }
         }
-        
+
         finished.await()
         return System.currentTimeMillis() - start
     }
