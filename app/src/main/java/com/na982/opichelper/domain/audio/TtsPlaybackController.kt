@@ -49,6 +49,7 @@ class TtsPlaybackController @Inject constructor() {
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
+                kotlinx.coroutines.delay(150)
                 _isPlaying.value = true
                 _isQuestionPlaying.value = true
 
@@ -72,6 +73,7 @@ class TtsPlaybackController @Inject constructor() {
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
+                kotlinx.coroutines.delay(150)
                 _isPlaying.value = true
                 _isAnswerPlaying.value = true
 
@@ -95,6 +97,7 @@ class TtsPlaybackController @Inject constructor() {
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
+                kotlinx.coroutines.delay(150)
                 _isPlaying.value = true
 
                 _isQuestionPlaying.value = true

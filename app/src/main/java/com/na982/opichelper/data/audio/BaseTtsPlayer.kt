@@ -53,17 +53,24 @@ abstract class BaseTtsPlayer(
     override suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
         return if (isAvailable()) {
             try {
+                // stop() 이후 TTS 엔진이 완전히 정지될 때까지 대기
+                var waitCount = 0
+                while (tts?.isSpeaking == true && waitCount < 20) {
+                    kotlinx.coroutines.delay(50)
+                    waitCount++
+                }
+
                 Log.d(logTag, "$serviceName 시작: $text")
                 _isPlaying = true
-                
+
                 // 기본 설정 적용
                 tts?.setSpeechRate(getSpeechRate())
                 tts?.setPitch(getPitch())
-                
+
                 val utteranceId = "${logTag.lowercase()}_${System.currentTimeMillis()}"
                 val params = HashMap<String, String>()
                 params[TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID] = utteranceId
-                
+
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {}
                     override fun onDone(utteranceId: String?) {
@@ -83,8 +90,14 @@ abstract class BaseTtsPlayer(
                         onComplete?.invoke()
                     }
                 })
-                
-                tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+
+                val result = tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                if (result == TextToSpeech.ERROR) {
+                    Log.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
+                    _isPlaying = false
+                    onComplete?.invoke()
+                    return false
+                }
                 true
             } catch (e: Exception) {
                 Log.e(logTag, "$serviceName 오류", e)

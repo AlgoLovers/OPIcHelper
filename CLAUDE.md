@@ -126,6 +126,28 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | WakeLock deprecated API | @Suppress 처리 | 낮음 |
 | LoginScreen 미작동 (인증 로직 비활성) | 미해결 | 낮음 |
 
+## Git 커밋 규칙
+
+- 커밋 메시지는 한글로 작성
+- 커밋 메시지에 AI 코딩 관련 내용(Co-Authored-By 등)을 포함하지 않음
+- 커밋 생성 후 반드시 패치 파일을 생성: `git format-patch -1 HEAD`
+- 커밋 메시지 마지막에 패치 파일명을 포함: `Patch: 000X-xxx.patch`
+- 패치 파일명 형식: `NNNN-간단한설명.patch` (N은 0패딩 순번)
+
+### 커밋 메시지 형식
+```
+<type>: <한글 설명>
+
+Patch: 000X-xxx.patch
+```
+
+### 예시
+```
+fix: TTS 음성 재생 불가 버그 수정 및 초기 진입 화면 수정
+
+Patch: 0008-tts-and-ui-bugfix.patch
+```
+
 ## 빌드 명령어
 
 ```bash
