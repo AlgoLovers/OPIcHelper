@@ -65,27 +65,38 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
      */
     override fun startRecordingPlayback(filePath: String) {
         Log.d("RecordingAudioPlayerImpl", "녹음 재생 시작 (동기): $filePath")
-        
+
         // 기존 재생 중지
         stopRecording()
-        
+
         val file = File(filePath)
         if (!file.exists()) {
             Log.e("RecordingAudioPlayerImpl", "녹음 파일이 존재하지 않음: $filePath")
             return
         }
-        
+
         player = MediaPlayer().apply {
             try {
                 setDataSource(file.absolutePath)
                 Log.d("RecordingAudioPlayerImpl", "setDataSource 완료")
-                
+
                 prepare()
                 Log.d("RecordingAudioPlayerImpl", "prepare 완료")
-                
+
                 start()
                 Log.d("RecordingAudioPlayerImpl", "start 완료")
-                
+
+                setOnCompletionListener {
+                    Log.d("RecordingAudioPlayerImpl", "녹음 재생 완료 (동기)")
+                    stopRecording()
+                }
+
+                setOnErrorListener { _, what, extra ->
+                    Log.e("RecordingAudioPlayerImpl", "녹음 재생 오류 (동기): what=$what, extra=$extra")
+                    stopRecording()
+                    true
+                }
+
             } catch (e: Exception) {
                 Log.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
                 stopRecording()

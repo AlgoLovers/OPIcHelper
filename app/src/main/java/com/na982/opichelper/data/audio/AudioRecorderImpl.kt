@@ -3,6 +3,7 @@ package com.na982.opichelper.data.audio
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
+import android.util.Log
 import androidx.core.content.ContextCompat
 import android.Manifest
 import java.io.File
@@ -62,12 +63,14 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
 
     override fun stopRecording(): File? {
         try {
-            recorder?.apply {
-                stop()
-                release()
-            }
+            recorder?.stop()
         } catch (e: Exception) {
-            // ignore
+            Log.w("AudioRecorderImpl", "MediaRecorder.stop() 실패", e)
+        }
+        try {
+            recorder?.release()
+        } catch (e: Exception) {
+            Log.w("AudioRecorderImpl", "MediaRecorder.release() 실패", e)
         }
         val file = outputFile
         recorder = null
