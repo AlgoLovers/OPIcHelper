@@ -7,8 +7,6 @@ data class MemorizationUiState(
     val isRepeatListeningCardFlipped: Boolean = false,
     val isRepeatListeningRunning: Boolean = false,
     val isRepeatListeningMode: Boolean = false,
-    val repeatListeningCurrentRepeat: Int = 0,
-    val repeatListeningTotalRepeats: Int = 5,
 
     val isEnglishWritingTestCardFlipped: Boolean = false,
     val isEnglishWritingTestRunning: Boolean = false,
