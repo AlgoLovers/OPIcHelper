@@ -13,14 +13,11 @@ import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.entity.MemorizeLevel
-import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 data class AppState(
     val currentQaItem: QaItem? = null,
@@ -45,10 +42,8 @@ data class AppState(
     val recordingHighlightIndex: Int? = null,
 
     val isAnswerCardFlipped: Boolean = false,
-    val isQuestionCardFlipped: Boolean = false,
 
     val hasProgress: Boolean = false,
-    val currentKoreanTtsService: String = "",
     val currentUserLevel: String = ""
 )
 
@@ -68,9 +63,6 @@ class MainViewModel @Inject constructor(
     val hasEnglishWritingTestMergedFile: StateFlow<Boolean> = playMergedFileUseCase.hasFile
     val isEnglishWritingTestMergedFilePlaying: StateFlow<Boolean> = playMergedFileUseCase.isPlaying
     val englishWritingTestMergedFileHighlightIndex: StateFlow<Int?> = playMergedFileUseCase.highlightIndex
-
-    private val _isQuestionCardFlipped = MutableStateFlow(false)
-    val isQuestionCardFlipped: StateFlow<Boolean> = _isQuestionCardFlipped.asStateFlow()
 
     init {
         initializeViewModel()
@@ -173,17 +165,9 @@ class MainViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isEnglishWritingTestMergedFilePlaying = isPlaying)
     }
 
-    fun setQuestionCardFlipped(isFlipped: Boolean) {
-        _isQuestionCardFlipped.value = isFlipped
-    }
-
     fun setSelectedMemorizeLevel(level: String) {
         _uiState.value = _uiState.value.copy(selectedMemorizeLevel = level)
         userPreferencesRepository.setMemorizeLevel(level)
-    }
-
-    fun updateKoreanTtsServiceName(serviceName: String) {
-        _uiState.value = _uiState.value.copy(currentKoreanTtsService = serviceName)
     }
 
     // ===== 영작테스트 병합 파일 재생 (PlayMergedFileUseCase에 위임) =====
@@ -356,11 +340,5 @@ class MainViewModel @Inject constructor(
 
     fun getCurrentAnswerKo(qaItem: QaItem?): String {
         return qaDataManager.getCurrentAnswerKo(qaItem)
-    }
-
-    fun setUserLevel(level: UserLevel) {
-        viewModelScope.launch {
-            userPreferencesRepository.setUserLevel(level)
-        }
     }
 }

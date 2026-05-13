@@ -19,13 +19,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.na982.opichelper.domain.entity.UserLevel
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.na982.opichelper.presentation.viewmodel.MainViewModel
+import com.na982.opichelper.presentation.viewmodel.SettingsViewModel
 import com.na982.opichelper.ui.theme.*
 
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: MainViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val userLevel = uiState.currentUserLevel
