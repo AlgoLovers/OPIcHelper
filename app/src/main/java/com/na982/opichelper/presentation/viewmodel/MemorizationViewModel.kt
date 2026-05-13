@@ -369,7 +369,17 @@ class MemorizationViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val hasRecording = fullMemorizationUseCase.hasRecording()
-                _currentMode.value = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION
+                val currentMode = _currentMode.value
+                if (currentMode in setOf(
+                        CurrentMode.FULL_MEMORIZATION,
+                        CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
+                        CurrentMode.FULL_MEMORIZATION_RECORDING,
+                        CurrentMode.FULL_MEMORIZATION_PLAYING,
+                        CurrentMode.FULL_MEMORIZATION_WITH_FILE
+                    )) {
+                    _currentMode.value = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION
+                }
+                _uiState.value = _uiState.value.copy(hasFullMemorizationRecordingFile = hasRecording)
                 updateUiState()
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 녹음 파일 상태 확인 실패", e)
@@ -381,6 +391,7 @@ class MemorizationViewModel @Inject constructor(
         try {
             val hasRecording = fullMemorizationUseCase.hasRecording()
             _currentMode.value = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION
+            _uiState.value = _uiState.value.copy(hasFullMemorizationRecordingFile = hasRecording)
             updateUiState()
         } catch (e: Exception) {
             Log.e("MemorizationViewModel", "통암기 녹음 파일 상태 확인 실패", e)

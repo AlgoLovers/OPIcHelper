@@ -73,7 +73,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             delay(100)
             emit(MemorizeTestEvent.KoreanHighlight(idx))
 
-            val koDuration = ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx], isKorean = true, rate = 0.8f)
+            ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx], isKorean = true, rate = 0.8f)
 
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
 
@@ -114,7 +114,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             val timestamp = dateFormat.format(Date())
             val mergedFileName = "영작테스트_${category}_${scriptIndex}_${timestamp}"
 
-            val mergedFile = audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
+            audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
 
             recordingFiles.forEach { file ->
                 if (file.exists()) file.delete()

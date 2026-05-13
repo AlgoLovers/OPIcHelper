@@ -62,7 +62,7 @@ class QaDataManager @Inject constructor(
     private fun setupUserLevelObserver() {
         userLevelJob?.cancel()
         userLevelJob = scope.launch {
-            userPreferencesRepository.userLevel.collect { newLevel ->
+            userPreferencesRepository.userLevel.collect { _ ->
                 loadQaItemsFromAssets()
                 restoreLastCategory()
             }

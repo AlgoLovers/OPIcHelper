@@ -58,11 +58,11 @@ fun MainScreen(
     val isFullMemorizationQuestionPlaying = memorizationUiState.isFullMemorizationQuestionPlaying
     val isFullMemorizationRecording = memorizationUiState.isFullMemorizationRecording
     val isFullMemorizationPlaying = memorizationUiState.isFullMemorizationPlaying
-    val hasFullMemorizationRecording = memorizationUiState.hasFullMemorizationRecording
+    val hasFullMemorizationRecording = memorizationUiState.hasFullMemorizationRecordingFile
     val isFullMemorizationRecordingPlaying = memorizationUiState.isFullMemorizationRecordingPlaying
 
     val isMemorizeTestRunning = memorizationUiState.isMemorizeTestRunning
-    val isFullMemorizationMode = memorizationUiState.isFullMemorizationMode
+    val isFullMemorizationMode = MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION
     val isEnglishWritingTestMode = memorizationUiState.isEnglishWritingTestMode
 
     LaunchedEffect(Unit) {

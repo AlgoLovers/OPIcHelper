@@ -20,6 +20,7 @@ data class MemorizationUiState(
     val isFullMemorizationRecording: Boolean = false,
     val isFullMemorizationPlaying: Boolean = false,
     val hasFullMemorizationRecording: Boolean = false,
+    val hasFullMemorizationRecordingFile: Boolean = false,
     val isFullMemorizationRecordingPlaying: Boolean = false,
 
     val isMemorizeTestRunning: Boolean = false,

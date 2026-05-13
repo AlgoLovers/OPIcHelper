@@ -14,8 +14,8 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun RecordingAnimation(
-    isRecording: Boolean,
-    onStopRecording: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") isRecording: Boolean,
+    @Suppress("UNUSED_PARAMETER") onStopRecording: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
