@@ -32,8 +32,6 @@ class ExecuteRepeatListeningUseCase @Inject constructor(
         uiCallback: RepeatListeningUiCallback,
         repeatCount: Int = 5
     ) {
-        Log.d("ExecuteRepeatListeningUseCase", "반복듣기 UseCase 실행 시작")
-        
         try {
             repeatListeningRepository.executeRepeatListening(
                 data = data,

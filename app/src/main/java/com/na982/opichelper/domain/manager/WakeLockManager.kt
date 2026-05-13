@@ -26,7 +26,6 @@ class WakeLockManager @Inject constructor(
 
     fun acquireWakeLock() {
         if (wakeLock?.isHeld == true) {
-            Log.d(TAG, "WakeLock이 이미 획득되어 있음")
             return
         }
 
@@ -38,7 +37,6 @@ class WakeLockManager @Inject constructor(
             ).apply {
                 acquire(WAKELOCK_TIMEOUT_MS)
             }
-            Log.d(TAG, "WakeLock 획득 완료 (타임아웃: ${WAKELOCK_TIMEOUT_MS}ms)")
         } catch (e: Exception) {
             Log.e(TAG, "WakeLock 획득 실패", e)
         }
@@ -49,7 +47,6 @@ class WakeLockManager @Inject constructor(
             wakeLock?.let { lock ->
                 if (lock.isHeld) {
                     lock.release()
-                    Log.d(TAG, "WakeLock 해제 완료")
                 }
             }
             wakeLock = null
