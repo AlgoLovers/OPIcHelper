@@ -57,8 +57,7 @@ class MainActivity : ComponentActivity() {
         
         // WakeLock 획득 (앱 실행 중 화면 켜짐 유지)
         wakeLockManager.acquireWakeLock()
-        Log.d("MainActivity", "앱 시작 - WakeLock 획득")
-        
+
         // 권한 요청
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -76,10 +75,7 @@ class MainActivity : ComponentActivity() {
             
             // 다크 테마 감지
             val isDarkTheme = isSystemInDarkTheme()
-            
-            // 디버깅 로그
-            Log.d("MainActivity", "다크테마: $isDarkTheme")
-            
+
             OPicHelperThemeWithMemorizeLevel(
                 darkTheme = isDarkTheme,
                 memorizeLevel = "" // 기본값, 실제 값은 각 Composable에서 관리
@@ -96,7 +92,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        Log.d("MainActivity", "onPause() - 앱이 백그라운드로 이동")
         // 백그라운드로 이동 시에는 TTS와 하이라이트 유지
         // WakeLock은 유지 (사용자가 다시 돌아올 수 있음)
         viewModel?.onBackgroundMove()
@@ -104,70 +99,58 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        Log.d("MainActivity", "onResume() - 앱이 포그라운드로 복귀")
-        
+
         // 앱이 완전히 종료되었다가 다시 시작된 경우 상태 초기화
         if (isFinishing) {
-            Log.d("MainActivity", "앱 재시작 감지 - 상태 초기화")
             // MemorizationViewModel 상태 초기화는 MainScreen에서 처리
             isFinishing = false
         }
-        
+
         // 포그라운드로 복귀 시 상태 확인
         // WakeLock이 해제되었을 경우 다시 획득
         if (!wakeLockManager.isWakeLockHeld()) {
             wakeLockManager.acquireWakeLock()
-            Log.d("MainActivity", "포그라운드 복귀 - WakeLock 재획득")
         }
         viewModel?.onForegroundReturn()
     }
 
     override fun onStop() {
         super.onStop()
-        Log.d("MainActivity", "onStop() - 앱이 완전히 숨겨짐")
         // onStop에서는 아직 정리하지 않음 (백그라운드에서 복귀 가능)
-        // WakeLock은 유지 (사용자가 다시 돌아올 수 있음)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("MainActivity", "onDestroy() - 앱이 완전히 종료됨")
         isFinishing = true
         // 앱이 완전히 종료될 때만 모든 리소스 정리
         cleanupAllResources()
     }
 
     override fun onBackPressed() {
-        Log.d("MainActivity", "onBackPressed() - 백버튼 눌림")
-        
         // 네비게이션 컨트롤러를 통해 현재 화면 확인
         navController?.let { controller ->
             try {
                 // 이전 백스택 엔트리가 있는지 확인
                 if (controller.previousBackStackEntry != null) {
-                    Log.d("MainActivity", "설정 화면에서 백키 - 메인 화면으로 이동")
                     // 네비게이션 컨트롤러가 자동으로 이전 화면으로 이동
                     super.onBackPressed()
                 } else {
-                    Log.d("MainActivity", "메인 화면에서 백키 - 앱 종료")
-                    
                     // 1. 모든 TTS 강제 중지 (동기적으로)
                     viewModel?.cleanupAllTtsSync()
-                    
+
                     // 2. 모든 리소스 정리
                     cleanupAllResources()
-                    
+
                     // 3. 앱 완전 종료
                     finish()
                 }
-                
+
             } catch (e: Exception) {
                 Log.e("MainActivity", "백버튼 처리 중 오류", e)
                 super.onBackPressed()
             }
         } ?: run {
             // 네비게이션 컨트롤러가 없는 경우 기본 동작
-            Log.d("MainActivity", "네비게이션 컨트롤러 없음 - 기본 백키 동작")
             super.onBackPressed()
         }
     }
@@ -180,17 +163,12 @@ class MainActivity : ComponentActivity() {
      * - WakeLock 해제
      */
     private fun cleanupAllResources() {
-        Log.d("MainActivity", "모든 리소스 정리 시작")
-
         try {
             lifecycleScope.launch {
                 viewModel?.cleanupOnAppExit()
             }
 
             wakeLockManager.releaseWakeLock()
-            Log.d("MainActivity", "WakeLock 해제 완료")
-
-            Log.d("MainActivity", "모든 리소스 정리 완료")
         } catch (e: Exception) {
             Log.e("MainActivity", "리소스 정리 중 오류 발생", e)
         }

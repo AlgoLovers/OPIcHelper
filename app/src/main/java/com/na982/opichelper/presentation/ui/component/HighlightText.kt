@@ -11,7 +11,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.util.Log
 
 @Composable
 fun HighlightText(
@@ -20,8 +19,6 @@ fun HighlightText(
     recordingHighlightIndex: Int? = null,
     modifier: Modifier = Modifier
 ) {
-    Log.d("HighlightText", "Rendering with highlightIndex=$highlightIndex, recordingHighlightIndex=$recordingHighlightIndex, text=${text.take(50)}...")
-    
     val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
     
     Column(modifier = modifier) {
