@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.BackHandler
-import com.na982.opichelper.presentation.viewmodel.MainViewModel
+import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -26,13 +26,13 @@ import androidx.compose.foundation.isSystemInDarkTheme
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    mainViewModel: MainViewModel = hiltViewModel(),
+    playbackViewModel: PlaybackViewModel = hiltViewModel(),
     qaViewModel: QaBrowserViewModel = hiltViewModel(),
     memorizationViewModel: MemorizationViewModel? = null,
     modifier: Modifier = Modifier,
     onNavigateToSettings: () -> Unit = {}
 ) {
-    val playbackState by mainViewModel.uiState.collectAsState()
+    val playbackState by playbackViewModel.uiState.collectAsState()
     val qaState by qaViewModel.uiState.collectAsState()
     val memorizationViewModelInstance = memorizationViewModel ?: hiltViewModel<MemorizationViewModel>()
     val memorizeLevels by memorizationViewModelInstance.memorizeLevels.collectAsState()
@@ -47,10 +47,10 @@ fun MainScreen(
 
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
 
-    val hasEnglishWritingTestMergedFile by mainViewModel.hasEnglishWritingTestMergedFile.collectAsState()
+    val hasEnglishWritingTestMergedFile by playbackViewModel.hasEnglishWritingTestMergedFile.collectAsState()
     val englishWritingTestCompleted by memorizationViewModelInstance.englishWritingTestCompleted.collectAsState()
-    val isEnglishWritingTestMergedFilePlaying by mainViewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
-    val englishWritingTestMergedFileHighlightIndex by mainViewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
+    val isEnglishWritingTestMergedFilePlaying by playbackViewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
+    val englishWritingTestMergedFileHighlightIndex by playbackViewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModelInstance.stopEnglishWritingTestMergedFilePlaying.collectAsState()
     val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
 
@@ -70,25 +70,25 @@ fun MainScreen(
     }
 
     LaunchedEffect(qaState.currentQaItem) {
-        mainViewModel.checkEnglishWritingTestMergedFile()
+        playbackViewModel.checkEnglishWritingTestMergedFile()
     }
 
     LaunchedEffect(englishWritingTestCompleted) {
         if (englishWritingTestCompleted) {
-            mainViewModel.checkEnglishWritingTestMergedFile()
+            playbackViewModel.checkEnglishWritingTestMergedFile()
             memorizationViewModelInstance.resetEnglishWritingTestCompleted()
         }
     }
 
     LaunchedEffect(isEnglishWritingTestMode) {
         if (!isEnglishWritingTestMode) {
-            mainViewModel.checkEnglishWritingTestMergedFile()
+            playbackViewModel.checkEnglishWritingTestMergedFile()
         }
     }
 
     LaunchedEffect(stopEnglishWritingTestMergedFilePlaying) {
         if (stopEnglishWritingTestMergedFilePlaying) {
-            mainViewModel.stopEnglishWritingTestMergedFile()
+            playbackViewModel.stopEnglishWritingTestMergedFile()
             memorizationViewModelInstance.resetStopEnglishWritingTestMergedFilePlaying()
         }
     }
@@ -154,7 +154,7 @@ fun MainScreen(
                             selectedCategory = category ?: "",
                             categories = categories,
                             onCategorySelected = {
-                                mainViewModel.stopAllTts()
+                                playbackViewModel.stopAllTts()
                                 qaViewModel.selectCategory(it)
                             }
                         )
@@ -230,9 +230,9 @@ fun MainScreen(
                             isPlaying = playbackState.isQuestionPlaying,
                             onPlayClick = {
                                 memorizationViewModelInstance.stopMemorization()
-                                mainViewModel.playQuestion(qaItem.questionEn)
+                                playbackViewModel.playQuestion(qaItem.questionEn)
                             },
-                            onStopClick = { mainViewModel.stopAllTts() },
+                            onStopClick = { playbackViewModel.stopAllTts() },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -248,7 +248,7 @@ fun MainScreen(
                             Button(
                                 onClick = {
                                     if (MemorizeLevel.fromDisplayName(selectedLevel) != MemorizeLevel.FULL_MEMORIZATION) {
-                                        mainViewModel.stopAllTts()
+                                        playbackViewModel.stopAllTts()
                                     }
                                     memorizationViewModelInstance.onMemorizeTestButtonClick(selectedLevel)
                                 },
@@ -313,15 +313,15 @@ fun MainScreen(
                             isPlaying = playbackState.isAnswerPlaying,
                             onPlayClick = {
                                 memorizationViewModelInstance.stopMemorization()
-                                qaItem.let { mainViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
+                                qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
                             },
-                            onStopClick = { mainViewModel.stopAllTts() },
+                            onStopClick = { playbackViewModel.stopAllTts() },
                             modifier = Modifier.weight(1f)
                         )
 
                         MemorizeLevelPlaybackButton(
                             selectedLevel = selectedLevel,
-                            mainViewModel = mainViewModel,
+                            mainViewModel = playbackViewModel,
                             memorizationViewModel = memorizationViewModelInstance,
                             hasEnglishWritingTestMergedFile = hasEnglishWritingTestMergedFile,
                             isEnglishWritingTestMergedFilePlaying = isEnglishWritingTestMergedFilePlaying,
@@ -335,11 +335,11 @@ fun MainScreen(
 
                     NavigationSection(
                         onPreviousQuestion = {
-                            mainViewModel.stopAllTts()
+                            playbackViewModel.stopAllTts()
                             qaViewModel.previousQaItem()
                         },
                         onNextQuestion = {
-                            mainViewModel.stopAllTts()
+                            playbackViewModel.stopAllTts()
                             qaViewModel.nextQaItem()
                         },
                         modifier = Modifier.fillMaxWidth()

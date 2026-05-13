@@ -33,7 +33,7 @@ data class PlaybackState(
 )
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
     ttsOrchestrator: TtsOrchestrator
@@ -89,8 +89,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // ===== 카드 상태 =====
-
     fun setAnswerCardFlipped(isFlipped: Boolean) {
         _uiState.value = _uiState.value.copy(isAnswerCardFlipped = isFlipped)
     }
@@ -98,8 +96,6 @@ class MainViewModel @Inject constructor(
     fun setMergedAudioPlaying(isPlaying: Boolean) {
         _uiState.value = _uiState.value.copy(isEnglishWritingTestMergedFilePlaying = isPlaying)
     }
-
-    // ===== 영작테스트 병합 파일 재생 =====
 
     fun playEnglishWritingTestMergedFile() {
         playMergedFileUseCase.play()
@@ -112,8 +108,6 @@ class MainViewModel @Inject constructor(
     fun checkEnglishWritingTestMergedFile() {
         playMergedFileUseCase.checkFile()
     }
-
-    // ===== TTS 재생 제어 =====
 
     fun playQuestion(question: String) {
         viewModelScope.launch {
@@ -148,8 +142,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // ===== 앱 생명주기 =====
-
     override fun onCleared() {
         super.onCleared()
         ttsPlaybackController.cleanupTts()
@@ -165,7 +157,7 @@ class MainViewModel @Inject constructor(
                 }
                 ttsPlaybackController.clearHighlight()
             } catch (e: Exception) {
-                Log.e("MainViewModel", "백그라운드 이동 처리 실패", e)
+                Log.e("PlaybackViewModel", "백그라운드 이동 처리 실패", e)
             }
         }
     }
@@ -177,7 +169,7 @@ class MainViewModel @Inject constructor(
                     ttsPlaybackController.resumeTts()
                 }
             } catch (e: Exception) {
-                Log.e("MainViewModel", "포그라운드 복귀 처리 실패", e)
+                Log.e("PlaybackViewModel", "포그라운드 복귀 처리 실패", e)
             }
         }
     }
