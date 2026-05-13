@@ -149,7 +149,7 @@ private fun ModernCard(
     highlightIndex: Int?,
     backgroundColor: Color,
     titleColor: Color,
-    contentColor: Color
+    @Suppress("UNUSED_PARAMETER") contentColor: Color
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),

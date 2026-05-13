@@ -183,6 +183,7 @@ class TtsOrchestrator @Inject constructor(
     /**
      * TTS 재생 후 재생 시간 반환
      */
+    @Suppress("UNUSED_PARAMETER")
     suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long {
         val startTime = System.currentTimeMillis()
         val isKoreanText = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
@@ -200,6 +201,7 @@ class TtsOrchestrator @Inject constructor(
     /**
      * TTS 재생 완료까지 기다린 후 재생 시간 반환
      */
+    @Suppress("UNUSED_PARAMETER")
     suspend fun speakAndWaitForCompletion(text: String, isKorean: Boolean, rate: Float): Long {
         val startTime = System.currentTimeMillis()
         val isKoreanText = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }

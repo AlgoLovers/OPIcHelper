@@ -155,7 +155,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                 file.name.substringBeforeLast("_").substringBeforeLast("_")
             }
             
-            filesByScript?.forEach { (scriptId, files) ->
+            filesByScript?.forEach { (_, files) ->
                 val sortedFiles = files.sortedByDescending { it.lastModified() }
                 sortedFiles.drop(keepLatestCount).forEach { file ->
                     file.delete()
@@ -208,7 +208,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
         var totalDuration = 0L
 
         try {
-            files.forEachIndexed { fileIndex, file ->
+            files.forEachIndexed { _, file ->
                 val extractor = MediaExtractor()
                 extractor.setDataSource(file.absolutePath)
 

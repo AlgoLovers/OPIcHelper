@@ -155,6 +155,6 @@ class RecordingFileRepositoryImpl @Inject constructor(
 
     private fun getRecordingsDirectory(): File {
         val dummyPath = audioFileManager.getRecordingFilePath("dummy.m4a")
-        return File(dummyPath).parentFile
+        return File(dummyPath).parentFile!!
     }
 } 

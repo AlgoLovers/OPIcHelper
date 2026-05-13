@@ -24,8 +24,7 @@ class AuthRepository(private val context: Context) {
         
         if (savedLoginState) {
             // 저장된 사용자 정보 복원 (간단한 정보만)
-            val userName = prefs.getString("user_name", "게스트 사용자")
-            val userEmail = prefs.getString("user_email", null)
+            // 사용자 이름과 이메일은 SharedPreferences에 저장되어 getUserName()/getUserEmail()로 접근 가능
             // 실제 GoogleSignInAccount 객체는 복원할 수 없으므로 null로 설정
             _currentUser.value = null
         }

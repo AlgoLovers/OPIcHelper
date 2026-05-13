@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
+    ) { _ ->
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,6 +106,7 @@ class MainActivity : ComponentActivity() {
         cleanupAllResources()
     }
 
+    @Suppress("DEPRECATION")
     override fun onBackPressed() {
         navController?.let { controller ->
             try {

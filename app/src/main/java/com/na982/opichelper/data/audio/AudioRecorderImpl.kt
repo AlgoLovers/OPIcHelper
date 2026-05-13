@@ -42,7 +42,7 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
         this.outputFile = outputFile
         
         try {
-            recorder = MediaRecorder().apply {
+            recorder = MediaRecorder(context).apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)

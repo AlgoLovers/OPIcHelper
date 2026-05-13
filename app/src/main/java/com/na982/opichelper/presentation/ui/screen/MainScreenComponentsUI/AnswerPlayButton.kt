@@ -10,7 +10,7 @@ import com.na982.opichelper.domain.audio.TtsPlayer
 
 @Composable
 fun AnswerPlayButton(
-    currentAnswer: String,
+    @Suppress("UNUSED_PARAMETER") currentAnswer: String,
     isPlaying: Boolean,
     onPlayClick: () -> Unit,
     onStopClick: () -> Unit,
