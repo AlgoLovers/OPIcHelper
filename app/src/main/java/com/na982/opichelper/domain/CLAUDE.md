@@ -86,8 +86,8 @@ stop() / pause() / resume()       — 재생 제어
 | `ScriptProgress.kt` | 데이터 클래스 | 진행상황 상태. 필드: category, scriptIndex, memorizeLevel, currentSentenceIndex, totalSentences, isMemorizeTestRunning, timestamp, needsSave. getKey(), toPersistable() 포함 |
 
 ### 주의: QaDataManager는 인터페이스가 아닌 구현체
-`domain/repository/`에 위치하지만 인터페이스가 아님. SharedPreferences, Application context를 직접 사용.
-→ **기술 부채: ISP 위반 + Android 의존성.** 향후 인터페이스 분리 및 Data 계층 이동 필요.
+`domain/repository/`에 위치하지만 인터페이스가 아님. Android 의존성은 ProgressPersistenceService로 분리 완료.
+순수 Kotlin 클래스이나 여전히 `domain/repository/`에 위치 (향후 Data 계층 이동 검토).
 
 ## usecase/ — 비즈니스 로직
 
@@ -95,16 +95,13 @@ stop() / pause() / resume()       — 재생 제어
 |------|------|----------|
 | `ExecuteRepeatListeningUseCase.kt` | RepeatListeningRepository 위임 래퍼 | 얇은 래퍼 |
 | `ExecuteEnglishWritingTestUseCase.kt` | EnglishWritingTestRepository 위임 래퍼 | 얇은 래퍼 |
-| `ExecuteFullMemorizationUseCase.kt` | FullMemorizationRepository 위임 | start/stopRecording/playRecording |
-| `FullMemorizationUseCase.kt` | TtsOrchestrator + RecordingFileRepository + AudioRecorder + QaDataManager + RecordingTimeManager 직접 사용 | highlightIndex StateFlow 제공, CoroutineScope(SupervisorJob + IO) 사용. 메서드: startFullMemorization, stopRecording, playRecordingWithHighlight, playRecordingSimple, hasRecording, clearRecording, cancelPlayback |
+| `FullMemorizationUseCase.kt` | TtsOrchestrator + RecordingFileRepository + AudioRecorder + QaDataManager + RecordingTimeManager 직접 사용 | highlightIndex StateFlow 제공, CoroutineScope(SupervisorJob + IO) 사용. Closeable 구현. 메서드: startFullMemorization, stopRecording, playRecordingWithHighlight, playRecordingSimple, hasRecording, clearRecording, cancelPlayback |
 | `RepeatListeningUseCase.kt` | 독립 반복듣기 로직. 문장별 한국어→영어 N회 | TTS duration 저장, 적응형 딜레이 (단어수*500ms*가중치). RepeatListeningRepositoryImpl과 거의 동일한 로직 포함 |
 | `PlayMergedFileUseCase.kt` | 영작테스트 병합 파일 재생 + 하이라이트 | StateFlow: isPlaying, highlightIndex, hasFile. 타이밍 추정: `(문자수 * 50ms).coerceAtLeast(1000ms)`. 정확한 타이밍 모드: playWithExactHighlight(). checkFile() 3회 재시도 |
 | `MemorizeTestProgressTracker.kt` | **@Singleton** 진행상황 메모리 관리 + 영속화 | 변경된 항목만 저장 (needsSave 플래그) |
 
-### 두 FullMemorization UseCase 중복
-`ExecuteFullMemorizationUseCase` (Repository 위임) vs `FullMemorizationUseCase` (Orchestrator 직접 사용).
-현재 MainScreen에서는 `FullMemorizationUseCase` 사용 중.
-→ **기술 부채: 통합 필요**
+### FullMemorizationUseCase
+이전에 `ExecuteFullMemorizationUseCase`가 존재했으나 삭제됨. 현재 `FullMemorizationUseCase`만 사용 중.
 
 ## 아키텍처 규칙
 - Data 계층을 직접 import하지 않음 (인터페이스로만 의존)
@@ -113,9 +110,8 @@ stop() / pause() / resume()       — 재생 제어
 
 ### 알려진 규칙 위반
 Domain 계층에 Android 프레임워크 import가 존재함:
-- `TtsOrchestrator` → Context, Build, Log
+- `TtsOrchestrator` → Context, Log
 - `TtsPlaybackController` → Log
-- `QaDataManager` → Application, Context, SharedPreferences, Log
+- `QaDataManager` → Log (Android 의존성은 ProgressPersistenceService로 분리 완료)
 - `WakeLockManager` → Context, PowerManager, Log
-- 모든 UseCase → Log
-→ **기술 부채: 순수 Kotlin 도메인 목표 달성 불가.** Log는 허용 범위, Context/SharedPreferences는 Data 계층으로 이동 필요.
+→ Log는 허용 범위, Context/PowerManager는 Data 계층으로 이동 검토.

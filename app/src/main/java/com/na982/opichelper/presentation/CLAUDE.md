@@ -19,8 +19,9 @@ presentation/
 
 | 파일 | 역할 | 주의사항 |
 |------|------|----------|
-| `MainViewModel.kt` | **@HiltViewModel AndroidViewModel** 통합 상태 관리. AppState 단일 StateFlow | 의존성 6개 (QaDataManager, TtsPlaybackController, MemorizeTestProgressTracker, UserPreferencesRepository, PlayMergedFileUseCase, Application). 진입 시 항상 반복듣기 모드 |
-| `MemorizationViewModel.kt` | **@HiltViewModel ViewModel** 암기 테스트 3모드 로직 | SRP 위반 (3모드 통합). CurrentMode 상태 머신 관리 |
+| `MainViewModel.kt` | **@HiltViewModel ViewModel** 통합 상태 관리. AppState 단일 StateFlow | 의존성 6개 (QaDataManager, TtsPlaybackController, MemorizeTestProgressTracker, UserPreferencesRepository, PlayMergedFileUseCase, TtsOrchestrator). 진입 시 항상 반복듣기 모드 |
+| `MemorizationViewModel.kt` | **@HiltViewModel ViewModel** 암기 테스트 3모드 로직 | SRP 위반 (3모드 통합). CurrentMode 상태 머신 관리. isQuestionCardFlipped 상태 포함 |
+| `SettingsViewModel.kt` | **@HiltViewModel ViewModel** 설정 화면 전용 | UserPreferencesRepository + TtsOrchestrator만 의존 |
 | `MemorizationUiState.kt` | 암기 테스트 UI 상태 데이터 클래스 | 반복듣기/영작/통암기 상태 모두 포함 |
 | `CurrentMode.kt` | 암기 테스트 모드 Enum | 아래 전체 목록 참조 |
 
@@ -62,9 +63,7 @@ data class AppState(
     val answerKoHighlightIndex: Int? = null,
     val recordingHighlightIndex: Int? = null,
     val isAnswerCardFlipped: Boolean = false,
-    val isQuestionCardFlipped: Boolean = false,
     val hasProgress: Boolean = false,
-    val currentKoreanTtsService: String = "",
     val currentUserLevel: String = ""
 )
 ```
@@ -79,6 +78,8 @@ data class AppState(
 블록5: PlayMergedFileUseCase (3-way combine) → hasMergedFile, isMergedFilePlaying, mergedFileHighlightIndex
 
 MemorizationViewModel.fullMemorizationHighlightIndex ──→ MainScreen에서 직접 collect
+MemorizationViewModel.isQuestionCardFlipped ──→ MainScreen에서 직접 collect
+SettingsViewModel.uiState ──→ SettingsScreen에서 직접 collect
 ```
 
 ### MemorizationViewModel 주의사항

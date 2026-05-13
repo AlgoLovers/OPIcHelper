@@ -43,23 +43,20 @@ data/
 | 파일 | 역할 | 주의사항 |
 |------|------|----------|
 | `LeveledQaDataLoader.kt` | JSON assets → QaItem 파싱. `{title, items}` 구조 로딩 | 새 JSON 추가 시 코드 수정 불필요 (title에서 동적 카테고리 생성) |
-| `QaDataLoaderImpl.kt` | LeveledQaDataLoader에 위임만 하는 래퍼 | **제거 대상**. AppModule에 미사용 import 잔존, 실제 바인딩은 LeveledQaDataLoader만 사용 |
-| `ProgressPersistenceServiceImpl.kt` | 진행상황 SharedPreferences 영속화 (opic_progress) | 예외 발생 시 null 반환 |
+| `ProgressPersistenceServiceImpl.kt` | 진행상황 + 네비게이션 상태 SharedPreferences 영속화 (opic_prefs) | NavigationState(category, index) 저장/로드 포함 |
 | `UserPreferencesRepository.kt` | 사용자 설정 (레벨, TTS 속도) 관리 (user_prefs) | Domain 인터페이스 구현. StateFlow로 레벨 변경 감지 가능 |
 | `AuthRepository.kt` | 로그인 상태 관리 (auth_prefs) | 현재 게스트 로그인만 작동 |
 | `RecordingFileRepositoryImpl.kt` | 녹음 파일 CRUD, 재생 | 파일 생성 시 카테고리/인덱스 기반 경로 |
 | `RecordingTimeManagerImpl.kt` | 문장별 녹음 시간 저장/조회 (recording_times) | Gson으로 Long 리스트 직렬화 |
 | `RepeatListeningRepositoryImpl.kt` | 반복듣기: 한국어 TTS → 영어 TTS N회 반복 | **아키텍처 위반**: domain.usecase.MemorizeTestProgressTracker 직접 import |
 | `EnglishWritingTestRepositoryImpl.kt` | 영작테스트: 한국어 TTS → 녹음 반복 | **아키텍처 위반**: domain.usecase.MemorizeTestProgressTracker 직접 import. 병합은 AudioFileManager에 위임 |
-| `FullMemorizationRepositoryImpl.kt` | 통암기: 질문 TTS → 녹음 | 파일 삭제 실패해도 path 초기화 (경미한 이슈) |
 | `AudioFileManagerImpl.kt` | 오디오 파일 병합/저장/삭제 | MediaExtractor + MediaMuxer 조합. 폴백 전략 3단계 (mergeWithMediaCodec → mergeWithHeaderAnalysis → 파일 연결) |
 
 ## SharedPreferences 키 맵
 
 | 이름 | 키 | 사용 위치 |
 |------|-----|----------|
-| `opic_prefs` | `last_category`, `last_index` (QaDataManager), `last_memorize_level` (MainViewModel) | QaDataManager, MainViewModel |
-| `opic_progress` | `app_exit_state`, `category_progress_*` | ProgressPersistenceServiceImpl |
+| `opic_prefs` | `last_category`, `last_index`, `last_memorize_level`, `nav_category`, `nav_index`, `app_exit_state`, `category_progress_*` | ProgressPersistenceServiceImpl, UserPreferencesRepository |
 | `user_prefs` | `user_level`, `english_tts_rate` | UserPreferencesRepository |
 | `auth_prefs` | `is_logged_in`, `user_name` 등 | AuthRepository |
 | `recording_times` | `recording_times_{category}_{scriptIndex}` | RecordingTimeManagerImpl |

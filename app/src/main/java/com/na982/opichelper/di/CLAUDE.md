@@ -27,8 +27,7 @@
 | 바인딩 | 구현체 | 제공 방식 |
 |--------|--------|----------|
 | `QaDataLoader` | `LeveledQaDataLoader` | @Provides @Singleton |
-| `QaDataManager` | 직접 제공 | @Provides @Singleton |
-| `FullMemorizationRepository` | `FullMemorizationRepositoryImpl` | @Provides @Singleton |
+| `QaDataManager` | 직접 제공 (ProgressPersistenceService 주입) | @Provides @Singleton |
 | `EnglishWritingTestRepository` | `EnglishWritingTestRepositoryImpl` | @Provides @Singleton |
 | `RepeatListeningRepository` | `RepeatListeningRepositoryImpl` | @Provides @Singleton |
 | `RecordingFileRepository` | `RecordingFileRepositoryImpl` | @Provides @Singleton |
@@ -45,9 +44,9 @@
 | `WakeLockManager` | @Provides @Singleton |
 
 ### 주의사항
-- `QaDataLoaderImpl`은 AppModule에 **바인딩되지 않음**. `LeveledQaDataLoader`만 `QaDataLoader`에 바인딩됨. QaDataLoaderImpl은 제거 대상.
 - ViewModel은 `@HiltViewModel` + `@Inject constructor`로 자동 주입 (모듈에서 제공하지 않음)
-- `SharedPreferences`는 `@Named` 없이 제공됨. 다른 prefs (user_prefs, auth_prefs, opic_progress, recording_times)는 각 Repository에서 `Context.getSharedPreferences()`으로 직접 생성
+- `SharedPreferences`는 `@Named` 없이 제공됨. 다른 prefs (user_prefs, auth_prefs, recording_times)는 각 Repository에서 `Context.getSharedPreferences()`으로 직접 생성
+- `QaDataManager`는 `ProgressPersistenceService`를 주입받아 Android 의존성 분리 완료
 
 ## 규칙
 - 새 Repository 인터페이스 추가 시: domain에 인터페이스 → data에 구현체 → AppModule에 @Provides 바인딩
