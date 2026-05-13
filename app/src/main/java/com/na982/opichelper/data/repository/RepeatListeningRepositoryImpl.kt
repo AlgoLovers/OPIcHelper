@@ -1,166 +1,130 @@
 package com.na982.opichelper.data.repository
 
+import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.RepeatListeningData
-import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
+import com.na982.opichelper.domain.repository.ProgressPersistenceService
+import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import com.na982.opichelper.domain.repository.ProgressData
-import com.na982.opichelper.domain.repository.RecordingTimeManager
-import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * 반복듣기 Repository 구현체
- * 
- * 클린 아키텍처 원칙:
- * - Data Layer에서 Repository 인터페이스 구현
- * - Infrastructure Layer에 의존
- * - 실제 비즈니스 로직 처리
- */
 @Singleton
 class RepeatListeningRepositoryImpl @Inject constructor(
     private val ttsOrchestrator: TtsOrchestrator,
-    private val progressTracker: MemorizeTestProgressTracker,
+    private val progressPersistenceService: ProgressPersistenceService,
     private val recordingTimeManager: RecordingTimeManager
 ) : RepeatListeningRepository {
-    
+
+    private val _events = MutableSharedFlow<MemorizeTestEvent>(
+        extraBufferCapacity = 1
+    )
+    override val events: SharedFlow<MemorizeTestEvent> = _events.asSharedFlow()
+
+    private suspend fun emit(event: MemorizeTestEvent) {
+        _events.emit(event)
+    }
+
     override suspend fun executeRepeatListening(
         data: RepeatListeningData,
-        uiCallback: RepeatListeningUiCallback,
         repeatCount: Int
     ) {
         val koSentences = data.koreanAnswer.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         val enSentences = data.englishAnswer.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
         val count = minOf(koSentences.size, enSentences.size)
-        
-        // 복원된 앱 상태에서 시작 인덱스 가져오기 (암기레벨별)
-        val currentProgress = progressTracker.getScriptProgress(data.category, data.scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
-        
-        val startIndex = if (currentProgress != null) {
-            currentProgress.currentSentenceIndex
+
+        val navState = progressPersistenceService.loadNavigationState()
+        val startIndex = if (navState.category == data.category && navState.index in 0 until count) {
+            navState.index
         } else {
             0
         }
 
         for (i in startIndex until count) {
-            // 코루틴이 취소되었는지 확인
-            if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                break
-            }
+            if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
 
-            // 진행 상황 업데이트 및 실시간 저장
-            progressTracker.updateProgress(
-                category = data.category,
-                scriptIndex = data.scriptIndex,
-                memorizeLevel = MemorizeLevel.REPEAT_LISTENING.displayName,
-                currentSentenceIndex = i,
-                totalSentences = count,
-                isMemorizeTestRunning = true
+            progressPersistenceService.saveNavigationState(
+                ProgressPersistenceService.NavigationState(data.category, i)
             )
-            // 실시간으로 진행상황 저장
-            progressTracker.persistChangedProgress()
 
-            // 1. 한글 문장 1회 TTS (카드를 한글로 뒤집고 하이라이트)
-            uiCallback.onCardFlip(true) // 카드를 한글로 뒤집기
-            delay(100) // 카드 뒤집기 애니메이션 대기
-            uiCallback.onKoreanHighlight(i) // 한글 하이라이트
-            
-            // 한글 TTS 재생 완료까지 기다리기 (표준화된 방식 사용)
+            // 1. 한글 문장 TTS
+            emit(MemorizeTestEvent.CardFlip(true))
+            delay(100)
+            emit(MemorizeTestEvent.KoreanHighlight(i))
+
             ttsOrchestrator.speakAndWaitForCompletion(koSentences[i], isKorean = true, rate = 1.0f)
-            
-            // 영문 문장 길이에 비례한 딜레이 계산 (고급 버전)
+
             val enSentence = enSentences[i]
             val enWordCount = enSentence.split("\\s+".toRegex()).size
-            
-            // 방법 1: 단어 수 기반 적응형 딜레이
-            val baseDelay = enWordCount * 500 // 기본 딜레이
+            val baseDelay = enWordCount * 500
             val lengthMultiplier = when {
-                enWordCount <= 5 -> 1.5f    // 짧은 문장: 1.5배
-                enWordCount <= 10 -> 1.2f   // 중간 문장: 1.2배
-                enWordCount <= 15 -> 1.0f   // 긴 문장: 1.0배
-                else -> 0.8f                // 매우 긴 문장: 0.8배
+                enWordCount <= 5 -> 1.5f
+                enWordCount <= 10 -> 1.2f
+                enWordCount <= 15 -> 1.0f
+                else -> 0.8f
             }
             val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
-
             kotlinx.coroutines.delay(adaptiveDelay)
 
-            // 코루틴이 취소되었는지 다시 확인
-            if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                break
-            }
-            
-            // 2. 영문 문장 1~repeatCount회 TTS (카드를 영문으로 뒤집고 하이라이트)
-            for (j in 1..repeatCount) {
-                // 코루틴이 취소되었는지 확인
-                if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                    break
-                }
+            if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
 
-                uiCallback.onCardFlip(false) // 카드를 영문으로 뒤집기
-                delay(100) // 카드 뒤집기 애니메이션 대기
-                uiCallback.onHighlight(i) // 영문 하이라이트
-                
-                // TTS 재생 완료까지 기다리기 (표준화된 방식 사용)
+            // 2. 영문 문장 N회 TTS
+            for (j in 1..repeatCount) {
+                if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
+
+                emit(MemorizeTestEvent.CardFlip(false))
+                delay(100)
+                emit(MemorizeTestEvent.Highlight(i))
+
                 val enDuration = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i], isKorean = false, rate = 1.0f)
-                
-                // 첫 번째 반복에서만 TTS 시간 저장 (영문 문장)
+
                 if (j == 1) {
                     recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)
                 }
 
-                // 코루틴이 취소되었는지 다시 확인 (TTS 재생 후)
-                if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                    break
-                }
-                
-                // 충분한 쉬는 시간 (사용자가 혼자 말해볼 시간)
-                val restTime = (enDuration * 1.2).toLong() // TTS 시간의 1.2배
+                if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
+
+                val restTime = (enDuration * 1.2).toLong()
                 delay(restTime)
             }
-            uiCallback.onHighlight(null) // 하이라이트 제거
+            emit(MemorizeTestEvent.Highlight(null))
         }
-        
-        // 마지막에 카드를 원래 상태(영문)로 복원
-        uiCallback.onCardFlip(false)
-        uiCallback.onHighlight(null)
-        
-        // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
-        progressTracker.clearScriptProgress(data.category, data.scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
-        
-        // 완료 콜백 호출
-        uiCallback.onComplete()
+
+        emit(MemorizeTestEvent.CardFlip(false))
+        emit(MemorizeTestEvent.Highlight(null))
+        emit(MemorizeTestEvent.Completed)
     }
-    
+
     override suspend fun getCurrentProgress(category: String, scriptIndex: Int): ProgressData? {
-        val progress = progressTracker.getScriptProgress(category, scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
-        return progress?.let {
+        val navState = progressPersistenceService.loadNavigationState()
+        return if (navState.category == category) {
             ProgressData(
-                category = it.category,
-                scriptIndex = it.scriptIndex,
-                memorizeLevel = it.memorizeLevel,
-                currentSentenceIndex = it.currentSentenceIndex,
-                totalSentences = it.totalSentences,
-                isMemorizeTestRunning = it.isMemorizeTestRunning
+                category = category,
+                scriptIndex = scriptIndex,
+                memorizeLevel = MemorizeLevel.REPEAT_LISTENING.displayName,
+                currentSentenceIndex = navState.index,
+                totalSentences = 0,
+                isMemorizeTestRunning = false
             )
-        }
+        } else null
     }
-    
+
     override suspend fun updateProgress(progressData: ProgressData) {
-        progressTracker.updateProgress(
-            category = progressData.category,
-            scriptIndex = progressData.scriptIndex,
-            memorizeLevel = progressData.memorizeLevel,
-            currentSentenceIndex = progressData.currentSentenceIndex,
-            totalSentences = progressData.totalSentences,
-            isMemorizeTestRunning = progressData.isMemorizeTestRunning
+        progressPersistenceService.saveNavigationState(
+            ProgressPersistenceService.NavigationState(progressData.category, progressData.currentSentenceIndex)
         )
     }
-    
+
     override suspend fun clearProgress(category: String, scriptIndex: Int) {
-        progressTracker.clearScriptProgress(category, scriptIndex, MemorizeLevel.REPEAT_LISTENING.displayName)
+        progressPersistenceService.saveNavigationState(
+            ProgressPersistenceService.NavigationState(category, 0)
+        )
     }
-} 
+}

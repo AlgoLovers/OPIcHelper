@@ -158,7 +158,7 @@ object AppModule {
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
         recordingTimeManager: RecordingTimeManager,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+        progressPersistenceService: ProgressPersistenceService
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
             qaDataManager = qaDataManager,
@@ -166,20 +166,20 @@ object AppModule {
             audioRecorder = audioRecorder,
             audioFileManager = audioFileManager,
             recordingTimeManager = recordingTimeManager,
-            progressTracker = progressTracker
+            progressPersistenceService = progressPersistenceService
         )
     }
-    
+
     @Provides
     @Singleton
     fun provideRepeatListeningRepository(
         ttsOrchestrator: TtsOrchestrator,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
+        progressPersistenceService: ProgressPersistenceService,
         recordingTimeManager: RecordingTimeManager
     ): RepeatListeningRepository {
         return RepeatListeningRepositoryImpl(
             ttsOrchestrator = ttsOrchestrator,
-            progressTracker = progressTracker,
+            progressPersistenceService = progressPersistenceService,
             recordingTimeManager = recordingTimeManager
         )
     }
