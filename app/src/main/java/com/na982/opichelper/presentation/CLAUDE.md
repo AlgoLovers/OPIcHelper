@@ -19,8 +19,9 @@ presentation/
 
 | 파일 | 역할 | 주의사항 |
 |------|------|----------|
-| `MainViewModel.kt` | **@HiltViewModel ViewModel** 통합 상태 관리. AppState 단일 StateFlow | 의존성 6개 (QaDataManager, TtsPlaybackController, MemorizeTestProgressTracker, UserPreferencesRepository, PlayMergedFileUseCase, TtsOrchestrator). 진입 시 항상 반복듣기 모드 |
-| `MemorizationViewModel.kt` | **@HiltViewModel ViewModel** 암기 테스트 3모드 로직 | SRP 위반 (3모드 통합). CurrentMode 상태 머신 관리. isQuestionCardFlipped 상태 포함 |
+| `QaBrowserViewModel.kt` | **@HiltViewModel ViewModel** QA 데이터 탐색 | QaDataManager + UserPreferencesRepository + MemorizeTestProgressTracker |
+| `PlaybackViewModel.kt` | **@HiltViewModel ViewModel** TTS 재생, 병합 파일, 생명주기 | TtsPlaybackController + PlayMergedFileUseCase + TtsOrchestrator |
+| `MemorizationViewModel.kt` | **@HiltViewModel ViewModel** 암기 테스트 3모드 로직 | SRP 위반 (3모드 통합). CurrentMode 상태 머신 관리. isQuestionCardFlipped 상태 포함. SharedFlow 이벤트 구독 |
 | `SettingsViewModel.kt` | **@HiltViewModel ViewModel** 설정 화면 전용 | UserPreferencesRepository + TtsOrchestrator만 의존 |
 | `MemorizationUiState.kt` | 암기 테스트 UI 상태 데이터 클래스 | 반복듣기/영작/통암기 상태 모두 포함 |
 | `CurrentMode.kt` | 암기 테스트 모드 Enum | 아래 전체 목록 참조 |
@@ -42,7 +43,20 @@ FULL_MEMORIZATION
   FULL_MEMORIZATION_WITH_FILE
 ```
 
-### MainViewModel의 AppState 핵심 필드
+### QaBrowserState 핵심 필드 (QaBrowserViewModel)
+```kotlin
+data class QaBrowserState(
+    val currentQaItem: QaItem? = null,
+    val currentCategory: String? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val categories: List<String> = emptyList(),
+    val selectedMemorizeLevel: String = ...,
+    val currentUserLevel: String = ""
+)
+```
+
+### PlaybackState 핵심 필드 (PlaybackViewModel)
 ```kotlin
 data class AppState(
     val currentQaItem: QaItem? = null,
@@ -68,14 +82,16 @@ data class AppState(
 )
 ```
 
-### 상태 흐름 (MainViewModel 내 5개 구독 블록)
+### 상태 흐름
 ```
-블록1: QaDataManager (5-way combine) → currentQaItem, currentCategory, categories, isLoading, error
-블록2: UserPreferencesRepository.userLevel → currentUserLevel
-블록3: TtsPlaybackController (7-way combine) → isPlaying, isQuestionPlaying, isAnswerPlaying,
-       questionHighlightIndex, answerHighlightIndex, answerKoHighlightIndex, recordingHighlightIndex
-블록4: MemorizeTestProgressTracker.hasProgress → hasProgress
-블록5: PlayMergedFileUseCase (3-way combine) → hasMergedFile, isMergedFilePlaying, mergedFileHighlightIndex
+QaBrowserViewModel:
+  블록1: QaDataManager (5-way combine) → currentQaItem, currentCategory, categories, isLoading, error
+  블록2: UserPreferencesRepository.userLevel → currentUserLevel
+
+PlaybackViewModel:
+  블록3: TtsPlaybackController (7-way combine) → isPlaying, isQuestionPlaying, isAnswerPlaying,
+         questionHighlightIndex, answerHighlightIndex, answerKoHighlightIndex, recordingHighlightIndex
+  블록4: PlayMergedFileUseCase (3-way combine) → hasMergedFile, isMergedFilePlaying, mergedFileHighlightIndex
 
 MemorizationViewModel.fullMemorizationHighlightIndex ──→ MainScreen에서 직접 collect
 MemorizationViewModel.isQuestionCardFlipped ──→ MainScreen에서 직접 collect

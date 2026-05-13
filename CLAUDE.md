@@ -33,15 +33,15 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 의존성은 항상 외부(Data) → 내부(Domain) 방향. Domain은 Data를 직접 참조하지 않음.
 
 ### ViewModel 구조
-- `MainViewModel` (**ViewModel**): 통합 상태 관리. AppState 단일 StateFlow. 의존성 5개 (QaDataManager, TtsPlaybackController, MemorizeTestProgressTracker, UserPreferencesRepository, PlayMergedFileUseCase, TtsOrchestrator)
-- `MemorizationViewModel`: 암기 테스트 3모드 로직. CurrentMode 상태 머신 관리. isQuestionCardFlipped 상태 포함
-- `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator만 의존
-- TTS 상태는 MainViewModel이 TtsPlaybackController 직접 구독 (별도 TtsViewModel 없음)
+- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 3개 (QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker)
+- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기. 의존성 3개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator)
+- `MemorizationViewModel`: 암기 테스트 3모드 로직. CurrentMode 상태 머신. SharedFlow 이벤트 구독
+- `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator
 
 ### TTS 재생 흐름 (핵심 경로)
 ```
 UI 버튼 클릭
-  → MainViewModel.playQuestion() / playAnswer()
+  → PlaybackViewModel.playQuestion() / playAnswer()
     → TtsPlaybackController.playQuestion() / playAnswer()
       → stopCurrentAndPrepare() (기존 Job 취소 + 상태 리셋)
       → 코루틴 시작 → TtsOrchestrator.speakWithHighlight()
@@ -92,7 +92,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 - **SRP**: 각 클래스는 하나의 변경 이유만 가져야 함. ViewModel이 비대해지면 새 ViewModel로 분리
 - **OCP**: TTS 플레이어 추가 시 `TtsPlayer` 인터페이스 구현체만 추가 (Orchestrator 수정 불필요)
 - **LSP**: BaseTtsPlayer 하위 클래스는 치환 가능해야 함
-- **ISP**: Repository 인터페이스는 UI 콜백을 받지 않아야 함 (현재 RepeatListeningRepository, EnglishWritingTestRepository 위반 — 리팩토링 필요)
+- **ISP**: Repository 인터페이스는 UI 콜백을 받지 않아야 함 (SharedFlow 이벤트로 대체 완료)
 - **DIP**: Domain 계층은 Data 계층을 직접 참조하지 않아야 함
 
 ### 네이밍
@@ -129,11 +129,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 
 | 항목 | 상태 | 우선순위 |
 |------|------|----------|
-| Repository 인터페이스 UI 콜백 결합 (RepeatListening, EnglishWritingTest) | 미해결 | 높음 |
-| Data→Domain 구현체 직접 참조 (RepeatListeningRepositoryImpl, EnglishWritingTestRepositoryImpl → MemorizeTestProgressTracker) | 미해결 | 높음 |
-| MainViewModel God Class 경향 (QA 브라우징 + TTS 재생 + 생명주기 혼합) | 미해결 | 중간 |
 | MemorizationViewModel SRP 위반 (3개 모드 통합) | 미해결 | 중간 |
-| TtsViewModelTest 고아 테스트 | 미해결 | 낮음 |
 | ScriptProgress가 domain/repository에 위치 | 미해결 | 낮음 |
 | Domain 계층 Android import (Log, Context) | 미해결 | 낮음 |
 | WakeLock deprecated API (@Suppress("DEPRECATION") 처리) | 완화 | 낮음 |
@@ -153,6 +149,10 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | 과도한 Log.d | 경고/오류 로그만 유지 (0021, 0022) |
 | 미사용 코드 (QaDataLoaderImpl, PlaybackEvent 등) | 일괄 삭제 (0020) |
 | SettingsScreen의 MainViewModel 의존 | SettingsViewModel 분리 (0023) |
+| Repository ISP 위반 (UI 콜백) | SharedFlow 이벤트로 전환 (0026) |
+| Data→Domain 직접 참조 | ProgressPersistenceService 사용 (0026) |
+| MainViewModel God Class | QaBrowserViewModel + PlaybackViewModel 분리 (0027, 0028) |
+| 고아 테스트 (MainViewModelTest, TtsViewModelTest) | 삭제 (0028) |
 
 ## Git 커밋 규칙
 
