@@ -56,8 +56,6 @@ class MemorizeTestProgressTracker @Inject constructor(
                 _progressMap.value = scriptProgressMap
                 _hasProgress.value = scriptProgressMap.isNotEmpty()
             }
-
-            Log.d("MemorizeTestProgressTracker", "모든 진행 상황 복원 완료: ${scriptProgressMap.size}개 스크립트")
         } catch (e: Exception) {
             Log.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
             mutex.withLock {
@@ -110,8 +108,6 @@ class MemorizeTestProgressTracker @Inject constructor(
             _progressMap.value = currentMap
             _hasProgress.value = currentMap.isNotEmpty()
         }
-
-        Log.d("MemorizeTestProgressTracker", "진행 상황 업데이트: $key -> 문장 $currentSentenceIndex/$totalSentences")
     }
     
     /**
@@ -146,10 +142,8 @@ class MemorizeTestProgressTracker @Inject constructor(
                     }
                     _progressMap.value = currentMap
                 }
-
-                Log.d("MemorizeTestProgressTracker", "변경된 진행 상황 저장 완료: ${changedProgress.size}개")
             } else {
-                Log.d("MemorizeTestProgressTracker", "저장할 진행 상황 없음")
+                // 저장할 진행 상황 없음
             }
         } catch (e: Exception) {
             Log.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
@@ -170,8 +164,6 @@ class MemorizeTestProgressTracker @Inject constructor(
             }
 
             progressPersistenceService.clearCategoryProgress(category, scriptIndex, memorizeLevel)
-
-            Log.d("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제: $key")
         } catch (e: Exception) {
             Log.e("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제 실패", e)
         }
@@ -187,7 +179,6 @@ class MemorizeTestProgressTracker @Inject constructor(
                 _progressMap.value = emptyMap()
                 _hasProgress.value = false
             }
-            Log.d("MemorizeTestProgressTracker", "모든 진행 상황 삭제 완료")
         } catch (e: Exception) {
             Log.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)
         }

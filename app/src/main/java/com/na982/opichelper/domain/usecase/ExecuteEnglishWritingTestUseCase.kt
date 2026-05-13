@@ -42,8 +42,6 @@ class ExecuteEnglishWritingTestUseCase @Inject constructor(
         onRecordingStateChange: (Boolean) -> Unit,
         onMergedFileCreated: () -> Unit
     ) {
-        Log.d("ExecuteEnglishWritingTestUseCase", "영작 테스트 UseCase 실행 시작")
-        
         try {
             englishWritingTestRepository.executeEnglishWritingTest(
                 answerKo = answerKo,

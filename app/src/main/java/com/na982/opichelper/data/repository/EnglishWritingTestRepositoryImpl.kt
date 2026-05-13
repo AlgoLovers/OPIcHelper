@@ -60,20 +60,15 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         } else {
             0
         }
-        
-        Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 시작: 총 $count 문장, 시작 인덱스: $startIndex")
-        
+
         val recordingFiles = mutableListOf<File>()
         
         for (idx in startIndex until count) {
             // 코루틴이 취소되었는지 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("EnglishWritingTestRepositoryImpl", "코루틴이 취소됨 - Repository 중단")
                 break
             }
-            
-            Log.d("EnglishWritingTestRepositoryImpl", "문장 ${idx + 1} 처리 시작 (인덱스: $idx)")
-            
+
             // 진행 상황 업데이트 및 실시간 저장
             progressTracker.updateProgress(
                 category = category,
@@ -85,8 +80,7 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             )
             // 실시간으로 진행상황 저장
             progressTracker.persistChangedProgress()
-            Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 진행상황 실시간 저장 완료")
-            
+
             // 1. 한글 문장 TTS (카드를 한글로 뒤집고 하이라이트)
             onCardFlip(true) // 카드를 한글로 뒤집기
             delay(100) // 카드 뒤집기 애니메이션 대기
@@ -97,7 +91,6 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             
             // 코루틴이 취소되었는지 다시 확인
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
-                Log.d("EnglishWritingTestRepositoryImpl", "코루틴이 취소됨 - Repository 중단")
                 break
             }
 
@@ -110,12 +103,9 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             
             // 2. 폴백 로직: 저장된 TTS 시간이 있으면 사용, 없으면 문장 길이로 계산
             val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
-                Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 저장된 TTS 시간 사용: ${savedTtsTime}ms")
                 savedTtsTime
             } else {
-                val calculatedTime = (enSentences[idx].length * 100L).coerceAtLeast(3000L)
-                Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 저장된 TTS 시간 없음 - 문장 길이로 계산: ${calculatedTime}ms")
-                calculatedTime
+                (enSentences[idx].length * 100L).coerceAtLeast(3000L)
             }
             
             // 녹음 시작
@@ -128,11 +118,6 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
             
             // 실제 녹음 시간 저장
             recordingTimeManager.saveRecordingTime(category, scriptIndex, idx, actualRecordingTime)
-            Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 실제 녹음 시간: ${actualRecordingTime}ms, 키: ${category}_${scriptIndex}")
-            
-            // 저장 확인
-            val savedTime = recordingTimeManager.getRecordingTime(category, scriptIndex, idx)
-            Log.d("EnglishWritingTestRepositoryImpl", "문장 $idx 저장 확인: 저장된 시간=${savedTime}ms")
             
             // 녹음 파일 저장
             val savedFile = audioFileManager.saveRecordingFile(recordingFile, "english_writing_${category}_${scriptIndex}_${idx}")
@@ -163,8 +148,8 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
                 }
             }
             
-            Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 완료 - 머지된 파일: ${mergedFile.absolutePath}")
-            
+            Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 머지 파일 생성: ${mergedFile.absolutePath}")
+
             // 병합 파일 생성 완료 콜백 호출
             onMergedFileCreated()
         }
