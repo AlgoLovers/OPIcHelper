@@ -11,16 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
-import com.na982.opichelper.domain.entity.QaItem
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.activity.compose.BackHandler
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.ui.theme.*
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -36,15 +32,13 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val memorizationViewModelInstance = memorizationViewModel ?: hiltViewModel<MemorizationViewModel>()
-    val coroutineScope = rememberCoroutineScope()
     val memorizeLevels by memorizationViewModelInstance.memorizeLevels.collectAsState()
     val selectedLevel = uiState.selectedMemorizeLevel
     val currentQaItemState = uiState.currentQaItem
     val categories = uiState.categories
     val currentCategoryState = uiState.currentCategory
 
-    val currentMode by memorizationViewModelInstance.currentMode.collectAsState()
-    val isQuestionCardFlipped by viewModel.isQuestionCardFlipped.collectAsState()
+    val isQuestionCardFlipped by memorizationViewModelInstance.isQuestionCardFlipped.collectAsState()
 
     val memorizationUiState by memorizationViewModelInstance.uiState.collectAsState()
 
@@ -134,35 +128,6 @@ fun MainScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-            if (uiState.currentKoreanTtsService.isNotEmpty()) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "한글 TTS",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = uiState.currentKoreanTtsService,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
 
             AppTitle(
                 currentLevel = uiState.currentUserLevel,

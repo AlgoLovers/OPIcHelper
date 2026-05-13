@@ -55,6 +55,9 @@ class MemorizationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MemorizationUiState())
     val uiState: StateFlow<MemorizationUiState> = _uiState.asStateFlow()
 
+    private val _isQuestionCardFlipped = MutableStateFlow(false)
+    val isQuestionCardFlipped: StateFlow<Boolean> = _isQuestionCardFlipped.asStateFlow()
+
     val fullMemorizationHighlightIndex: StateFlow<Int?> = fullMemorizationUseCase.highlightIndex
 
     private var currentUseCaseJob: Job? = null
@@ -526,5 +529,9 @@ class MemorizationViewModel @Inject constructor(
     override fun onComplete() {
         if (currentUseCaseJob?.isActive != true) return
         stopMode()
+    }
+
+    fun setQuestionCardFlipped(isFlipped: Boolean) {
+        _isQuestionCardFlipped.value = isFlipped
     }
 }
