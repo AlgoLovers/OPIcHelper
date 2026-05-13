@@ -4,7 +4,6 @@ import android.content.Context
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import com.na982.opichelper.data.repository.AuthRepository
-import com.na982.opichelper.data.repository.QaDataLoaderImpl
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
