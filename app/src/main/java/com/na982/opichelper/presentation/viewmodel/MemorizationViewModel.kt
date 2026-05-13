@@ -69,8 +69,6 @@ class MemorizationViewModel @Inject constructor(
             isRepeatListeningCardFlipped = mode == CurrentMode.REPEAT_LISTENING && running,
             isRepeatListeningRunning = mode == CurrentMode.REPEAT_LISTENING && running,
             isRepeatListeningMode = mode == CurrentMode.REPEAT_LISTENING,
-            repeatListeningCurrentRepeat = 0,
-            repeatListeningTotalRepeats = 5,
 
             isEnglishWritingTestCardFlipped = mode == CurrentMode.ENGLISH_WRITING && running,
             isEnglishWritingTestRunning = mode == CurrentMode.ENGLISH_WRITING && running,
