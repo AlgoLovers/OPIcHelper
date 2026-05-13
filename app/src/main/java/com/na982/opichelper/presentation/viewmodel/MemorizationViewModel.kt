@@ -2,8 +2,8 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.TtsPlaybackController
-import com.na982.opichelper.domain.audio.RepeatListeningUiCallback
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.QaDataManager
@@ -28,7 +28,7 @@ class MemorizationViewModel @Inject constructor(
     private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
     private val fullMemorizationUseCase: FullMemorizationUseCase,
     private val progressTracker: MemorizeTestProgressTracker
-) : ViewModel(), RepeatListeningUiCallback {
+) : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
@@ -61,6 +61,7 @@ class MemorizationViewModel @Inject constructor(
     val fullMemorizationHighlightIndex: StateFlow<Int?> = fullMemorizationUseCase.highlightIndex
 
     private var currentUseCaseJob: Job? = null
+    private var eventCollectJob: Job? = null
 
     private fun updateUiState() {
         val mode = _currentMode.value
@@ -120,10 +121,6 @@ class MemorizationViewModel @Inject constructor(
         updateUiState()
     }
 
-    private fun isModeRunning(mode: CurrentMode): Boolean {
-        return _isRunning.value && _currentMode.value == mode
-    }
-
     fun onMemorizeTestButtonClick(selectedLevel: String) {
         viewModelScope.launch {
             try {
@@ -160,6 +157,131 @@ class MemorizationViewModel @Inject constructor(
                 Log.e("MemorizationViewModel", "암기 테스트 시작 실패", e)
                 stopMode()
             }
+        }
+    }
+
+    private fun startRepeatListening() {
+        viewModelScope.launch {
+            try {
+                currentUseCaseJob?.cancel()
+                eventCollectJob?.cancel()
+                val currentItem = qaDataManager.getCurrentQaItem()
+                if (currentItem != null) {
+                    eventCollectJob = viewModelScope.launch {
+                        executeRepeatListeningUseCase.events.collect { event ->
+                            handleRepeatListeningEvent(event)
+                        }
+                    }
+                    currentUseCaseJob = launch {
+                        val repeatListeningData = RepeatListeningData(
+                            category = currentItem.category,
+                            scriptIndex = qaDataManager.getCurrentIndex(),
+                            koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
+                            englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
+                        )
+                        executeRepeatListeningUseCase.execute(data = repeatListeningData)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MemorizationViewModel", "반복 듣기 시작 실패", e)
+                stopMode()
+            }
+        }
+    }
+
+    private fun handleRepeatListeningEvent(event: MemorizeTestEvent) {
+        if (currentUseCaseJob?.isActive != true) return
+        when (event) {
+            is MemorizeTestEvent.CardFlip -> {
+                _uiState.value = _uiState.value.copy(isRepeatListeningCardFlipped = event.isKorean)
+            }
+            is MemorizeTestEvent.Highlight -> {
+                if (event.index != null) {
+                    ttsPlaybackController.setAnswerHighlightIndex(event.index)
+                } else {
+                    ttsPlaybackController.clearHighlight()
+                }
+            }
+            is MemorizeTestEvent.KoreanHighlight -> {
+                if (event.index != null) {
+                    ttsPlaybackController.setAnswerKoHighlightIndex(event.index)
+                } else {
+                    ttsPlaybackController.clearHighlight()
+                }
+            }
+            is MemorizeTestEvent.Completed -> {
+                stopMode()
+            }
+            else -> {}
+        }
+    }
+
+    private fun startEnglishWritingTest() {
+        val currentItem = qaDataManager.currentQaItem.value
+        if (currentItem != null) {
+            val scriptIndex = qaDataManager.getCurrentIndex()
+
+            eventCollectJob?.cancel()
+            eventCollectJob = viewModelScope.launch {
+                executeEnglishWritingTestUseCase.events.collect { event ->
+                    handleEnglishWritingTestEvent(event)
+                }
+            }
+
+            currentUseCaseJob = viewModelScope.launch {
+                try {
+                    executeEnglishWritingTestUseCase.execute(
+                        answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
+                        answerEn = qaDataManager.getCurrentAnswer(currentItem),
+                        category = currentItem.category,
+                        scriptIndex = scriptIndex
+                    )
+                } catch (e: Exception) {
+                    Log.e("MemorizationViewModel", "영작 테스트 실행 중 오류", e)
+                    stopMode()
+                }
+            }
+        }
+    }
+
+    private fun handleEnglishWritingTestEvent(event: MemorizeTestEvent) {
+        if (currentUseCaseJob?.isActive != true) return
+        when (event) {
+            is MemorizeTestEvent.CardFlip -> {
+                _uiState.value = _uiState.value.copy(
+                    isEnglishWritingTestCardFlipped = event.isKorean
+                )
+            }
+            is MemorizeTestEvent.KoreanHighlight -> {
+                if (event.index != null) {
+                    ttsPlaybackController.setAnswerKoHighlightIndex(event.index)
+                } else {
+                    ttsPlaybackController.clearHighlight()
+                }
+            }
+            is MemorizeTestEvent.RecordingHighlight -> {
+                if (event.index != null) {
+                    ttsPlaybackController.setRecordingHighlightIndex(event.index)
+                } else {
+                    ttsPlaybackController.clearHighlight()
+                }
+            }
+            is MemorizeTestEvent.RecordingStateChange -> {
+                if (!event.isRecording) {
+                    viewModelScope.launch {
+                        updateFullMemorizationRecordingStatus()
+                    }
+                }
+            }
+            is MemorizeTestEvent.MergedFileCreated -> {
+                _englishWritingTestCompleted.value = true
+                stopMode()
+                _uiState.value = _uiState.value.copy(
+                    isEnglishWritingTestRunning = false,
+                    isEnglishWritingTestMode = false
+                )
+            }
+            else -> {}
         }
     }
 
@@ -282,87 +404,6 @@ class MemorizationViewModel @Inject constructor(
         }
     }
 
-    private fun startRepeatListening() {
-        viewModelScope.launch {
-            try {
-                currentUseCaseJob?.cancel()
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    currentUseCaseJob = launch {
-                        val repeatListeningData = RepeatListeningData(
-                            category = currentItem.category,
-                            scriptIndex = qaDataManager.getCurrentIndex(),
-                            koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
-                            englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
-                        )
-                        executeRepeatListeningUseCase.execute(
-                            data = repeatListeningData,
-                            uiCallback = this@MemorizationViewModel
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("MemorizationViewModel", "반복 듣기 시작 실패", e)
-                stopMode()
-            }
-        }
-    }
-
-    private fun startEnglishWritingTest() {
-        val currentItem = qaDataManager.currentQaItem.value
-        if (currentItem != null) {
-            val scriptIndex = qaDataManager.getCurrentIndex()
-
-            currentUseCaseJob = viewModelScope.launch {
-                try {
-                    executeEnglishWritingTestUseCase.execute(
-                        answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
-                        answerEn = qaDataManager.getCurrentAnswer(currentItem),
-                        category = currentItem.category,
-                        scriptIndex = scriptIndex,
-                        onCardFlip = { isKorean ->
-                            _uiState.value = _uiState.value.copy(
-                                isEnglishWritingTestCardFlipped = isKorean
-                            )
-                        },
-                        onKoreanHighlight = { index ->
-                            if (index != null) {
-                                ttsPlaybackController.setAnswerKoHighlightIndex(index)
-                            } else {
-                                ttsPlaybackController.clearHighlight()
-                            }
-                        },
-                        onRecordingHighlight = { index ->
-                            if (index != null) {
-                                ttsPlaybackController.setRecordingHighlightIndex(index)
-                            } else {
-                                ttsPlaybackController.clearHighlight()
-                            }
-                        },
-                        onRecordingStateChange = { isRecording ->
-                            if (!isRecording) {
-                                viewModelScope.launch {
-                                    updateFullMemorizationRecordingStatus()
-                                }
-                            }
-                        },
-                        onMergedFileCreated = {
-                            _englishWritingTestCompleted.value = true
-                            stopMode()
-                            _uiState.value = _uiState.value.copy(
-                                isEnglishWritingTestRunning = false,
-                                isEnglishWritingTestMode = false
-                            )
-                        }
-                    )
-                } catch (e: Exception) {
-                    Log.e("MemorizationViewModel", "영작 테스트 실행 중 오류", e)
-                    stopMode()
-                }
-            }
-        }
-    }
-
     fun stopMemorization() {
         when {
             _uiState.value.isRepeatListeningRunning -> stopRepeatListening()
@@ -391,6 +432,8 @@ class MemorizationViewModel @Inject constructor(
     fun stopRepeatListening() {
         currentUseCaseJob?.cancel()
         currentUseCaseJob = null
+        eventCollectJob?.cancel()
+        eventCollectJob = null
         stopMode()
 
         _uiState.value = _uiState.value.copy(isRepeatListeningCardFlipped = false)
@@ -402,13 +445,7 @@ class MemorizationViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), MemorizeLevel.REPEAT_LISTENING.displayName)
-                    if (currentProgress != null) {
-                        progressTracker.persistChangedProgress()
-                    }
-                }
+                progressTracker.persistChangedProgress()
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "반복듣기 진행상황 저장 실패", e)
             }
@@ -426,6 +463,8 @@ class MemorizationViewModel @Inject constructor(
     fun stopEnglishWritingTest() {
         currentUseCaseJob?.cancel()
         currentUseCaseJob = null
+        eventCollectJob?.cancel()
+        eventCollectJob = null
         stopMode()
 
         _uiState.value = _uiState.value.copy(isEnglishWritingTestCardFlipped = false)
@@ -437,13 +476,7 @@ class MemorizationViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), MemorizeLevel.ENGLISH_WRITING.displayName)
-                    if (currentProgress != null) {
-                        progressTracker.persistChangedProgress()
-                    }
-                }
+                progressTracker.persistChangedProgress()
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "영작테스트 진행상황 저장 실패", e)
             }
@@ -453,28 +486,12 @@ class MemorizationViewModel @Inject constructor(
     fun onMemorizeLevelChanged() {
         viewModelScope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    val currentLevel = when {
-                        _uiState.value.isRepeatListeningMode -> MemorizeLevel.REPEAT_LISTENING.displayName
-                        _uiState.value.isEnglishWritingTestMode -> MemorizeLevel.ENGLISH_WRITING.displayName
-                        _uiState.value.isFullMemorizationMode -> MemorizeLevel.FULL_MEMORIZATION.displayName
-                        else -> MemorizeLevel.REPEAT_LISTENING.displayName
-                    }
-
-                    val currentProgress = progressTracker.getScriptProgress(
-                        currentItem.category,
-                        qaDataManager.getCurrentIndex(),
-                        currentLevel
-                    )
-
-                    if (currentProgress != null) {
-                        progressTracker.persistChangedProgress()
-                    }
-                }
+                progressTracker.persistChangedProgress()
 
                 currentUseCaseJob?.cancel()
                 currentUseCaseJob = null
+                eventCollectJob?.cancel()
+                eventCollectJob = null
                 stopMode()
 
                 _englishWritingTestCompleted.value = false
@@ -486,6 +503,10 @@ class MemorizationViewModel @Inject constructor(
                 Log.e("MemorizationViewModel", "암기레벨 변경 처리 실패", e)
             }
         }
+    }
+
+    fun setQuestionCardFlipped(isFlipped: Boolean) {
+        _isQuestionCardFlipped.value = isFlipped
     }
 
     init {
@@ -501,37 +522,5 @@ class MemorizationViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    override fun onCardFlip(isKorean: Boolean) {
-        if (currentUseCaseJob?.isActive != true) return
-        _uiState.value = _uiState.value.copy(isRepeatListeningCardFlipped = isKorean)
-    }
-
-    override fun onHighlight(index: Int?) {
-        if (currentUseCaseJob?.isActive != true) return
-        if (index != null) {
-            ttsPlaybackController.setAnswerHighlightIndex(index)
-        } else {
-            ttsPlaybackController.clearHighlight()
-        }
-    }
-
-    override fun onKoreanHighlight(index: Int?) {
-        if (currentUseCaseJob?.isActive != true) return
-        if (index != null) {
-            ttsPlaybackController.setAnswerKoHighlightIndex(index)
-        } else {
-            ttsPlaybackController.clearHighlight()
-        }
-    }
-
-    override fun onComplete() {
-        if (currentUseCaseJob?.isActive != true) return
-        stopMode()
-    }
-
-    fun setQuestionCardFlipped(isFlipped: Boolean) {
-        _isQuestionCardFlipped.value = isFlipped
     }
 }
