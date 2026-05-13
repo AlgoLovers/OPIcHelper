@@ -13,35 +13,31 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
-import com.na982.opichelper.presentation.ui.screen.MainScreen
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
-import com.na982.opichelper.ui.theme.OPicHelperTheme
+import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import android.util.Log
-import dagger.hilt.android.AndroidEntryPoint
-import com.na982.opichelper.domain.manager.WakeLockManager
-import javax.inject.Inject
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import com.na982.opichelper.domain.manager.WakeLockManager
+import javax.inject.Inject
+import android.util.Log
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    
+
     @Inject
     lateinit var wakeLockManager: WakeLockManager
 
     private var isFinishing = false
-    private var viewModel: MainViewModel? = null
+    private var mainViewModel: MainViewModel? = null
+    private var qaViewModel: QaBrowserViewModel? = null
     private var navController: NavHostController? = null
-    
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -51,14 +47,12 @@ class MainActivity : ComponentActivity() {
             // 권한이 거부됨
         }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // WakeLock 획득 (앱 실행 중 화면 켜짐 유지)
+
         wakeLockManager.acquireWakeLock()
 
-        // 권한 요청
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.RECORD_AUDIO
@@ -66,19 +60,20 @@ class MainActivity : ComponentActivity() {
         ) {
             requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
-        
+
         setContent {
             val navController = rememberNavController()
-            val mainViewModel: MainViewModel = hiltViewModel()
-            this@MainActivity.viewModel = mainViewModel
+            val vm: MainViewModel = hiltViewModel()
+            val qaVm: QaBrowserViewModel = hiltViewModel()
+            this@MainActivity.mainViewModel = vm
+            this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
-            
-            // 다크 테마 감지
+
             val isDarkTheme = isSystemInDarkTheme()
 
             OPicHelperThemeWithMemorizeLevel(
                 darkTheme = isDarkTheme,
-                memorizeLevel = "" // 기본값, 실제 값은 각 Composable에서 관리
+                memorizeLevel = ""
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -92,80 +87,55 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // 백그라운드로 이동 시에는 TTS와 하이라이트 유지
-        // WakeLock은 유지 (사용자가 다시 돌아올 수 있음)
-        viewModel?.onBackgroundMove()
+        mainViewModel?.onBackgroundMove()
     }
 
     override fun onResume() {
         super.onResume()
 
-        // 앱이 완전히 종료되었다가 다시 시작된 경우 상태 초기화
         if (isFinishing) {
-            // MemorizationViewModel 상태 초기화는 MainScreen에서 처리
             isFinishing = false
         }
 
-        // 포그라운드로 복귀 시 상태 확인
-        // WakeLock이 해제되었을 경우 다시 획득
         if (!wakeLockManager.isWakeLockHeld()) {
             wakeLockManager.acquireWakeLock()
         }
-        viewModel?.onForegroundReturn()
+        mainViewModel?.onForegroundReturn()
     }
 
     override fun onStop() {
         super.onStop()
-        // onStop에서는 아직 정리하지 않음 (백그라운드에서 복귀 가능)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         isFinishing = true
-        // 앱이 완전히 종료될 때만 모든 리소스 정리
         cleanupAllResources()
     }
 
     override fun onBackPressed() {
-        // 네비게이션 컨트롤러를 통해 현재 화면 확인
         navController?.let { controller ->
             try {
-                // 이전 백스택 엔트리가 있는지 확인
                 if (controller.previousBackStackEntry != null) {
-                    // 네비게이션 컨트롤러가 자동으로 이전 화면으로 이동
                     super.onBackPressed()
                 } else {
-                    // 1. 모든 TTS 강제 중지 (동기적으로)
-                    viewModel?.cleanupAllTtsSync()
-
-                    // 2. 모든 리소스 정리
+                    mainViewModel?.cleanupAllTtsSync()
                     cleanupAllResources()
-
-                    // 3. 앱 완전 종료
                     finish()
                 }
-
             } catch (e: Exception) {
                 Log.e("MainActivity", "백버튼 처리 중 오류", e)
                 super.onBackPressed()
             }
         } ?: run {
-            // 네비게이션 컨트롤러가 없는 경우 기본 동작
             super.onBackPressed()
         }
     }
 
-    /**
-     * 모든 리소스를 정리하는 함수
-     * - TTS 재생 중지
-     * - 하이라이트 초기화
-     * - 오디오 플레이어 중지
-     * - WakeLock 해제
-     */
     private fun cleanupAllResources() {
         try {
             lifecycleScope.launch {
-                viewModel?.cleanupOnAppExit()
+                qaViewModel?.cleanupOnAppExit()
             }
 
             wakeLockManager.releaseWakeLock()
