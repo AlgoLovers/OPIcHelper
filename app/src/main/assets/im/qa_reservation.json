@@ -1,23 +1,26 @@
-[
-  {
-    "id": "1",
-    "question_en": "Now, tell me about appointments you make in your life.\nWhat kinds of appointments are they and how do you make them?\nTalk about what happens at your appointments.\n",
-    "question_ko": "이제, 당신이 생활에서 하는 약속에 대해 말해주세요.\n어떤 종류의 약속들이며 어떻게 약속을 잡습니까?\n약속에서 어떤 일이 일어나는지 이야기해 주세요.\n",
-    "answer_en": "I make different kinds of appointments.\nI make doctor's appointments when I am sick.\nI make dentist's appointments for check-ups.\nIf something is wrong with my health, I go see a doctor right away.\nI also make appointments with my stylist.\nI like getting my hair done.\nI often get a perm.\nI change the color of my hair.\nI feel more confident with a new look.\nI prefer making appointments ahead of time.\nThis helps me avoid long waits.\nThat's how I make appointments.",
-    "answer_ko": "저는 다양한 종류의 약속을 잡아요.\n아플 때 의사 예약을 해요.\n검진을 위해 치과 예약을 해요.\n건강에 이상이 있으면 즉시 병원에 가요.\n미용사와도 약속을 잡아요.\n머리하는 것을 좋아해요.\n종종 파마를 해요.\n머리 색깔을 바꿔요.\n새로운 모습으로 변신하면 더 자신감이 생겨요.\n미리 예약하는 것을 선호해요.\n이렇게 하면 오래 기다리지 않아요.\n그렇게 약속을 잡아요."
-  },
-  {
-    "id": "2",
-    "question_en": "Talk about an appointment you had in the past.\nWhat was the appointment about?\nWas it with a doctor or a dentist?\nHave you made an appointment with your hairdresser?\nWhat did you do to make the appointment and what actually happened when you got there?\n",
-    "question_ko": "과거에 가졌던 약속에 대해 이야기해 주세요.\n그 약속은 무엇에 관한 것이었습니까?\n의사나 치과 의사와의 약속이었습니까?\n미용사와의 약속을 잡았습니까?\n약속을 잡기 위해 무엇을 했고, 그곳에 도착했을 때 실제로 무슨 일이 일어났습니까?\n",
-    "answer_en": "I remember when I made an appointment with a dentist.\nI wanted to get my teeth cleaned.\nI thought I had been taking good care of my teeth.\nBut the dentist found a small cavity in my wisdom tooth.\nI did not want to get my wisdom tooth pulled.\nI knew it would hurt.\nBut the dentist recommended removing it.\nSo I got my wisdom tooth removed.\nI couldn't eat regular meals for a few days.\nThat was my last appointment.",
-    "answer_ko": "치과에서 예약을 했던 때가 기억나요.\n스케일링을 받고 싶었어요.\n제가 치아 관리를 잘 해왔다고 생각했어요.\n하지만 치과 의사가 사랑니에 작은 충치를 발견했어요.\n사랑니를 뽑고 싶지 않았어요.\n아플 것을 알았어요.\n하지만 치과 의사가 제거할 것을 권유했어요.\n결국 사랑니를 뽑았어요.\n며칠 동안은 제대로 된 식사를 할 수 없었어요.\n그게 제가 마지막으로 했던 약속이에요."
-  },
-  {
-    "id": "3",
-    "question_en": "Unexpected things can happen during an appointment.\nTalk about a memorable incident you experienced during an appointment.\nWhat exactly happened and how did you deal with the situation?\n",
-    "question_ko": "약속 중에 예상치 못한 일이 발생할 수 있습니다.\n약속 중에 경험했던 기억에 남는 사건에 대해 이야기해 주세요.\n정확히 무슨 일이 일어났고 상황을 어떻게 처리했습니까?\n",
-    "answer_en": "I remember when I made an appointment with my stylist.\nI needed to get my hair done early in the morning.\nI had to get my graduation picture taken that day.\nBut when I arrived at the salon, all the doors were locked.\nThe lights were turned off.\nI decided to wait for my stylist.\nBut she did not show up for 15 minutes.\nSo I called her.\nShe told me she had a car accident.\nShe broke her arm.\nI always get my hair done by her.\nSo I decided to postpone my graduation picture.\nI waited until she was recovered.\nThat was the most memorable incident at the salon.",
-    "answer_ko": "미용사와 약속을 잡았던 때가 기억나요.\n아침 일찍 머리를 해야 했어요.\n그날 졸업 사진을 찍어야 했어요.\n하지만 미용실에 도착했을 때 모든 문이 잠겨 있었어요.\n불도 꺼져 있었어요.\n미용사를 기다리기로 했어요.\n하지만 15분 동안 나타나지 않았어요.\n그래서 전화를 걸었어요.\n그녀가 교통사고를 당했다고 말했어요.\n팔이 부러졌어요.\n저는 항상 그녀에게 머리를 해왔어요.\n그래서 졸업 사진을 미루기로 결정했어요.\n그녀가 회복될 때까지 기다렸어요.\n그게 미용실에서 겪었던 가장 기억에 남는 사건이에요."
-  }
-]
+{
+  "title": "예약",
+  "items": [
+    {
+      "id": "1",
+      "question_en": "Now, tell me about appointments you make in your life.\nWhat kinds of appointments are they and how do you make them?\nTalk about what happens at your appointments.\n",
+      "question_ko": "이제, 당신이 생활에서 하는 약속에 대해 말해주세요.\n어떤 종류의 약속들이며 어떻게 약속을 잡습니까?\n약속에서 어떤 일이 일어나는지 이야기해 주세요.\n",
+      "answer_en": "I make different kinds of appointments.\nI make doctor's appointments when I am sick.\nI make dentist's appointments for check-ups.\nIf something is wrong with my health, I go see a doctor right away.\nI also make appointments with my stylist.\nI like getting my hair done.\nI often get a perm.\nI change the color of my hair.\nI feel more confident with a new look.\nI prefer making appointments ahead of time.\nThis helps me avoid long waits.\nThat's how I make appointments.",
+      "answer_ko": "저는 다양한 종류의 약속을 잡아요.\n아플 때 의사 예약을 해요.\n검진을 위해 치과 예약을 해요.\n건강에 이상이 있으면 즉시 병원에 가요.\n미용사와도 약속을 잡아요.\n머리하는 것을 좋아해요.\n종종 파마를 해요.\n머리 색깔을 바꿔요.\n새로운 모습으로 변신하면 더 자신감이 생겨요.\n미리 예약하는 것을 선호해요.\n이렇게 하면 오래 기다리지 않아요.\n그렇게 약속을 잡아요."
+    },
+    {
+      "id": "2",
+      "question_en": "Talk about an appointment you had in the past.\nWhat was the appointment about?\nWas it with a doctor or a dentist?\nHave you made an appointment with your hairdresser?\nWhat did you do to make the appointment and what actually happened when you got there?\n",
+      "question_ko": "과거에 가졌던 약속에 대해 이야기해 주세요.\n그 약속은 무엇에 관한 것이었습니까?\n의사나 치과 의사와의 약속이었습니까?\n미용사와의 약속을 잡았습니까?\n약속을 잡기 위해 무엇을 했고, 그곳에 도착했을 때 실제로 무슨 일이 일어났습니까?\n",
+      "answer_en": "I remember when I made an appointment with a dentist.\nI wanted to get my teeth cleaned.\nI thought I had been taking good care of my teeth.\nBut the dentist found a small cavity in my wisdom tooth.\nI did not want to get my wisdom tooth pulled.\nI knew it would hurt.\nBut the dentist recommended removing it.\nSo I got my wisdom tooth removed.\nI couldn't eat regular meals for a few days.\nThat was my last appointment.",
+      "answer_ko": "치과에서 예약을 했던 때가 기억나요.\n스케일링을 받고 싶었어요.\n제가 치아 관리를 잘 해왔다고 생각했어요.\n하지만 치과 의사가 사랑니에 작은 충치를 발견했어요.\n사랑니를 뽑고 싶지 않았어요.\n아플 것을 알았어요.\n하지만 치과 의사가 제거할 것을 권유했어요.\n결국 사랑니를 뽑았어요.\n며칠 동안은 제대로 된 식사를 할 수 없었어요.\n그게 제가 마지막으로 했던 약속이에요."
+    },
+    {
+      "id": "3",
+      "question_en": "Unexpected things can happen during an appointment.\nTalk about a memorable incident you experienced during an appointment.\nWhat exactly happened and how did you deal with the situation?\n",
+      "question_ko": "약속 중에 예상치 못한 일이 발생할 수 있습니다.\n약속 중에 경험했던 기억에 남는 사건에 대해 이야기해 주세요.\n정확히 무슨 일이 일어났고 상황을 어떻게 처리했습니까?\n",
+      "answer_en": "I remember when I made an appointment with my stylist.\nI needed to get my hair done early in the morning.\nI had to get my graduation picture taken that day.\nBut when I arrived at the salon, all the doors were locked.\nThe lights were turned off.\nI decided to wait for my stylist.\nBut she did not show up for 15 minutes.\nSo I called her.\nShe told me she had a car accident.\nShe broke her arm.\nI always get my hair done by her.\nSo I decided to postpone my graduation picture.\nI waited until she was recovered.\nThat was the most memorable incident at the salon.",
+      "answer_ko": "미용사와 약속을 잡았던 때가 기억나요.\n아침 일찍 머리를 해야 했어요.\n그날 졸업 사진을 찍어야 했어요.\n하지만 미용실에 도착했을 때 모든 문이 잠겨 있었어요.\n불도 꺼져 있었어요.\n미용사를 기다리기로 했어요.\n하지만 15분 동안 나타나지 않았어요.\n그래서 전화를 걸었어요.\n그녀가 교통사고를 당했다고 말했어요.\n팔이 부러졌어요.\n저는 항상 그녀에게 머리를 해왔어요.\n그래서 졸업 사진을 미루기로 결정했어요.\n그녀가 회복될 때까지 기다렸어요.\n그게 미용실에서 겪었던 가장 기억에 남는 사건이에요."
+    }
+  ]
+}

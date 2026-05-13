@@ -1,23 +1,26 @@
-[
-  {
-    "id": "1",
-    "question_en": "Let's talk about the bank you go to.\nWhere is it located and what is it like?\nWhat do you do from the moment you walk into the bank till you walk out?\nHow are the people who work at the bank?\nTell me everything that goes on when you visit the bank.\n",
-    "question_ko": "당신이 이용하는 은행에 대해 이야기해 주세요.\n어디에 위치해 있으며 어떤 모습인가요?\n은행에 들어서는 순간부터 나올 때까지 무엇을 합니까?\n은행에서 일하는 사람들은 어떤가요?\n은행을 방문할 때 일어나는 모든 일에 대해 말해주세요.\n",
-    "answer_en": "I go to a bank near my house.\nIt is on a busy street.\nIt takes only a few minutes to walk there.\nI go to the bank when I need money.\nI also go to the bank to pay bills.\nThere are always many people at the bank.\nI wait in line for a long time.\nThe bank workers are friendly.\nThey always smile at me.\nI can see ATMs at the bank.\nMany people use the ATMs.\nThat's what I do at the bank.",
-    "answer_ko": "저는 집 근처 은행에 가요.\n그 은행은 번화가에 있어요.\n걸어서 몇 분밖에 안 걸려요.\n돈이 필요할 때 은행에 가요.\n공과금을 낼 때도 은행에 가요.\n은행에는 항상 사람이 많아요.\n줄을 서서 오래 기다려요.\n은행 직원들은 친절해요.\n그들은 항상 저에게 미소를 지어요.\n은행에는 ATM이 있어요.\n많은 사람들이 ATM을 써요.\n그게 제가 은행에서 하는 일이에요."
-  },
-  {
-    "id": "2",
-    "question_en": "Problems can occur when you're at the bank.\nPerhaps you could have forgotten to bring your ID.\nTalk about a problem you've personally had at a bank.\nWhat happened and how did you solve the problem?\n",
-    "question_ko": "은행에 있을 때 문제가 발생할 수 있습니다.\n어쩌면 신분증을 가져오는 것을 잊었을 수도 있습니다.\n은행에서 개인적으로 겪었던 문제에 대해 이야기해 주세요.\n무슨 일이 있었고 어떻게 문제를 해결했습니까?\n",
-    "answer_en": "I don't remember any problems at the bank.\nI never had any problems there.\nBut I remember one strange experience.\nI went to the bank during lunch time.\nThere were many people at the bank.\nA drunk man came into the bank.\nHe talked very loudly.\nHe was talking to himself.\nA guard tried to make him leave.\nBut the man kept talking loudly.\nHe started talking to other people.\nI decided to leave the bank.\nI don't know why he was drunk in the daytime.\nPeople should be polite in public places.\nThat's my only experience at the bank.",
-    "answer_ko": "은행에서 문제는 기억나지 않아요.\n은행에서 문제를 겪은 적이 없어요.\n하지만 이상한 경험 하나는 기억나요.\n점심시간에 은행에 갔어요.\n은행에 사람이 많았어요.\n술 취한 남자가 은행에 들어왔어요.\n그는 매우 큰 소리로 말했어요.\n그는 혼잣말을 했어요.\n경비원이 그를 내보내려고 했어요.\n하지만 그 남자는 계속 큰 소리로 말했어요.\n그는 다른 사람들에게 말을 걸기 시작했어요.\n저는 은행을 떠나기로 했어요.\n그가 낮에 왜 취했는지 모르겠어요.\n사람들은 공공장소에서 예의를 지켜야 해요.\n그게 제가 은행에서 겪은 유일한 경험이에요."
-  },
-  {
-    "id": "3",
-    "question_en": "Banks have changed over the years.\nHow do banks look different than they did in the past?\nWhat kinds of changes are the most evident?\nWhat kind of impact have those changes had on the customers?\nGive me all the details.\n",
-    "question_ko": "은행은 수년에 걸쳐 변화했습니다.\n은행이 과거와 어떻게 다르게 보이나요?\n어떤 종류의 변화가 가장 뚜렷합니까?\n그러한 변화가 고객에게 어떤 영향을 미쳤습니까?\n모든 세부 사항을 알려주세요.\n",
-    "answer_en": "Banks have changed a lot in recent years.\nI used to go to the bank often.\nNow I don't go to the bank much.\nI can use my phone to do banking.\nI can check my balance on my phone.\nI can transfer money on my phone.\nI can pay bills on my phone.\nMost people use the internet for banking now.\nI only go to the bank to get cash from the ATM.\nBanks have changed a lot in the last few years.",
-    "answer_ko": "은행은 최근 몇 년간 많이 바뀌었어요.\n예전에는 은행에 자주 갔어요.\n지금은 은행에 잘 안 가요.\n휴대폰으로 은행 업무를 할 수 있어요.\n휴대폰으로 잔액을 확인할 수 있어요.\n휴대폰으로 송금할 수 있어요.\n휴대폰으로 공과금을 낼 수 있어요.\n요즘에는 대부분의 사람들이 인터넷으로 은행 업무를 해요.\nATM에서 현금을 뽑을 때만 은행에 가요.\n은행은 최근 몇 년간 많이 바뀌었어요."
-  }
-]
+{
+  "title": "은행",
+  "items": [
+    {
+      "id": "1",
+      "question_en": "Let's talk about the bank you go to.\nWhere is it located and what is it like?\nWhat do you do from the moment you walk into the bank till you walk out?\nHow are the people who work at the bank?\nTell me everything that goes on when you visit the bank.\n",
+      "question_ko": "당신이 이용하는 은행에 대해 이야기해 주세요.\n어디에 위치해 있으며 어떤 모습인가요?\n은행에 들어서는 순간부터 나올 때까지 무엇을 합니까?\n은행에서 일하는 사람들은 어떤가요?\n은행을 방문할 때 일어나는 모든 일에 대해 말해주세요.\n",
+      "answer_en": "I go to a bank near my house.\nIt is on a busy street.\nIt takes only a few minutes to walk there.\nI go to the bank when I need money.\nI also go to the bank to pay bills.\nThere are always many people at the bank.\nI wait in line for a long time.\nThe bank workers are friendly.\nThey always smile at me.\nI can see ATMs at the bank.\nMany people use the ATMs.\nThat's what I do at the bank.",
+      "answer_ko": "저는 집 근처 은행에 가요.\n그 은행은 번화가에 있어요.\n걸어서 몇 분밖에 안 걸려요.\n돈이 필요할 때 은행에 가요.\n공과금을 낼 때도 은행에 가요.\n은행에는 항상 사람이 많아요.\n줄을 서서 오래 기다려요.\n은행 직원들은 친절해요.\n그들은 항상 저에게 미소를 지어요.\n은행에는 ATM이 있어요.\n많은 사람들이 ATM을 써요.\n그게 제가 은행에서 하는 일이에요."
+    },
+    {
+      "id": "2",
+      "question_en": "Problems can occur when you're at the bank.\nPerhaps you could have forgotten to bring your ID.\nTalk about a problem you've personally had at a bank.\nWhat happened and how did you solve the problem?\n",
+      "question_ko": "은행에 있을 때 문제가 발생할 수 있습니다.\n어쩌면 신분증을 가져오는 것을 잊었을 수도 있습니다.\n은행에서 개인적으로 겪었던 문제에 대해 이야기해 주세요.\n무슨 일이 있었고 어떻게 문제를 해결했습니까?\n",
+      "answer_en": "I don't remember any problems at the bank.\nI never had any problems there.\nBut I remember one strange experience.\nI went to the bank during lunch time.\nThere were many people at the bank.\nA drunk man came into the bank.\nHe talked very loudly.\nHe was talking to himself.\nA guard tried to make him leave.\nBut the man kept talking loudly.\nHe started talking to other people.\nI decided to leave the bank.\nI don't know why he was drunk in the daytime.\nPeople should be polite in public places.\nThat's my only experience at the bank.",
+      "answer_ko": "은행에서 문제는 기억나지 않아요.\n은행에서 문제를 겪은 적이 없어요.\n하지만 이상한 경험 하나는 기억나요.\n점심시간에 은행에 갔어요.\n은행에 사람이 많았어요.\n술 취한 남자가 은행에 들어왔어요.\n그는 매우 큰 소리로 말했어요.\n그는 혼잣말을 했어요.\n경비원이 그를 내보내려고 했어요.\n하지만 그 남자는 계속 큰 소리로 말했어요.\n그는 다른 사람들에게 말을 걸기 시작했어요.\n저는 은행을 떠나기로 했어요.\n그가 낮에 왜 취했는지 모르겠어요.\n사람들은 공공장소에서 예의를 지켜야 해요.\n그게 제가 은행에서 겪은 유일한 경험이에요."
+    },
+    {
+      "id": "3",
+      "question_en": "Banks have changed over the years.\nHow do banks look different than they did in the past?\nWhat kinds of changes are the most evident?\nWhat kind of impact have those changes had on the customers?\nGive me all the details.\n",
+      "question_ko": "은행은 수년에 걸쳐 변화했습니다.\n은행이 과거와 어떻게 다르게 보이나요?\n어떤 종류의 변화가 가장 뚜렷합니까?\n그러한 변화가 고객에게 어떤 영향을 미쳤습니까?\n모든 세부 사항을 알려주세요.\n",
+      "answer_en": "Banks have changed a lot in recent years.\nI used to go to the bank often.\nNow I don't go to the bank much.\nI can use my phone to do banking.\nI can check my balance on my phone.\nI can transfer money on my phone.\nI can pay bills on my phone.\nMost people use the internet for banking now.\nI only go to the bank to get cash from the ATM.\nBanks have changed a lot in the last few years.",
+      "answer_ko": "은행은 최근 몇 년간 많이 바뀌었어요.\n예전에는 은행에 자주 갔어요.\n지금은 은행에 잘 안 가요.\n휴대폰으로 은행 업무를 할 수 있어요.\n휴대폰으로 잔액을 확인할 수 있어요.\n휴대폰으로 송금할 수 있어요.\n휴대폰으로 공과금을 낼 수 있어요.\n요즘에는 대부분의 사람들이 인터넷으로 은행 업무를 해요.\nATM에서 현금을 뽑을 때만 은행에 가요.\n은행은 최근 몇 년간 많이 바뀌었어요."
+    }
+  ]
+}

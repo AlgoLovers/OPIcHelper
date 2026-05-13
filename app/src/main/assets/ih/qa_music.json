@@ -1,50 +1,53 @@
-[
-  {
-    "id": "1",
-    "theme": "Music - Favorite",
-    "question_en": "What type of music do you like? Who is your favorite singer? What is special about them?",
-    "question_ko": "어떤 종류의 음악을 좋아하시나요? 가장 좋아하는 가수는 누구인가요? 그들의 특별한 점은 무엇인가요?",
-    "answer_en": "Well, to be honest, I’m not very picky about music genres.\nI usually listen to the Top 100 chart on Melon.\nIt is the most popular music app in Korea, and I love it.\nSince I’m quite busy, I like that it chooses hits for me automatically.\nI don’t have a favorite singer, but I enjoy trendy and upbeat songs.\nI can easily sing along to these songs, which is great.\nThese songs help me follow the latest trends and feel young.\nOverall, I just love listening to whatever is popular right now.",
-    "answer_ko": "음, 솔직히 말해서 저는 음악 장르를 별로 가리지 않아요.\n보통 멜론에서 톱 100 차트를 듣습니다.\n한국에서 가장 인기 있는 음악 앱이고, 정말 좋아요.\n제가 꽤 바쁘다 보니, 알아서 자동으로 히트곡을 골라주는 점이 마음에 듭니다.\n좋아하는 가수는 따로 없지만, 유행하는 신나는 노래들을 즐겨 듣습니다.\n저는 이 노래들을 쉽게 따라 부를 수 있어서 아주 좋거든요.\n이런 노래들은 제가 최신 유행을 따라가고 젊은 기분을 느끼게 도와줍니다.\n전반적으로, 저는 그냥 지금 인기 있는 노래라면 뭐든 듣는 걸 좋아해요."
-  },
-  {
-    "id": "2",
-    "theme": "Music - Time and Place",
-    "question_en": "When and where do you like to listen to music? Why do you listen to music?",
-    "question_ko": "언제 어디서 음악을 듣나요? 왜 음악을 듣나요?",
-    "answer_en": "I usually listen to music while I’m driving.\nAs a weekend dad, I drive home every Friday night to see my family.\nYou know, the drive takes about two hours, so music is my best friend.\nI play my favorite songs loudly to stay awake and energized.\nI mean, music makes the long drive feel much shorter and more exciting.\nWithout music, driving for two hours would be very boring for me.\nThat’s why I always listen to music on my way back home.",
-    "answer_ko": "저는 보통 운전하는 동안 음악을 듣습니다.\n주말 아빠로서, 저는 매주 금요일 밤에 가족들을 보러 집으로 운전해 갑니다.\n아시다시피, 운전이 2시간 정도 걸려서 음악이 저의 가장 친한 친구가 되어줍니다.\n저는 잠을 깨고 활력을 얻기 위해 좋아하는 노래들을 크게 틀어놓습니다.\n제 말은, 음악이 긴 운전 시간을 훨씬 짧고 신나게 만들어준다는 거예요.\n음악이 없다면 2시간 동안 운전하는 것은 저에게 매우 지루할 것입니다.\n그것이 제가 집으로 돌아가는 길에 항상 음악을 듣는 이유입니다."
-  },
-  {
-    "id": "3",
-    "theme": "Music - Gadgets",
-    "question_en": "Explain some of the new electronic gadgets or equipment that music lovers are interested in.",
-    "question_ko": "음악 팬들이 관심을 갖는 새로운 전자기기나 장비에 대해 설명해 주세요.",
-    "answer_en": "Well, I think wireless earphones are the most popular gadgets these days.\nAlmost everyone uses them because they are very convenient and simple.\nYou know, in the past, wired earphones were quite messy to use.\nBut now, we can enjoy high-quality sound without any cables.\nAs a developer, I really like this technology because it makes my life easier.\nI usually wear them while working to focus better on my tasks.\nAnyway, this trend has definitely changed our music experience.",
-    "answer_ko": "음, 요즘은 무선 이어폰이 가장 인기 있는 기기라고 생각합니다.\n매우 편리하고 간단하기 때문에 거의 모든 사람이 그것을 사용합니다.\n아시다시피, 과거에는 유선 이어폰이 사용하기 꽤 번거로웠습니다.\n하지만 이제는 선 없이도 고음질의 사운드를 즐길 수 있습니다.\n개발자로서, 저는 이 기술이 제 삶을 더 편하게 만들어주기 때문에 정말 좋아합니다.\n저는 보통 업무에 더 잘 집중하기 위해 일할 때 그것을 착용합니다.\n어쨌든, 이러한 트렌드는 분명 우리의 음악 경험을 바꿔놓았습니다."
-  },
-  {
-    "id": "4",
-    "theme": "Music - Live Concert",
-    "question_en": "Tell me about a time when you went to listen to some live music.",
-    "question_ko": "라이브 음악을 들으러 갔던 때에 대해 말씀해 주세요.",
-    "answer_en": "I remember a special live concert I attended in high school.\nMy close friend was a guitar player in a school rock band.\nYou know, I went to their show to support him and it was amazing.\nThe sound was very powerful and the energy was just incredible.\nTo be honest, it was a great way to blow away all my school stress.\nI still remember the loud guitar sound and the cheering friends.\nOverall, it was one of the most exciting experiences of my youth.",
-    "answer_ko": "고등학교 때 갔던 특별한 라이브 콘서트를 기억합니다.\n제 친한 친구가 학교 록 밴드의 기타 연주자였습니다.\n아시다시피, 저는 그를 응원하기 위해 그들의 공연에 갔는데 정말 놀라웠습니다.\n사운드는 매우 강력했고 그 에너지는 그야말로 엄청났습니다.\n솔직히 말해서, 그 당시 저의 모든 학업 스트레스를 날려버릴 수 있는 좋은 방법이었습니다.\n저는 아직도 그 커다란 기타 소리와 환호하던 친구들을 기억합니다.\n전반적으로, 그것은 제 젊은 시절 가장 신나는 경험 중 하나였습니다."
-  },
-  {
-    "id": "5",
-    "theme": "Music - Comparison",
-    "question_en": "Pick two singers you like and compare their similarities and differences.",
-    "question_ko": "좋아하는 가수 두 명을 골라 공통점과 차이점을 비교해 주세요.",
-    "answer_en": "Well, I want to compare two famous Korean singers, Seo Taiji and Psy.\nBoth are very famous for their unique styles and great performances.\nYou know, Seo Taiji was like a hero to me when I was young.\nOn the other hand, Psy is famous for his fun music videos like ‘Gangnam Style’.\nI mean, Seo Taiji’s music is serious, while Psy’s music is all about fun.\nHowever, both of them know how to connect with the audience very well.\nIn conclusion, even though their styles are different, both are great artists.",
-    "answer_ko": "음, 한국의 유명한 두 가수인 서태지와 싸이를 비교해보고 싶습니다.\n둘 다 독특한 스타일과 멋진 퍼포먼스로 매우 유명합니다.\n아시다시피, 서태지는 제가 어렸을 때 영웅과도 같았습니다.\n반면에, 싸이는 ‘강남스타일’ 같은 재미있는 뮤직비디오로 유명합니다.\n제 말은, 서태지의 음악은 진지한 반면, 싸이의 음악은 즐거움이 전부라는 거예요.\n하지만 두 사람 모두 관객과 소통하는 법을 정말 잘 알고 있습니다.\n결론적으로, 스타일은 다르지만 두 사람 모두 위대한 아티스트들입니다."
-  },
-  {
-    "id": "6",
-    "theme": "Music - Interest Change",
-    "question_en": "How has your interest in music changed over the years?",
-    "question_ko": "시간이 지나면서 음악에 대한 관심이 어떻게 변했나요?",
-    "answer_en": "Actually, my taste in music has changed a lot as I became a father.\nWhen I was young, I loved fast and loud music like rock and hip-hop.\nBut now, you know, I prefer soft and calm music to relax my mind after work.\nSince I work hard in Seoul during the week, I need some healing time.\nI mean, I don’t spend much energy searching for new singers anymore.\nInstead, I just enjoy the comfortable songs recommended by streaming apps like Melon.\nOverall, music has become a way for me to find peace in my busy life.",
-    "answer_ko": "사실, 제가 아버지가 되면서 음악 취향이 많이 바뀌었습니다.\n어렸을 때는 록이나 힙합 같은 빠르고 시끄러운 음악을 좋아했습니다.\n하지만 지금은, 아시다시피, 퇴근 후 마음을 차분하게 해주는 부드럽고 조용한 음악을 선호합니다.\n평일에는 서울에서 열심히 일하기 때문에, 저에게는 힐링 시간이 필요하거든요.\n제 말은, 이제는 새로운 가수를 찾는 데 많은 에너지를 쓰지 않는다는 거예요.\n대신, 멜론 같은 스트리밍 앱에서 추천해 주는 편안한 노래들을 그냥 즐깁니다.\n전반적으로, 음악은 저의 바쁜 삶 속에서 평온을 찾는 방법이 되었습니다."
-  }
-]
+{
+  "title": "음악",
+  "items": [
+    {
+      "id": "1",
+      "theme": "Music - Favorite",
+      "question_en": "What type of music do you like? Who is your favorite singer? What is special about them?",
+      "question_ko": "어떤 종류의 음악을 좋아하시나요? 가장 좋아하는 가수는 누구인가요? 그들의 특별한 점은 무엇인가요?",
+      "answer_en": "Well, to be honest, I’m not very picky about music genres.\nI usually listen to the Top 100 chart on Melon.\nIt is the most popular music app in Korea, and I love it.\nSince I’m quite busy, I like that it chooses hits for me automatically.\nI don’t have a favorite singer, but I enjoy trendy and upbeat songs.\nI can easily sing along to these songs, which is great.\nThese songs help me follow the latest trends and feel young.\nOverall, I just love listening to whatever is popular right now.",
+      "answer_ko": "음, 솔직히 말해서 저는 음악 장르를 별로 가리지 않아요.\n보통 멜론에서 톱 100 차트를 듣습니다.\n한국에서 가장 인기 있는 음악 앱이고, 정말 좋아요.\n제가 꽤 바쁘다 보니, 알아서 자동으로 히트곡을 골라주는 점이 마음에 듭니다.\n좋아하는 가수는 따로 없지만, 유행하는 신나는 노래들을 즐겨 듣습니다.\n저는 이 노래들을 쉽게 따라 부를 수 있어서 아주 좋거든요.\n이런 노래들은 제가 최신 유행을 따라가고 젊은 기분을 느끼게 도와줍니다.\n전반적으로, 저는 그냥 지금 인기 있는 노래라면 뭐든 듣는 걸 좋아해요."
+    },
+    {
+      "id": "2",
+      "theme": "Music - Time and Place",
+      "question_en": "When and where do you like to listen to music? Why do you listen to music?",
+      "question_ko": "언제 어디서 음악을 듣나요? 왜 음악을 듣나요?",
+      "answer_en": "I usually listen to music while I’m driving.\nAs a weekend dad, I drive home every Friday night to see my family.\nYou know, the drive takes about two hours, so music is my best friend.\nI play my favorite songs loudly to stay awake and energized.\nI mean, music makes the long drive feel much shorter and more exciting.\nWithout music, driving for two hours would be very boring for me.\nThat’s why I always listen to music on my way back home.",
+      "answer_ko": "저는 보통 운전하는 동안 음악을 듣습니다.\n주말 아빠로서, 저는 매주 금요일 밤에 가족들을 보러 집으로 운전해 갑니다.\n아시다시피, 운전이 2시간 정도 걸려서 음악이 저의 가장 친한 친구가 되어줍니다.\n저는 잠을 깨고 활력을 얻기 위해 좋아하는 노래들을 크게 틀어놓습니다.\n제 말은, 음악이 긴 운전 시간을 훨씬 짧고 신나게 만들어준다는 거예요.\n음악이 없다면 2시간 동안 운전하는 것은 저에게 매우 지루할 것입니다.\n그것이 제가 집으로 돌아가는 길에 항상 음악을 듣는 이유입니다."
+    },
+    {
+      "id": "3",
+      "theme": "Music - Gadgets",
+      "question_en": "Explain some of the new electronic gadgets or equipment that music lovers are interested in.",
+      "question_ko": "음악 팬들이 관심을 갖는 새로운 전자기기나 장비에 대해 설명해 주세요.",
+      "answer_en": "Well, I think wireless earphones are the most popular gadgets these days.\nAlmost everyone uses them because they are very convenient and simple.\nYou know, in the past, wired earphones were quite messy to use.\nBut now, we can enjoy high-quality sound without any cables.\nAs a developer, I really like this technology because it makes my life easier.\nI usually wear them while working to focus better on my tasks.\nAnyway, this trend has definitely changed our music experience.",
+      "answer_ko": "음, 요즘은 무선 이어폰이 가장 인기 있는 기기라고 생각합니다.\n매우 편리하고 간단하기 때문에 거의 모든 사람이 그것을 사용합니다.\n아시다시피, 과거에는 유선 이어폰이 사용하기 꽤 번거로웠습니다.\n하지만 이제는 선 없이도 고음질의 사운드를 즐길 수 있습니다.\n개발자로서, 저는 이 기술이 제 삶을 더 편하게 만들어주기 때문에 정말 좋아합니다.\n저는 보통 업무에 더 잘 집중하기 위해 일할 때 그것을 착용합니다.\n어쨌든, 이러한 트렌드는 분명 우리의 음악 경험을 바꿔놓았습니다."
+    },
+    {
+      "id": "4",
+      "theme": "Music - Live Concert",
+      "question_en": "Tell me about a time when you went to listen to some live music.",
+      "question_ko": "라이브 음악을 들으러 갔던 때에 대해 말씀해 주세요.",
+      "answer_en": "I remember a special live concert I attended in high school.\nMy close friend was a guitar player in a school rock band.\nYou know, I went to their show to support him and it was amazing.\nThe sound was very powerful and the energy was just incredible.\nTo be honest, it was a great way to blow away all my school stress.\nI still remember the loud guitar sound and the cheering friends.\nOverall, it was one of the most exciting experiences of my youth.",
+      "answer_ko": "고등학교 때 갔던 특별한 라이브 콘서트를 기억합니다.\n제 친한 친구가 학교 록 밴드의 기타 연주자였습니다.\n아시다시피, 저는 그를 응원하기 위해 그들의 공연에 갔는데 정말 놀라웠습니다.\n사운드는 매우 강력했고 그 에너지는 그야말로 엄청났습니다.\n솔직히 말해서, 그 당시 저의 모든 학업 스트레스를 날려버릴 수 있는 좋은 방법이었습니다.\n저는 아직도 그 커다란 기타 소리와 환호하던 친구들을 기억합니다.\n전반적으로, 그것은 제 젊은 시절 가장 신나는 경험 중 하나였습니다."
+    },
+    {
+      "id": "5",
+      "theme": "Music - Comparison",
+      "question_en": "Pick two singers you like and compare their similarities and differences.",
+      "question_ko": "좋아하는 가수 두 명을 골라 공통점과 차이점을 비교해 주세요.",
+      "answer_en": "Well, I want to compare two famous Korean singers, Seo Taiji and Psy.\nBoth are very famous for their unique styles and great performances.\nYou know, Seo Taiji was like a hero to me when I was young.\nOn the other hand, Psy is famous for his fun music videos like ‘Gangnam Style’.\nI mean, Seo Taiji’s music is serious, while Psy’s music is all about fun.\nHowever, both of them know how to connect with the audience very well.\nIn conclusion, even though their styles are different, both are great artists.",
+      "answer_ko": "음, 한국의 유명한 두 가수인 서태지와 싸이를 비교해보고 싶습니다.\n둘 다 독특한 스타일과 멋진 퍼포먼스로 매우 유명합니다.\n아시다시피, 서태지는 제가 어렸을 때 영웅과도 같았습니다.\n반면에, 싸이는 ‘강남스타일’ 같은 재미있는 뮤직비디오로 유명합니다.\n제 말은, 서태지의 음악은 진지한 반면, 싸이의 음악은 즐거움이 전부라는 거예요.\n하지만 두 사람 모두 관객과 소통하는 법을 정말 잘 알고 있습니다.\n결론적으로, 스타일은 다르지만 두 사람 모두 위대한 아티스트들입니다."
+    },
+    {
+      "id": "6",
+      "theme": "Music - Interest Change",
+      "question_en": "How has your interest in music changed over the years?",
+      "question_ko": "시간이 지나면서 음악에 대한 관심이 어떻게 변했나요?",
+      "answer_en": "Actually, my taste in music has changed a lot as I became a father.\nWhen I was young, I loved fast and loud music like rock and hip-hop.\nBut now, you know, I prefer soft and calm music to relax my mind after work.\nSince I work hard in Seoul during the week, I need some healing time.\nI mean, I don’t spend much energy searching for new singers anymore.\nInstead, I just enjoy the comfortable songs recommended by streaming apps like Melon.\nOverall, music has become a way for me to find peace in my busy life.",
+      "answer_ko": "사실, 제가 아버지가 되면서 음악 취향이 많이 바뀌었습니다.\n어렸을 때는 록이나 힙합 같은 빠르고 시끄러운 음악을 좋아했습니다.\n하지만 지금은, 아시다시피, 퇴근 후 마음을 차분하게 해주는 부드럽고 조용한 음악을 선호합니다.\n평일에는 서울에서 열심히 일하기 때문에, 저에게는 힐링 시간이 필요하거든요.\n제 말은, 이제는 새로운 가수를 찾는 데 많은 에너지를 쓰지 않는다는 거예요.\n대신, 멜론 같은 스트리밍 앱에서 추천해 주는 편안한 노래들을 그냥 즐깁니다.\n전반적으로, 음악은 저의 바쁜 삶 속에서 평온을 찾는 방법이 되었습니다."
+    }
+  ]
+}

@@ -1,23 +1,26 @@
-[
-  {
-    "id": "1",
-    "question_en": "Describe a family or a friend you have.\nWhat is he or she like?\nWhat is special about that person?\nGive me some details about that person.\n",
-    "question_ko": "당신의 가족 구성원이나 친구 한 명을 묘사해 주세요.\n그는/그녀는 어떤 사람인가요?\n그 사람에게 특별한 점은 무엇인가요?\n그 사람에 대한 자세한 정보를 알려주세요.\n",
-    "answer_en": "Let me talk about my best friend named Jenny.\nI met her in high school.\nWe have been friends for almost 20 years.\nShe is down to earth and easy going.\nI like her personality because she is very optimistic.\nI like to talk to her about my daily life.\nShe is a good listener.\nShe always gives me practical advice.\nJenny and I share many interests.\nWe have a lot in common.\nBut we are different in many ways.\nWe both love going to the movies.\nBut we have opposite tastes.\nShe enjoys romantic comedies.\nI only watch action-thrillers.\nThe most awkward situation is when we eat out.\nJenny is a seafood person.\nBut I am not.\nSo it takes a long time to choose a menu.\nBut I still love my friend.\nShe is such an important person to me.",
-    "answer_ko": "제 가장 친한 친구 제니에 대해 이야기해 볼게요.\n고등학교에서 그녀를 만났어요.\n거의 20년 동안 친구였어요.\n그녀는 현실적이고 소탈해요.\n그녀가 매우 낙천적이어서 그녀의 성격을 좋아해요.\n일상생활에 대해 그녀와 이야기하는 것을 좋아해요.\n그녀는 말을 잘 들어줘요.\n항상 실용적인 조언을 해줘요.\n제니와 저는 많은 관심사를 공유해요.\n공통점이 많아요.\n하지만 여러 면에서 달라요.\n우리는 둘 다 영화 보러 가는 것을 좋아해요.\n하지만 취향은 반대예요.\n그녀는 로맨틱 코미디를 즐겨봐요.\n저는 액션 스릴러만 봐요.\n가장 난처한 상황은 외식할 때예요.\n제니는 해산물을 좋아해요.\n하지만 저는 아니에요.\n그래서 메뉴를 고르는 데 시간이 오래 걸려요.\n하지만 여전히 제 친구를 사랑해요.\n그녀는 저에게 너무나 소중한 사람이에요."
-  },
-  {
-    "id": "2",
-    "question_en": "Talk about a time when you visited a friend or a family member.\nWhat did you do when you visited them?\nWhat was memorable about that visit?\nTell me everything from beginning to end.\n",
-    "question_ko": "친구 또는 가족 구성원을 방문했던 때에 대해 이야기해 주세요.\n그들을 방문했을 때 무엇을 했습니까?\n그 방문에서 기억에 남는 것은 무엇이었습니까?\n처음부터 끝까지 모든 것을 말해주세요.\n",
-    "answer_en": "I like visiting my uncle who lives in Busan.\nBusan is a famous vacation spot.\nIt has beautiful beaches.\nI try to visit my uncle when I have time.\nI visited my uncle a few years ago.\nI took the bullet train.\nIt took about two and a half hours.\nI was tired from the trip.\nBut I was happy to see my uncle.\nWe took the subway to the main streets.\nHe took me to a famous restaurant.\nWe had to wait 30 minutes to be seated.\nThe food was great.\nWe were all very hungry.\nAfter dinner, we went to Haeundae Beach.\nWe watched fireworks together.\nWe walked along the beach.\nWe took some pictures.\nI love visiting my uncle in Busan.\nIt was the best trip I ever had.",
-    "answer_ko": "부산에 사는 삼촌을 방문하는 것을 좋아해요.\n부산은 유명한 휴가지예요.\n아름다운 해변이 있어요.\n시간이 날 때마다 삼촌을 방문하려고 해요.\n몇 년 전에 삼촌을 방문했어요.\n고속철도를 탔어요.\n약 두 시간 반이 걸렸어요.\n여행으로 피곤했어요.\n하지만 삼촌을 만나서 기뻤어요.\n지하철을 타고 주요 거리로 갔어요.\n삼촌이 저를 유명한 식당에 데려가 주셨어요.\n자리에 앉기 위해 30분 기다려야 했어요.\n음식이 훌륭했어요.\n우리 모두가 매우 배고팠어요.\n저녁 후에 해운대 해변에 갔어요.\n함께 불꽃놀이를 봤어요.\n해변을 따라 걸었어요.\n사진을 찍었어요.\n부산에 있는 삼촌을 방문하는 것을 정말 좋아해요.\n제가 경험한 최고의 여행이었어요."
-  },
-  {
-    "id": "3",
-    "question_en": "Now, tell me about what you talk about with your family members or friends commonly.\nWhat was the most recent thing that you talked about?\nGive me the details.\n",
-    "question_ko": "이제, 가족 구성원이나 친구들과 주로 무엇에 대해 이야기하는지 말해주세요.\n가장 최근에 이야기했던 것은 무엇이었습니까?\n자세한 내용을 알려주세요.\n",
-    "answer_en": "I normally talk to my friends about various issues.\nWe talk about what we've been doing.\nWe also talk about special events.\nWe talk about life in general.\nWe talk about careers and relationships.\nWe even talk about personal issues.\nAll of us are interested in getting a job.\nSo whenever we meet up, we talk about job hunting.\nI graduated last year.\nBut I am between jobs.\nI am currently working as a manager.\nI want to get a promotion this year.\nSo whenever I meet up with my friends, we talk about these issues.\nSpending time with my friends always cheers me up.\nHaving conversations with my friends helps me get rid of stress.",
-    "answer_ko": "보통 친구들과 다양한 문제에 대해 이야기해요.\n우리가 무엇을 하고 지냈는지에 대해 이야기해요.\n일어났던 특별한 일들에 대해서도 이야기해요.\n전반적인 삶에 대해서도 이야기해요.\n직업과 관계에 대해서도 이야기해요.\n개인적인 문제에 대해서도 이야기해요.\n요즘 우리 모두는 직장을 구하는 데 관심이 많아요.\n그래서 만날 때마다 취업에 대해 이야기해요.\n작년에 졸업했어요.\n하지만 현재 구직 중이에요.\n현재 매니저로 일하고 있어요.\n올해 승진하고 싶어요.\n그래서 친구들을 만날 때마다 이런 문제들에 대해 이야기해요.\n친구들과 시간을 보내는 것은 항상 저를 기쁘게 해요.\n친구들과 대화하는 것은 일상생활의 스트레스를 해소하는 데 도움이 돼요."
-  }
-]
+{
+  "title": "가족,친구",
+  "items": [
+    {
+      "id": "1",
+      "question_en": "Describe a family or a friend you have.\nWhat is he or she like?\nWhat is special about that person?\nGive me some details about that person.\n",
+      "question_ko": "당신의 가족 구성원이나 친구 한 명을 묘사해 주세요.\n그는/그녀는 어떤 사람인가요?\n그 사람에게 특별한 점은 무엇인가요?\n그 사람에 대한 자세한 정보를 알려주세요.\n",
+      "answer_en": "Let me talk about my best friend named Jenny.\nI met her in high school.\nWe have been friends for almost 20 years.\nShe is down to earth and easy going.\nI like her personality because she is very optimistic.\nI like to talk to her about my daily life.\nShe is a good listener.\nShe always gives me practical advice.\nJenny and I share many interests.\nWe have a lot in common.\nBut we are different in many ways.\nWe both love going to the movies.\nBut we have opposite tastes.\nShe enjoys romantic comedies.\nI only watch action-thrillers.\nThe most awkward situation is when we eat out.\nJenny is a seafood person.\nBut I am not.\nSo it takes a long time to choose a menu.\nBut I still love my friend.\nShe is such an important person to me.",
+      "answer_ko": "제 가장 친한 친구 제니에 대해 이야기해 볼게요.\n고등학교에서 그녀를 만났어요.\n거의 20년 동안 친구였어요.\n그녀는 현실적이고 소탈해요.\n그녀가 매우 낙천적이어서 그녀의 성격을 좋아해요.\n일상생활에 대해 그녀와 이야기하는 것을 좋아해요.\n그녀는 말을 잘 들어줘요.\n항상 실용적인 조언을 해줘요.\n제니와 저는 많은 관심사를 공유해요.\n공통점이 많아요.\n하지만 여러 면에서 달라요.\n우리는 둘 다 영화 보러 가는 것을 좋아해요.\n하지만 취향은 반대예요.\n그녀는 로맨틱 코미디를 즐겨봐요.\n저는 액션 스릴러만 봐요.\n가장 난처한 상황은 외식할 때예요.\n제니는 해산물을 좋아해요.\n하지만 저는 아니에요.\n그래서 메뉴를 고르는 데 시간이 오래 걸려요.\n하지만 여전히 제 친구를 사랑해요.\n그녀는 저에게 너무나 소중한 사람이에요."
+    },
+    {
+      "id": "2",
+      "question_en": "Talk about a time when you visited a friend or a family member.\nWhat did you do when you visited them?\nWhat was memorable about that visit?\nTell me everything from beginning to end.\n",
+      "question_ko": "친구 또는 가족 구성원을 방문했던 때에 대해 이야기해 주세요.\n그들을 방문했을 때 무엇을 했습니까?\n그 방문에서 기억에 남는 것은 무엇이었습니까?\n처음부터 끝까지 모든 것을 말해주세요.\n",
+      "answer_en": "I like visiting my uncle who lives in Busan.\nBusan is a famous vacation spot.\nIt has beautiful beaches.\nI try to visit my uncle when I have time.\nI visited my uncle a few years ago.\nI took the bullet train.\nIt took about two and a half hours.\nI was tired from the trip.\nBut I was happy to see my uncle.\nWe took the subway to the main streets.\nHe took me to a famous restaurant.\nWe had to wait 30 minutes to be seated.\nThe food was great.\nWe were all very hungry.\nAfter dinner, we went to Haeundae Beach.\nWe watched fireworks together.\nWe walked along the beach.\nWe took some pictures.\nI love visiting my uncle in Busan.\nIt was the best trip I ever had.",
+      "answer_ko": "부산에 사는 삼촌을 방문하는 것을 좋아해요.\n부산은 유명한 휴가지예요.\n아름다운 해변이 있어요.\n시간이 날 때마다 삼촌을 방문하려고 해요.\n몇 년 전에 삼촌을 방문했어요.\n고속철도를 탔어요.\n약 두 시간 반이 걸렸어요.\n여행으로 피곤했어요.\n하지만 삼촌을 만나서 기뻤어요.\n지하철을 타고 주요 거리로 갔어요.\n삼촌이 저를 유명한 식당에 데려가 주셨어요.\n자리에 앉기 위해 30분 기다려야 했어요.\n음식이 훌륭했어요.\n우리 모두가 매우 배고팠어요.\n저녁 후에 해운대 해변에 갔어요.\n함께 불꽃놀이를 봤어요.\n해변을 따라 걸었어요.\n사진을 찍었어요.\n부산에 있는 삼촌을 방문하는 것을 정말 좋아해요.\n제가 경험한 최고의 여행이었어요."
+    },
+    {
+      "id": "3",
+      "question_en": "Now, tell me about what you talk about with your family members or friends commonly.\nWhat was the most recent thing that you talked about?\nGive me the details.\n",
+      "question_ko": "이제, 가족 구성원이나 친구들과 주로 무엇에 대해 이야기하는지 말해주세요.\n가장 최근에 이야기했던 것은 무엇이었습니까?\n자세한 내용을 알려주세요.\n",
+      "answer_en": "I normally talk to my friends about various issues.\nWe talk about what we've been doing.\nWe also talk about special events.\nWe talk about life in general.\nWe talk about careers and relationships.\nWe even talk about personal issues.\nAll of us are interested in getting a job.\nSo whenever we meet up, we talk about job hunting.\nI graduated last year.\nBut I am between jobs.\nI am currently working as a manager.\nI want to get a promotion this year.\nSo whenever I meet up with my friends, we talk about these issues.\nSpending time with my friends always cheers me up.\nHaving conversations with my friends helps me get rid of stress.",
+      "answer_ko": "보통 친구들과 다양한 문제에 대해 이야기해요.\n우리가 무엇을 하고 지냈는지에 대해 이야기해요.\n일어났던 특별한 일들에 대해서도 이야기해요.\n전반적인 삶에 대해서도 이야기해요.\n직업과 관계에 대해서도 이야기해요.\n개인적인 문제에 대해서도 이야기해요.\n요즘 우리 모두는 직장을 구하는 데 관심이 많아요.\n그래서 만날 때마다 취업에 대해 이야기해요.\n작년에 졸업했어요.\n하지만 현재 구직 중이에요.\n현재 매니저로 일하고 있어요.\n올해 승진하고 싶어요.\n그래서 친구들을 만날 때마다 이런 문제들에 대해 이야기해요.\n친구들과 시간을 보내는 것은 항상 저를 기쁘게 해요.\n친구들과 대화하는 것은 일상생활의 스트레스를 해소하는 데 도움이 돼요."
+    }
+  ]
+}

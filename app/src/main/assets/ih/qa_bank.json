@@ -1,23 +1,26 @@
-[
-  {
-    "id": "1",
-    "question_en": "Let's talk about the bank you go to.\nWhere is it located and what is it like?\nWhat do you do from the moment you walk into the bank till you walk out?\nHow are the people who work at the bank?\nTell me everything that goes on when you visit the bank.\n",
-    "question_ko": "당신이 이용하는 은행에 대해 이야기해 주세요.\n어디에 위치해 있으며 어떤 모습인가요?\n은행에 들어서는 순간부터 나올 때까지 무엇을 합니까?\n은행에서 일하는 사람들은 어떤가요?\n은행을 방문할 때 일어나는 모든 일에 대해 말해주세요.\n",
-    "answer_en": "I typically visit a bank located in a bustling commercial district.\nIt's conveniently situated just a few minutes from my residence.\nI usually go there when I need to handle various financial transactions.\nThe bank offers services like withdrawals, deposits, and bill payments.\nIt's always quite crowded, so I often have to wait in line.\nHowever, the tellers are quite friendly and always greet me with a warm smile.\nI also visit when I need cash, and there are several ATMs available.\nPeople frequently queue up at the ATMs as well.\nOverall, I prefer this particular bank due to its convenient location.\n",
-    "answer_ko": "저는 번화가에 위치한 은행을 주로 이용해요.\n집에서 도보로 몇 분 거리에 있어서 매우 편리하죠.\n주로 다양한 금융 거래를 처리할 때 방문합니다.\n인출, 입금, 공과금 납부 같은 서비스를 이용해요.\n항상 사람이 많아서 줄을 서서 기다려야 하는 경우가 많아요.\n하지만 창구 직원들이 친절하고 항상 따뜻한 미소로 맞아주시죠.\n현금이 필요할 때도 방문하고, ATM도 여러 대 설치되어 있어요.\nATM에도 사람들이 자주 줄을 서 있긴 하지만요.\n전반적으로 위치가 편리해서 이 은행을 선호합니다.\n"
-  },
-  {
-    "id": "2",
-    "question_en": "Problems can occur when you're at the bank.\nPerhaps you could have forgotten to bring your ID.\nTalk about a problem you've personally had at a bank.\nWhat happened and how did you solve the problem?\n",
-    "question_ko": "은행에 있을 때 문제가 발생할 수 있습니다.\n어쩌면 신분증을 가져오는 것을 잊었을 수도 있습니다.\n은행에서 개인적으로 겪었던 문제에 대해 이야기해 주세요.\n무슨 일이 있었고 어떻게 문제를 해결했습니까?\n",
-    "answer_en": "Fortunately, I haven't encountered any significant problems at banks.\nHowever, I do recall an unusual incident that occurred during my lunch break.\nI visited a bank near my office, which was packed with customers.\nSuddenly, an intoxicated individual entered the premises.\nHe began speaking loudly to himself, making it obvious he was heavily under the influence.\nA security guard attempted to intervene and escort him out.\nHowever, the man persisted in his disruptive behavior and started approaching other customers.\nGiven the situation, I decided it was best to leave the bank.\nI couldn't understand why someone would be in such a state during business hours.\nThis incident reinforced my belief that people should maintain proper decorum in public spaces.\n",
-    "answer_ko": "다행히 은행에서 심각한 문제는 겪지 않았어요.\n하지만 점심시간에 발생한 특이한 사건을 기억해요.\n회사 근처 은행에 갔는데 고객들로 가득 차 있었죠.\n갑자기 술에 취한 사람이 들어왔어요.\n그는 자신에게 큰 소리로 말하기 시작했고, 심각하게 취한 상태임이 분명했어요.\n보안 요원이 개입해서 그를 내보내려고 했어요.\n하지만 그 남자는 계속 방해 행위를 하며 다른 고객들에게 접근하기 시작했죠.\n상황을 고려해서 은행을 떠나는 것이 좋겠다고 판단했어요.\n업무 시간에 왜 그런 상태가 되는지 이해할 수 없었어요.\n이 사건은 공공장소에서 예의를 지켜야 한다는 제 믿음을 더욱 강화했어요.\n"
-  },
-  {
-    "id": "3",
-    "question_en": "Banks have changed over the years.\nHow do banks look different than they did in the past?\nWhat kinds of changes are the most evident?\nWhat kind of impact have those changes had on the customers?\nGive me all the details.\n",
-    "question_ko": "은행은 수년에 걸쳐 변화했습니다.\n은행이 과거와 어떻게 다르게 보이나요?\n어떤 종류의 변화가 가장 뚜렷합니까?\n그러한 변화가 고객에게 어떤 영향을 미쳤습니까?\n모든 세부 사항을 알려주세요.\n",
-    "answer_en": "The banking industry has undergone remarkable transformations over the past few decades.\nPreviously, I would visit banks frequently for various transactions.\nHowever, the landscape has changed dramatically with the advent of digital technology.\nNowadays, I can access banking services through my smartphone at any time.\nI can check my balance, transfer funds, and even pay bills online.\nMost people now prefer to conduct their banking activities through digital platforms.\nI only visit physical bank branches when I need to withdraw cash from ATMs.\nThe banking system has evolved significantly in recent years.\n",
-    "answer_ko": "은행업계는 지난 수십 년간 놀라운 변화를 겪었어요.\n예전에는 다양한 거래를 위해 은행에 자주 방문했죠.\n하지만 디지털 기술의 등장으로 상황이 극적으로 바뀌었어요.\n요즘은 스마트폰으로 언제든지 은행 서비스에 접근할 수 있어요.\n잔액 확인, 송금, 온라인 공과금 납부까지 가능하죠.\n대부분의 사람들이 이제 디지털 플랫폼을 통해 은행 업무를 처리하는 것을 선호해요.\n저는 ATM에서 현금을 인출할 때만 실제 은행 지점을 방문해요.\n은행 시스템이 최근 몇 년간 크게 발전했어요.\n"
-  }
-]
+{
+  "title": "은행",
+  "items": [
+    {
+      "id": "1",
+      "question_en": "Let's talk about the bank you go to.\nWhere is it located and what is it like?\nWhat do you do from the moment you walk into the bank till you walk out?\nHow are the people who work at the bank?\nTell me everything that goes on when you visit the bank.\n",
+      "question_ko": "당신이 이용하는 은행에 대해 이야기해 주세요.\n어디에 위치해 있으며 어떤 모습인가요?\n은행에 들어서는 순간부터 나올 때까지 무엇을 합니까?\n은행에서 일하는 사람들은 어떤가요?\n은행을 방문할 때 일어나는 모든 일에 대해 말해주세요.\n",
+      "answer_en": "I typically visit a bank located in a bustling commercial district.\nIt's conveniently situated just a few minutes from my residence.\nI usually go there when I need to handle various financial transactions.\nThe bank offers services like withdrawals, deposits, and bill payments.\nIt's always quite crowded, so I often have to wait in line.\nHowever, the tellers are quite friendly and always greet me with a warm smile.\nI also visit when I need cash, and there are several ATMs available.\nPeople frequently queue up at the ATMs as well.\nOverall, I prefer this particular bank due to its convenient location.\n",
+      "answer_ko": "저는 번화가에 위치한 은행을 주로 이용해요.\n집에서 도보로 몇 분 거리에 있어서 매우 편리하죠.\n주로 다양한 금융 거래를 처리할 때 방문합니다.\n인출, 입금, 공과금 납부 같은 서비스를 이용해요.\n항상 사람이 많아서 줄을 서서 기다려야 하는 경우가 많아요.\n하지만 창구 직원들이 친절하고 항상 따뜻한 미소로 맞아주시죠.\n현금이 필요할 때도 방문하고, ATM도 여러 대 설치되어 있어요.\nATM에도 사람들이 자주 줄을 서 있긴 하지만요.\n전반적으로 위치가 편리해서 이 은행을 선호합니다.\n"
+    },
+    {
+      "id": "2",
+      "question_en": "Problems can occur when you're at the bank.\nPerhaps you could have forgotten to bring your ID.\nTalk about a problem you've personally had at a bank.\nWhat happened and how did you solve the problem?\n",
+      "question_ko": "은행에 있을 때 문제가 발생할 수 있습니다.\n어쩌면 신분증을 가져오는 것을 잊었을 수도 있습니다.\n은행에서 개인적으로 겪었던 문제에 대해 이야기해 주세요.\n무슨 일이 있었고 어떻게 문제를 해결했습니까?\n",
+      "answer_en": "Fortunately, I haven't encountered any significant problems at banks.\nHowever, I do recall an unusual incident that occurred during my lunch break.\nI visited a bank near my office, which was packed with customers.\nSuddenly, an intoxicated individual entered the premises.\nHe began speaking loudly to himself, making it obvious he was heavily under the influence.\nA security guard attempted to intervene and escort him out.\nHowever, the man persisted in his disruptive behavior and started approaching other customers.\nGiven the situation, I decided it was best to leave the bank.\nI couldn't understand why someone would be in such a state during business hours.\nThis incident reinforced my belief that people should maintain proper decorum in public spaces.\n",
+      "answer_ko": "다행히 은행에서 심각한 문제는 겪지 않았어요.\n하지만 점심시간에 발생한 특이한 사건을 기억해요.\n회사 근처 은행에 갔는데 고객들로 가득 차 있었죠.\n갑자기 술에 취한 사람이 들어왔어요.\n그는 자신에게 큰 소리로 말하기 시작했고, 심각하게 취한 상태임이 분명했어요.\n보안 요원이 개입해서 그를 내보내려고 했어요.\n하지만 그 남자는 계속 방해 행위를 하며 다른 고객들에게 접근하기 시작했죠.\n상황을 고려해서 은행을 떠나는 것이 좋겠다고 판단했어요.\n업무 시간에 왜 그런 상태가 되는지 이해할 수 없었어요.\n이 사건은 공공장소에서 예의를 지켜야 한다는 제 믿음을 더욱 강화했어요.\n"
+    },
+    {
+      "id": "3",
+      "question_en": "Banks have changed over the years.\nHow do banks look different than they did in the past?\nWhat kinds of changes are the most evident?\nWhat kind of impact have those changes had on the customers?\nGive me all the details.\n",
+      "question_ko": "은행은 수년에 걸쳐 변화했습니다.\n은행이 과거와 어떻게 다르게 보이나요?\n어떤 종류의 변화가 가장 뚜렷합니까?\n그러한 변화가 고객에게 어떤 영향을 미쳤습니까?\n모든 세부 사항을 알려주세요.\n",
+      "answer_en": "The banking industry has undergone remarkable transformations over the past few decades.\nPreviously, I would visit banks frequently for various transactions.\nHowever, the landscape has changed dramatically with the advent of digital technology.\nNowadays, I can access banking services through my smartphone at any time.\nI can check my balance, transfer funds, and even pay bills online.\nMost people now prefer to conduct their banking activities through digital platforms.\nI only visit physical bank branches when I need to withdraw cash from ATMs.\nThe banking system has evolved significantly in recent years.\n",
+      "answer_ko": "은행업계는 지난 수십 년간 놀라운 변화를 겪었어요.\n예전에는 다양한 거래를 위해 은행에 자주 방문했죠.\n하지만 디지털 기술의 등장으로 상황이 극적으로 바뀌었어요.\n요즘은 스마트폰으로 언제든지 은행 서비스에 접근할 수 있어요.\n잔액 확인, 송금, 온라인 공과금 납부까지 가능하죠.\n대부분의 사람들이 이제 디지털 플랫폼을 통해 은행 업무를 처리하는 것을 선호해요.\n저는 ATM에서 현금을 인출할 때만 실제 은행 지점을 방문해요.\n은행 시스템이 최근 몇 년간 크게 발전했어요.\n"
+    }
+  ]
+}

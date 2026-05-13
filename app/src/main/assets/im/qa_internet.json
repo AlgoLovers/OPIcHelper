@@ -1,23 +1,26 @@
-[
-  {
-    "id": "1",
-    "question_en": "Tell me about the technology you use in your daily life.\nHow often do you use technology?\nHow does technology help you?\nTell me everything about the things you do with technology.\n",
-    "question_ko": "당신의 일상생활에서 사용하는 기술에 대해 말해주세요.\n기술을 얼마나 자주 사용하나요?\n기술이 당신에게 어떻게 도움이 되나요?\n기술로 하는 모든 것에 대해 말해주세요.\n",
-    "answer_en": "I use technology all the time.\nWhen I wake up, I check my phone first.\nI use my tablet to take notes at work.\nI use my laptop to watch TV shows.\nI communicate with my friends through my phone.\nI send and receive messages on my phone.\nThere are many free applications.\nYou can send unlimited text messages and pictures.\nAt work, I can look up information online.\nWithout technology, my projects would take longer.\nI don't have to go to the library anymore.\nI don't know how anyone can live without technology.\nThat's why I use technology all the time.",
-    "answer_ko": "저는 항상 기술을 사용해요.\n잠에서 깨면 먼저 휴대전화를 확인해요.\n직장에서 태블릿으로 필기를 해요.\n노트북으로 TV 프로그램을 봐요.\n휴대전화로 친구들과 소통해요.\n휴대전화로 메시지를 주고받아요.\n무료로 다운로드할 수 있는 애플리케이션이 많아요.\n원할 때마다 무제한으로 문자와 사진을 보낼 수 있어요.\n직장에서는 온라인으로 정보를 찾아볼 수 있어요.\n기술이 없으면 프로젝트가 더 오래 걸려요.\n더 이상 도서관에 갈 필요가 없어요.\n기술 없이 어떻게 살 수 있을지 모르겠어요.\n그래서 항상 기술을 사용해요."
-  },
-  {
-    "id": "2",
-    "question_en": "What kind of things do you do on the Internet?\nDo you find out about new things or do you shop for stuff online?\nTell me about the most typical things that you do on the Internet.\n",
-    "question_ko": "인터넷에서 어떤 종류의 일들을 하나요?\n새로운 것을 찾아보거나 온라인으로 물건을 쇼핑하나요?\n인터넷에서 당신이 하는 가장 일반적인 일들에 대해 말해주세요.\n",
-    "answer_en": "I spend most of the day on the Internet.\nI send messages to my friends and family.\nI browse social media sites.\nI research products I want to buy.\nI have my phone with me all the time.\nI can do all these things even when I move.\nI keep in touch with my friends online.\nI watch funny clips.\nI find out about new products.\nWhen I go somewhere, I take pictures.\nI post them on Instagram.\nI can take selfies and post them right away.\nMy friends leave comments quickly.\nPeople do everything online these days.\nI don't know how anyone can live without the Internet.",
-    "answer_ko": "하루의 대부분을 인터넷에서 보내요.\n친구들과 가족에게 메시지를 보내요.\n소셜 미디어 사이트를 둘러봐요.\n사고 싶은 제품을 검색해요.\n항상 휴대전화를 가지고 다녀요.\n이동 중에도 이 모든 것을 할 수 있어요.\n온라인으로 친구들과 연락해요.\n재미있는 영상을 봐요.\n새로운 제품에 대해 알아봐요.\n어딘가에 갈 때마다 사진을 찍어요.\n인스타그램에 올려요.\n셀카를 찍어 바로 올릴 수도 있어요.\n친구들이 빠르게 댓글을 남겨요.\n요즘 사람들은 모든 것을 온라인으로 해요.\n인터넷 없이 어떻게 살 수 있을지 모르겠어요."
-  },
-  {
-    "id": "3",
-    "question_en": "We all have things that we remember on the Internet.\nTalk about the memorable things that you have seen on the Internet.\nWhy were they memorable?\n",
-    "question_ko": "우리 모두는 인터넷에서 기억하는 것들이 있습니다.\n인터넷에서 보았던 기억에 남는 것들에 대해 이야기해주세요.\n왜 기억에 남았나요?\n",
-    "answer_en": "I was very busy these days.\nI had no time to go shopping.\nSo I decided to shop online.\nI shopped online a month ago.\nI was going to travel to Japan.\nI wanted to buy clothes for the trip.\nI bought a pair of jeans.\nI also bought a blue sweater.\nI bought a hat too.\nThe shipping was fast.\nBut the clothes were different from what I expected.\nI was very disappointed.\nI called customer service.\nThe line was busy.\nIt took a long time to get connected.\nI talked to a customer representative.\nI decided to get a refund.\nI felt like I got ripped-off.\nSince then, I am more careful when I shop online.",
-    "answer_ko": "요즘 너무 바빴어요.\n쇼핑 갈 시간이 없었어요.\n그래서 온라인 쇼핑을 하기로 했어요.\n한 달 전에 온라인으로 쇼핑했어요.\n일본으로 여행을 갈 예정이었어요.\n여행을 위한 옷을 사고 싶었어요.\n청바지 한 벌을 샀어요.\n파란색 스웨터도 샀어요.\n모자도 샀어요.\n배송은 빨랐어요.\n하지만 옷이 예상과 달랐어요.\n매우 실망했어요.\n고객 서비스에 전화했어요.\n전화 연결이 바빴어요.\n연결되는 데 오래 걸렸어요.\n고객 상담원과 통화했어요.\n환불받기로 결정했어요.\n속았다는 느낌을 받았어요.\n그 이후로는 온라인 쇼핑할 때 더 신중해요."
-  }
-]
+{
+  "title": "인터넷",
+  "items": [
+    {
+      "id": "1",
+      "question_en": "Tell me about the technology you use in your daily life.\nHow often do you use technology?\nHow does technology help you?\nTell me everything about the things you do with technology.\n",
+      "question_ko": "당신의 일상생활에서 사용하는 기술에 대해 말해주세요.\n기술을 얼마나 자주 사용하나요?\n기술이 당신에게 어떻게 도움이 되나요?\n기술로 하는 모든 것에 대해 말해주세요.\n",
+      "answer_en": "I use technology all the time.\nWhen I wake up, I check my phone first.\nI use my tablet to take notes at work.\nI use my laptop to watch TV shows.\nI communicate with my friends through my phone.\nI send and receive messages on my phone.\nThere are many free applications.\nYou can send unlimited text messages and pictures.\nAt work, I can look up information online.\nWithout technology, my projects would take longer.\nI don't have to go to the library anymore.\nI don't know how anyone can live without technology.\nThat's why I use technology all the time.",
+      "answer_ko": "저는 항상 기술을 사용해요.\n잠에서 깨면 먼저 휴대전화를 확인해요.\n직장에서 태블릿으로 필기를 해요.\n노트북으로 TV 프로그램을 봐요.\n휴대전화로 친구들과 소통해요.\n휴대전화로 메시지를 주고받아요.\n무료로 다운로드할 수 있는 애플리케이션이 많아요.\n원할 때마다 무제한으로 문자와 사진을 보낼 수 있어요.\n직장에서는 온라인으로 정보를 찾아볼 수 있어요.\n기술이 없으면 프로젝트가 더 오래 걸려요.\n더 이상 도서관에 갈 필요가 없어요.\n기술 없이 어떻게 살 수 있을지 모르겠어요.\n그래서 항상 기술을 사용해요."
+    },
+    {
+      "id": "2",
+      "question_en": "What kind of things do you do on the Internet?\nDo you find out about new things or do you shop for stuff online?\nTell me about the most typical things that you do on the Internet.\n",
+      "question_ko": "인터넷에서 어떤 종류의 일들을 하나요?\n새로운 것을 찾아보거나 온라인으로 물건을 쇼핑하나요?\n인터넷에서 당신이 하는 가장 일반적인 일들에 대해 말해주세요.\n",
+      "answer_en": "I spend most of the day on the Internet.\nI send messages to my friends and family.\nI browse social media sites.\nI research products I want to buy.\nI have my phone with me all the time.\nI can do all these things even when I move.\nI keep in touch with my friends online.\nI watch funny clips.\nI find out about new products.\nWhen I go somewhere, I take pictures.\nI post them on Instagram.\nI can take selfies and post them right away.\nMy friends leave comments quickly.\nPeople do everything online these days.\nI don't know how anyone can live without the Internet.",
+      "answer_ko": "하루의 대부분을 인터넷에서 보내요.\n친구들과 가족에게 메시지를 보내요.\n소셜 미디어 사이트를 둘러봐요.\n사고 싶은 제품을 검색해요.\n항상 휴대전화를 가지고 다녀요.\n이동 중에도 이 모든 것을 할 수 있어요.\n온라인으로 친구들과 연락해요.\n재미있는 영상을 봐요.\n새로운 제품에 대해 알아봐요.\n어딘가에 갈 때마다 사진을 찍어요.\n인스타그램에 올려요.\n셀카를 찍어 바로 올릴 수도 있어요.\n친구들이 빠르게 댓글을 남겨요.\n요즘 사람들은 모든 것을 온라인으로 해요.\n인터넷 없이 어떻게 살 수 있을지 모르겠어요."
+    },
+    {
+      "id": "3",
+      "question_en": "We all have things that we remember on the Internet.\nTalk about the memorable things that you have seen on the Internet.\nWhy were they memorable?\n",
+      "question_ko": "우리 모두는 인터넷에서 기억하는 것들이 있습니다.\n인터넷에서 보았던 기억에 남는 것들에 대해 이야기해주세요.\n왜 기억에 남았나요?\n",
+      "answer_en": "I was very busy these days.\nI had no time to go shopping.\nSo I decided to shop online.\nI shopped online a month ago.\nI was going to travel to Japan.\nI wanted to buy clothes for the trip.\nI bought a pair of jeans.\nI also bought a blue sweater.\nI bought a hat too.\nThe shipping was fast.\nBut the clothes were different from what I expected.\nI was very disappointed.\nI called customer service.\nThe line was busy.\nIt took a long time to get connected.\nI talked to a customer representative.\nI decided to get a refund.\nI felt like I got ripped-off.\nSince then, I am more careful when I shop online.",
+      "answer_ko": "요즘 너무 바빴어요.\n쇼핑 갈 시간이 없었어요.\n그래서 온라인 쇼핑을 하기로 했어요.\n한 달 전에 온라인으로 쇼핑했어요.\n일본으로 여행을 갈 예정이었어요.\n여행을 위한 옷을 사고 싶었어요.\n청바지 한 벌을 샀어요.\n파란색 스웨터도 샀어요.\n모자도 샀어요.\n배송은 빨랐어요.\n하지만 옷이 예상과 달랐어요.\n매우 실망했어요.\n고객 서비스에 전화했어요.\n전화 연결이 바빴어요.\n연결되는 데 오래 걸렸어요.\n고객 상담원과 통화했어요.\n환불받기로 결정했어요.\n속았다는 느낌을 받았어요.\n그 이후로는 온라인 쇼핑할 때 더 신중해요."
+    }
+  ]
+}

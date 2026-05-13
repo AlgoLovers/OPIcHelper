@@ -1,23 +1,26 @@
-[
-  {
-    "id": "1",
-    "question_en": "You indicated that you like to go to the beach. Which beach do you like to go to?\nWhere is it? What does it look like? How often do you go to this beach?\nHow do people get there? Does it get crowded?",
-    "question_ko": "당신은 해변에 가는 것을 좋아한다고 말씀하셨습니다. 어떤 해변에 가는 것을 좋아하나요? 그곳은 어디에 있나요? 어떻게 생겼나요? 그 해변에 얼마나 자주 가나요? 사람들은 그곳에 어떻게 가나요? 붐비는 편인가요?",
-    "answer_en": "I like to go to Jumunjin Beach.\nIt is near my hometown.\nIt takes only fifteen minutes to get there.\nThe beach has white sand.\nThe water is cool in summer.\nThere are many restaurants near the beach.\nMany people go there for vacation.\nIt gets very crowded in summer.\nMany families and couples visit the beach.\nPeople walk on the beach and take pictures.\nI go there often because it is close to my home.",
-    "answer_ko": "저는 주문진 해변에 가는 것을 좋아해요.\n그 해변은 제 고향 근처에 있어요.\n그곳까지 15분밖에 안 걸려요.\n해변에는 흰 모래가 있어요.\n여름에는 물이 시원해요.\n해변 근처에 식당이 많아요.\n많은 사람들이 휴가를 위해 그곳에 가요.\n여름에는 매우 붐빠요.\n많은 가족들과 커플들이 해변을 방문해요.\n사람들은 해변을 걸으며 사진을 찍어요.\n집과 가깝기 때문에 자주 가요."
-  },
-  {
-    "id": "2",
-    "question_en": "When you go to the beach, what do you usually do there? Who do you go with?\nTell me everything about what you can do at the beach.",
-    "question_ko": "해변에 가면 보통 무엇을 하나요? 누구와 함께 가나요? 해변에서 할 수 있는 모든 것에 대해 말해주세요.",
-    "answer_en": "I usually go to the beach with my friends and family.\nWhen I get to the beach, I swim in the water.\nI also get a tan.\nI like to walk along the beach.\nSometimes I go jogging on the beach.\nI sometimes try surfing.\nWhen it gets dark, I drive along the beach.\nI eat seafood near the beach.\nI also enjoy fireworks.\nThese are the things I do at the beach.",
-    "answer_ko": "저는 보통 친구들과 가족과 함께 해변에 가요.\n해변에 도착하면 물에서 수영해요.\n태닝도 해요.\n해변을 따라 걷는 것을 좋아해요.\n가끔 해변에서 조깅을 해요.\n가끔 서핑을 시도해요.\n어두워지면 해변을 따라 드라이브를 해요.\n해변 근처에서 해산물을 먹어요.\n불꽃놀이도 즐겨요.\n이것들이 제가 해변에서 하는 일들이에요."
-  },
-  {
-    "id": "3",
-    "question_en": "Tell me about a particularly memorable trip to the beach. Who were you with?\nWhich beach were you at? What did you do there? What made this trip to the beach so memorable or special? Tell me everything you did from the moment you arrived there.",
-    "question_ko": "특히 기억에 남는 해변 여행에 대해 이야기해주세요. 누구와 함께 있었나요? 어느 해변에 있었나요? 그곳에서 무엇을 했나요? 무엇이 이 해변 여행을 그렇게 기억에 남고 특별하게 만들었나요? 그곳에 도착한 순간부터 했던 모든 것을 말해주세요.",
-    "answer_en": "I visited my uncle in Busan a few years ago.\nBusan has beautiful beaches.\nI took the bullet train to get there.\nIt took about two and a half hours.\nI was tired from the trip.\nBut I was happy to see my uncle.\nHe took me to a famous restaurant.\nWe had to wait 30 minutes to get a table.\nThe food was very good.\nAfter dinner, we went to Haeundae Beach.\nWe watched fireworks together.\nI had a great time in Busan.\nIt was the best trip I ever had.",
-    "answer_ko": "몇 년 전에 부산에 사는 삼촌을 방문했어요.\n부산에는 아름다운 해변들이 있어요.\n고속철도를 타고 갔어요.\n약 두 시간 반이 걸렸어요.\n여행으로 피곤했어요.\n하지만 삼촌을 만나서 기뻤어요.\n삼촌이 저를 유명한 식당에 데려가 주셨어요.\n테이블을 얻기 위해 30분 기다려야 했어요.\n음식이 정말 맛있었어요.\n저녁 후에 해운대 해변에 갔어요.\n함께 불꽃놀이를 봤어요.\n부산에서 정말 즐거운 시간을 보냈어요.\n제가 경험한 최고의 여행이었어요."
-  }
-]
+{
+  "title": "해변",
+  "items": [
+    {
+      "id": "1",
+      "question_en": "You indicated that you like to go to the beach. Which beach do you like to go to?\nWhere is it? What does it look like? How often do you go to this beach?\nHow do people get there? Does it get crowded?",
+      "question_ko": "당신은 해변에 가는 것을 좋아한다고 말씀하셨습니다. 어떤 해변에 가는 것을 좋아하나요? 그곳은 어디에 있나요? 어떻게 생겼나요? 그 해변에 얼마나 자주 가나요? 사람들은 그곳에 어떻게 가나요? 붐비는 편인가요?",
+      "answer_en": "I like to go to Jumunjin Beach.\nIt is near my hometown.\nIt takes only fifteen minutes to get there.\nThe beach has white sand.\nThe water is cool in summer.\nThere are many restaurants near the beach.\nMany people go there for vacation.\nIt gets very crowded in summer.\nMany families and couples visit the beach.\nPeople walk on the beach and take pictures.\nI go there often because it is close to my home.",
+      "answer_ko": "저는 주문진 해변에 가는 것을 좋아해요.\n그 해변은 제 고향 근처에 있어요.\n그곳까지 15분밖에 안 걸려요.\n해변에는 흰 모래가 있어요.\n여름에는 물이 시원해요.\n해변 근처에 식당이 많아요.\n많은 사람들이 휴가를 위해 그곳에 가요.\n여름에는 매우 붐빠요.\n많은 가족들과 커플들이 해변을 방문해요.\n사람들은 해변을 걸으며 사진을 찍어요.\n집과 가깝기 때문에 자주 가요."
+    },
+    {
+      "id": "2",
+      "question_en": "When you go to the beach, what do you usually do there? Who do you go with?\nTell me everything about what you can do at the beach.",
+      "question_ko": "해변에 가면 보통 무엇을 하나요? 누구와 함께 가나요? 해변에서 할 수 있는 모든 것에 대해 말해주세요.",
+      "answer_en": "I usually go to the beach with my friends and family.\nWhen I get to the beach, I swim in the water.\nI also get a tan.\nI like to walk along the beach.\nSometimes I go jogging on the beach.\nI sometimes try surfing.\nWhen it gets dark, I drive along the beach.\nI eat seafood near the beach.\nI also enjoy fireworks.\nThese are the things I do at the beach.",
+      "answer_ko": "저는 보통 친구들과 가족과 함께 해변에 가요.\n해변에 도착하면 물에서 수영해요.\n태닝도 해요.\n해변을 따라 걷는 것을 좋아해요.\n가끔 해변에서 조깅을 해요.\n가끔 서핑을 시도해요.\n어두워지면 해변을 따라 드라이브를 해요.\n해변 근처에서 해산물을 먹어요.\n불꽃놀이도 즐겨요.\n이것들이 제가 해변에서 하는 일들이에요."
+    },
+    {
+      "id": "3",
+      "question_en": "Tell me about a particularly memorable trip to the beach. Who were you with?\nWhich beach were you at? What did you do there? What made this trip to the beach so memorable or special? Tell me everything you did from the moment you arrived there.",
+      "question_ko": "특히 기억에 남는 해변 여행에 대해 이야기해주세요. 누구와 함께 있었나요? 어느 해변에 있었나요? 그곳에서 무엇을 했나요? 무엇이 이 해변 여행을 그렇게 기억에 남고 특별하게 만들었나요? 그곳에 도착한 순간부터 했던 모든 것을 말해주세요.",
+      "answer_en": "I visited my uncle in Busan a few years ago.\nBusan has beautiful beaches.\nI took the bullet train to get there.\nIt took about two and a half hours.\nI was tired from the trip.\nBut I was happy to see my uncle.\nHe took me to a famous restaurant.\nWe had to wait 30 minutes to get a table.\nThe food was very good.\nAfter dinner, we went to Haeundae Beach.\nWe watched fireworks together.\nI had a great time in Busan.\nIt was the best trip I ever had.",
+      "answer_ko": "몇 년 전에 부산에 사는 삼촌을 방문했어요.\n부산에는 아름다운 해변들이 있어요.\n고속철도를 타고 갔어요.\n약 두 시간 반이 걸렸어요.\n여행으로 피곤했어요.\n하지만 삼촌을 만나서 기뻤어요.\n삼촌이 저를 유명한 식당에 데려가 주셨어요.\n테이블을 얻기 위해 30분 기다려야 했어요.\n음식이 정말 맛있었어요.\n저녁 후에 해운대 해변에 갔어요.\n함께 불꽃놀이를 봤어요.\n부산에서 정말 즐거운 시간을 보냈어요.\n제가 경험한 최고의 여행이었어요."
+    }
+  ]
+}
