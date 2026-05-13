@@ -8,13 +8,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.na982.opichelper.domain.entity.MemorizeLevel
-import com.na982.opichelper.presentation.viewmodel.MainViewModel
+import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
 
 @Composable
 fun MemorizeLevelPlaybackButton(
     selectedLevel: String,
-    mainViewModel: MainViewModel,
+    mainViewModel: PlaybackViewModel,
     memorizationViewModel: MemorizationViewModel,
     hasEnglishWritingTestMergedFile: Boolean,
     isEnglishWritingTestMergedFilePlaying: Boolean,
