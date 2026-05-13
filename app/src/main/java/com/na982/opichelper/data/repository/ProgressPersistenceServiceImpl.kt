@@ -14,12 +14,14 @@ import javax.inject.Singleton
 class ProgressPersistenceServiceImpl @Inject constructor(
     private val context: Context
 ) : ProgressPersistenceService {
-    private val prefs: SharedPreferences = context.getSharedPreferences("opic_progress", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = context.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
 
     companion object {
         private const val KEY_APP_EXIT_STATE = "app_exit_state"
         private const val KEY_CATEGORY_PROGRESS_PREFIX = "category_progress_"
+        private const val KEY_NAV_CATEGORY = "last_category"
+        private const val KEY_NAV_INDEX = "last_index"
     }
 
     override suspend fun saveAppExitState(
@@ -53,6 +55,30 @@ class ProgressPersistenceServiceImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("ProgressPersistenceService", "앱 종료 상태 로드 실패", e)
             null
+        }
+    }
+
+    override suspend fun saveNavigationState(state: ProgressPersistenceService.NavigationState) {
+        try {
+            prefs.edit().apply {
+                putString(KEY_NAV_CATEGORY, state.category)
+                putInt(KEY_NAV_INDEX, state.index)
+                apply()
+            }
+        } catch (e: Exception) {
+            Log.e("ProgressPersistenceService", "네비게이션 상태 저장 실패", e)
+        }
+    }
+
+    override suspend fun loadNavigationState(): ProgressPersistenceService.NavigationState {
+        return try {
+            ProgressPersistenceService.NavigationState(
+                category = prefs.getString(KEY_NAV_CATEGORY, null),
+                index = prefs.getInt(KEY_NAV_INDEX, 0)
+            )
+        } catch (e: Exception) {
+            Log.e("ProgressPersistenceService", "네비게이션 상태 로드 실패", e)
+            ProgressPersistenceService.NavigationState(null, 0)
         }
     }
 

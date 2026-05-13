@@ -97,9 +97,10 @@ object AppModule {
     fun provideQaDataManager(
         progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
         qaDataLoader: QaDataLoader,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+        progressPersistenceService: ProgressPersistenceService
     ): QaDataManager {
-        return QaDataManager(progressTracker, qaDataLoader, userPreferencesRepository)
+        return QaDataManager(progressTracker, qaDataLoader, userPreferencesRepository, progressPersistenceService)
     }
     
     @Provides

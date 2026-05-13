@@ -1,18 +1,14 @@
 package com.na982.opichelper.presentation.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
+import android.util.Log
 import com.na982.opichelper.domain.entity.QaItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import android.content.Context
-import android.content.SharedPreferences
-import android.util.Log
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
@@ -21,8 +17,9 @@ import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 data class AppState(
@@ -62,8 +59,8 @@ class MainViewModel @Inject constructor(
     private val progressTracker: MemorizeTestProgressTracker,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
-    application: Application
-) : AndroidViewModel(application) {
+    private val ttsOrchestrator: TtsOrchestrator
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AppState())
     val uiState: StateFlow<AppState> = _uiState.asStateFlow()
@@ -75,9 +72,6 @@ class MainViewModel @Inject constructor(
     private val _isQuestionCardFlipped = MutableStateFlow(false)
     val isQuestionCardFlipped: StateFlow<Boolean> = _isQuestionCardFlipped.asStateFlow()
 
-    private var prefs: SharedPreferences? = null
-    private val PREF_KEY_LAST_MEMORIZE_LEVEL = "last_memorize_level"
-
     init {
         initializeViewModel()
         setupStateCombination()
@@ -85,16 +79,13 @@ class MainViewModel @Inject constructor(
 
     private fun initializeViewModel() {
         try {
-            prefs = getApplication<Application>().getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
-
-            val app = getApplication<Application>() as com.na982.opichelper.OPicHelperApplication
-            ttsPlaybackController.setTtsOrchestrator(app.ttsOrchestrator)
+            ttsPlaybackController.setTtsOrchestrator(ttsOrchestrator)
 
             loadMemorizeLevel()
 
             viewModelScope.launch {
                 try {
-                    qaDataManager.init(getApplication())
+                    qaDataManager.init()
                     progressTracker.restoreAllProgress()
                 } catch (e: Exception) {
                     Log.e("MainViewModel", "진행상황 복원 실패", e)
@@ -188,7 +179,7 @@ class MainViewModel @Inject constructor(
 
     fun setSelectedMemorizeLevel(level: String) {
         _uiState.value = _uiState.value.copy(selectedMemorizeLevel = level)
-        prefs?.edit()?.putString(PREF_KEY_LAST_MEMORIZE_LEVEL, level)?.apply()
+        userPreferencesRepository.setMemorizeLevel(level)
     }
 
     fun updateKoreanTtsServiceName(serviceName: String) {
@@ -351,7 +342,12 @@ class MainViewModel @Inject constructor(
     // ===== 헬퍼 =====
 
     private fun loadMemorizeLevel() {
-        setSelectedMemorizeLevel(MemorizeLevel.REPEAT_LISTENING.displayName)
+        val savedLevel = userPreferencesRepository.getMemorizeLevel()
+        if (savedLevel.isNotEmpty()) {
+            setSelectedMemorizeLevel(savedLevel)
+        } else {
+            setSelectedMemorizeLevel(MemorizeLevel.REPEAT_LISTENING.displayName)
+        }
     }
 
     fun getCurrentAnswer(qaItem: QaItem?): String {

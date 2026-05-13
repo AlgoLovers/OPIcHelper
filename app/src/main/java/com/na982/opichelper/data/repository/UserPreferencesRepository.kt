@@ -38,4 +38,12 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
     }
 
     override fun getEnglishTtsRate(): Float = _englishTtsRate.value
+
+    override fun getMemorizeLevel(): String {
+        return prefs.getString("last_memorize_level", "") ?: ""
+    }
+
+    override fun setMemorizeLevel(level: String) {
+        prefs.edit().putString("last_memorize_level", level).apply()
+    }
 }

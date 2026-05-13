@@ -37,4 +37,7 @@ interface UserPreferencesRepository {
      * 영문 TTS 속도 StateFlow
      */
     val englishTtsRate: StateFlow<Float>
+
+    fun getMemorizeLevel(): String
+    fun setMemorizeLevel(level: String)
 } 
