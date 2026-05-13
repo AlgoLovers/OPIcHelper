@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import com.na982.opichelper.presentation.ui.component.FlipCard
 import com.na982.opichelper.presentation.ui.component.HighlightText
 import com.na982.opichelper.ui.theme.*
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -31,8 +30,6 @@ fun AnswerCard(
     isRepeatListeningCardFlipped: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    Log.d("AnswerCard", "Rendering with highlightIndex=$highlightIndex, answerKoHighlightIndex=$answerKoHighlightIndex, recordingHighlightIndex=$recordingHighlightIndex, isFlipped=$isFlipped")
-    
     var isVisible by remember { mutableStateOf(true) }
     
     Column(
@@ -58,7 +55,6 @@ fun AnswerCard(
                     isVisible = isVisible,
                     onHideClick = {
                         isVisible = !isVisible
-                        Log.d("AnswerCard", "Visibility toggled to: $isVisible")
                     }
                 )
             },
@@ -74,7 +70,6 @@ fun AnswerCard(
                     isVisible = isVisible,
                     onHideClick = {
                         isVisible = !isVisible
-                        Log.d("AnswerCard", "Visibility toggled to: $isVisible")
                     }
                 )
             }

@@ -17,7 +17,6 @@ import androidx.compose.ui.zIndex
 import com.na982.opichelper.presentation.ui.component.FlipCard
 import com.na982.opichelper.presentation.ui.component.HighlightText
 import com.na982.opichelper.ui.theme.*
-import android.util.Log
 
 @Composable
 fun QuestionCard(
@@ -30,8 +29,6 @@ fun QuestionCard(
     currentCategory: String = "",
     modifier: Modifier = Modifier
 ) {
-    Log.d("QuestionCard", "Rendering with index=$currentIndex/$totalCount, highlightIndex=$highlightIndex")
-    
     Column(
         modifier = modifier
             .fillMaxWidth()

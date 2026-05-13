@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import android.util.Log
 import com.na982.opichelper.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,10 +104,8 @@ fun MemorizeLevelSelector(
                                     ) 
                                 },
                                 onClick = {
-                                    Log.d("MemorizeLevelSelector", "Level selected: $level")
                                     onLevelSelected(level)
                                     expanded = false
-                                    Log.d("MemorizeLevelSelector", "Level changed")
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = MenuDefaults.itemColors(

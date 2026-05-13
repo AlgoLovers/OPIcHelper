@@ -156,8 +156,6 @@ class EnglishWritingTestRepositoryImpl @Inject constructor(
         
         // 테스트 완료 - 현재 스크립트 진행 상황 삭제 (암기레벨별)
         progressTracker.clearScriptProgress(category, scriptIndex, MemorizeLevel.ENGLISH_WRITING.displayName)
-        
-        Log.d("EnglishWritingTestRepositoryImpl", "영작 테스트 완료")
     }
     
     override suspend fun getCurrentProgress(category: String, scriptIndex: Int): ProgressData? {

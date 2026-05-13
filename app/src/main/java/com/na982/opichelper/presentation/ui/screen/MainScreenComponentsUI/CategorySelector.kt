@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.util.Log
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.na982.opichelper.ui.theme.*
@@ -105,10 +104,8 @@ fun CategorySelector(
                                     ) 
                                 },
                                 onClick = {
-                                    Log.d("CategorySelector", "Category selected: $category")
                                     onCategorySelected(category)
                                     expanded = false
-                                    Log.d("CategorySelector", "Category changed")
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = MenuDefaults.itemColors(
