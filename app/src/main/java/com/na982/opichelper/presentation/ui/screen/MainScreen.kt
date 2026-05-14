@@ -321,8 +321,10 @@ fun MainScreen(
 
                         MemorizeLevelPlaybackButton(
                             selectedLevel = selectedLevel,
-                            mainViewModel = playbackViewModel,
-                            memorizationViewModel = memorizationViewModelInstance,
+                            onPlayEnglishWritingTest = { playbackViewModel.playEnglishWritingTestMergedFile() },
+                            onStopEnglishWritingTest = { playbackViewModel.stopEnglishWritingTestMergedFile() },
+                            onPlayFullMemorization = { memorizationViewModelInstance.playFullMemorizationRecording() },
+                            onStopFullMemorization = { memorizationViewModelInstance.stopFullMemorizationPlaying() },
                             hasEnglishWritingTestMergedFile = hasEnglishWritingTestMergedFile,
                             isEnglishWritingTestMergedFilePlaying = isEnglishWritingTestMergedFilePlaying,
                             hasFullMemorizationRecording = hasFullMemorizationRecording,

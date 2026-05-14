@@ -8,14 +8,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.na982.opichelper.domain.entity.MemorizeLevel
-import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
-import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
 
 @Composable
 fun MemorizeLevelPlaybackButton(
     selectedLevel: String,
-    mainViewModel: PlaybackViewModel,
-    memorizationViewModel: MemorizationViewModel,
+    onPlayEnglishWritingTest: () -> Unit,
+    onStopEnglishWritingTest: () -> Unit,
+    onPlayFullMemorization: () -> Unit,
+    onStopFullMemorization: () -> Unit,
     hasEnglishWritingTestMergedFile: Boolean,
     isEnglishWritingTestMergedFilePlaying: Boolean,
     hasFullMemorizationRecording: Boolean,
@@ -29,9 +29,9 @@ fun MemorizeLevelPlaybackButton(
                 Button(
                     onClick = {
                         if (isEnglishWritingTestMergedFilePlaying) {
-                            mainViewModel.stopEnglishWritingTestMergedFile()
+                            onStopEnglishWritingTest()
                         } else {
-                            mainViewModel.playEnglishWritingTestMergedFile()
+                            onPlayEnglishWritingTest()
                         }
                     },
                     enabled = hasEnglishWritingTestMergedFile,
@@ -55,9 +55,9 @@ fun MemorizeLevelPlaybackButton(
                 Button(
                     onClick = {
                         if (isFullMemorizationRecordingPlaying) {
-                            memorizationViewModel.stopFullMemorizationPlaying()
+                            onStopFullMemorization()
                         } else {
-                            memorizationViewModel.playFullMemorizationRecording()
+                            onPlayFullMemorization()
                         }
                     },
                     enabled = hasFullMemorizationRecording,
