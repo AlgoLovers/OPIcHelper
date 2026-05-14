@@ -27,7 +27,8 @@ class MemorizationViewModel @Inject constructor(
     private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
     private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
     private val fullMemorizationUseCase: FullMemorizationUseCase,
-    private val progressTracker: MemorizeTestProgressTracker
+    private val progressTracker: MemorizeTestProgressTracker,
+    private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
 ) : ViewModel() {
 
     override fun onCleared() {
@@ -179,7 +180,10 @@ class MemorizationViewModel @Inject constructor(
                             koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
                             englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
                         )
-                        executeRepeatListeningUseCase.execute(data = repeatListeningData)
+                        executeRepeatListeningUseCase.execute(
+                            data = repeatListeningData,
+                            repeatCount = userPreferencesRepository.getRepeatListeningCount()
+                        )
                     }
                 }
             } catch (e: Exception) {
