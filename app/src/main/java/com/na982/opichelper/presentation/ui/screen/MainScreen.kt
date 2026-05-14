@@ -154,7 +154,7 @@ fun MainScreen(
                             selectedCategory = category ?: "",
                             categories = categories,
                             onCategorySelected = {
-                                playbackViewModel.stopAllTts()
+                                playbackViewModel.stopTts()
                                 qaViewModel.selectCategory(it)
                             }
                         )
@@ -232,7 +232,7 @@ fun MainScreen(
                                 memorizationViewModelInstance.stopMemorization()
                                 playbackViewModel.playQuestion(qaItem.questionEn)
                             },
-                            onStopClick = { playbackViewModel.stopAllTts() },
+                            onStopClick = { playbackViewModel.stopTts() },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -248,7 +248,7 @@ fun MainScreen(
                             Button(
                                 onClick = {
                                     if (MemorizeLevel.fromDisplayName(selectedLevel) != MemorizeLevel.FULL_MEMORIZATION) {
-                                        playbackViewModel.stopAllTts()
+                                        playbackViewModel.stopTts()
                                     }
                                     memorizationViewModelInstance.onMemorizeTestButtonClick(selectedLevel)
                                 },
@@ -315,7 +315,7 @@ fun MainScreen(
                                 memorizationViewModelInstance.stopMemorization()
                                 qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
                             },
-                            onStopClick = { playbackViewModel.stopAllTts() },
+                            onStopClick = { playbackViewModel.stopTts() },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -335,11 +335,11 @@ fun MainScreen(
 
                     NavigationSection(
                         onPreviousQuestion = {
-                            playbackViewModel.stopAllTts()
+                            playbackViewModel.stopTts()
                             qaViewModel.previousQaItem()
                         },
                         onNextQuestion = {
-                            playbackViewModel.stopAllTts()
+                            playbackViewModel.stopTts()
                             qaViewModel.nextQaItem()
                         },
                         modifier = Modifier.fillMaxWidth()
