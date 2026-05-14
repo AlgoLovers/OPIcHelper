@@ -10,7 +10,7 @@ import java.io.File
  * TTS와 완전히 분리된 독립적인 MediaPlayer 인스턴스 사용
  */
 class RecordingAudioPlayerImpl : RecordingAudioPlayer {
-    private var player: MediaPlayer? = null
+    @Volatile private var player: MediaPlayer? = null
     
     override val isPlaying: Boolean
         get() = player?.isPlaying == true

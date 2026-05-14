@@ -6,7 +6,7 @@ import com.na982.opichelper.domain.audio.AudioPlayer
 import android.util.Log
 
 class AudioPlayerImpl : AudioPlayer {
-    private var player: MediaPlayer? = null
+    @Volatile private var player: MediaPlayer? = null
     override val isPlaying: Boolean
         get() = player?.isPlaying == true
 
