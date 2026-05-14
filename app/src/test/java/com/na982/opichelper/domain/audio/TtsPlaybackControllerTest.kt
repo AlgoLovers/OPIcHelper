@@ -20,8 +20,7 @@ class TtsPlaybackControllerTest {
 
     @Before
     fun setUp() {
-        ttsPlaybackController = TtsPlaybackController()
-        ttsPlaybackController.setTtsOrchestrator(mockTtsOrchestrator)
+        ttsPlaybackController = TtsPlaybackController(mockTtsOrchestrator)
     }
 
     @Test
