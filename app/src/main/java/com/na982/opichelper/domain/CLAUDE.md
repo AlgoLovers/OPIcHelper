@@ -17,26 +17,25 @@ domain/
 
 | 파일 | 내용 |
 |------|------|
-| `QaItem.kt` | 핵심 QA 데이터. 필드: `id`, `category`, `questionEn`, `questionKo`, `answers: Map<UserLevel, LeveledAnswer>`. **LeveledAnswer** (동일 파일): `answerEn`, `answerKo`, `vocabulary`, `grammar`, `tips` |
+| `QaItem.kt` | 핵심 QA 데이터. 필드: `id`, `category`, `questionEn`, `questionKo`, `answers: Map<UserLevel, LeveledAnswer>`. **LeveledAnswer** (동일 파일): `answerEn`, `answerKo`, `vocabulary: List<String>`, `grammar: List<String>`, `tips: List<String>` |
 | `UserLevel.kt` | AL, IH, IH_RAW, IM — 각각 displayName과 description 포함 |
-| `MemorizeLevel.kt` | REPEAT_LISTENING, ENGLISH_WRITING, FULL_MEMORIZATION — allDisplayNames 제공 |
+| `MemorizeLevel.kt` | REPEAT_LISTENING, ENGLISH_WRITING, FULL_MEMORIZATION — allDisplayNames 제공, fromDisplayName() 변환 메서드 |
 | `RepeatListeningData.kt` | 반복듣기용 데이터 (category, scriptIndex, koreanAnswer, englishAnswer) |
-| `ProgressData.kt` | AppExitState, CategoryProgress (진행상황 영속화용). CategoryProgress에 getKey() 메서드 포함 |
+| `ProgressData.kt` | AppExitState(timestamp 포함), CategoryProgress (진행상황 영속화용). CategoryProgress에 getKey() 메서드 포함 |
 
-**주의**: `ProgressData` data class는 이 파일이 아닌 `EnglishWritingTestRepository.kt`에 별도 정의됨. 파일명과 클래스명 혼동 주의.
+**주의**: `ProgressData` data class는 이 파일이 아닌 `EnglishWritingTestRepository.kt`에 별도 정의됨 (필드: category, scriptIndex, memorizeLevel, currentSentenceIndex, totalSentences, isMemorizeTestRunning). 파일명과 클래스명 혼동 주의. ScriptProgress.kt에도 거의 동일한 필드의 클래스가 존재함.
 
 ## audio/ — 오디오 추상화 & 제어
 
 | 파일 | 역할 | 비고 |
 |------|------|------|
 | `TtsPlayer.kt` | TTS 엔진 인터페이스 | speak, stop, pause, resume, isPlaying, isAvailable, getServiceName, speakWithHighlight, speakAndGetDuration, release |
-| `AudioPlayer.kt` | 오디오 파일 재생 인터페이스 | Data 계층에서 구현 |
-| `AudioRecorder.kt` | 녹음 인터페이스 | Data 계층에서 구현 |
+| `AudioPlayer.kt` | 오디오 파일 재생 인터페이스 | Data 계층에서 구현. java.io.File 사용 |
+| `AudioRecorder.kt` | 녹음 인터페이스 | Data 계층에서 구현. java.io.File 사용 |
 | `RecordingAudioPlayer.kt` | 녹음 재생 전용 인터페이스 | Data 계층에서 구현 |
-| `PlaybackEvent.kt` | 재생 이벤트 sealed class | **현재 미사용** |
-| `RepeatListeningUiCallback.kt` | 반복듣기 UI 콜백 인터페이스 | MemorizationViewModel에서 구현 |
-| `TtsOrchestrator.kt` | **@Singleton** 언어 감지→TTS 라우팅 | 한국어: Samsung, 영어: Google. speakWithHighlight로 문장별 하이라이트 지원 (15초 타임아웃). 한글 TTS 폴백: 모든 서비스 실패 시 index 0 리셋 |
-| `TtsPlaybackController.kt` | **@Singleton** 재생 상태 관리 | playQuestion/playAnswer/playMergedAudio. 7개 StateFlow 제공 (isPlaying, isQuestionPlaying, isAnswerPlaying + 4개 highlightIndex) |
+| `MemorizeTestEvent.kt` | 암기 테스트 이벤트 sealed class | CardFlip, Highlight, KoreanHighlight, RecordingHighlight, RecordingStateChange, MergedFileCreated, Completed |
+| `TtsOrchestrator.kt` | 언어 감지→TTS 라우팅 | 한국어: Samsung, 영어: Google. speakWithHighlight로 문장별 하이라이트 지원 (15초 타임아웃). 한글 TTS 폴백: 모든 서비스 실패 시 index 0 리셋. Hilt에 의해 싱글톤 보장 |
+| `TtsPlaybackController.kt` | **@Singleton** 재생 상태 관리 | playQuestion/playAnswer/playMergedAudio. 7개 StateFlow 제공 (isPlaying, isQuestionPlaying, isAnswerPlaying + 4개 highlightIndex). setQuestionHighlightIndex/setAnswerHighlightIndex/setAnswerKoHighlightIndex/setRecordingHighlightIndex/clearHighlight. pauseTts/resumeTts/cleanupTts/close. TtsOrchestrator는 setter로 주입됨 (생성자 아님) |
 
 ### TtsPlaybackController 핵심 API
 
@@ -45,19 +44,32 @@ playQuestion()       → stopCurrentAndPrepare() + 코루틴에서 speakWithHigh
 playAnswer()         → 동일 패턴
 playMergedAudio()    → 질문 TTS → 500ms 딜레이 → 답변 TTS 순차 재생
 stopCurrentAndPrepare() → 기존 Job 취소 + 상태 리셋 (TTS stop 호출 안함)
-stopTts() / stopAllTts() → TTS stop + Job 취소 + 상태 리셋 + 하이라이트 제거
+stopTts() / stopAllTts() → 동일: TTS stop + Job 취소 + 상태 리셋 + 하이라이트 제거
 forceStopTts()       → TTS stop + Job 취소 + 상태 리셋 (하이라이트 유지)
+setAnswerHighlightIndex(idx)    → answerHighlightIndex StateFlow 업데이트
+setAnswerKoHighlightIndex(idx)  → answerKoHighlightIndex StateFlow 업데이트
+setRecordingHighlightIndex(idx) → recordingHighlightIndex StateFlow 업데이트
+clearHighlight()     → 모든 highlightIndex를 null로 리셋
+pauseTts() / resumeTts() → TTS 일시정지/재개
+cleanupTts()         → forceStopTts + clearHighlight
+close()              → Closeable 구현, 코루틴 스코프 취소
 ```
 
-**주의**: playQuestion/playAnswer/playMergedAudio는 `stopCurrentAndPrepare()`를 사용. `forceStopTts()`를 사용하면 TTS 엔진에 불필요한 stop이 추가로 전송되어 간헐적 재생 불가 버그 발생 가능.
+**주의**: playQuestion/playAnswer/playMergedAudio는 `stopCurrentAndPrepare()`를 사용. `forceStopTts()`를 사용하면 TTS 엔진에 불필요한 stop이 추가로 전송되어 간헐적 재생 불가 버그 발생 가능. `stopTts()`와 `stopAllTts()`는 동일한 동작.
 
 ### TtsOrchestrator 핵심 API
 
 ```
-speak(text, onComplete)           — 기본 TTS 재생 (언어 자동 감지)
-speakWithHighlight(text, onHighlight) — 문장별 하이라이트 콜백 (15초/문장 타임아웃)
-speakAndWaitForCompletion(text, ...)  — 완료 대기 (30초 타임아웃)
-stop() / pause() / resume()       — 재생 제어
+speak(text, onComplete)                — 기본 TTS 재생 (언어 자동 감지)
+speakWithHighlight(text, onHighlight)  — 문장별 하이라이트 콜백 (15초/문장 타임아웃)
+speakAndWaitForCompletion(text, ...)   — 완료 대기 (30초 타임아웃), isKorean/rate 파라미터는 미사용
+speakAndGetDuration(text, ...)         — 재생 후 경과 시간 반환, isKorean/rate 파라미터는 미사용
+stop() / pause() / resume()            — 재생 제어
+releaseAllPlayers()                     — 모든 TTS 플레이어 해제 (앱 종료 시)
+isPlaying()                            — 현재 재생 중 여부
+getCurrentKoreanTtsServiceName()        — 현재 한글 TTS 서비스명 반환
+getAvailableKoreanTtsServices()         — 사용 가능한 한글 TTS 목록
+getKoreanTtsServiceStatus()             — 한글 TTS 서비스별 사용 가능 상태
 ```
 
 한글 감지: 유니코드 범위 0xAC00~0xD7AF, 0x3131~0x318E
@@ -74,31 +86,31 @@ stop() / pause() / resume()       — 재생 제어
 | 파일 | 타입 | 주요 메서드 |
 |------|------|------------|
 | `QaDataLoader.kt` | 인터페이스 | `loadQaItemsForLevel(level)` |
-| `QaDataManager.kt` | **@Singleton 클래스** | 카테고리/인덱스 관리, 데이터 로딩, 진행상황 저장. getCurrentAnswer(), getCurrentAnswerKo(), saveCurrentProgress() 포함 |
-| `UserPreferencesRepository.kt` | 인터페이스 | 레벨/TTS속도 get/set, StateFlow |
-| `ProgressPersistenceService.kt` | 인터페이스 | AppExitState, CategoryProgress CRUD |
+| `QaDataManager.kt` | **@Singleton 클래스** | 카테고리/인덱스 관리, 데이터 로딩, 진행상황 저장. currentQaItem/currentCategory/categories/isLoading/error StateFlow. selectCategory/nextQaItem/previousQaItem. getCurrentAnswer/getCurrentAnswerKo/getCurrentIndex. init/loadQaItemsFromAssets/release. saveCurrentProgress/saveCurrentIndex |
+| `UserPreferencesRepository.kt` | 인터페이스 | 레벨/TTS속도/암기레벨 get/set, StateFlow |
+| `ProgressPersistenceService.kt` | 인터페이스 | NavigationState(category, index) 저장/로드. AppExitState, CategoryProgress CRUD |
 | `RecordingFileRepository.kt` | 인터페이스 | 녹음 파일 CRUD, 재생, 하이라이트 재생 |
-| `RecordingTimeManager.kt` | 인터페이스 | saveRecordingTime, getRecordingTime, getAllRecordingTimes, hasRecordingTimes, clearRecordingTimes |
-| `RepeatListeningRepository.kt` | 인터페이스 | `executeRepeatListening(data, uiCallback, repeatCount)` — **UI 콜백 결합 위반** |
-| `EnglishWritingTestRepository.kt` | 인터페이스 + ProgressData | 영작테스트 실행, 진행상황 CRUD — **UI 콜백 결합 위반** |
-| `FullMemorizationRepository.kt` | 인터페이스 | playQuestionWithHighlight, startRecording, stopRecording, playRecording, hasRecording, getRecordingPath, clearRecording |
+| `RecordingTimeManager.kt` | 인터페이스 | saveRecordingTime(category, scriptIndex, sentenceIndex, recordingTimeMs), getRecordingTime, getAllRecordingTimes, hasRecordingTimes, clearRecordingTimes |
+| `RepeatListeningRepository.kt` | 인터페이스 | `events: SharedFlow<MemorizeTestEvent>`, `executeRepeatListening(data, repeatCount)`, getCurrentProgress, updateProgress, clearProgress |
+| `EnglishWritingTestRepository.kt` | 인터페이스 + ProgressData | `events: SharedFlow<MemorizeTestEvent>`, `executeEnglishWritingTest(answerKo, answerEn, category, scriptIndex)`, getCurrentProgress, updateProgress, clearProgress |
 | `AudioFileManager.kt` | 인터페이스 | 오디오 병합/저장/삭제 (다수 메서드) |
 | `ScriptProgress.kt` | 데이터 클래스 | 진행상황 상태. 필드: category, scriptIndex, memorizeLevel, currentSentenceIndex, totalSentences, isMemorizeTestRunning, timestamp, needsSave. getKey(), toPersistable() 포함 |
 
 ### 주의: QaDataManager는 인터페이스가 아닌 구현체
 `domain/repository/`에 위치하지만 인터페이스가 아님. Android 의존성은 ProgressPersistenceService로 분리 완료.
 순수 Kotlin 클래스이나 여전히 `domain/repository/`에 위치 (향후 Data 계층 이동 검토).
+**역의존성 문제**: MemorizeTestProgressTracker(usecase)를 직접 import.
 
 ## usecase/ — 비즈니스 로직
 
 | 파일 | 역할 | 주의사항 |
 |------|------|----------|
-| `ExecuteRepeatListeningUseCase.kt` | RepeatListeningRepository 위임 래퍼 | 얇은 래퍼 |
-| `ExecuteEnglishWritingTestUseCase.kt` | EnglishWritingTestRepository 위임 래퍼 | 얇은 래퍼 |
+| `ExecuteRepeatListeningUseCase.kt` | RepeatListeningRepository 위임 래퍼 | `events: SharedFlow<MemorizeTestEvent>` 노출. 얇은 래퍼 |
+| `ExecuteEnglishWritingTestUseCase.kt` | EnglishWritingTestRepository 위임 래퍼 | `events: SharedFlow<MemorizeTestEvent>` 노출. 얇은 래퍼 |
 | `FullMemorizationUseCase.kt` | TtsOrchestrator + RecordingFileRepository + AudioRecorder + QaDataManager + RecordingTimeManager 직접 사용 | highlightIndex StateFlow 제공, CoroutineScope(SupervisorJob + IO) 사용. Closeable 구현. 메서드: startFullMemorization, stopRecording, playRecordingWithHighlight, playRecordingSimple, hasRecording, clearRecording, cancelPlayback |
-| `RepeatListeningUseCase.kt` | 독립 반복듣기 로직. 문장별 한국어→영어 N회 | TTS duration 저장, 적응형 딜레이 (단어수*500ms*가중치). RepeatListeningRepositoryImpl과 거의 동일한 로직 포함 |
+| `RepeatListeningUseCase.kt` | 독립 반복듣기 로직. 문장별 한국어→영어 N회 | `events: SharedFlow<MemorizeTestEvent>`. `startRepeatListening()` 메서드. TTS duration 저장, 적응형 딜레이 (단어수*500ms*가중치). RepeatListeningRepositoryImpl과 거의 동일한 로직 포함 |
 | `PlayMergedFileUseCase.kt` | 영작테스트 병합 파일 재생 + 하이라이트 | StateFlow: isPlaying, highlightIndex, hasFile. 타이밍 추정: `(문자수 * 50ms).coerceAtLeast(1000ms)`. 정확한 타이밍 모드: playWithExactHighlight(). checkFile() 3회 재시도 |
-| `MemorizeTestProgressTracker.kt` | **@Singleton** 진행상황 메모리 관리 + 영속화 | 변경된 항목만 저장 (needsSave 플래그) |
+| `MemorizeTestProgressTracker.kt` | **@Singleton** 진행상황 메모리 관리 + 영속화 | 변경된 항목만 저장 (needsSave 플래그). @Inject constructor로 Hilt 자동 제공 |
 
 ### FullMemorizationUseCase
 이전에 `ExecuteFullMemorizationUseCase`가 존재했으나 삭제됨. 현재 `FullMemorizationUseCase`만 사용 중.
@@ -113,5 +125,7 @@ Domain 계층에 Android 프레임워크 import가 존재함:
 - `TtsOrchestrator` → Context, Log
 - `TtsPlaybackController` → Log
 - `QaDataManager` → Log (Android 의존성은 ProgressPersistenceService로 분리 완료)
+- `FullMemorizationUseCase` → Log
+- `MemorizeTestProgressTracker` → Log
 - `WakeLockManager` → Context, PowerManager, Log
 → Log는 허용 범위, Context/PowerManager는 Data 계층으로 이동 검토.
