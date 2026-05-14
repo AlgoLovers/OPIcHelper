@@ -17,12 +17,24 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
     private val _englishTtsRate = MutableStateFlow(0.8f)
     override val englishTtsRate: StateFlow<Float> = _englishTtsRate
 
+    private val _repeatListeningCount = MutableStateFlow(5)
+    override val repeatListeningCount: StateFlow<Int> = _repeatListeningCount
+
+    private val _answerPlayCount = MutableStateFlow(1)
+    override val answerPlayCount: StateFlow<Int> = _answerPlayCount
+
     init {
         val savedLevel = prefs.getString("user_level", UserLevel.IH.name)
         _userLevel.value = UserLevel.valueOf(savedLevel ?: UserLevel.IH.name)
 
         val savedRate = prefs.getFloat("english_tts_rate", 0.8f)
         _englishTtsRate.value = savedRate
+
+        val savedRepeatCount = prefs.getInt("repeat_listening_count", 5)
+        _repeatListeningCount.value = savedRepeatCount
+
+        val savedAnswerPlayCount = prefs.getInt("answer_play_count", 1)
+        _answerPlayCount.value = savedAnswerPlayCount
     }
 
     override fun setUserLevel(level: UserLevel) {
@@ -45,5 +57,19 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
 
     override fun setMemorizeLevel(level: String) {
         prefs.edit().putString("last_memorize_level", level).apply()
+    }
+
+    override fun getRepeatListeningCount(): Int = _repeatListeningCount.value
+
+    override fun setRepeatListeningCount(count: Int) {
+        _repeatListeningCount.value = count
+        prefs.edit().putInt("repeat_listening_count", count).apply()
+    }
+
+    override fun getAnswerPlayCount(): Int = _answerPlayCount.value
+
+    override fun setAnswerPlayCount(count: Int) {
+        _answerPlayCount.value = count
+        prefs.edit().putInt("answer_play_count", count).apply()
     }
 }

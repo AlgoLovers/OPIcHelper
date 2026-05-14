@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
@@ -34,7 +35,8 @@ data class PlaybackState(
 @HiltViewModel
 class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
-    private val playMergedFileUseCase: PlayMergedFileUseCase
+    private val playMergedFileUseCase: PlayMergedFileUseCase,
+    private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlaybackState())
@@ -114,7 +116,12 @@ class PlaybackViewModel @Inject constructor(
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
             ttsPlaybackController.stopTts()
-            ttsPlaybackController.playAnswer(answer)
+            val playCount = userPreferencesRepository.getAnswerPlayCount()
+            for (i in 1..playCount) {
+                ttsPlaybackController.playAnswer(answer)
+                // 재생 완료 대기
+                ttsPlaybackController.isAnswerPlaying.first { !it }
+            }
         }
     }
 
