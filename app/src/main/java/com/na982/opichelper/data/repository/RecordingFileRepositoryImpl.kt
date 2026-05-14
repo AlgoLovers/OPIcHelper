@@ -30,14 +30,14 @@ class RecordingFileRepositoryImpl @Inject constructor(
         if (files != null) {
             for (file in files) {
                 if (file.name.startsWith("통암기_${category}_${scriptIndex}_") && file.name.endsWith(".m4a")) {
-                    Log.d("RecordingFileRepositoryImpl", "hasRecordingFile: 파일 발견 - ${file.name}")
+                    // 파일 발견
                     currentRecordingPath.set(file.absolutePath)
                     return true
                 }
             }
         }
         
-        Log.d("RecordingFileRepositoryImpl", "hasRecordingFile: 파일 없음 - category=$category, scriptIndex=$scriptIndex")
+        // 파일 없음
         return false
     }
 
@@ -65,7 +65,7 @@ class RecordingFileRepositoryImpl @Inject constructor(
                 if (file.exists()) {
                     val deleted = file.delete()
                     if (deleted) {
-                        Log.d("RecordingFileRepositoryImpl", "deleteRecordingFile: 파일 삭제 성공 - $filePath")
+                        // 파일 삭제 성공
                         if (currentRecordingPath.get() == filePath) {
                             currentRecordingPath.set(null)
                         }
@@ -95,7 +95,7 @@ class RecordingFileRepositoryImpl @Inject constructor(
                 Log.e("RecordingFileRepositoryImpl", "playRecordingFile: 재생할 녹음 파일이 없음")
                 return
             }
-            Log.d("RecordingFileRepositoryImpl", "playRecordingFile: 단순 재생 시작 - $filePath")
+            // 단순 재생 시작
             currentPlayingPath.set(filePath)
             onPlayingStateChange(true)
             recordingAudioPlayer.startRecordingPlayback(filePath)
@@ -121,7 +121,7 @@ class RecordingFileRepositoryImpl @Inject constructor(
                 Log.e("RecordingFileRepositoryImpl", "playRecordingFileSimple: 재생할 녹음 파일이 없음")
                 return
             }
-            Log.d("RecordingFileRepositoryImpl", "playRecordingFileSimple: 동기 재생 시작 - $filePath")
+            // 동기 재생 시작
             currentPlayingPath.set(filePath)
             onPlayingStateChange(true)
 

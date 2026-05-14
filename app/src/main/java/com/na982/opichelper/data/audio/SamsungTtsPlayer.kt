@@ -21,17 +21,14 @@ class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
         return when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
                 // Android 14+ (S24 등 최신 기기): 한글 적합 속도
-                Log.d(logTag, "Android 14+ 감지 - 한글 적합 삼성 TTS 속도 적용")
                 1.1f
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
                 // Android 13 (Tab S6 Lite 등): 중간 속도
-                Log.d(logTag, "Android 13 감지 - 중간 삼성 TTS 속도 적용")
                 0.9f
             }
             else -> {
                 // Android 12 이하: 기본 속도
-                Log.d(logTag, "Android 12 이하 감지 - 기본 삼성 TTS 속도 적용")
                 0.8f
             }
         }
@@ -79,7 +76,7 @@ class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
                     (rate * 1.0f).coerceAtMost(1.0f)
                 }
             }
-            Log.d(logTag, "Android ${Build.VERSION.SDK_INT} - 한글 TTS 최적화 속도: $baseRate")
+            // 한글 TTS 최적화 속도 적용
             baseRate
         } else {
             rate
@@ -108,9 +105,8 @@ class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
      */
     override fun release() {
         try {
-            Log.d(logTag, "Samsung TTS 플레이어 완전 해제 시작")
+            // Samsung TTS 플레이어 완전 해제
             super.release()
-            Log.d(logTag, "Samsung TTS 플레이어 완전 해제 완료")
         } catch (e: Exception) {
             Log.e(logTag, "Samsung TTS 플레이어 해제 중 오류", e)
         }
