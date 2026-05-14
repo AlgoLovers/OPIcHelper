@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
 import javax.inject.Inject
@@ -35,8 +34,7 @@ data class PlaybackState(
 @HiltViewModel
 class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
-    private val playMergedFileUseCase: PlayMergedFileUseCase,
-    ttsOrchestrator: TtsOrchestrator
+    private val playMergedFileUseCase: PlayMergedFileUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlaybackState())
@@ -47,7 +45,6 @@ class PlaybackViewModel @Inject constructor(
     val englishWritingTestMergedFileHighlightIndex: StateFlow<Int?> = playMergedFileUseCase.highlightIndex
 
     init {
-        ttsPlaybackController.setTtsOrchestrator(ttsOrchestrator)
         setupStateCombination()
     }
 

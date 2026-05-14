@@ -14,7 +14,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TtsPlaybackController @Inject constructor() : java.io.Closeable {
+class TtsPlaybackController @Inject constructor(
+    private val ttsOrchestrator: TtsOrchestrator
+) : java.io.Closeable {
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var currentPlayJob: Job? = null
 
@@ -39,12 +41,6 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
     private val _recordingHighlightIndex = MutableStateFlow<Int?>(null)
     val recordingHighlightIndex: StateFlow<Int?> = _recordingHighlightIndex.asStateFlow()
 
-    private var ttsOrchestrator: TtsOrchestrator? = null
-
-    fun setTtsOrchestrator(orchestrator: TtsOrchestrator) {
-        ttsOrchestrator = orchestrator
-    }
-
     private fun stopCurrentAndPrepare() {
         currentPlayJob?.cancel()
         currentPlayJob = null
@@ -59,7 +55,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
                 _isPlaying.value = true
                 _isQuestionPlaying.value = true
 
-                ttsOrchestrator?.speakWithHighlight(question) { index ->
+                ttsOrchestrator.speakWithHighlight(question) { index ->
                     _questionHighlightIndex.value = index
                 }
             } catch (e: Exception) {
@@ -82,7 +78,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
                 _isPlaying.value = true
                 _isAnswerPlaying.value = true
 
-                ttsOrchestrator?.speakWithHighlight(answer) { index ->
+                ttsOrchestrator.speakWithHighlight(answer) { index ->
                     _answerHighlightIndex.value = index
                 }
             } catch (e: Exception) {
@@ -105,7 +101,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
                 _isPlaying.value = true
 
                 _isQuestionPlaying.value = true
-                ttsOrchestrator?.speakWithHighlight(question) { index ->
+                ttsOrchestrator.speakWithHighlight(question) { index ->
                     _questionHighlightIndex.value = index
                 }
                 _isQuestionPlaying.value = false
@@ -114,7 +110,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
                 kotlinx.coroutines.delay(500)
 
                 _isAnswerPlaying.value = true
-                ttsOrchestrator?.speakWithHighlight(answer) { index ->
+                ttsOrchestrator.speakWithHighlight(answer) { index ->
                     _answerHighlightIndex.value = index
                 }
                 _isAnswerPlaying.value = false
@@ -139,7 +135,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
 
     private fun stopTtsSync() {
         try {
-            ttsOrchestrator?.stop()
+            ttsOrchestrator.stop()
             currentPlayJob?.cancel()
             currentPlayJob = null
             resetPlayState()
@@ -162,7 +158,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
     fun pauseTts() {
         try {
             if (_isPlaying.value) {
-                ttsOrchestrator?.pause()
+                ttsOrchestrator.pause()
             }
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 일시 중지 실패", e)
@@ -172,7 +168,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
     fun resumeTts() {
         try {
             if (_isPlaying.value) {
-                ttsOrchestrator?.resume()
+                ttsOrchestrator.resume()
             }
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 재개 실패", e)
@@ -186,7 +182,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
     fun cleanupTts() {
         try {
             stopAllTts()
-            ttsOrchestrator?.releaseAllPlayers()
+            ttsOrchestrator.releaseAllPlayers()
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
         }
@@ -199,7 +195,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
 
     fun forceStopTts() {
         try {
-            ttsOrchestrator?.stop()
+            ttsOrchestrator.stop()
             currentPlayJob?.cancel()
             currentPlayJob = null
             resetPlayState()
@@ -209,7 +205,7 @@ class TtsPlaybackController @Inject constructor() : java.io.Closeable {
     }
 
     fun getCurrentKoreanTtsServiceName(): String {
-        return ttsOrchestrator?.getCurrentKoreanTtsServiceName() ?: "없음"
+        return ttsOrchestrator.getCurrentKoreanTtsServiceName()
     }
 
     fun setQuestionHighlightIndex(index: Int) {
