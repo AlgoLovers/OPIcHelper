@@ -40,10 +40,6 @@ class PlaybackViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PlaybackState())
     val uiState: StateFlow<PlaybackState> = _uiState.asStateFlow()
 
-    val hasEnglishWritingTestMergedFile: StateFlow<Boolean> = playMergedFileUseCase.hasFile
-    val isEnglishWritingTestMergedFilePlaying: StateFlow<Boolean> = playMergedFileUseCase.isPlaying
-    val englishWritingTestMergedFileHighlightIndex: StateFlow<Int?> = playMergedFileUseCase.highlightIndex
-
     init {
         setupStateCombination()
     }
