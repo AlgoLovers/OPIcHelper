@@ -7,11 +7,8 @@ import com.google.gson.Gson
 import com.na982.opichelper.domain.entity.AppExitState
 import com.na982.opichelper.domain.entity.CategoryProgress
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class ProgressPersistenceServiceImpl @Inject constructor(
+class ProgressPersistenceServiceImpl(
     private val context: Context
 ) : ProgressPersistenceService {
     private val prefs: SharedPreferences = context.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)

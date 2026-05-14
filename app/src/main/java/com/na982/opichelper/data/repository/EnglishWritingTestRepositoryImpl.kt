@@ -20,11 +20,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class EnglishWritingTestRepositoryImpl @Inject constructor(
+class EnglishWritingTestRepositoryImpl(
     private val qaDataManager: QaDataManager,
     private val ttsOrchestrator: TtsOrchestrator,
     private val audioRecorder: AudioRecorder,
