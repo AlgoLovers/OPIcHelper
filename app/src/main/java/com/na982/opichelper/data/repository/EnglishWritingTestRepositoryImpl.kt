@@ -9,7 +9,7 @@ import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
-import com.na982.opichelper.domain.repository.ProgressData
+import com.na982.opichelper.domain.repository.TestProgressData
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -125,10 +125,10 @@ class EnglishWritingTestRepositoryImpl(
         )
     }
 
-    override suspend fun getCurrentProgress(category: String, scriptIndex: Int): ProgressData? {
+    override suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData? {
         val navState = progressPersistenceService.loadNavigationState()
         return if (navState.category == category) {
-            ProgressData(
+            TestProgressData(
                 category = category,
                 scriptIndex = scriptIndex,
                 memorizeLevel = MemorizeLevel.ENGLISH_WRITING.displayName,
@@ -139,7 +139,7 @@ class EnglishWritingTestRepositoryImpl(
         } else null
     }
 
-    override suspend fun updateProgress(progressData: ProgressData) {
+    override suspend fun updateProgress(progressData: TestProgressData) {
         progressPersistenceService.saveNavigationState(
             ProgressPersistenceService.NavigationState(progressData.category, progressData.currentSentenceIndex)
         )
