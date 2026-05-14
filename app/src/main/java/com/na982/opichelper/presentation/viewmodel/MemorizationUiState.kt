@@ -1,5 +1,7 @@
 package com.na982.opichelper.presentation.viewmodel
 
+import com.na982.opichelper.domain.entity.MemorizeLevel
+
 data class MemorizationUiState(
     val isRunning: Boolean = false,
     val currentMode: CurrentMode = CurrentMode.NONE,
@@ -26,5 +28,9 @@ data class MemorizationUiState(
     val isMemorizeTestRunning: Boolean = false,
 
     val englishWritingTestCompleted: Boolean = false,
-    val stopEnglishWritingTestMergedFilePlaying: Boolean = false
+    val stopEnglishWritingTestMergedFilePlaying: Boolean = false,
+
+    val isQuestionCardFlipped: Boolean = false,
+    val fullMemorizationHighlightIndex: Int? = null,
+    val memorizeLevels: List<String> = MemorizeLevel.allDisplayNames
 )
