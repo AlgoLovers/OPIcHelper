@@ -6,7 +6,7 @@ import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
@@ -92,12 +92,9 @@ class RecordingFileRepositoryImpl(
                 Log.e("RecordingFileRepositoryImpl", "playRecordingFile: 재생할 녹음 파일이 없음")
                 return
             }
-            // 단순 재생 시작
             currentPlayingPath.set(filePath)
             onPlayingStateChange(true)
-            recordingAudioPlayer.startRecordingPlayback(filePath)
-            val recordingDuration = recordingAudioPlayer.getDuration(filePath)
-            kotlinx.coroutines.delay(recordingDuration.toLong())
+            awaitPlaybackCompletion(filePath)
             onPlayingStateChange(false)
             currentPlayingPath.set(null)
         } catch (e: Exception) {
@@ -106,7 +103,7 @@ class RecordingFileRepositoryImpl(
             currentPlayingPath.set(null)
         }
     }
-    
+
     override suspend fun playRecordingFileSimple(
         category: String,
         scriptIndex: Int,
@@ -118,21 +115,23 @@ class RecordingFileRepositoryImpl(
                 Log.e("RecordingFileRepositoryImpl", "playRecordingFileSimple: 재생할 녹음 파일이 없음")
                 return
             }
-            // 동기 재생 시작
             currentPlayingPath.set(filePath)
             onPlayingStateChange(true)
-
-            recordingAudioPlayer.startRecordingPlayback(filePath)
-
-            val recordingDuration = recordingAudioPlayer.getDuration(filePath)
-            kotlinx.coroutines.delay(recordingDuration.toLong())
-
+            awaitPlaybackCompletion(filePath)
             onPlayingStateChange(false)
             currentPlayingPath.set(null)
         } catch (e: Exception) {
             Log.e("RecordingFileRepositoryImpl", "playRecordingFileSimple 실패", e)
             onPlayingStateChange(false)
             currentPlayingPath.set(null)
+        }
+    }
+
+    private suspend fun awaitPlaybackCompletion(filePath: String) {
+        suspendCancellableCoroutine { cont ->
+            recordingAudioPlayer.playRecording(filePath) {
+                if (cont.isActive) cont.resume(Unit) {}
+            }
         }
     }
 
