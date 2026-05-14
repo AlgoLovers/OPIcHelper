@@ -38,39 +38,16 @@ class MemorizationViewModel @Inject constructor(
         fullMemorizationUseCase.cancelPlayback()
     }
 
-    private val _memorizeLevels = MutableStateFlow(MemorizeLevel.allDisplayNames)
-    val memorizeLevels: StateFlow<List<String>> = _memorizeLevels.asStateFlow()
-
-    private val _isRunning = MutableStateFlow(false)
-    val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
-
-    private val _currentMode = MutableStateFlow(CurrentMode.NONE)
-    val currentMode: StateFlow<CurrentMode> = _currentMode.asStateFlow()
-
-    private val _englishWritingTestCompleted = MutableStateFlow(false)
-    val englishWritingTestCompleted: StateFlow<Boolean> = _englishWritingTestCompleted.asStateFlow()
-
-    private val _stopEnglishWritingTestMergedFilePlaying = MutableStateFlow(false)
-    val stopEnglishWritingTestMergedFilePlaying: StateFlow<Boolean> = _stopEnglishWritingTestMergedFilePlaying.asStateFlow()
-
     private val _uiState = MutableStateFlow(MemorizationUiState())
     val uiState: StateFlow<MemorizationUiState> = _uiState.asStateFlow()
-
-    private val _isQuestionCardFlipped = MutableStateFlow(false)
-    val isQuestionCardFlipped: StateFlow<Boolean> = _isQuestionCardFlipped.asStateFlow()
-
-    val fullMemorizationHighlightIndex: StateFlow<Int?> = fullMemorizationUseCase.highlightIndex
 
     private var currentUseCaseJob: Job? = null
     private var eventCollectJob: Job? = null
 
     private fun updateUiState() {
-        val mode = _currentMode.value
-        val running = _isRunning.value
-        _uiState.value = MemorizationUiState(
-            isRunning = running,
-            currentMode = mode,
-
+        val mode = _uiState.value.currentMode
+        val running = _uiState.value.isRunning
+        _uiState.value = _uiState.value.copy(
             isRepeatListeningCardFlipped = mode == CurrentMode.REPEAT_LISTENING && running,
             isRepeatListeningRunning = mode == CurrentMode.REPEAT_LISTENING && running,
             isRepeatListeningMode = mode == CurrentMode.REPEAT_LISTENING,
@@ -103,22 +80,17 @@ class MemorizationViewModel @Inject constructor(
             ),
             isFullMemorizationRecordingPlaying = mode == CurrentMode.FULL_MEMORIZATION_PLAYING,
 
-            isMemorizeTestRunning = running,
-
-            englishWritingTestCompleted = _englishWritingTestCompleted.value,
-            stopEnglishWritingTestMergedFilePlaying = _stopEnglishWritingTestMergedFilePlaying.value
+            isMemorizeTestRunning = running
         )
     }
 
     private fun startMode(mode: CurrentMode) {
-        _currentMode.value = mode
-        _isRunning.value = true
+        _uiState.value = _uiState.value.copy(currentMode = mode, isRunning = true)
         updateUiState()
     }
 
     private fun stopMode() {
-        _isRunning.value = false
-        _currentMode.value = CurrentMode.NONE
+        _uiState.value = _uiState.value.copy(isRunning = false, currentMode = CurrentMode.NONE)
         updateUiState()
     }
 
@@ -145,7 +117,7 @@ class MemorizationViewModel @Inject constructor(
                             startMode(CurrentMode.ENGLISH_WRITING)
                             ttsPlaybackController.stopTts()
                             ttsPlaybackController.clearHighlight()
-                            _stopEnglishWritingTestMergedFilePlaying.value = true
+                            _uiState.value = _uiState.value.copy(stopEnglishWritingTestMergedFilePlaying = true)
                             startEnglishWritingTest()
                         }
                     }
@@ -278,7 +250,7 @@ class MemorizationViewModel @Inject constructor(
                 }
             }
             is MemorizeTestEvent.MergedFileCreated -> {
-                _englishWritingTestCompleted.value = true
+                _uiState.value = _uiState.value.copy(englishWritingTestCompleted = true)
                 stopMode()
                 _uiState.value = _uiState.value.copy(
                     isEnglishWritingTestRunning = false,
@@ -373,7 +345,7 @@ class MemorizationViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val hasRecording = fullMemorizationUseCase.hasRecording()
-                val currentMode = _currentMode.value
+                val currentMode = _uiState.value.currentMode
                 if (currentMode in setOf(
                         CurrentMode.FULL_MEMORIZATION,
                         CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
@@ -381,7 +353,9 @@ class MemorizationViewModel @Inject constructor(
                         CurrentMode.FULL_MEMORIZATION_PLAYING,
                         CurrentMode.FULL_MEMORIZATION_WITH_FILE
                     )) {
-                    _currentMode.value = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION
+                    _uiState.value = _uiState.value.copy(
+                        currentMode = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION
+                    )
                 }
                 _uiState.value = _uiState.value.copy(hasFullMemorizationRecordingFile = hasRecording)
                 updateUiState()
@@ -394,8 +368,10 @@ class MemorizationViewModel @Inject constructor(
     private suspend fun checkFullMemorizationRecordingStatus() {
         try {
             val hasRecording = fullMemorizationUseCase.hasRecording()
-            _currentMode.value = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION
-            _uiState.value = _uiState.value.copy(hasFullMemorizationRecordingFile = hasRecording)
+            _uiState.value = _uiState.value.copy(
+                currentMode = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION,
+                hasFullMemorizationRecordingFile = hasRecording
+            )
             updateUiState()
         } catch (e: Exception) {
             Log.e("MemorizationViewModel", "통암기 녹음 파일 상태 확인 실패", e)
@@ -403,8 +379,7 @@ class MemorizationViewModel @Inject constructor(
     }
 
     fun resetStateOnAppRestart() {
-        _currentMode.value = CurrentMode.NONE
-        _isRunning.value = false
+        _uiState.value = _uiState.value.copy(currentMode = CurrentMode.NONE, isRunning = false)
         updateUiState()
     }
 
@@ -468,11 +443,11 @@ class MemorizationViewModel @Inject constructor(
     }
 
     fun resetEnglishWritingTestCompleted() {
-        _englishWritingTestCompleted.value = false
+        _uiState.value = _uiState.value.copy(englishWritingTestCompleted = false)
     }
 
     fun resetStopEnglishWritingTestMergedFilePlaying() {
-        _stopEnglishWritingTestMergedFilePlaying.value = false
+        _uiState.value = _uiState.value.copy(stopEnglishWritingTestMergedFilePlaying = false)
     }
 
     fun stopEnglishWritingTest() {
@@ -509,8 +484,10 @@ class MemorizationViewModel @Inject constructor(
                 eventCollectJob = null
                 stopMode()
 
-                _englishWritingTestCompleted.value = false
-                _stopEnglishWritingTestMergedFilePlaying.value = false
+                _uiState.value = _uiState.value.copy(
+                    englishWritingTestCompleted = false,
+                    stopEnglishWritingTestMergedFilePlaying = false
+                )
 
                 ttsPlaybackController.stopTts()
                 ttsPlaybackController.clearHighlight()
@@ -521,10 +498,16 @@ class MemorizationViewModel @Inject constructor(
     }
 
     fun setQuestionCardFlipped(isFlipped: Boolean) {
-        _isQuestionCardFlipped.value = isFlipped
+        _uiState.value = _uiState.value.copy(isQuestionCardFlipped = isFlipped)
     }
 
     init {
+        viewModelScope.launch {
+            fullMemorizationUseCase.highlightIndex.collect { index ->
+                _uiState.value = _uiState.value.copy(fullMemorizationHighlightIndex = index)
+            }
+        }
+
         viewModelScope.launch {
             var isFirst = true
             qaDataManager.currentQaItem.collect { currentItem ->

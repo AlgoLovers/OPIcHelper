@@ -35,26 +35,24 @@ fun MainScreen(
     val playbackState by playbackViewModel.uiState.collectAsState()
     val qaState by qaViewModel.uiState.collectAsState()
     val memorizationViewModelInstance = memorizationViewModel ?: hiltViewModel<MemorizationViewModel>()
-    val memorizeLevels by memorizationViewModelInstance.memorizeLevels.collectAsState()
+    val memorizationUiState by memorizationViewModelInstance.uiState.collectAsState()
+    val memorizeLevels = memorizationUiState.memorizeLevels
     val selectedLevel = qaState.selectedMemorizeLevel
     val currentQaItemState = qaState.currentQaItem
     val categories = qaState.categories
     val currentCategoryState = qaState.currentCategory
 
-    val isQuestionCardFlipped by memorizationViewModelInstance.isQuestionCardFlipped.collectAsState()
-
-    val memorizationUiState by memorizationViewModelInstance.uiState.collectAsState()
-
+    val isQuestionCardFlipped = memorizationUiState.isQuestionCardFlipped
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
 
     val hasEnglishWritingTestMergedFile = playbackState.hasEnglishWritingTestMergedFile
-    val englishWritingTestCompleted by memorizationViewModelInstance.englishWritingTestCompleted.collectAsState()
+    val englishWritingTestCompleted = memorizationUiState.englishWritingTestCompleted
     val isEnglishWritingTestMergedFilePlaying = playbackState.isEnglishWritingTestMergedFilePlaying
     val englishWritingTestMergedFileHighlightIndex = playbackState.englishWritingTestMergedFileHighlightIndex
-    val stopEnglishWritingTestMergedFilePlaying by memorizationViewModelInstance.stopEnglishWritingTestMergedFilePlaying.collectAsState()
+    val stopEnglishWritingTestMergedFilePlaying = memorizationUiState.stopEnglishWritingTestMergedFilePlaying
     val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
 
-    val fullMemorizationHighlightIndex by memorizationViewModelInstance.fullMemorizationHighlightIndex.collectAsState()
+    val fullMemorizationHighlightIndex = memorizationUiState.fullMemorizationHighlightIndex
     val isFullMemorizationQuestionPlaying = memorizationUiState.isFullMemorizationQuestionPlaying
     val isFullMemorizationRecording = memorizationUiState.isFullMemorizationRecording
     val isFullMemorizationPlaying = memorizationUiState.isFullMemorizationPlaying
