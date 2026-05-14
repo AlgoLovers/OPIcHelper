@@ -2,12 +2,12 @@ package com.na982.opichelper.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import javax.inject.Inject
 import javax.inject.Singleton
-import android.util.Log
 
 /**
  * SharedPreferences를 사용한 녹음 시간 관리 구현체
@@ -34,13 +34,13 @@ class RecordingTimeManagerImpl @Inject constructor(
         val json = gson.toJson(times)
         prefs.edit().putString(key, json).apply()
         
-        Log.d("RecordingTimeManagerImpl", "녹음 시간 저장: $key, 문장 $sentenceIndex, 시간 ${recordingTimeMs}ms, 전체: $times")
+        // 녹음 시간 저장 완료
     }
     
     override fun getRecordingTime(category: String, scriptIndex: Int, sentenceIndex: Int): Long? {
         val times = getAllRecordingTimes(category, scriptIndex)
         val result = if (sentenceIndex < times.size) times[sentenceIndex] else null
-        Log.d("RecordingTimeManagerImpl", "녹음 시간 조회: ${getKey(category, scriptIndex)}, 문장 $sentenceIndex, 결과: $result")
+        // 녹음 시간 조회 완료
         return result
     }
     
@@ -60,14 +60,14 @@ class RecordingTimeManagerImpl @Inject constructor(
             emptyList()
         }
         
-        Log.d("RecordingTimeManagerImpl", "전체 녹음 시간 조회: $key, 결과: $result")
+        // 전체 녹음 시간 조회 완료
         return result
     }
     
     override fun hasRecordingTimes(category: String, scriptIndex: Int): Boolean {
         val key = getKey(category, scriptIndex)
         val hasData = prefs.contains(key)
-        Log.d("RecordingTimeManagerImpl", "녹음 시간 존재 확인: $key, 결과: $hasData")
+        // 녹음 시간 존재 확인 완료
         return hasData
     }
     
