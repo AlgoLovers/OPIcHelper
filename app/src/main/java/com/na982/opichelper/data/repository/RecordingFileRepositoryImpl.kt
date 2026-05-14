@@ -9,11 +9,8 @@ import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.isActive
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class RecordingFileRepositoryImpl @Inject constructor(
+class RecordingFileRepositoryImpl(
     private val audioFileManager: AudioFileManager,
     private val audioRecorder: AudioRecorder,
     private val recordingAudioPlayer: RecordingAudioPlayer,

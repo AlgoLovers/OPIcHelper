@@ -7,8 +7,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import android.util.Log
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,8 +19,7 @@ import java.util.concurrent.ConcurrentHashMap
  * QA 데이터 관리 전담 클래스 (Manager 패턴)
  * 책임: QA 데이터 상태 관리, 카테고리 관리, 인덱스 관리, UI 상태 관리
  */
-@Singleton
-class QaDataManager @Inject constructor(
+class QaDataManager(
     private val progressTracker: MemorizeTestProgressTracker,
     private val qaDataLoader: QaDataLoader,
     private val userPreferencesRepository: UserPreferencesRepository,

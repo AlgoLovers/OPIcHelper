@@ -3,16 +3,13 @@ package com.na982.opichelper.domain.manager
 import android.content.Context
 import android.os.PowerManager
 import android.util.Log
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * WakeLock 관리자
  * 앱 실행 중 화면이 꺼지지 않도록 WakeLock을 관리
  * 안전장치로 30분 타임아웃 적용
  */
-@Singleton
-class WakeLockManager @Inject constructor(
+class WakeLockManager(
     context: Context
 ) {
     private val appContext = context.applicationContext

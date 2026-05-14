@@ -13,11 +13,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class RepeatListeningRepositoryImpl @Inject constructor(
+class RepeatListeningRepositoryImpl(
     private val ttsOrchestrator: TtsOrchestrator,
     private val progressPersistenceService: ProgressPersistenceService,
     private val recordingTimeManager: RecordingTimeManager
