@@ -13,12 +13,12 @@ interface EnglishWritingTestRepository {
         scriptIndex: Int
     )
 
-    suspend fun getCurrentProgress(category: String, scriptIndex: Int): ProgressData?
-    suspend fun updateProgress(progressData: ProgressData)
+    suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData?
+    suspend fun updateProgress(progressData: TestProgressData)
     suspend fun clearProgress(category: String, scriptIndex: Int)
 }
 
-data class ProgressData(
+data class TestProgressData(
     val category: String,
     val scriptIndex: Int,
     val memorizeLevel: String,

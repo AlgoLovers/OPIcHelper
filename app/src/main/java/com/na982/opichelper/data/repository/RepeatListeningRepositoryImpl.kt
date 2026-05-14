@@ -7,7 +7,7 @@ import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
-import com.na982.opichelper.domain.repository.ProgressData
+import com.na982.opichelper.domain.repository.TestProgressData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -99,10 +99,10 @@ class RepeatListeningRepositoryImpl(
         emit(MemorizeTestEvent.Completed)
     }
 
-    override suspend fun getCurrentProgress(category: String, scriptIndex: Int): ProgressData? {
+    override suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData? {
         val navState = progressPersistenceService.loadNavigationState()
         return if (navState.category == category) {
-            ProgressData(
+            TestProgressData(
                 category = category,
                 scriptIndex = scriptIndex,
                 memorizeLevel = MemorizeLevel.REPEAT_LISTENING.displayName,
@@ -113,7 +113,7 @@ class RepeatListeningRepositoryImpl(
         } else null
     }
 
-    override suspend fun updateProgress(progressData: ProgressData) {
+    override suspend fun updateProgress(progressData: TestProgressData) {
         progressPersistenceService.saveNavigationState(
             ProgressPersistenceService.NavigationState(progressData.category, progressData.currentSentenceIndex)
         )
