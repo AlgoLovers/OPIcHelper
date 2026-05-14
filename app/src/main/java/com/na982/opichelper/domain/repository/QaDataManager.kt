@@ -1,8 +1,6 @@
 package com.na982.opichelper.domain.repository
 
-import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.QaItem
-import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap
  * 책임: QA 데이터 상태 관리, 카테고리 관리, 인덱스 관리, UI 상태 관리
  */
 class QaDataManager(
-    private val progressTracker: MemorizeTestProgressTracker,
     private val qaDataLoader: QaDataLoader,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val progressPersistenceService: ProgressPersistenceService
@@ -258,23 +255,7 @@ class QaDataManager(
         scope.cancel()
     }
 
-    /**
-     * 현재 스크립트의 진행상황 저장
-     * @param memorizeLevel 현재 활성화된 암기레벨
-     */
     suspend fun saveCurrentProgress(memorizeLevel: String? = null) {
-        val category = _currentCategory.value
-        val currentIndex = itemIndexByCategory[category] ?: 0
-        
-        if (category != null) {
-            // 현재 진행상황 확인
-            val currentProgress = progressTracker.getScriptProgress(category, currentIndex, memorizeLevel ?: MemorizeLevel.REPEAT_LISTENING.displayName)
-
-            if (currentProgress != null) {
-                progressTracker.persistChangedProgress()
-            } else {
-                // 저장할 진행상황 없음
-            }
-        }
+        // 진행상황 영속화는 ViewModel에서 MemorizeTestProgressTracker를 통해 처리
     }
 }
