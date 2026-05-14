@@ -1,4 +1,4 @@
-package com.na982.opichelper.domain.repository
+package com.na982.opichelper.domain.entity
 
 data class ScriptProgress(
     val category: String,

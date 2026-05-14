@@ -1,7 +1,7 @@
 package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.TtsPlayer
-import com.na982.opichelper.domain.repository.ScriptProgress
+import com.na982.opichelper.domain.entity.ScriptProgress
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.launch
