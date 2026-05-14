@@ -47,10 +47,10 @@ fun MainScreen(
 
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
 
-    val hasEnglishWritingTestMergedFile by playbackViewModel.hasEnglishWritingTestMergedFile.collectAsState()
+    val hasEnglishWritingTestMergedFile = playbackState.hasEnglishWritingTestMergedFile
     val englishWritingTestCompleted by memorizationViewModelInstance.englishWritingTestCompleted.collectAsState()
-    val isEnglishWritingTestMergedFilePlaying by playbackViewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
-    val englishWritingTestMergedFileHighlightIndex by playbackViewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
+    val isEnglishWritingTestMergedFilePlaying = playbackState.isEnglishWritingTestMergedFilePlaying
+    val englishWritingTestMergedFileHighlightIndex = playbackState.englishWritingTestMergedFileHighlightIndex
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModelInstance.stopEnglishWritingTestMergedFilePlaying.collectAsState()
     val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
 
