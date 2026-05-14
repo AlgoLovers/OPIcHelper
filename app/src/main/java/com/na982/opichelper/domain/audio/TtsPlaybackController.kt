@@ -130,10 +130,6 @@ class TtsPlaybackController @Inject constructor(
     }
 
     fun stopTts() {
-        stopTtsSync()
-    }
-
-    private fun stopTtsSync() {
         try {
             ttsOrchestrator.stop()
             currentPlayJob?.cancel()
@@ -175,13 +171,9 @@ class TtsPlaybackController @Inject constructor(
         }
     }
 
-    fun stopAllTts() {
-        stopTtsSync()
-    }
-
     fun cleanupTts() {
         try {
-            stopAllTts()
+            stopTts()
             ttsOrchestrator.releaseAllPlayers()
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 완전 정리 실패", e)

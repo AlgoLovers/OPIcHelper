@@ -109,7 +109,7 @@ class PlaybackViewModel @Inject constructor(
     fun playQuestion(question: String) {
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
-            ttsPlaybackController.stopAllTts()
+            ttsPlaybackController.stopTts()
             ttsPlaybackController.playQuestion(question)
         }
     }
@@ -117,14 +117,14 @@ class PlaybackViewModel @Inject constructor(
     fun playAnswer(answer: String) {
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
-            ttsPlaybackController.stopAllTts()
+            ttsPlaybackController.stopTts()
             ttsPlaybackController.playAnswer(answer)
         }
     }
 
-    fun stopAllTts() {
+    fun stopTts() {
         viewModelScope.launch {
-            ttsPlaybackController.stopAllTts()
+            ttsPlaybackController.stopTts()
             playMergedFileUseCase.stop()
             ttsPlaybackController.clearHighlight()
         }
