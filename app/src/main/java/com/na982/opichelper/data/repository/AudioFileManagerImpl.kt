@@ -301,13 +301,29 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             if (!outputDir.exists()) {
                 outputDir.mkdirs()
             }
-            
+
             val outputFile = File(outputDir, "${mergedFileName}.m4a")
 
             if (files.size == 1) {
                 files[0].copyTo(outputFile, overwrite = true)
             } else {
-                mergeWithMediaCodec(files, outputFile)
+                try {
+                    mergeWithMediaCodec(files, outputFile)
+                } catch (e: Exception) {
+                    Log.e("AudioFileManager", "MediaCodec 병합 실패, 헤더 분석 방식 사용", e)
+                    try {
+                        mergeWithHeaderAnalysis(files, outputFile)
+                    } catch (e2: Exception) {
+                        Log.e("AudioFileManager", "헤더 분석 병합 실패, 파일 연결 방식 사용", e2)
+                        FileOutputStream(outputFile).use { out ->
+                            files.forEach { file ->
+                                FileInputStream(file).use { input ->
+                                    input.copyTo(out)
+                                }
+                            }
+                        }
+                    }
+                }
             }
             waitForFileReady(outputFile)
             outputFile
@@ -315,8 +331,10 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
     }
 
     private suspend fun waitForFileReady(file: File) {
-        while (!file.exists() || file.length() == 0L) {
+        var attempts = 0
+        while ((!file.exists() || file.length() == 0L) && attempts < 30) {
             delay(100L)
+            attempts++
         }
     }
     
