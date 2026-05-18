@@ -6,7 +6,6 @@ import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.repository.AudioFileManager
-import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.TestProgressData
@@ -22,7 +21,6 @@ import java.util.Date
 import java.util.Locale
 
 class EnglishWritingTestRepositoryImpl(
-    private val qaDataManager: QaDataManager,
     private val ttsOrchestrator: TtsOrchestrator,
     private val audioRecorder: AudioRecorder,
     private val audioFileManager: AudioFileManager,
