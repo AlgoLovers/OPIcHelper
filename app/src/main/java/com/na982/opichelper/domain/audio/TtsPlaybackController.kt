@@ -18,6 +18,7 @@ class TtsPlaybackController @Inject constructor(
     private val ttsOrchestrator: TtsOrchestrator
 ) : java.io.Closeable {
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    @Volatile
     private var currentPlayJob: Job? = null
 
     private val _isPlaying = MutableStateFlow(false)
@@ -42,6 +43,7 @@ class TtsPlaybackController @Inject constructor(
     val recordingHighlightIndex: StateFlow<Int?> = _recordingHighlightIndex.asStateFlow()
 
     private fun stopCurrentAndPrepare() {
+        ttsOrchestrator.stop()
         currentPlayJob?.cancel()
         currentPlayJob = null
         resetPlayState()
