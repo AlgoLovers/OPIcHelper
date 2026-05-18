@@ -137,12 +137,8 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 
 | 항목 | 상태 | 우선순위 |
 |------|------|----------|
-| MemorizationViewModel SRP 위반 (3개 모드 통합 + 6개 분산 StateFlow) | 미해결 | 중간 |
+| MemorizationViewModel SRP 위반 (3개 모드 통합) | 미해결 | 중간 |
 | MainScreen 다중 StateFlow 구독 (11개 개별 collect) | 미해결 | 중간 |
-| EnglishWritingTestRepositoryImpl이 QaDataManager(구현체) 직접 참조 | 미해결 | 중간 |
-| Dual DI 등록 (@Inject constructor + @Provides 중복, 7개 클래스) | 미해결 | 중간 |
-| TtsPlaybackController에 TtsOrchestrator를 setter로 주입 | 미해결 | 낮음 |
-| ScriptProgress가 domain/repository에 위치 | 미해결 | 낮음 |
 | Domain 계층 Android import (Log, Context, PowerManager) | 미해결 | 낮음 |
 | Data 계층 Log.d 잔존 (RecordingFileRepositoryImpl 등) | 미해결 | 낮음 |
 | WakeLock deprecated API (@Suppress("DEPRECATION") 처리) | 완화 | 낮음 |
@@ -170,6 +166,15 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | 고아 테스트 (MainViewModelTest, TtsViewModelTest) | 삭제 (0028) |
 | 반복듣기 모드에서 답변 녹음 버튼 표시 버그 | isFullMemorizationMode 파생 소스 변경 (0030) |
 | 컴파일 경고 24개 | unused param/deprecated API 수정 (0030) |
+| NavigationState 스크립트/문장 인덱스 오염 | scriptIndex 필드 추가 (0046) |
+| RepeatListeningUseCase 중복 로직 | 삭제, ExecuteRepeatListeningUseCase만 사용 (0047) |
+| EnglishWritingTestRepoImpl QaDataManager 미사용 의존성 | 제거 (0047) |
+| FullMemorizationUseCase 콜백 기반 상태 전달 | FullMemorizationState StateFlow 전환 (0047) |
+| MemorizationUiState 15개 파생 불리언 | 확장 프로퍼티로 전환, updateUiState() 삭제 (0048) |
+| EnglishWritingTestRepositoryImpl QaDataManager 직접 참조 | 미사용 의존성 제거 (0047) |
+| Dual DI 등록 7개 클래스 | @Provides만 사용하도록 정리 (0037) |
+| TtsPlaybackController setter 주입 | 생성자 주입으로 이미 전환됨 (0036) |
+| ScriptProgress domain/repository 위치 | domain/entity로 이동 (0039) |
 
 ## Git 커밋 규칙
 
