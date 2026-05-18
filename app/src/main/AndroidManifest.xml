@@ -29,6 +29,11 @@
             android:theme="@style/Theme.OPicHelper">
         </activity>
 
+        <service
+            android:name=".service.TtsForegroundService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="false" />
+
     </application>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>

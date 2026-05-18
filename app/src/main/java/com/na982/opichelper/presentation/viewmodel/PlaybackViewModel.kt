@@ -9,10 +9,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
+import com.na982.opichelper.service.TtsForegroundService
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.app.Application
 
 data class PlaybackState(
     val hasEnglishWritingTestMergedFile: Boolean = false,
@@ -36,7 +38,8 @@ data class PlaybackState(
 class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
-    private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+    private val application: Application
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlaybackState())
@@ -150,27 +153,12 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun onBackgroundMove() {
-        viewModelScope.launch {
-            try {
-                if (_uiState.value.isPlaying) {
-                    ttsPlaybackController.pauseTts()
-                }
-                ttsPlaybackController.clearHighlight()
-            } catch (e: Exception) {
-                Log.e("PlaybackViewModel", "백그라운드 이동 처리 실패", e)
-            }
+        if (_uiState.value.isPlaying) {
+            application.startService(TtsForegroundService.startIntent(application))
         }
     }
 
     fun onForegroundReturn() {
-        viewModelScope.launch {
-            try {
-                if (_uiState.value.isPlaying) {
-                    ttsPlaybackController.resumeTts()
-                }
-            } catch (e: Exception) {
-                Log.e("PlaybackViewModel", "포그라운드 복귀 처리 실패", e)
-            }
-        }
+        application.stopService(TtsForegroundService.stopIntent(application))
     }
 }
