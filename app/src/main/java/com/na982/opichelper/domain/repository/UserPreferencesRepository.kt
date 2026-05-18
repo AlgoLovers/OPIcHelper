@@ -48,4 +48,7 @@ interface UserPreferencesRepository {
     fun getAnswerPlayCount(): Int
     fun setAnswerPlayCount(count: Int)
     val answerPlayCount: StateFlow<Int>
+
+    fun isAutoAdvance(): Boolean
+    fun setAutoAdvance(enabled: Boolean)
 } 
