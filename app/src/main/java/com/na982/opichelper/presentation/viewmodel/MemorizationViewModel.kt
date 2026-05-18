@@ -44,54 +44,12 @@ class MemorizationViewModel @Inject constructor(
     private var currentUseCaseJob: Job? = null
     private var eventCollectJob: Job? = null
 
-    private fun updateUiState() {
-        val mode = _uiState.value.currentMode
-        val running = _uiState.value.isRunning
-        _uiState.value = _uiState.value.copy(
-            isRepeatListeningCardFlipped = mode == CurrentMode.REPEAT_LISTENING && running,
-            isRepeatListeningRunning = mode == CurrentMode.REPEAT_LISTENING && running,
-            isRepeatListeningMode = mode == CurrentMode.REPEAT_LISTENING,
-
-            isEnglishWritingTestCardFlipped = mode == CurrentMode.ENGLISH_WRITING && running,
-            isEnglishWritingTestRunning = mode == CurrentMode.ENGLISH_WRITING && running,
-            isEnglishWritingTestMode = mode in setOf(
-                CurrentMode.ENGLISH_WRITING,
-                CurrentMode.ENGLISH_WRITING_RECORDING,
-                CurrentMode.ENGLISH_WRITING_PLAYING,
-                CurrentMode.ENGLISH_WRITING_WITH_FILE
-            ),
-            isEnglishWritingTestRecording = mode == CurrentMode.ENGLISH_WRITING_RECORDING,
-            isEnglishWritingTestPlaying = mode == CurrentMode.ENGLISH_WRITING_PLAYING,
-            hasEnglishWritingTestRecording = mode == CurrentMode.ENGLISH_WRITING_WITH_FILE,
-
-            isFullMemorizationMode = mode in setOf(
-                CurrentMode.FULL_MEMORIZATION,
-                CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
-                CurrentMode.FULL_MEMORIZATION_RECORDING,
-                CurrentMode.FULL_MEMORIZATION_PLAYING,
-                CurrentMode.FULL_MEMORIZATION_WITH_FILE
-            ),
-            isFullMemorizationQuestionPlaying = mode == CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
-            isFullMemorizationRecording = mode == CurrentMode.FULL_MEMORIZATION_RECORDING,
-            isFullMemorizationPlaying = mode == CurrentMode.FULL_MEMORIZATION_PLAYING,
-            hasFullMemorizationRecording = mode in setOf(
-                CurrentMode.FULL_MEMORIZATION_WITH_FILE,
-                CurrentMode.FULL_MEMORIZATION_PLAYING
-            ),
-            isFullMemorizationRecordingPlaying = mode == CurrentMode.FULL_MEMORIZATION_PLAYING,
-
-            isMemorizeTestRunning = running
-        )
-    }
-
     private fun startMode(mode: CurrentMode) {
         _uiState.value = _uiState.value.copy(currentMode = mode, isRunning = true)
-        updateUiState()
     }
 
     private fun stopMode() {
         _uiState.value = _uiState.value.copy(isRunning = false, currentMode = CurrentMode.NONE)
-        updateUiState()
     }
 
     fun onMemorizeTestButtonClick(selectedLevel: String) {
@@ -252,10 +210,6 @@ class MemorizationViewModel @Inject constructor(
             is MemorizeTestEvent.MergedFileCreated -> {
                 _uiState.value = _uiState.value.copy(englishWritingTestCompleted = true)
                 stopMode()
-                _uiState.value = _uiState.value.copy(
-                    isEnglishWritingTestRunning = false,
-                    isEnglishWritingTestMode = false
-                )
             }
             else -> {}
         }
@@ -340,7 +294,6 @@ class MemorizationViewModel @Inject constructor(
                     )
                 }
                 _uiState.value = _uiState.value.copy(hasFullMemorizationRecordingFile = hasRecording)
-                updateUiState()
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 녹음 파일 상태 확인 실패", e)
             }
@@ -354,7 +307,6 @@ class MemorizationViewModel @Inject constructor(
                 currentMode = if (hasRecording) CurrentMode.FULL_MEMORIZATION_WITH_FILE else CurrentMode.FULL_MEMORIZATION,
                 hasFullMemorizationRecordingFile = hasRecording
             )
-            updateUiState()
         } catch (e: Exception) {
             Log.e("MemorizationViewModel", "통암기 녹음 파일 상태 확인 실패", e)
         }
@@ -362,7 +314,6 @@ class MemorizationViewModel @Inject constructor(
 
     fun resetStateOnAppRestart() {
         _uiState.value = _uiState.value.copy(currentMode = CurrentMode.NONE, isRunning = false)
-        updateUiState()
     }
 
     fun deleteFullMemorizationRecording() {

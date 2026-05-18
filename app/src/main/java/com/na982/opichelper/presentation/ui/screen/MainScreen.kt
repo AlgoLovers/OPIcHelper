@@ -17,6 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
+import com.na982.opichelper.presentation.viewmodel.isFullMemorizationQuestionPlaying
+import com.na982.opichelper.presentation.viewmodel.isFullMemorizationRecording
+import com.na982.opichelper.presentation.viewmodel.isFullMemorizationPlaying
+import com.na982.opichelper.presentation.viewmodel.isFullMemorizationRecordingPlaying
+import com.na982.opichelper.presentation.viewmodel.isMemorizeTestRunning
+import com.na982.opichelper.presentation.viewmodel.isEnglishWritingTestMode
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.ui.theme.*
