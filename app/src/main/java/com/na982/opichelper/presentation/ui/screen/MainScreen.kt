@@ -102,9 +102,12 @@ fun MainScreen(
     }
 
     // 크로스 모드: 영작 녹음 완료 시 통암기 녹음 상태 업데이트
-    LaunchedEffect(Unit) {
+    DisposableEffect(Unit) {
         englishWritingTestViewModel.onRecordingStateChanged = {
             fullMemorizationViewModel.updateRecordingStatus()
+        }
+        onDispose {
+            englishWritingTestViewModel.onRecordingStateChanged = null
         }
     }
 

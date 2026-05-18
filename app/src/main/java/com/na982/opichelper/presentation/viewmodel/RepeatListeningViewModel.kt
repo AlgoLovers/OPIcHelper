@@ -126,8 +126,11 @@ class RepeatListeningViewModel @Inject constructor(
             val hasMore = qaDataManager.hasNextQaItem()
             if (hasMore) {
                 qaDataManager.nextQaItem()
+                _uiState.value = _uiState.value.copy(isCardFlipped = false)
                 coordinator.releaseMode()
-                coordinator.requestMode(CurrentMode.REPEAT_LISTENING)
+                if (!coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
+                    return@launch
+                }
                 ttsPlaybackController.stopTts()
                 ttsPlaybackController.clearHighlight()
                 startRepeatListening()
