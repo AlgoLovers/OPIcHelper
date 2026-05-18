@@ -182,6 +182,13 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | TtsPlaybackController currentPlayJob 가시성 | @Volatile 추가, stopCurrentAndPrepare에 stop 추가 (0055) |
 | MemorizationViewModel SRP 위반 (3모드 통합) | 3개 ViewModel 분리 + MemorizationModeCoordinator (0056) |
 | MainScreen 다중 StateFlow 구독 | derivedStateOf 도입, LaunchedEffect 정리 (0057) |
+| PlayStopToggleButton 중복 버튼 패턴 | 공통 컴포넌트 추출, 4개 버튼 위임 (0061) |
+| QaDataManager navigate 패턴 중복 | navigateTo() 추출, saveCurrentProgress 데드 코드 제거 (0061) |
+| PlaybackViewModel 이중 노출 (setMergedAudioPlaying) | 미사용 메서드 제거 (0061) |
+| SharedPreferences 키 인라인 리터럴 | 키 상수화, 미사용 DI 바인딩 제거 (0061) |
+| ViewModel stop/onLevelChanged 중복 | BaseMemorizationViewModel 추출 (0062) |
+| Repository TTS 재생 패턴 중복 | BaseMemorizeTestRepository 추출 (0062) |
+| MainScreen LaunchedEffect 크로스 VM 릴레이 | 코디네이터 이벤트 시스템으로 이관 (0062) |
 
 ## Git 커밋 규칙
 
