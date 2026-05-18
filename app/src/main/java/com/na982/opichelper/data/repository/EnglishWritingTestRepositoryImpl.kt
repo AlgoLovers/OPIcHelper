@@ -8,12 +8,9 @@ import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
-import com.na982.opichelper.domain.repository.TestProgressData
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import java.io.File
 import java.text.SimpleDateFormat
@@ -25,17 +22,10 @@ class EnglishWritingTestRepositoryImpl(
     private val audioRecorder: AudioRecorder,
     private val audioFileManager: AudioFileManager,
     private val recordingTimeManager: RecordingTimeManager,
-    private val progressPersistenceService: ProgressPersistenceService
-) : EnglishWritingTestRepository {
+    progressPersistenceService: ProgressPersistenceService
+) : BaseMemorizeTestRepository(progressPersistenceService), EnglishWritingTestRepository {
 
-    private val _events = MutableSharedFlow<MemorizeTestEvent>(
-        extraBufferCapacity = 1
-    )
-    override val events: SharedFlow<MemorizeTestEvent> = _events.asSharedFlow()
-
-    private suspend fun emit(event: MemorizeTestEvent) {
-        _events.emit(event)
-    }
+    override val memorizeLevel = MemorizeLevel.ENGLISH_WRITING
 
     override suspend fun executeEnglishWritingTest(
         answerKo: String,
@@ -43,24 +33,16 @@ class EnglishWritingTestRepositoryImpl(
         category: String,
         scriptIndex: Int
     ) {
-        val koSentences = answerKo.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
-        val enSentences = answerEn.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        val koSentences = splitSentences(answerKo)
+        val enSentences = splitSentences(answerEn)
         val count = minOf(koSentences.size, enSentences.size)
 
-        val navState = progressPersistenceService.loadNavigationState()
-        val startIndex = if (navState.category == category
-            && navState.scriptIndex == scriptIndex
-            && navState.index in 0 until count
-        ) {
-            navState.index
-        } else {
-            0
-        }
+        val startIndex = resolveStartIndex(category, scriptIndex, count)
 
         val recordingFiles = mutableListOf<File>()
 
         for (idx in startIndex until count) {
-            if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
+            if (!currentCoroutineContext().isActive) break
 
             progressPersistenceService.saveNavigationState(
                 ProgressPersistenceService.NavigationState(category, idx, scriptIndex)
@@ -73,7 +55,7 @@ class EnglishWritingTestRepositoryImpl(
 
             ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx], isKorean = true, rate = 0.8f)
 
-            if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
+            if (!currentCoroutineContext().isActive) break
 
             // 2. 녹음
             emit(MemorizeTestEvent.RecordingHighlight(idx))
@@ -121,32 +103,6 @@ class EnglishWritingTestRepositoryImpl(
             emit(MemorizeTestEvent.MergedFileCreated)
         }
 
-        progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, 0, scriptIndex)
-        )
-    }
-
-    override suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData? {
-        val navState = progressPersistenceService.loadNavigationState()
-        return if (navState.category == category && navState.scriptIndex == scriptIndex) {
-            TestProgressData(
-                category = category,
-                scriptIndex = scriptIndex,
-                memorizeLevel = MemorizeLevel.ENGLISH_WRITING.displayName,
-                currentSentenceIndex = navState.index,
-                totalSentences = 0,
-                isMemorizeTestRunning = false
-            )
-        } else null
-    }
-
-    override suspend fun updateProgress(progressData: TestProgressData) {
-        progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(progressData.category, progressData.currentSentenceIndex, progressData.scriptIndex)
-        )
-    }
-
-    override suspend fun clearProgress(category: String, scriptIndex: Int) {
         progressPersistenceService.saveNavigationState(
             ProgressPersistenceService.NavigationState(category, 0, scriptIndex)
         )

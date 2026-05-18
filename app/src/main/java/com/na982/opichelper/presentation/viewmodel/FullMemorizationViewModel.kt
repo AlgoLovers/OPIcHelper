@@ -1,15 +1,13 @@
 package com.na982.opichelper.presentation.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.FullMemorizationState
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 import javax.inject.Inject
@@ -23,11 +21,15 @@ data class FullMemorizationUiState(
 class FullMemorizationViewModel @Inject constructor(
     private val fullMemorizationUseCase: FullMemorizationUseCase,
     private val qaDataManager: QaDataManager,
-    private val coordinator: MemorizationModeCoordinator
-) : ViewModel() {
+    coordinator: MemorizationModeCoordinator
+) : BaseMemorizationViewModel<FullMemorizationUiState>(
+    coordinator = coordinator,
+    ttsPlaybackController = null,
+    progressTracker = null
+) {
 
-    private val _uiState = MutableStateFlow(FullMemorizationUiState())
-    val uiState: StateFlow<FullMemorizationUiState> = _uiState.asStateFlow()
+    override val _uiState = MutableStateFlow(FullMemorizationUiState())
+    override fun resetUiState() = FullMemorizationUiState()
 
     init {
         viewModelScope.launch {
@@ -77,6 +79,14 @@ class FullMemorizationViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(hasRecordingFile = fsState.hasRecording)
                         coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
                     }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            coordinator.events.collect { event ->
+                if (event is CoordinatorEvent.RecordingStateChanged) {
+                    updateRecordingStatus()
                 }
             }
         }
@@ -175,16 +185,10 @@ class FullMemorizationViewModel @Inject constructor(
         }
     }
 
-    fun stop() {
-        coordinator.releaseMode()
+    override fun onStop() {
         viewModelScope.launch {
             fullMemorizationUseCase.cancelPlayback()
         }
-    }
-
-    fun onLevelChanged() {
-        coordinator.releaseMode()
-        _uiState.value = FullMemorizationUiState()
     }
 
     override fun onCleared() {

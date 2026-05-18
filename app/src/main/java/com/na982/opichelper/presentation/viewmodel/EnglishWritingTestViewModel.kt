@@ -1,52 +1,50 @@
 package com.na982.opichelper.presentation.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 import javax.inject.Inject
 
 data class EnglishWritingTestUiState(
-    val isCardFlipped: Boolean = false,
-    val completed: Boolean = false,
-    val stopMergedFilePlaying: Boolean = false
+    val isCardFlipped: Boolean = false
 )
 
 @HiltViewModel
 class EnglishWritingTestViewModel @Inject constructor(
     private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
-    private val ttsPlaybackController: TtsPlaybackController,
+    private val ttsCtrl: TtsPlaybackController,
     private val qaDataManager: QaDataManager,
-    private val progressTracker: MemorizeTestProgressTracker,
-    private val coordinator: MemorizationModeCoordinator
-) : ViewModel() {
+    private val progress: MemorizeTestProgressTracker,
+    coordinator: MemorizationModeCoordinator
+) : BaseMemorizationViewModel<EnglishWritingTestUiState>(
+    coordinator = coordinator,
+    ttsPlaybackController = ttsCtrl,
+    progressTracker = progress
+) {
 
-    private val _uiState = MutableStateFlow(EnglishWritingTestUiState())
-    val uiState: StateFlow<EnglishWritingTestUiState> = _uiState.asStateFlow()
+    override val _uiState = MutableStateFlow(EnglishWritingTestUiState())
+    override fun resetUiState() = EnglishWritingTestUiState()
 
-    private var currentUseCaseJob: Job? = null
-    private var eventCollectJob: Job? = null
-
-    var onRecordingStateChanged: (() -> Unit)? = null
+    override fun onStop() {
+        _uiState.value = _uiState.value.copy(isCardFlipped = false)
+        viewModelScope.launch { coordinator.emitEvent(CoordinatorEvent.EnglishWritingStopped) }
+    }
 
     fun start() {
         viewModelScope.launch {
             try {
                 if (coordinator.requestMode(CurrentMode.ENGLISH_WRITING)) {
-                    ttsPlaybackController.stopTts()
-                    ttsPlaybackController.clearHighlight()
-                    _uiState.value = _uiState.value.copy(stopMergedFilePlaying = true)
+                    ttsCtrl.stopTts()
+                    ttsCtrl.clearHighlight()
                     startEnglishWritingTest()
                 }
             } catch (e: Exception) {
@@ -94,79 +92,28 @@ class EnglishWritingTestViewModel @Inject constructor(
             }
             is MemorizeTestEvent.KoreanHighlight -> {
                 if (event.index != null) {
-                    ttsPlaybackController.setAnswerKoHighlightIndex(event.index)
+                    ttsCtrl.setAnswerKoHighlightIndex(event.index)
                 } else {
-                    ttsPlaybackController.clearHighlight()
+                    ttsCtrl.clearHighlight()
                 }
             }
             is MemorizeTestEvent.RecordingHighlight -> {
                 if (event.index != null) {
-                    ttsPlaybackController.setRecordingHighlightIndex(event.index)
+                    ttsCtrl.setRecordingHighlightIndex(event.index)
                 } else {
-                    ttsPlaybackController.clearHighlight()
+                    ttsCtrl.clearHighlight()
                 }
             }
             is MemorizeTestEvent.RecordingStateChange -> {
                 if (!event.isRecording) {
-                    onRecordingStateChanged?.invoke()
+                    viewModelScope.launch { coordinator.emitEvent(CoordinatorEvent.RecordingStateChanged) }
                 }
             }
             is MemorizeTestEvent.MergedFileCreated -> {
-                _uiState.value = _uiState.value.copy(completed = true)
+                viewModelScope.launch { coordinator.emitEvent(CoordinatorEvent.EnglishWritingCompleted) }
                 stop()
             }
             else -> {}
         }
-    }
-
-    fun stop() {
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        eventCollectJob?.cancel()
-        eventCollectJob = null
-        coordinator.releaseMode()
-
-        _uiState.value = _uiState.value.copy(isCardFlipped = false)
-
-        viewModelScope.launch {
-            ttsPlaybackController.stopTts()
-            ttsPlaybackController.clearHighlight()
-        }
-
-        viewModelScope.launch {
-            try {
-                progressTracker.persistChangedProgress()
-            } catch (e: Exception) {
-                Log.e("EnglishWritingTestVM", "진행상황 저장 실패", e)
-            }
-        }
-    }
-
-    fun resetCompleted() {
-        _uiState.value = _uiState.value.copy(completed = false)
-    }
-
-    fun resetStopMergedFilePlaying() {
-        _uiState.value = _uiState.value.copy(stopMergedFilePlaying = false)
-    }
-
-    fun onLevelChanged() {
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        eventCollectJob?.cancel()
-        eventCollectJob = null
-        coordinator.releaseMode()
-        _uiState.value = EnglishWritingTestUiState()
-        ttsPlaybackController.stopTts()
-        ttsPlaybackController.clearHighlight()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        eventCollectJob?.cancel()
-        eventCollectJob = null
-        onRecordingStateChanged = null
     }
 }
