@@ -13,8 +13,8 @@ import com.na982.opichelper.domain.repository.RecordingTimeManager
 class RecordingTimeManagerImpl(
     private val context: Context
 ) : RecordingTimeManager {
-    
-    private val prefs: SharedPreferences = context.getSharedPreferences("recording_times", Context.MODE_PRIVATE)
+
+    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
     
     override fun saveRecordingTime(category: String, scriptIndex: Int, sentenceIndex: Int, recordingTimeMs: Long) {
@@ -74,6 +74,11 @@ class RecordingTimeManagerImpl(
     }
     
     private fun getKey(category: String, scriptIndex: Int): String {
-        return "recording_times_${category}_${scriptIndex}"
+        return "${KEY_RECORDING_TIMES_PREFIX}${category}_${scriptIndex}"
+    }
+
+    companion object {
+        private const val PREFS_NAME = "recording_times"
+        private const val KEY_RECORDING_TIMES_PREFIX = "recording_times_"
     }
 } 

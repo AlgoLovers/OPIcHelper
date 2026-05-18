@@ -132,7 +132,6 @@ class QaBrowserViewModel @Inject constructor(
                 )
             }
 
-            qaDataManager.saveCurrentIndex(qaDataManager.getCurrentIndex())
         } catch (e: Exception) {
             Log.e("QaBrowserViewModel", "앱 종료 시 리소스 정리 중 오류", e)
         }

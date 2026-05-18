@@ -21,7 +21,6 @@ import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import com.na982.opichelper.data.audio.RecordingAudioPlayerImpl
-import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -99,13 +98,7 @@ object AppModule {
     ): QaDataManager {
         return QaDataManager(qaDataLoader, userPreferencesRepository, progressPersistenceService)
     }
-    
-    @Provides
-    @Singleton
-    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
-    }
-    
+
     @Provides
     @Singleton
     fun provideRecordingTimeManager(@ApplicationContext context: Context): RecordingTimeManager {
