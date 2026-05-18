@@ -185,7 +185,7 @@ class FullMemorizationUseCase @Inject constructor(
         }
     }
 
-    fun cancelPlayback() {
+    suspend fun cancelPlayback() = mutex.withLock {
         playbackJob?.cancel()
         playbackJob = null
         _state.value = FullMemorizationState.WithFile(hasRecording = true)
@@ -193,7 +193,10 @@ class FullMemorizationUseCase @Inject constructor(
     }
 
     override fun close() {
-        cancelPlayback()
+        playbackJob?.cancel()
+        playbackJob = null
+        _state.value = FullMemorizationState.WithFile(hasRecording = true)
+        _highlightIndex.value = null
         scope.cancel()
     }
 }

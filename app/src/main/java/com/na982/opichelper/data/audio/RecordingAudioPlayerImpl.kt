@@ -5,19 +5,15 @@ import android.util.Log
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import java.io.File
 
-/**
- * 녹음 재생 전용 AudioPlayer 구현체
- * TTS와 완전히 분리된 독립적인 MediaPlayer 인스턴스 사용
- */
 class RecordingAudioPlayerImpl : RecordingAudioPlayer {
     @Volatile private var player: MediaPlayer? = null
-    
-    override val isPlaying: Boolean
-        get() = player?.isPlaying == true
+    private val lock = Any()
 
-    override fun playRecording(filePath: String, onCompletion: () -> Unit) {
-        // 기존 재생 중지
-        stopRecording()
+    override val isPlaying: Boolean
+        get() = synchronized(lock) { player?.isPlaying == true }
+
+    override fun playRecording(filePath: String, onCompletion: () -> Unit) = synchronized(lock) {
+        stopRecordingInternal()
 
         val file = File(filePath)
         if (!file.exists()) {
@@ -51,13 +47,9 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
             }
         }
     }
-    
-    /**
-     * 녹음 재생 시작 (동기적)
-     */
-    override fun startRecordingPlayback(filePath: String) {
-        // 기존 재생 중지
-        stopRecording()
+
+    override fun startRecordingPlayback(filePath: String) = synchronized(lock) {
+        stopRecordingInternal()
 
         val file = File(filePath)
         if (!file.exists()) {
@@ -88,7 +80,11 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
         }
     }
 
-    override fun stopRecording() {
+    override fun stopRecording() = synchronized(lock) {
+        stopRecordingInternal()
+    }
+
+    private fun stopRecordingInternal() {
         try {
             player?.let { mediaPlayer ->
                 if (mediaPlayer.isPlaying) {
@@ -101,7 +97,7 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
         }
         player = null
     }
-    
+
     override fun getDuration(filePath: String): Int {
         val mediaPlayer = MediaPlayer()
         return try {
@@ -115,4 +111,4 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
             mediaPlayer.release()
         }
     }
-} 
+}

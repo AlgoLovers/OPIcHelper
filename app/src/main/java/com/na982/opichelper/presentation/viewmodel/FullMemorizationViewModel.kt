@@ -51,7 +51,14 @@ class FullMemorizationViewModel @Inject constructor(
 
         viewModelScope.launch {
             fullMemorizationUseCase.state.collect { fsState ->
-                if (!coordinator.isActive()) return@collect
+                val currentMode = coordinator.currentMode.value
+                if (currentMode !in setOf(
+                        CurrentMode.FULL_MEMORIZATION,
+                        CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
+                        CurrentMode.FULL_MEMORIZATION_RECORDING,
+                        CurrentMode.FULL_MEMORIZATION_PLAYING,
+                        CurrentMode.FULL_MEMORIZATION_WITH_FILE
+                    )) return@collect
 
                 when (fsState) {
                     is FullMemorizationState.Idle -> {
@@ -182,6 +189,6 @@ class FullMemorizationViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        fullMemorizationUseCase.cancelPlayback()
+        fullMemorizationUseCase.close()
     }
 }

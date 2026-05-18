@@ -20,12 +20,11 @@ class MemorizationModeCoordinator @Inject constructor() {
     private var eventJob: Job? = null
 
     fun requestMode(mode: CurrentMode): Boolean {
-        if (_currentMode.value != CurrentMode.NONE && _currentMode.value != mode) {
-            return false
+        val result = _currentMode.compareAndSet(CurrentMode.NONE, mode)
+        if (result) {
+            _isRunning.value = true
         }
-        _currentMode.value = mode
-        _isRunning.value = true
-        return true
+        return result
     }
 
     fun updateMode(mode: CurrentMode) {

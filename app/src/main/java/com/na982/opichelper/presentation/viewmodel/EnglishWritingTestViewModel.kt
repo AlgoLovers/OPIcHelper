@@ -160,4 +160,13 @@ class EnglishWritingTestViewModel @Inject constructor(
         ttsPlaybackController.stopTts()
         ttsPlaybackController.clearHighlight()
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentUseCaseJob?.cancel()
+        currentUseCaseJob = null
+        eventCollectJob?.cancel()
+        eventCollectJob = null
+        onRecordingStateChanged = null
+    }
 }
