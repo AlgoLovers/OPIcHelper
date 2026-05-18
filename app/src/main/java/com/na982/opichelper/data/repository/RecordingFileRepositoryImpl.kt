@@ -8,6 +8,7 @@ import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 
@@ -155,6 +156,7 @@ class RecordingFileRepositoryImpl(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun awaitPlaybackCompletion(filePath: String) {
         suspendCancellableCoroutine { cont ->
             recordingAudioPlayer.playRecording(filePath) {
