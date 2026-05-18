@@ -138,14 +138,7 @@ class QaDataManager(
     
     suspend fun selectCategory(category: String) {
         if (itemsByCategory.containsKey(category)) {
-            // 현재 스크립트의 진행상황 저장
-            saveCurrentProgress()
-            
-            _currentCategory.value = category
-            itemIndexByCategory[category] = 0
-            updateCurrentQaItem()
-            saveLastCategory(category)
-            saveLastIndex(0)  // 카테고리 선택 시 인덱스 0 저장
+            navigateTo(category, 0)
         } else {
             Log.e("QaDataManager", "존재하지 않는 카테고리: $category")
         }
@@ -163,16 +156,9 @@ class QaDataManager(
         if (category != null) {
             val items = itemsByCategory[category] ?: emptyList()
             val currentIndex = itemIndexByCategory[category] ?: 0
-            
+
             if (currentIndex < items.size - 1) {
-                // 현재 스크립트의 진행상황 저장
-                saveCurrentProgress()
-                
-                itemIndexByCategory[category] = currentIndex + 1
-                updateCurrentQaItem()
-                saveLastIndex(currentIndex + 1)
-            } else {
-                // 마지막 항목
+                navigateTo(category, currentIndex + 1)
             }
         }
     }
@@ -181,16 +167,9 @@ class QaDataManager(
         val category = _currentCategory.value
         if (category != null) {
             val currentIndex = itemIndexByCategory[category] ?: 0
-            
+
             if (currentIndex > 0) {
-                // 현재 스크립트의 진행상황 저장
-                saveCurrentProgress()
-                
-                itemIndexByCategory[category] = currentIndex - 1
-                updateCurrentQaItem()
-                saveLastIndex(currentIndex - 1)
-            } else {
-                // 첫 번째 항목
+                navigateTo(category, currentIndex - 1)
             }
         }
     }
@@ -231,27 +210,15 @@ class QaDataManager(
         }
     }
 
-    private suspend fun saveLastCategory(category: String) {
-        val scriptIndex = itemIndexByCategory[category] ?: 0
-        progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, scriptIndex, scriptIndex)
-        )
-    }
-
-    private suspend fun saveLastIndex(index: Int) {
-        val category = _currentCategory.value
+    private suspend fun navigateTo(category: String, index: Int) {
+        _currentCategory.value = category
+        itemIndexByCategory[category] = index
+        updateCurrentQaItem()
         progressPersistenceService.saveNavigationState(
             ProgressPersistenceService.NavigationState(category, index, index)
         )
     }
-    
-    /**
-     * 현재 인덱스를 저장 (외부에서 호출 가능)
-     */
-    suspend fun saveCurrentIndex(index: Int) {
-        saveLastIndex(index)
-    }
-    
+
     fun clearError() {
         _error.value = null
     }
@@ -260,9 +227,5 @@ class QaDataManager(
         userLevelJob?.cancel()
         userLevelJob = null
         scope.cancel()
-    }
-
-    suspend fun saveCurrentProgress(memorizeLevel: String? = null) {
-        // 진행상황 영속화는 ViewModel에서 MemorizeTestProgressTracker를 통해 처리
     }
 }

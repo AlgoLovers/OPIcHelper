@@ -91,10 +91,6 @@ class PlaybackViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isAnswerCardFlipped = isFlipped)
     }
 
-    fun setMergedAudioPlaying(isPlaying: Boolean) {
-        _uiState.value = _uiState.value.copy(isEnglishWritingTestMergedFilePlaying = isPlaying)
-    }
-
     fun playEnglishWritingTestMergedFile() {
         playMergedFileUseCase.play()
     }
