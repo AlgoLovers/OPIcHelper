@@ -1,6 +1,5 @@
 package com.na982.opichelper.presentation.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.TtsPlaybackController
@@ -11,10 +10,7 @@ import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
 import javax.inject.Inject
@@ -26,27 +22,32 @@ data class RepeatListeningUiState(
 @HiltViewModel
 class RepeatListeningViewModel @Inject constructor(
     private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
-    private val ttsPlaybackController: TtsPlaybackController,
+    private val ttsCtrl: TtsPlaybackController,
     private val qaDataManager: QaDataManager,
-    private val progressTracker: MemorizeTestProgressTracker,
+    private val progress: MemorizeTestProgressTracker,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val coordinator: MemorizationModeCoordinator
-) : ViewModel() {
+    coordinator: MemorizationModeCoordinator
+) : BaseMemorizationViewModel<RepeatListeningUiState>(
+    coordinator = coordinator,
+    ttsPlaybackController = ttsCtrl,
+    progressTracker = progress
+) {
 
     val modeCoordinator: MemorizationModeCoordinator get() = coordinator
 
-    private val _uiState = MutableStateFlow(RepeatListeningUiState())
-    val uiState: StateFlow<RepeatListeningUiState> = _uiState.asStateFlow()
+    override val _uiState = MutableStateFlow(RepeatListeningUiState())
+    override fun resetUiState() = RepeatListeningUiState()
 
-    private var currentUseCaseJob: Job? = null
-    private var eventCollectJob: Job? = null
+    override fun onStop() {
+        _uiState.value = _uiState.value.copy(isCardFlipped = false)
+    }
 
     fun start() {
         viewModelScope.launch {
             try {
                 if (coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
-                    ttsPlaybackController.stopTts()
-                    ttsPlaybackController.clearHighlight()
+                    ttsCtrl.stopTts()
+                    ttsCtrl.clearHighlight()
                     startRepeatListening()
                 }
             } catch (e: Exception) {
@@ -98,16 +99,16 @@ class RepeatListeningViewModel @Inject constructor(
             }
             is MemorizeTestEvent.Highlight -> {
                 if (event.index != null) {
-                    ttsPlaybackController.setAnswerHighlightIndex(event.index)
+                    ttsCtrl.setAnswerHighlightIndex(event.index)
                 } else {
-                    ttsPlaybackController.clearHighlight()
+                    ttsCtrl.clearHighlight()
                 }
             }
             is MemorizeTestEvent.KoreanHighlight -> {
                 if (event.index != null) {
-                    ttsPlaybackController.setAnswerKoHighlightIndex(event.index)
+                    ttsCtrl.setAnswerKoHighlightIndex(event.index)
                 } else {
-                    ttsPlaybackController.clearHighlight()
+                    ttsCtrl.clearHighlight()
                 }
             }
             is MemorizeTestEvent.Completed -> {
@@ -131,46 +132,12 @@ class RepeatListeningViewModel @Inject constructor(
                 if (!coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
                     return@launch
                 }
-                ttsPlaybackController.stopTts()
-                ttsPlaybackController.clearHighlight()
+                ttsCtrl.stopTts()
+                ttsCtrl.clearHighlight()
                 startRepeatListening()
             } else {
                 stop()
             }
         }
-    }
-
-    fun stop() {
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        eventCollectJob?.cancel()
-        eventCollectJob = null
-        coordinator.releaseMode()
-
-        _uiState.value = _uiState.value.copy(isCardFlipped = false)
-
-        viewModelScope.launch {
-            ttsPlaybackController.stopTts()
-            ttsPlaybackController.clearHighlight()
-        }
-
-        viewModelScope.launch {
-            try {
-                progressTracker.persistChangedProgress()
-            } catch (e: Exception) {
-                Log.e("RepeatListeningVM", "진행상황 저장 실패", e)
-            }
-        }
-    }
-
-    fun onLevelChanged() {
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        eventCollectJob?.cancel()
-        eventCollectJob = null
-        coordinator.releaseMode()
-        _uiState.value = RepeatListeningUiState()
-        ttsPlaybackController.stopTts()
-        ttsPlaybackController.clearHighlight()
     }
 }

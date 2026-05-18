@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.na982.opichelper.domain.audio.TtsPlaybackController
+import com.na982.opichelper.domain.usecase.CoordinatorEvent
+import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
 import com.na982.opichelper.service.TtsForegroundService
 import javax.inject.Inject
@@ -39,6 +41,7 @@ class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
     private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+    private val coordinator: MemorizationModeCoordinator,
     private val application: Application
 ) : ViewModel() {
 
@@ -47,6 +50,7 @@ class PlaybackViewModel @Inject constructor(
 
     init {
         setupStateCombination()
+        setupCoordinatorEventHandling()
     }
 
     private fun setupStateCombination() {
@@ -84,6 +88,28 @@ class PlaybackViewModel @Inject constructor(
                     englishWritingTestMergedFileHighlightIndex = highlightIndex
                 )
             }.collect { }
+        }
+    }
+
+    private fun setupCoordinatorEventHandling() {
+        viewModelScope.launch {
+            coordinator.events.collect { event ->
+                when (event) {
+                    is CoordinatorEvent.EnglishWritingCompleted -> {
+                        stopEnglishWritingTestMergedFile()
+                        checkEnglishWritingTestMergedFile()
+                    }
+                    is CoordinatorEvent.EnglishWritingStopped -> {
+                        checkEnglishWritingTestMergedFile()
+                    }
+                    is CoordinatorEvent.RecordingStateChanged -> {
+                        // FullMemorizationViewModel에서 직접 처리
+                    }
+                    is CoordinatorEvent.LevelChanged -> {
+                        // BaseMemorizationViewModel.onLevelChanged()에서 처리
+                    }
+                }
+            }
         }
     }
 

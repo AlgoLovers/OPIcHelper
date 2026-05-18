@@ -3,10 +3,20 @@ package com.na982.opichelper.domain.usecase
 import com.na982.opichelper.presentation.viewmodel.CurrentMode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 import javax.inject.Singleton
+
+sealed class CoordinatorEvent {
+    object LevelChanged : CoordinatorEvent()
+    object EnglishWritingCompleted : CoordinatorEvent()
+    object EnglishWritingStopped : CoordinatorEvent()
+    object RecordingStateChanged : CoordinatorEvent()
+}
 
 @Singleton
 class MemorizationModeCoordinator @Inject constructor() {
@@ -15,6 +25,9 @@ class MemorizationModeCoordinator @Inject constructor() {
 
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+
+    private val _events = MutableSharedFlow<CoordinatorEvent>(extraBufferCapacity = 1)
+    val events: SharedFlow<CoordinatorEvent> = _events.asSharedFlow()
 
     private var activeJob: Job? = null
     private var eventJob: Job? = null
@@ -60,4 +73,8 @@ class MemorizationModeCoordinator @Inject constructor() {
     }
 
     fun isActive(): Boolean = _isRunning.value
+
+    suspend fun emitEvent(event: CoordinatorEvent) {
+        _events.emit(event)
+    }
 }

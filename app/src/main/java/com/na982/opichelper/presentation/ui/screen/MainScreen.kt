@@ -71,44 +71,11 @@ fun MainScreen(
         derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING }
     }
 
-    // 크로스 VM 이벤트: 영작 완료 → 병합 파일 체크
-    LaunchedEffect(englishWritingTestState.completed) {
-        if (englishWritingTestState.completed) {
-            playbackViewModel.checkEnglishWritingTestMergedFile()
-            englishWritingTestViewModel.resetCompleted()
-        }
-    }
-
-    // 크로스 VM 이벤트: 영작 모드 종료 → 병합 파일 체크
-    LaunchedEffect(isEnglishWritingTestMode) {
-        if (!isEnglishWritingTestMode) {
-            playbackViewModel.checkEnglishWritingTestMergedFile()
-        }
-    }
-
-    // 크로스 VM 이벤트: 병합 파일 재생 중지 요청
-    LaunchedEffect(englishWritingTestState.stopMergedFilePlaying) {
-        if (englishWritingTestState.stopMergedFilePlaying) {
-            playbackViewModel.stopEnglishWritingTestMergedFile()
-            englishWritingTestViewModel.resetStopMergedFilePlaying()
-        }
-    }
-
     // 레벨 변경 시 모든 모드 정지
     LaunchedEffect(selectedLevel) {
         repeatListeningViewModel.onLevelChanged()
         englishWritingTestViewModel.onLevelChanged()
         fullMemorizationViewModel.onLevelChanged()
-    }
-
-    // 크로스 모드: 영작 녹음 완료 시 통암기 녹음 상태 업데이트
-    DisposableEffect(Unit) {
-        englishWritingTestViewModel.onRecordingStateChanged = {
-            fullMemorizationViewModel.updateRecordingStatus()
-        }
-        onDispose {
-            englishWritingTestViewModel.onRecordingStateChanged = null
-        }
     }
 
     val isDarkTheme = isSystemInDarkTheme()
