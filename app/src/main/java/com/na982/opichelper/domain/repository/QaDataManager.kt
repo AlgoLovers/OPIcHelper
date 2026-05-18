@@ -232,9 +232,9 @@ class QaDataManager(
     }
 
     private suspend fun saveLastCategory(category: String) {
-        val currentIndex = itemIndexByCategory[category] ?: 0
+        val scriptIndex = itemIndexByCategory[category] ?: 0
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, currentIndex, currentIndex)
+            ProgressPersistenceService.NavigationState(category, scriptIndex, scriptIndex)
         )
     }
 
