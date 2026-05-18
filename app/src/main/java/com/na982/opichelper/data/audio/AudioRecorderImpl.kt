@@ -13,8 +13,8 @@ import java.util.Locale
 import com.na982.opichelper.domain.audio.AudioRecorder
 
 class AudioRecorderImpl(private val context: Context) : AudioRecorder {
-    private var recorder: MediaRecorder? = null
-    private var outputFile: File? = null
+    @Volatile private var recorder: MediaRecorder? = null
+    @Volatile private var outputFile: File? = null
 
     override fun startRecording(): File {
         return startRecording("recording_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()))
@@ -42,7 +42,7 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
         this.outputFile = outputFile
         
         try {
-            recorder = MediaRecorder().apply {
+            recorder = MediaRecorder(context).apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)

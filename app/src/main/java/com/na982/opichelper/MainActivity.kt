@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
-import com.na982.opichelper.presentation.viewmodel.MainViewModel
+import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
 import androidx.lifecycle.lifecycleScope
@@ -34,18 +34,13 @@ class MainActivity : ComponentActivity() {
     lateinit var wakeLockManager: WakeLockManager
 
     private var isFinishing = false
-    private var mainViewModel: MainViewModel? = null
+    private var playbackViewModel: PlaybackViewModel? = null
     private var qaViewModel: QaBrowserViewModel? = null
     private var navController: NavHostController? = null
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // 권한이 승인됨
-        } else {
-            // 권한이 거부됨
-        }
+    ) { _ ->
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,9 +58,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-            val vm: MainViewModel = hiltViewModel()
+            val pvm: PlaybackViewModel = hiltViewModel()
             val qaVm: QaBrowserViewModel = hiltViewModel()
-            this@MainActivity.mainViewModel = vm
+            this@MainActivity.playbackViewModel = pvm
             this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
 
@@ -87,20 +82,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        mainViewModel?.onBackgroundMove()
+        playbackViewModel?.onBackgroundMove()
     }
 
     override fun onResume() {
         super.onResume()
-
         if (isFinishing) {
             isFinishing = false
         }
-
         if (!wakeLockManager.isWakeLockHeld()) {
             wakeLockManager.acquireWakeLock()
         }
-        mainViewModel?.onForegroundReturn()
+        playbackViewModel?.onForegroundReturn()
     }
 
     override fun onStop() {
@@ -113,13 +106,14 @@ class MainActivity : ComponentActivity() {
         cleanupAllResources()
     }
 
+    @Suppress("DEPRECATION")
     override fun onBackPressed() {
         navController?.let { controller ->
             try {
                 if (controller.previousBackStackEntry != null) {
                     super.onBackPressed()
                 } else {
-                    mainViewModel?.cleanupAllTtsSync()
+                    playbackViewModel?.cleanupAllTtsSync()
                     cleanupAllResources()
                     finish()
                 }
@@ -137,7 +131,6 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 qaViewModel?.cleanupOnAppExit()
             }
-
             wakeLockManager.releaseWakeLock()
         } catch (e: Exception) {
             Log.e("MainActivity", "리소스 정리 중 오류 발생", e)

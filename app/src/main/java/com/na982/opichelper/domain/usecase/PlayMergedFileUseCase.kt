@@ -84,7 +84,7 @@ class PlayMergedFileUseCase @Inject constructor(
         _highlightIndex.value = null
     }
 
-    private suspend fun playWithExactHighlight(mergedFile: File, currentItem: QaItem, category: String, scriptIndex: Int) {
+    private suspend fun playWithExactHighlight(mergedFile: File, @Suppress("UNUSED_PARAMETER") currentItem: QaItem?, category: String, scriptIndex: Int) {
         _isPlaying.value = true
         audioPlayer.playAudio(mergedFile.absolutePath)
 

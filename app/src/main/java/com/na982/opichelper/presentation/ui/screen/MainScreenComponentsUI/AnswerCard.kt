@@ -85,7 +85,7 @@ private fun ModernAnswerCard(
     recordingHighlightIndex: Int?,
     backgroundColor: Color,
     titleColor: Color,
-    contentColor: Color,
+    @Suppress("UNUSED_PARAMETER") contentColor: Color,
     isVisible: Boolean = true,
     onHideClick: () -> Unit
 ) {

@@ -2,19 +2,25 @@
 
 ## 가이드 사용법
 
-이 파일은 프로젝트 전체 개요와 규칙을 담습니다. 모듈별 상세 정보는 각 계층의 CLAUDE.md를 참조:
+이 파일은 프로젝트 전체 개요와 규칙을 담습니다. 모듈별 상세 정보는 각 계층의 CLAUDE.md를, 아키텍처 전체 구조는 아키텍처 문서를 참조:
 
 - **코드 수정 시**: 수정 대상 계층의 CLAUDE.md를 먼저 읽고 해당 모듈의 구조와 규칙을 파악
 - **신규 기능 추가 시**: 관련 계층 3개(data/domain/presentation)의 CLAUDE.md를 모두 확인
 - **버그 수정 시**: 루트의 "알려진 기술 부채"와 해당 계층의 주의사항 확인
 - **DI 변경 시**: `di/CLAUDE.md`에서 바인딩 규칙 확인
+- **프로젝트 전체 파악**: [ARCHITECTURE.md](ARCHITECTURE.md) → 모듈별 아키텍처 문서 순서로 읽기
 
-| 계층 | 파일 | 내용 |
-|------|------|------|
-| Data | `data/CLAUDE.md` | TTS 플레이어 구현체, Repository 구현체, SharedPreferences 키 맵 |
-| Domain | `domain/CLAUDE.md` | Entity, UseCase, Repository 인터페이스, TTS 오케스트레이터, 재생 컨트롤러 |
-| Presentation | `presentation/CLAUDE.md` | ViewModel, Compose UI, 네비게이션, 상태 흐름 |
-| DI | `di/CLAUDE.md` | Hilt 바인딩 전체 목록, 제공 방식, 주의사항 |
+| 문서 | 내용 |
+|------|------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | 전체 아키텍처 개요, 다이어그램, 읽기 순서 |
+| [ARCHITECTURE_DATA.md](ARCHITECTURE_DATA.md) | Data 계층 아키텍처 상세 |
+| [ARCHITECTURE_DOMAIN.md](ARCHITECTURE_DOMAIN.md) | Domain 계층 아키텍처 상세 |
+| [ARCHITECTURE_PRESENTATION.md](ARCHITECTURE_PRESENTATION.md) | Presentation 계층 아키텍처 상세 |
+| [ARCHITECTURE_IMPROVEMENT_PLAN.md](ARCHITECTURE_IMPROVEMENT_PLAN.md) | 구조적 결함 및 개선 계획 |
+| `data/CLAUDE.md` | TTS 플레이어 구현체, Repository 구현체, SharedPreferences 키 맵 |
+| `domain/CLAUDE.md` | Entity, UseCase, Repository 인터페이스, TTS 오케스트레이터, 재생 컨트롤러 |
+| `presentation/CLAUDE.md` | ViewModel, Compose UI, 네비게이션, 상태 흐름 |
+| `di/CLAUDE.md` | Hilt 바인딩 전체 목록, 제공 방식, 주의사항 |
 
 ## 프로젝트 개요
 
@@ -33,15 +39,15 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 의존성은 항상 외부(Data) → 내부(Domain) 방향. Domain은 Data를 직접 참조하지 않음.
 
 ### ViewModel 구조
-- `MainViewModel` (**ViewModel**): 통합 상태 관리. AppState 단일 StateFlow. 의존성 5개 (QaDataManager, TtsPlaybackController, MemorizeTestProgressTracker, UserPreferencesRepository, PlayMergedFileUseCase, TtsOrchestrator)
-- `MemorizationViewModel`: 암기 테스트 3모드 로직. CurrentMode 상태 머신 관리. isQuestionCardFlipped 상태 포함
-- `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator만 의존
-- TTS 상태는 MainViewModel이 TtsPlaybackController 직접 구독 (별도 TtsViewModel 없음)
+- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 3개 (QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker)
+- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기. 의존성 3개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator)
+- `MemorizationViewModel`: 암기 테스트 3모드 로직. CurrentMode 상태 머신. SharedFlow 이벤트 구독. 의존성 6개 (TtsPlaybackController, QaDataManager, ExecuteRepeatListeningUseCase, ExecuteEnglishWritingTestUseCase, FullMemorizationUseCase, MemorizeTestProgressTracker)
+- `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator
 
 ### TTS 재생 흐름 (핵심 경로)
 ```
 UI 버튼 클릭
-  → MainViewModel.playQuestion() / playAnswer()
+  → PlaybackViewModel.playQuestion() / playAnswer()
     → TtsPlaybackController.playQuestion() / playAnswer()
       → stopCurrentAndPrepare() (기존 Job 취소 + 상태 리셋)
       → 코루틴 시작 → TtsOrchestrator.speakWithHighlight()
@@ -53,8 +59,9 @@ UI 버튼 클릭
 **주의**: `forceStopTts()` 대신 `stopCurrentAndPrepare()` 사용. 이중 stop 호출은 TTS 엔진을 불안정하게 만듦. 자세한 내용은 `domain/CLAUDE.md`의 TtsPlaybackController 섹션 참조.
 
 ### DI
-- 싱글톤 바인딩: `di/AppModule.kt` (@Provides)
+- 싱글톤 바인딩: `di/AppModule.kt` (@Provides @Singleton)
 - 자동 제공: `@Singleton` + `@Inject constructor` (TtsPlaybackController, MemorizeTestProgressTracker 등)
+- **이중 등록 주의**: 일부 클래스가 @Inject constructor + @Provides 양쪽에 등록됨 (Hilt는 @Provides 우선 사용)
 - ViewModel: `@HiltViewModel` + `@Inject constructor`
 
 ### 네비게이션
@@ -68,7 +75,7 @@ SplashActivity → MainActivity
 
 | 파일 | 역할 |
 |------|------|
-| `OPicHelperApplication.kt` | `@HiltAndroidApp`. TtsOrchestrator 싱글톤 보유 |
+| `OPicHelperApplication.kt` | `@HiltAndroidApp`. TtsOrchestrator, TtsPlaybackController, FullMemorizationUseCase, PlayMergedFileUseCase 싱글톤 보유 |
 | `SplashActivity.kt` | 런처 Activity. 2초 스플래시 후 MainActivity 이동 |
 | `MainActivity.kt` | `@AndroidEntryPoint`. RECORD_AUDIO 권한, WakeLock 수명주기, 백버튼 리소스 정리 |
 
@@ -78,11 +85,11 @@ SplashActivity → MainActivity
 assets/
   al/           — Advanced Low 레벨 (15개 JSON)
   ih/           — Intermediate High 레벨 (16개 JSON, qa_roleplay 포함)
-  ih_raw/       — IH Raw 레벨 (15개 JSON)
+  ih_raw/       — IH Raw 레벨 (15개 JSON, qa_roleplay 없음)
   im/           — Intermediate Mid 레벨 (15개 JSON)
 ```
 
-JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, question_ko, answer_en, answer_ko }] }`
+JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, question_ko, answers: { "AL": { answer_en, answer_ko, vocabulary, grammar, tips }, ... } }] }`
 `theme` 필드는 일부 JSON에만 존재하며 파싱 시 무시됨.
 새 JSON 추가 시 코드 수정 없이 assets에 넣기만 하면 자동 인식 (동적 카테고리 로딩).
 
@@ -92,7 +99,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 - **SRP**: 각 클래스는 하나의 변경 이유만 가져야 함. ViewModel이 비대해지면 새 ViewModel로 분리
 - **OCP**: TTS 플레이어 추가 시 `TtsPlayer` 인터페이스 구현체만 추가 (Orchestrator 수정 불필요)
 - **LSP**: BaseTtsPlayer 하위 클래스는 치환 가능해야 함
-- **ISP**: Repository 인터페이스는 UI 콜백을 받지 않아야 함 (현재 RepeatListeningRepository, EnglishWritingTestRepository 위반 — 리팩토링 필요)
+- **ISP**: Repository 인터페이스는 UI 콜백을 받지 않아야 함 (SharedFlow 이벤트로 대체 완료)
 - **DIP**: Domain 계층은 Data 계층을 직접 참조하지 않아야 함
 
 ### 네이밍
@@ -109,6 +116,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 ### 로깅
 - Tag: 클래스명 사용
 - Log.d (디버그) 제거, Log.w (경고)와 Log.e (오류)만 유지
+- **현재 위반**: Data 계층 일부 파일에 Log.d 잔존
 
 ## 코드 리뷰 체크리스트
 
@@ -129,14 +137,17 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 
 | 항목 | 상태 | 우선순위 |
 |------|------|----------|
-| Repository 인터페이스 UI 콜백 결합 (RepeatListening, EnglishWritingTest) | 미해결 | 높음 |
-| Data→Domain 구현체 직접 참조 (RepeatListeningRepositoryImpl, EnglishWritingTestRepositoryImpl → MemorizeTestProgressTracker) | 미해결 | 높음 |
-| MainViewModel God Class 경향 (QA 브라우징 + TTS 재생 + 생명주기 혼합) | 미해결 | 중간 |
-| MemorizationViewModel SRP 위반 (3개 모드 통합) | 미해결 | 중간 |
-| TtsViewModelTest 고아 테스트 | 미해결 | 낮음 |
+| MemorizationViewModel SRP 위반 (3개 모드 통합 + 6개 분산 StateFlow) | 미해결 | 중간 |
+| MainScreen 다중 StateFlow 구독 (11개 개별 collect) | 미해결 | 중간 |
+| EnglishWritingTestRepositoryImpl이 QaDataManager(구현체) 직접 참조 | 미해결 | 중간 |
+| Dual DI 등록 (@Inject constructor + @Provides 중복, 7개 클래스) | 미해결 | 중간 |
+| TtsPlaybackController에 TtsOrchestrator를 setter로 주입 | 미해결 | 낮음 |
 | ScriptProgress가 domain/repository에 위치 | 미해결 | 낮음 |
-| Domain 계층 Android import (Log, Context) | 미해결 | 낮음 |
+| Domain 계층 Android import (Log, Context, PowerManager) | 미해결 | 낮음 |
+| Data 계층 Log.d 잔존 (RecordingFileRepositoryImpl 등) | 미해결 | 낮음 |
 | WakeLock deprecated API (@Suppress("DEPRECATION") 처리) | 완화 | 낮음 |
+
+상세 개선 계획은 [ARCHITECTURE_IMPROVEMENT_PLAN.md](ARCHITECTURE_IMPROVEMENT_PLAN.md) 참조.
 
 ### 완료된 리팩토링
 
@@ -153,6 +164,12 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | 과도한 Log.d | 경고/오류 로그만 유지 (0021, 0022) |
 | 미사용 코드 (QaDataLoaderImpl, PlaybackEvent 등) | 일괄 삭제 (0020) |
 | SettingsScreen의 MainViewModel 의존 | SettingsViewModel 분리 (0023) |
+| Repository ISP 위반 (UI 콜백) | SharedFlow 이벤트로 전환 (0026) |
+| Data→Domain 직접 참조 (MemorizeTestProgressTracker) | ProgressPersistenceService 사용 (0026) |
+| MainViewModel God Class | QaBrowserViewModel + PlaybackViewModel 분리 (0027, 0028) |
+| 고아 테스트 (MainViewModelTest, TtsViewModelTest) | 삭제 (0028) |
+| 반복듣기 모드에서 답변 녹음 버튼 표시 버그 | isFullMemorizationMode 파생 소스 변경 (0030) |
+| 컴파일 경고 24개 | unused param/deprecated API 수정 (0030) |
 
 ## Git 커밋 규칙
 

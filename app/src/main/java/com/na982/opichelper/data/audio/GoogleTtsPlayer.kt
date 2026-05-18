@@ -21,17 +21,14 @@ class GoogleTtsPlayer(context: Context) : BaseTtsPlayer(
         return when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
                 // Android 14+ (S24 등 최신 기기): 영문 적합 속도
-                Log.d(logTag, "Android 14+ 감지 - 영문 적합 TTS 속도 적용")
                 0.8f
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
                 // Android 13 (Tab S6 Lite 등): 중간 속도
-                Log.d(logTag, "Android 13 감지 - 중간 TTS 속도 적용")
                 0.8f
             }
             else -> {
                 // Android 12 이하: 기본 속도
-                Log.d(logTag, "Android 12 이하 감지 - 기본 TTS 속도 적용")
                 0.7f
             }
         }
@@ -79,7 +76,7 @@ class GoogleTtsPlayer(context: Context) : BaseTtsPlayer(
                     (rate * 1.0f).coerceAtMost(0.8f)
                 }
             }
-            Log.d(logTag, "Android ${Build.VERSION.SDK_INT} - 영문 TTS 최적화 속도: $baseRate")
+            // 영문 TTS 최적화 속도 적용
             baseRate
         } else {
             rate
@@ -108,9 +105,8 @@ class GoogleTtsPlayer(context: Context) : BaseTtsPlayer(
      */
     override fun release() {
         try {
-            Log.d(logTag, "Google TTS 플레이어 완전 해제 시작")
+            // Google TTS 플레이어 완전 해제
             super.release()
-            Log.d(logTag, "Google TTS 플레이어 완전 해제 완료")
         } catch (e: Exception) {
             Log.e(logTag, "Google TTS 플레이어 해제 중 오류", e)
         }
