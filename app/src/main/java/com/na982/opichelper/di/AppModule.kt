@@ -3,7 +3,6 @@ package com.na982.opichelper.di
 import android.content.Context
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
-import com.na982.opichelper.data.repository.AuthRepository
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
@@ -129,12 +128,6 @@ object AppModule {
     @Singleton
     fun provideWakeLockManager(@ApplicationContext context: Context): WakeLockManager {
         return WakeLockManager(context)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideAuthRepository(@ApplicationContext context: Context): AuthRepository {
-        return AuthRepository(context)
     }
     
     @Provides
