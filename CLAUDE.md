@@ -41,7 +41,10 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 ### ViewModel 구조
 - `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 3개 (QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker)
 - `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기. 의존성 3개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator)
-- `MemorizationViewModel`: 암기 테스트 3모드 로직. CurrentMode 상태 머신. SharedFlow 이벤트 구독. 의존성 6개 (TtsPlaybackController, QaDataManager, ExecuteRepeatListeningUseCase, ExecuteEnglishWritingTestUseCase, FullMemorizationUseCase, MemorizeTestProgressTracker)
+- `RepeatListeningViewModel`: 반복듣기 모드 전담. 의존성 6개 (ExecuteRepeatListeningUseCase, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator)
+- `EnglishWritingTestViewModel`: 영작테스트 모드 전담. 의존성 5개 (ExecuteEnglishWritingTestUseCase, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator)
+- `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 3개 (FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator)
+- `MemorizationModeCoordinator`: 3개 모드 상호 배제, 상태 머신, Job 관리. @Singleton
 - `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator
 
 ### TTS 재생 흐름 (핵심 경로)
@@ -137,8 +140,6 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 
 | 항목 | 상태 | 우선순위 |
 |------|------|----------|
-| MemorizationViewModel SRP 위반 (3개 모드 통합) | 미해결 | 중간 |
-| MainScreen 다중 StateFlow 구독 (11개 개별 collect) | 미해결 | 중간 |
 | Domain 계층 Android import (Log, Context, PowerManager) | 미해결 | 낮음 |
 | Data 계층 Log.d 잔존 (RecordingFileRepositoryImpl 등) | 미해결 | 낮음 |
 | WakeLock deprecated API (@Suppress("DEPRECATION") 처리) | 완화 | 낮음 |
@@ -175,6 +176,12 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | Dual DI 등록 7개 클래스 | @Provides만 사용하도록 정리 (0037) |
 | TtsPlaybackController setter 주입 | 생성자 주입으로 이미 전환됨 (0036) |
 | ScriptProgress domain/repository 위치 | domain/entity로 이동 (0039) |
+| AudioPlayerImpl/AudioRecorderImpl 경쟁 상태 | synchronized(lock)/@Synchronized 적용 (0055) |
+| RecordingFileRepositoryImpl AtomicReference TOCTOU | Mutex 교체, !! 제거 (0055) |
+| FullMemorizationUseCase 복합 상태 경쟁 | Mutex 적용, _isRecording/_isPlaying 제거 (0055) |
+| TtsPlaybackController currentPlayJob 가시성 | @Volatile 추가, stopCurrentAndPrepare에 stop 추가 (0055) |
+| MemorizationViewModel SRP 위반 (3모드 통합) | 3개 ViewModel 분리 + MemorizationModeCoordinator (0056) |
+| MainScreen 다중 StateFlow 구독 | derivedStateOf 도입, LaunchedEffect 정리 (0057) |
 
 ## Git 커밋 규칙
 
