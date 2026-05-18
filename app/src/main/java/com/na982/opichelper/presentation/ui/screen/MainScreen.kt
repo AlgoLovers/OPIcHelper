@@ -47,62 +47,54 @@ fun MainScreen(
     val englishWritingTestState by englishWritingTestViewModel.uiState.collectAsState()
     val fullMemorizationState by fullMemorizationViewModel.uiState.collectAsState()
 
-    val memorizeLevels = MemorizeLevel.allDisplayNames
     val selectedLevel = qaState.selectedMemorizeLevel
-    val currentQaItemState = qaState.currentQaItem
-    val categories = qaState.categories
-    val currentCategoryState = qaState.currentCategory
-
-    val isQuestionCardFlipped = false
-    val isRepeatListeningCardFlipped = repeatListeningState.isCardFlipped
-
-    val hasEnglishWritingTestMergedFile = playbackState.hasEnglishWritingTestMergedFile
-    val englishWritingTestCompleted = englishWritingTestState.completed
-    val isEnglishWritingTestMergedFilePlaying = playbackState.isEnglishWritingTestMergedFilePlaying
-    val englishWritingTestMergedFileHighlightIndex = playbackState.englishWritingTestMergedFileHighlightIndex
-    val stopEnglishWritingTestMergedFilePlaying = englishWritingTestState.stopMergedFilePlaying
-    val isEnglishWritingTestCardFlipped = englishWritingTestState.isCardFlipped
-
-    val fullMemorizationHighlightIndex = fullMemorizationState.highlightIndex
-    val isFullMemorizationQuestionPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING
-    val isFullMemorizationRecording = coordinatorMode == CurrentMode.FULL_MEMORIZATION_RECORDING
-    val isFullMemorizationPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING
-    val hasFullMemorizationRecording = fullMemorizationState.hasRecordingFile
-    val isFullMemorizationRecordingPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING
-
-    val isMemorizeTestRunning = coordinatorRunning
-    val isFullMemorizationMode = MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION
-    val isEnglishWritingTestMode = coordinatorMode in setOf(
-        CurrentMode.ENGLISH_WRITING,
-        CurrentMode.ENGLISH_WRITING_RECORDING,
-        CurrentMode.ENGLISH_WRITING_PLAYING,
-        CurrentMode.ENGLISH_WRITING_WITH_FILE
-    )
-
-    LaunchedEffect(qaState.currentQaItem) {
-        playbackViewModel.checkEnglishWritingTestMergedFile()
+    val isFullMemorizationMode by remember {
+        derivedStateOf { MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION }
+    }
+    val isEnglishWritingTestMode by remember {
+        derivedStateOf {
+            coordinatorMode in setOf(
+                CurrentMode.ENGLISH_WRITING,
+                CurrentMode.ENGLISH_WRITING_RECORDING,
+                CurrentMode.ENGLISH_WRITING_PLAYING,
+                CurrentMode.ENGLISH_WRITING_WITH_FILE
+            )
+        }
+    }
+    val isFullMemorizationPlaying by remember {
+        derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING }
+    }
+    val isFullMemorizationRecording by remember {
+        derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_RECORDING }
+    }
+    val isFullMemorizationQuestionPlaying by remember {
+        derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING }
     }
 
-    LaunchedEffect(englishWritingTestCompleted) {
-        if (englishWritingTestCompleted) {
+    // 크로스 VM 이벤트: 영작 완료 → 병합 파일 체크
+    LaunchedEffect(englishWritingTestState.completed) {
+        if (englishWritingTestState.completed) {
             playbackViewModel.checkEnglishWritingTestMergedFile()
             englishWritingTestViewModel.resetCompleted()
         }
     }
 
+    // 크로스 VM 이벤트: 영작 모드 종료 → 병합 파일 체크
     LaunchedEffect(isEnglishWritingTestMode) {
         if (!isEnglishWritingTestMode) {
             playbackViewModel.checkEnglishWritingTestMergedFile()
         }
     }
 
-    LaunchedEffect(stopEnglishWritingTestMergedFilePlaying) {
-        if (stopEnglishWritingTestMergedFilePlaying) {
+    // 크로스 VM 이벤트: 병합 파일 재생 중지 요청
+    LaunchedEffect(englishWritingTestState.stopMergedFilePlaying) {
+        if (englishWritingTestState.stopMergedFilePlaying) {
             playbackViewModel.stopEnglishWritingTestMergedFile()
             englishWritingTestViewModel.resetStopMergedFilePlaying()
         }
     }
 
+    // 레벨 변경 시 모든 모드 정지
     LaunchedEffect(selectedLevel) {
         repeatListeningViewModel.onLevelChanged()
         englishWritingTestViewModel.onLevelChanged()
@@ -124,8 +116,8 @@ fun MainScreen(
     ) {
         BackHandler(enabled = false) {}
 
-        val qaItem = currentQaItemState
-        val category = currentCategoryState
+        val qaItem = qaState.currentQaItem
+        val category = qaState.currentCategory
         val itemsInCategory = remember(category) {
             category?.let { qaViewModel.getItemsInCategory(it) } ?: emptyList()
         }
@@ -171,7 +163,7 @@ fun MainScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         CategorySelector(
                             selectedCategory = category ?: "",
-                            categories = categories,
+                            categories = qaState.categories,
                             onCategorySelected = {
                                 playbackViewModel.stopTts()
                                 qaViewModel.selectCategory(it)
@@ -190,7 +182,7 @@ fun MainScreen(
 
                     Column(modifier = Modifier.weight(1f)) {
                         MemorizeLevelSelector(
-                            levels = memorizeLevels,
+                            levels = MemorizeLevel.allDisplayNames,
                             selectedLevel = selectedLevel,
                             onLevelSelected = { qaViewModel.setSelectedMemorizeLevel(it) }
                         )
@@ -230,12 +222,12 @@ fun MainScreen(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
                         highlightIndex = when {
-                            (isFullMemorizationMode && isFullMemorizationPlaying) -> fullMemorizationHighlightIndex
+                            (isFullMemorizationMode && isFullMemorizationPlaying) -> fullMemorizationState.highlightIndex
                             else -> playbackState.questionHighlightIndex
                         },
                         currentIndex = currentIndex,
                         totalCount = totalCount,
-                        isFlipped = isQuestionCardFlipped,
+                        isFlipped = false,
                         currentCategory = category ?: "",
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -248,7 +240,7 @@ fun MainScreen(
                             currentQuestion = qaItem.questionEn,
                             isPlaying = playbackState.isQuestionPlaying,
                             onPlayClick = {
-                                stopCurrentMemorization(selectedLevel, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel, coordinator)
+                                stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
                                 playbackViewModel.playQuestion(qaItem.questionEn)
                             },
                             onStopClick = { playbackViewModel.stopTts() },
@@ -274,7 +266,7 @@ fun MainScreen(
                                     )
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isMemorizeTestRunning)
+                                    containerColor = if (coordinatorRunning)
                                         MaterialTheme.colorScheme.error
                                     else
                                         MaterialTheme.colorScheme.primary
@@ -283,7 +275,7 @@ fun MainScreen(
                             ) {
                                 Text(
                                     text = when {
-                                        isMemorizeTestRunning -> "${selectedLevel} 종료"
+                                        coordinatorRunning -> "${selectedLevel} 종료"
                                         MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.ENGLISH_WRITING -> "부분암기 테스트"
                                         MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION -> "통암기"
                                         else -> selectedLevel.ifEmpty { "암기 테스트" }
@@ -301,19 +293,19 @@ fun MainScreen(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             currentAnswerKo = qaViewModel.getCurrentAnswerKo(qaItem),
                             highlightIndex = when {
-                                (isFullMemorizationMode && isFullMemorizationPlaying) || isFullMemorizationRecordingPlaying -> fullMemorizationHighlightIndex
-                                isEnglishWritingTestMergedFilePlaying -> englishWritingTestMergedFileHighlightIndex
+                                (isFullMemorizationMode && isFullMemorizationPlaying) || (coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING) -> fullMemorizationState.highlightIndex
+                                playbackState.isEnglishWritingTestMergedFilePlaying -> playbackState.englishWritingTestMergedFileHighlightIndex
                                 else -> playbackState.answerHighlightIndex
                             },
                             answerKoHighlightIndex = playbackState.answerKoHighlightIndex,
                             recordingHighlightIndex = playbackState.recordingHighlightIndex,
                             isFlipped = when {
-                                isEnglishWritingTestMode -> isEnglishWritingTestCardFlipped
-                                isEnglishWritingTestMergedFilePlaying -> false
-                                isRepeatListeningCardFlipped -> isRepeatListeningCardFlipped
+                                isEnglishWritingTestMode -> englishWritingTestState.isCardFlipped
+                                playbackState.isEnglishWritingTestMergedFilePlaying -> false
+                                repeatListeningState.isCardFlipped -> repeatListeningState.isCardFlipped
                                 else -> playbackState.isAnswerCardFlipped
                             },
-                            isRepeatListeningCardFlipped = isRepeatListeningCardFlipped,
+                            isRepeatListeningCardFlipped = repeatListeningState.isCardFlipped,
                             modifier = Modifier.fillMaxWidth()
                         )
                     } else {
@@ -333,7 +325,7 @@ fun MainScreen(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             isPlaying = playbackState.isAnswerPlaying,
                             onPlayClick = {
-                                stopCurrentMemorization(selectedLevel, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel, coordinator)
+                                stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
                                 qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
                             },
                             onStopClick = { playbackViewModel.stopTts() },
@@ -346,10 +338,10 @@ fun MainScreen(
                             onStopEnglishWritingTest = { playbackViewModel.stopEnglishWritingTestMergedFile() },
                             onPlayFullMemorization = { fullMemorizationViewModel.playRecording() },
                             onStopFullMemorization = { fullMemorizationViewModel.stopPlaying() },
-                            hasEnglishWritingTestMergedFile = hasEnglishWritingTestMergedFile,
-                            isEnglishWritingTestMergedFilePlaying = isEnglishWritingTestMergedFilePlaying,
-                            hasFullMemorizationRecording = hasFullMemorizationRecording,
-                            isFullMemorizationRecordingPlaying = isFullMemorizationRecordingPlaying,
+                            hasEnglishWritingTestMergedFile = playbackState.hasEnglishWritingTestMergedFile,
+                            isEnglishWritingTestMergedFilePlaying = playbackState.isEnglishWritingTestMergedFilePlaying,
+                            hasFullMemorizationRecording = fullMemorizationState.hasRecordingFile,
+                            isFullMemorizationRecordingPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -380,28 +372,18 @@ private fun onMemorizeTestButtonClick(
     englishWritingTestViewModel: EnglishWritingTestViewModel,
     fullMemorizationViewModel: FullMemorizationViewModel
 ) {
-    val level = MemorizeLevel.fromDisplayName(selectedLevel)
-    when (level) {
-        MemorizeLevel.REPEAT_LISTENING -> {
-            if (repeatListeningViewModel.uiState.value.isCardFlipped || true) {
-                repeatListeningViewModel.start()
-            }
-        }
-        MemorizeLevel.ENGLISH_WRITING -> {
-            englishWritingTestViewModel.start()
-        }
-        MemorizeLevel.FULL_MEMORIZATION -> {
-            fullMemorizationViewModel.start()
-        }
+    when (MemorizeLevel.fromDisplayName(selectedLevel)) {
+        MemorizeLevel.REPEAT_LISTENING -> repeatListeningViewModel.start()
+        MemorizeLevel.ENGLISH_WRITING -> englishWritingTestViewModel.start()
+        MemorizeLevel.FULL_MEMORIZATION -> fullMemorizationViewModel.start()
     }
 }
 
 private fun stopCurrentMemorization(
-    selectedLevel: String,
+    coordinator: MemorizationModeCoordinator,
     repeatListeningViewModel: RepeatListeningViewModel,
     englishWritingTestViewModel: EnglishWritingTestViewModel,
-    fullMemorizationViewModel: FullMemorizationViewModel,
-    coordinator: MemorizationModeCoordinator
+    fullMemorizationViewModel: FullMemorizationViewModel
 ) {
     val currentMode = coordinator.currentMode.value
     when {
