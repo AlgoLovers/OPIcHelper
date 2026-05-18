@@ -6,7 +6,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
 
 @Composable
@@ -17,11 +16,8 @@ fun AnswerPlayButton(
     onStopClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Log.d("AnswerPlayButton", "Rendering with isPlaying=$isPlaying, answer=${currentAnswer.take(50)}...")
-    
     Button(
         onClick = {
-            Log.d("AnswerPlayButton", "Button clicked, current isPlaying=$isPlaying")
             if (isPlaying) {
                 onStopClick()
             } else {

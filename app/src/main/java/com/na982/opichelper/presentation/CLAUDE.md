@@ -1,6 +1,5 @@
 # Presentation Layer — UI, ViewModel, 네비게이션
 
-## 역할
 사용자 인터페이스와 상태 관리. Compose UI + MVVM.
 ViewModel은 Domain 계층만 참조, UI는 ViewModel의 StateFlow만 구독.
 
@@ -20,10 +19,11 @@ presentation/
 
 | 파일 | 역할 | 주의사항 |
 |------|------|----------|
-| `MainViewModel.kt` | **@HiltViewModel AndroidViewModel** 통합 상태 관리. AppState 단일 StateFlow | 의존성 6개 (QaDataManager, TtsPlaybackController, MemorizeTestProgressTracker, UserPreferencesRepository, PlayMergedFileUseCase, Application). 진입 시 항상 반복듣기 모드 |
-| `MemorizationViewModel.kt` | **@HiltViewModel ViewModel** 암기 테스트 3모드 로직 | SRP 위반 (3모드 통합). CurrentMode 상태 머신 관리 |
+| `MainViewModel.kt` | **@HiltViewModel ViewModel** 통합 상태 관리. AppState 단일 StateFlow | 의존성 6개 (QaDataManager, TtsPlaybackController, MemorizeTestProgressTracker, UserPreferencesRepository, PlayMergedFileUseCase, TtsOrchestrator). 진입 시 항상 반복듣기 모드 |
+| `MemorizationViewModel.kt` | **@HiltViewModel ViewModel** 암기 테스트 3모드 로직 | SRP 위반 (3모드 통합). CurrentMode 상태 머신 관리. isQuestionCardFlipped 상태 포함 |
+| `SettingsViewModel.kt` | **@HiltViewModel ViewModel** 설정 화면 전용 | UserPreferencesRepository + TtsOrchestrator만 의존 |
 | `MemorizationUiState.kt` | 암기 테스트 UI 상태 데이터 클래스 | 반복듣기/영작/통암기 상태 모두 포함 |
-| `CurrentMode.kt` | 암기 테스트 모드 Enum | NONE, QUESTION_PLAY, ANSWER_PLAY, REPEAT_LISTENING, ENGLISH_WRITING(+substates), FULL_MEMORIZATION(+substates) |
+| `CurrentMode.kt` | 암기 테스트 모드 Enum | 아래 전체 목록 참조 |
 
 ### CurrentMode 전체 목록
 ```
@@ -45,42 +45,47 @@ FULL_MEMORIZATION
 ### MainViewModel의 AppState 핵심 필드
 ```kotlin
 data class AppState(
-    val currentQaItem: QaItem?,
-    val categories: List<String>,
-    val currentCategory: String?,
-    val selectedMemorizeLevel: String,           // 항상 "반복 듣기"로 시작
-    val memorizeLevels: List<String>,
-    val currentUserLevel: String,
-    val currentKoreanTtsService: String,
-    val isLoading: Boolean,
-    val error: String?,
-    val isQuestionPlaying: Boolean,
-    val isAnswerPlaying: Boolean,
-    val isPlaying: Boolean,
-    val questionHighlightIndex: Int?,
-    val answerHighlightIndex: Int?,
-    val answerKoHighlightIndex: Int?,
-    val recordingHighlightIndex: Int?,
-    val isQuestionCardFlipped: Boolean,
-    val isAnswerCardFlipped: Boolean,
-    val hasProgress: Boolean,
-    val hasEnglishWritingTestMergedFile: Boolean,
-    val isEnglishWritingTestMergedFilePlaying: Boolean,
-    val englishWritingTestMergedFileHighlightIndex: Int?,
+    val currentQaItem: QaItem? = null,
+    val currentCategory: String? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val categories: List<String> = emptyList(),
+    val memorizeLevels: List<String> = MemorizeLevel.allDisplayNames,
+    val selectedMemorizeLevel: String = MemorizeLevel.REPEAT_LISTENING.displayName,
+    val hasEnglishWritingTestMergedFile: Boolean = false,
+    val isEnglishWritingTestMergedFilePlaying: Boolean = false,
+    val englishWritingTestMergedFileHighlightIndex: Int? = null,
+    val isPlaying: Boolean = false,
+    val isQuestionPlaying: Boolean = false,
+    val isAnswerPlaying: Boolean = false,
+    val questionHighlightIndex: Int? = null,
+    val answerHighlightIndex: Int? = null,
+    val answerKoHighlightIndex: Int? = null,
+    val recordingHighlightIndex: Int? = null,
+    val isAnswerCardFlipped: Boolean = false,
+    val hasProgress: Boolean = false,
+    val currentUserLevel: String = ""
 )
 ```
 
 ### 상태 흐름 (MainViewModel 내 5개 구독 블록)
 ```
 블록1: QaDataManager (5-way combine) → currentQaItem, currentCategory, categories, isLoading, error
-블록2: UserPreferencesRepository.userLevel → currentUserLevel, currentKoreanTtsService
+블록2: UserPreferencesRepository.userLevel → currentUserLevel
 블록3: TtsPlaybackController (7-way combine) → isPlaying, isQuestionPlaying, isAnswerPlaying,
        questionHighlightIndex, answerHighlightIndex, answerKoHighlightIndex, recordingHighlightIndex
 블록4: MemorizeTestProgressTracker.hasProgress → hasProgress
 블록5: PlayMergedFileUseCase (3-way combine) → hasMergedFile, isMergedFilePlaying, mergedFileHighlightIndex
 
 MemorizationViewModel.fullMemorizationHighlightIndex ──→ MainScreen에서 직접 collect
+MemorizationViewModel.isQuestionCardFlipped ──→ MainScreen에서 직접 collect
+SettingsViewModel.uiState ──→ SettingsScreen에서 직접 collect
 ```
+
+### MemorizationViewModel 주의사항
+
+- **init 블록**: `qaDataManager.currentQaItem.collect`에서 첫 아이템 수신 시 `updateFullMemorizationRecordingStatus()`를 스킵. 이것은 앱 재시작 시 통암기 모드로 자동 진입하는 것을 방지하기 위함
+- **resetStateOnAppRestart()**: currentMode를 NONE으로 리셋. init의 첫 스킵 로직과 함께 초기 진입 시 항상 반복듣기 모드 보장
 
 ## ui/component/ — 재사용 컴포저블
 
@@ -93,23 +98,22 @@ MemorizationViewModel.fullMemorizationHighlightIndex ──→ MainScreen에서 
 
 | 파일 | 역할 |
 |------|------|
-| `AppNavigation.kt` | NavHost. Main/Settings/Login 3개 라우트. sealed class Screen |
+| `AppNavigation.kt` | NavHost. Main/Settings 2개 라우트. sealed class Screen |
 
 ## ui/screen/ — 화면
 
 | 파일 | 역할 | 비고 |
 |------|------|------|
 | `MainScreen.kt` | 메인 화면. 두 ViewModel 상태 결합 | QuestionCard/AnswerCard 하이라이트: when 분기로 소스 선택 |
-| `SettingsScreen.kt` | 설정: 레벨 선택, TTS 속도, 다크모드 | MainViewModel 통해 설정 변경 (UserPreferencesRepository 직접 참조 아님) |
-| `LoginScreen.kt` | 로그인: 게스트/Google | Google Sign-In 비활성 상태 |
+| `SettingsScreen.kt` | 설정: 학습 레벨 선택, 앱 정보(버전, 한글 TTS 서비스명) | 그라디언트 헤더 + 헤더 배지로 메인 화면과 룩앤필 통일 |
 
 ## ui/screen/MainScreenComponentsUI/ — MainScreen 하위 컴포넌트
 
 | 파일 | 역할 |
 |------|------|
-| `AppTitle.kt` | 앱 타이틀바 (그라디언트 배경) |
-| `CategorySelector.kt` | 카테고리 드롭다운 |
-| `MemorizeLevelSelector.kt` | 암기 모드 선택 (반복듣기/영작/통암기) |
+| `AppTitle.kt` | 앱 타이틀바 (그라디언트 배경, 설정 버튼) |
+| `CategorySelector.kt` | 카테고리 드롭다운 (헤더 배지 + ExposedDropdownMenuBox) |
+| `MemorizeLevelSelector.kt` | 암기 모드 선택 (카테고리 셀렉터와 동일 스타일) |
 | `QuestionCard.kt` | 질문 카드 (FlipCard + HighlightText) |
 | `AnswerCard.kt` | 답변 카드 (FlipCard + HighlightText, 녹음 하이라이트) |
 | `QuestionPlayButton.kt` | 질문 재생/정지 버튼 |

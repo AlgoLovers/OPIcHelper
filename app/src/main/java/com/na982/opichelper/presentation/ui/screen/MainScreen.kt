@@ -10,17 +10,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.BackHandler
 import com.na982.opichelper.presentation.viewmodel.MainViewModel
-import com.na982.opichelper.domain.entity.QaItem
+import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import androidx.activity.compose.BackHandler
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import com.na982.opichelper.presentation.viewmodel.MemorizationViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.ui.theme.*
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -29,31 +26,31 @@ import androidx.compose.foundation.isSystemInDarkTheme
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
+    qaViewModel: QaBrowserViewModel = hiltViewModel(),
     memorizationViewModel: MemorizationViewModel? = null,
     modifier: Modifier = Modifier,
     onNavigateToSettings: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val playbackState by mainViewModel.uiState.collectAsState()
+    val qaState by qaViewModel.uiState.collectAsState()
     val memorizationViewModelInstance = memorizationViewModel ?: hiltViewModel<MemorizationViewModel>()
-    val coroutineScope = rememberCoroutineScope()
     val memorizeLevels by memorizationViewModelInstance.memorizeLevels.collectAsState()
-    val selectedLevel = uiState.selectedMemorizeLevel
-    val currentQaItemState = uiState.currentQaItem
-    val categories = uiState.categories
-    val currentCategoryState = uiState.currentCategory
+    val selectedLevel = qaState.selectedMemorizeLevel
+    val currentQaItemState = qaState.currentQaItem
+    val categories = qaState.categories
+    val currentCategoryState = qaState.currentCategory
 
-    val currentMode by memorizationViewModelInstance.currentMode.collectAsState()
-    val isQuestionCardFlipped by viewModel.isQuestionCardFlipped.collectAsState()
+    val isQuestionCardFlipped by memorizationViewModelInstance.isQuestionCardFlipped.collectAsState()
 
     val memorizationUiState by memorizationViewModelInstance.uiState.collectAsState()
 
     val isRepeatListeningCardFlipped = memorizationUiState.isRepeatListeningCardFlipped
 
-    val hasEnglishWritingTestMergedFile by viewModel.hasEnglishWritingTestMergedFile.collectAsState()
+    val hasEnglishWritingTestMergedFile by mainViewModel.hasEnglishWritingTestMergedFile.collectAsState()
     val englishWritingTestCompleted by memorizationViewModelInstance.englishWritingTestCompleted.collectAsState()
-    val isEnglishWritingTestMergedFilePlaying by viewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
-    val englishWritingTestMergedFileHighlightIndex by viewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
+    val isEnglishWritingTestMergedFilePlaying by mainViewModel.isEnglishWritingTestMergedFilePlaying.collectAsState()
+    val englishWritingTestMergedFileHighlightIndex by mainViewModel.englishWritingTestMergedFileHighlightIndex.collectAsState()
     val stopEnglishWritingTestMergedFilePlaying by memorizationViewModelInstance.stopEnglishWritingTestMergedFilePlaying.collectAsState()
     val isEnglishWritingTestCardFlipped = memorizationUiState.isEnglishWritingTestCardFlipped
 
@@ -72,26 +69,26 @@ fun MainScreen(
         memorizationViewModelInstance.resetStateOnAppRestart()
     }
 
-    LaunchedEffect(uiState.currentQaItem) {
-        viewModel.checkEnglishWritingTestMergedFile()
+    LaunchedEffect(qaState.currentQaItem) {
+        mainViewModel.checkEnglishWritingTestMergedFile()
     }
 
     LaunchedEffect(englishWritingTestCompleted) {
         if (englishWritingTestCompleted) {
-            viewModel.checkEnglishWritingTestMergedFile()
+            mainViewModel.checkEnglishWritingTestMergedFile()
             memorizationViewModelInstance.resetEnglishWritingTestCompleted()
         }
     }
 
     LaunchedEffect(isEnglishWritingTestMode) {
         if (!isEnglishWritingTestMode) {
-            viewModel.checkEnglishWritingTestMergedFile()
+            mainViewModel.checkEnglishWritingTestMergedFile()
         }
     }
 
     LaunchedEffect(stopEnglishWritingTestMergedFilePlaying) {
         if (stopEnglishWritingTestMergedFilePlaying) {
-            viewModel.stopEnglishWritingTestMergedFile()
+            mainViewModel.stopEnglishWritingTestMergedFile()
             memorizationViewModelInstance.resetStopEnglishWritingTestMergedFilePlaying()
         }
     }
@@ -111,7 +108,7 @@ fun MainScreen(
         val qaItem = currentQaItemState
         val category = currentCategoryState
         val itemsInCategory = remember(category) {
-            category?.let { viewModel.getItemsInCategory(it) } ?: emptyList()
+            category?.let { qaViewModel.getItemsInCategory(it) } ?: emptyList()
         }
         val currentIndex = remember(category to qaItem) {
             if (category != null && qaItem != null) {
@@ -134,38 +131,9 @@ fun MainScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-            if (uiState.currentKoreanTtsService.isNotEmpty()) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "한글 TTS",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = uiState.currentKoreanTtsService,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
 
             AppTitle(
-                currentLevel = uiState.currentUserLevel,
+                currentLevel = qaState.currentUserLevel,
                 onSettingsClick = onNavigateToSettings,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -186,8 +154,8 @@ fun MainScreen(
                             selectedCategory = category ?: "",
                             categories = categories,
                             onCategorySelected = {
-                                viewModel.stopAllTts()
-                                viewModel.selectCategory(it)
+                                mainViewModel.stopAllTts()
+                                qaViewModel.selectCategory(it)
                             }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -205,7 +173,7 @@ fun MainScreen(
                         MemorizeLevelSelector(
                             levels = memorizeLevels,
                             selectedLevel = selectedLevel,
-                            onLevelSelected = { viewModel.setSelectedMemorizeLevel(it) }
+                            onLevelSelected = { qaViewModel.setSelectedMemorizeLevel(it) }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -221,10 +189,10 @@ fun MainScreen(
             }
 
             when {
-                uiState.isLoading -> {
+                qaState.isLoading -> {
                     CircularProgressIndicator(modifier = Modifier.padding(16.dp))
                 }
-                uiState.error != null -> {
+                qaState.error != null -> {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -232,7 +200,7 @@ fun MainScreen(
                         )
                     ) {
                         Text(
-                            text = uiState.error!!,
+                            text = qaState.error!!,
                             modifier = Modifier.padding(16.dp),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -244,7 +212,7 @@ fun MainScreen(
                         currentQuestionKo = qaItem.questionKo,
                         highlightIndex = when {
                             (isFullMemorizationMode && isFullMemorizationPlaying) -> fullMemorizationHighlightIndex
-                            else -> uiState.questionHighlightIndex
+                            else -> playbackState.questionHighlightIndex
                         },
                         currentIndex = currentIndex,
                         totalCount = totalCount,
@@ -259,12 +227,12 @@ fun MainScreen(
                     ) {
                         QuestionPlayButton(
                             currentQuestion = qaItem.questionEn,
-                            isPlaying = uiState.isQuestionPlaying,
+                            isPlaying = playbackState.isQuestionPlaying,
                             onPlayClick = {
                                 memorizationViewModelInstance.stopMemorization()
-                                viewModel.playQuestion(qaItem.questionEn)
+                                mainViewModel.playQuestion(qaItem.questionEn)
                             },
-                            onStopClick = { viewModel.stopAllTts() },
+                            onStopClick = { mainViewModel.stopAllTts() },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -280,7 +248,7 @@ fun MainScreen(
                             Button(
                                 onClick = {
                                     if (MemorizeLevel.fromDisplayName(selectedLevel) != MemorizeLevel.FULL_MEMORIZATION) {
-                                        viewModel.stopAllTts()
+                                        mainViewModel.stopAllTts()
                                     }
                                     memorizationViewModelInstance.onMemorizeTestButtonClick(selectedLevel)
                                 },
@@ -309,20 +277,20 @@ fun MainScreen(
 
                     if (!isFullMemorizationMode || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
                         AnswerCard(
-                            currentAnswer = viewModel.getCurrentAnswer(qaItem),
-                            currentAnswerKo = viewModel.getCurrentAnswerKo(qaItem),
+                            currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
+                            currentAnswerKo = qaViewModel.getCurrentAnswerKo(qaItem),
                             highlightIndex = when {
                                 (isFullMemorizationMode && isFullMemorizationPlaying) || isFullMemorizationRecordingPlaying -> fullMemorizationHighlightIndex
                                 isEnglishWritingTestMergedFilePlaying -> englishWritingTestMergedFileHighlightIndex
-                                else -> uiState.answerHighlightIndex
+                                else -> playbackState.answerHighlightIndex
                             },
-                            answerKoHighlightIndex = uiState.answerKoHighlightIndex,
-                            recordingHighlightIndex = uiState.recordingHighlightIndex,
+                            answerKoHighlightIndex = playbackState.answerKoHighlightIndex,
+                            recordingHighlightIndex = playbackState.recordingHighlightIndex,
                             isFlipped = when {
                                 isEnglishWritingTestMode -> isEnglishWritingTestCardFlipped
                                 isEnglishWritingTestMergedFilePlaying -> false
                                 isRepeatListeningCardFlipped -> isRepeatListeningCardFlipped
-                                else -> uiState.isAnswerCardFlipped
+                                else -> playbackState.isAnswerCardFlipped
                             },
                             isRepeatListeningCardFlipped = isRepeatListeningCardFlipped,
                             modifier = Modifier.fillMaxWidth()
@@ -341,19 +309,19 @@ fun MainScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         AnswerPlayButton(
-                            currentAnswer = viewModel.getCurrentAnswer(qaItem),
-                            isPlaying = uiState.isAnswerPlaying,
+                            currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
+                            isPlaying = playbackState.isAnswerPlaying,
                             onPlayClick = {
                                 memorizationViewModelInstance.stopMemorization()
-                                qaItem.let { viewModel.playAnswer(viewModel.getCurrentAnswer(it)) }
+                                qaItem.let { mainViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
                             },
-                            onStopClick = { viewModel.stopAllTts() },
+                            onStopClick = { mainViewModel.stopAllTts() },
                             modifier = Modifier.weight(1f)
                         )
 
                         MemorizeLevelPlaybackButton(
                             selectedLevel = selectedLevel,
-                            mainViewModel = viewModel,
+                            mainViewModel = mainViewModel,
                             memorizationViewModel = memorizationViewModelInstance,
                             hasEnglishWritingTestMergedFile = hasEnglishWritingTestMergedFile,
                             isEnglishWritingTestMergedFilePlaying = isEnglishWritingTestMergedFilePlaying,
@@ -367,12 +335,12 @@ fun MainScreen(
 
                     NavigationSection(
                         onPreviousQuestion = {
-                            viewModel.stopAllTts()
-                            viewModel.previousQaItem()
+                            mainViewModel.stopAllTts()
+                            qaViewModel.previousQaItem()
                         },
                         onNextQuestion = {
-                            viewModel.stopAllTts()
-                            viewModel.nextQaItem()
+                            mainViewModel.stopAllTts()
+                            qaViewModel.nextQaItem()
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -380,5 +348,5 @@ fun MainScreen(
             }
         }
     }
-}
+    }
 }

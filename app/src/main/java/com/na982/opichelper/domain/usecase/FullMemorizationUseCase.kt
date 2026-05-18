@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.currentCoroutineContext
 import javax.inject.Inject
@@ -28,14 +29,16 @@ class FullMemorizationUseCase @Inject constructor(
     private val audioRecorder: AudioRecorder,
     private val qaDataManager: QaDataManager,
     private val recordingTimeManager: RecordingTimeManager
-) {
+) : java.io.Closeable {
     private val _highlightIndex = MutableStateFlow<Int?>(null)
     val highlightIndex: StateFlow<Int?> = _highlightIndex.asStateFlow()
 
     private val _isRecording = AtomicBoolean(false)
     private val _isPlaying = AtomicBoolean(false)
 
+    @Volatile
     private var currentRecordingPath: String? = null
+    @Volatile
     private var playbackJob: Job? = null
     private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
@@ -182,5 +185,10 @@ class FullMemorizationUseCase @Inject constructor(
         playbackJob = null
         _isPlaying.set(false)
         _highlightIndex.value = null
+    }
+
+    override fun close() {
+        cancelPlayback()
+        scope.cancel()
     }
 }

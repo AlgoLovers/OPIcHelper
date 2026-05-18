@@ -1,8 +1,5 @@
 package com.na982.opichelper.domain.repository
 
-import android.app.Application
-import android.content.Context
-import android.content.SharedPreferences
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
@@ -12,14 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * QA 데이터 관리 전담 클래스 (Manager 패턴)
@@ -29,18 +25,14 @@ import kotlinx.coroutines.launch
 class QaDataManager @Inject constructor(
     private val progressTracker: MemorizeTestProgressTracker,
     private val qaDataLoader: QaDataLoader,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val progressPersistenceService: ProgressPersistenceService
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var userLevelJob: Job? = null
 
     private val itemsByCategory: MutableMap<String, List<QaItem>> = ConcurrentHashMap()
     private val itemIndexByCategory: MutableMap<String, Int> = ConcurrentHashMap()
-    
-    private var prefs: SharedPreferences? = null
-    private var application: Application? = null
-    private val PREF_KEY_LAST_CATEGORY = "last_category"
-    private val PREF_KEY_LAST_INDEX = "last_index"
     
     // UI 상태 관리
     private val _currentQaItem = MutableStateFlow<QaItem?>(null)
@@ -58,13 +50,9 @@ class QaDataManager @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
     
-    suspend fun init(application: Application) {
-        this.application = application
-        prefs = application.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
-        loadQaItemsFromAssets(application)
+    suspend fun init() {
+        loadQaItemsFromAssets()
         restoreLastCategory()
-        
-        // 사용자 레벨 변경 감지 및 데이터 재로드
         setupUserLevelObserver()
     }
     
@@ -75,26 +63,21 @@ class QaDataManager @Inject constructor(
         userLevelJob?.cancel()
         userLevelJob = scope.launch {
             userPreferencesRepository.userLevel.collect { newLevel ->
-                Log.d("QaDataManager", "사용자 레벨 변경 감지: $newLevel")
-                application?.let { app ->
-                    loadQaItemsFromAssets(app)
-                    restoreLastCategory()
-                }
+                loadQaItemsFromAssets()
+                restoreLastCategory()
             }
         }
     }
     
-    suspend fun loadQaItemsFromAssets(application: Application) {
+    suspend fun loadQaItemsFromAssets() {
         val preferredOrder = listOf(
             "집", "음악", "집에서 보내는 휴가", "영화", "레스토랑", "해변", "인터넷",
             "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절", "롤플레이"
         )
 
         val currentUserLevel = userPreferencesRepository.getUserLevel()
-        Log.d("QaDataManager", "데이터 로딩 시작 - 현재 사용자 레벨: $currentUserLevel")
 
         val allLeveledItems = qaDataLoader.loadQaItemsForLevel(currentUserLevel)
-        Log.d("QaDataManager", "레벨별 데이터 로드 완료 - 총 ${allLeveledItems.size}개 항목")
 
         // JSON의 title 필드에서 동적으로 카테고리 추출
         val loadedCategories = allLeveledItems.map { it.category }.distinct()
@@ -109,11 +92,9 @@ class QaDataManager @Inject constructor(
             val categoryItems = allLeveledItems.filter { it.category == category }
             itemsByCategory[category] = categoryItems
             itemIndexByCategory[category] = 0
-            Log.d("QaDataManager", "카테고리 로드 완료: $category (${categoryItems.size}개 항목, 레벨: $currentUserLevel)")
         }
 
         _categories.value = sortedCategories
-        Log.d("QaDataManager", "모든 카테고리 로드 완료: ${sortedCategories.size}개 카테고리 (레벨: $currentUserLevel)")
     }
     
     fun getCurrentIndex(): Int {
@@ -171,7 +152,6 @@ class QaDataManager @Inject constructor(
             updateCurrentQaItem()
             saveLastCategory(category)
             saveLastIndex(0)  // 카테고리 선택 시 인덱스 0 저장
-            Log.d("QaDataManager", "카테고리 선택: $category (인덱스: 0)")
         } else {
             Log.e("QaDataManager", "존재하지 않는 카테고리: $category")
         }
@@ -190,9 +170,8 @@ class QaDataManager @Inject constructor(
                 itemIndexByCategory[category] = currentIndex + 1
                 updateCurrentQaItem()
                 saveLastIndex(currentIndex + 1)
-                Log.d("QaDataManager", "다음 항목으로 이동: ${currentIndex + 1}/${items.size}")
             } else {
-                Log.d("QaDataManager", "마지막 항목에 도달")
+                // 마지막 항목
             }
         }
     }
@@ -209,9 +188,8 @@ class QaDataManager @Inject constructor(
                 itemIndexByCategory[category] = currentIndex - 1
                 updateCurrentQaItem()
                 saveLastIndex(currentIndex - 1)
-                Log.d("QaDataManager", "이전 항목으로 이동: ${currentIndex - 1}")
             } else {
-                Log.d("QaDataManager", "첫 번째 항목에 도달")
+                // 첫 번째 항목
             }
         }
     }
@@ -224,7 +202,6 @@ class QaDataManager @Inject constructor(
             
             if (items.isNotEmpty() && currentIndex < items.size) {
                 _currentQaItem.value = items[currentIndex]
-                Log.d("QaDataManager", "현재 QA 항목 업데이트: ${items[currentIndex].questionEn}")
             } else {
                 _currentQaItem.value = null
                 if (items.isEmpty()) {
@@ -239,36 +216,38 @@ class QaDataManager @Inject constructor(
     }
     
     private suspend fun restoreLastCategory() {
-        val lastCategory = prefs?.getString(PREF_KEY_LAST_CATEGORY, null)
+        val navState = progressPersistenceService.loadNavigationState()
+        val lastCategory = navState.category
         if (lastCategory != null && itemsByCategory.containsKey(lastCategory)) {
             _currentCategory.value = lastCategory
-            val lastIndex = prefs?.getInt(PREF_KEY_LAST_INDEX, 0) ?: 0
-            itemIndexByCategory[lastCategory] = lastIndex
+            itemIndexByCategory[lastCategory] = navState.index
             updateCurrentQaItem()
-            Log.d("QaDataManager", "마지막 카테고리 복원: $lastCategory (인덱스: $lastIndex)")
         } else {
-            // 기본 카테고리 선택
             val firstCategory = _categories.value.firstOrNull()
             if (firstCategory != null) {
                 selectCategory(firstCategory)
-                Log.d("QaDataManager", "기본 카테고리 선택: $firstCategory")
             }
         }
     }
-    
-    private fun saveLastCategory(category: String) {
-        prefs?.edit()?.putString(PREF_KEY_LAST_CATEGORY, category)?.apply()
+
+    private suspend fun saveLastCategory(category: String) {
+        val currentIndex = itemIndexByCategory[category] ?: 0
+        progressPersistenceService.saveNavigationState(
+            ProgressPersistenceService.NavigationState(category, currentIndex)
+        )
     }
-    
-    private fun saveLastIndex(index: Int) {
-        prefs?.edit()?.putInt(PREF_KEY_LAST_INDEX, index)?.apply()
-        Log.d("QaDataManager", "인덱스 저장: $index (SharedPreferences: opic_prefs)")
+
+    private suspend fun saveLastIndex(index: Int) {
+        val category = _currentCategory.value
+        progressPersistenceService.saveNavigationState(
+            ProgressPersistenceService.NavigationState(category, index)
+        )
     }
     
     /**
      * 현재 인덱스를 저장 (외부에서 호출 가능)
      */
-    fun saveCurrentIndex(index: Int) {
+    suspend fun saveCurrentIndex(index: Int) {
         saveLastIndex(index)
     }
     
@@ -296,9 +275,8 @@ class QaDataManager @Inject constructor(
 
             if (currentProgress != null) {
                 progressTracker.persistChangedProgress()
-                Log.d("QaDataManager", "현재 진행상황 저장: $category (인덱스: $currentIndex, 레벨: ${memorizeLevel ?: MemorizeLevel.REPEAT_LISTENING.displayName})")
             } else {
-                Log.d("QaDataManager", "저장할 진행상황 없음: $category (인덱스: $currentIndex)")
+                // 저장할 진행상황 없음
             }
         }
     }

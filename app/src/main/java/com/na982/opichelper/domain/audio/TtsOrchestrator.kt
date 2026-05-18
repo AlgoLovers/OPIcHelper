@@ -1,8 +1,8 @@
 package com.na982.opichelper.domain.audio
 
 import android.content.Context
-import android.os.Build
 import android.util.Log
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 /**
@@ -23,17 +23,10 @@ class TtsOrchestrator @Inject constructor(
         // KakaoTtsPlayer(context),    // 3순위: 카카오 음성 (유료 - 요금 불명)
     )
     
-    private var currentKoreanTtsIndex = 0
+    private val currentKoreanTtsIndex = AtomicInteger(0)
     
     init {
-        // Android 버전 정보 로깅
-        val androidVersion = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> "Android 14+ (최신 기기)"
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> "Android 13 (중간 기기)"
-            else -> "Android 12 이하 (구형 기기)"
-        }
-        Log.d("TtsOrchestrator", "📱 Android 버전 감지: ${Build.VERSION.SDK_INT} ($androidVersion)")
-        Log.d("TtsOrchestrator", "📱 기기 정보: ${Build.MANUFACTURER} ${Build.MODEL}")
+        // Android 버전 정보는 필요시 Build.VERSION.SDK_INT로 직접 확인
     }
     
     /**
@@ -44,14 +37,10 @@ class TtsOrchestrator @Inject constructor(
      */
     suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
         val isKorean = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
-        
-        Log.d("TtsOrchestrator", "🔍 언어 감지: 텍스트='${text.take(20)}...', 한글여부=$isKorean")
-        
+
         return if (isKorean) {
-            Log.d("TtsOrchestrator", "🇰🇷 한글 텍스트 감지 - 한글 TTS로 전달")
             speakKorean(text, onComplete)
         } else {
-            Log.d("TtsOrchestrator", "🇺🇸 영문 텍스트 감지 - 영문 TTS로 전달")
             speakEnglish(text, onComplete)
         }
     }
@@ -60,7 +49,6 @@ class TtsOrchestrator @Inject constructor(
      * 영문 TTS 재생 (Google TTS)
      */
     private suspend fun speakEnglish(text: String, onComplete: (() -> Unit)?): Boolean {
-        Log.d("TtsOrchestrator", "🇺🇸 영문 TTS 재생: $text")
         return googleTtsPlayer.speak(text, onComplete)
     }
     
@@ -68,33 +56,27 @@ class TtsOrchestrator @Inject constructor(
      * 한글 TTS 재생 (폴백 시스템)
      */
     private suspend fun speakKorean(text: String, onComplete: (() -> Unit)?): Boolean {
-        Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 재생 시작 (현재 서비스: ${getCurrentKoreanTtsServiceName()})")
-        
-        // 현재 서비스부터 순차적으로 시도
-        for (i in currentKoreanTtsIndex until koreanTtsPlayers.size) {
+        val startIndex = currentKoreanTtsIndex.get()
+        for (i in startIndex until koreanTtsPlayers.size) {
             val player = koreanTtsPlayers[i]
-            Log.d("TtsOrchestrator", "🇰🇷 시도 중: ${player.getServiceName()} (인덱스: $i)")
-            
+
             if (player.isAvailable()) {
-                Log.d("TtsOrchestrator", "🇰🇷 ${player.getServiceName()} 사용 가능, 재생 시도")
                 val success = player.speak(text, onComplete)
                 if (success) {
-                    currentKoreanTtsIndex = i // 성공한 서비스로 업데이트
-                    Log.d("TtsOrchestrator", "🇰🇷 한글 TTS 성공: ${player.getServiceName()}")
+                    currentKoreanTtsIndex.set(i)
                     return true
                 } else {
-                    Log.w("TtsOrchestrator", "🇰🇷 한글 TTS 실패: ${player.getServiceName()}, 다음 서비스 시도")
-                    currentKoreanTtsIndex = i + 1
+                    Log.w("TtsOrchestrator", "한글 TTS 실패: ${player.getServiceName()}, 다음 서비스 시도")
+                    currentKoreanTtsIndex.set(i + 1)
                 }
             } else {
-                Log.w("TtsOrchestrator", "🇰🇷 한글 TTS 서비스 사용 불가: ${player.getServiceName()}, 다음 서비스 시도")
-                currentKoreanTtsIndex = i + 1
+                Log.w("TtsOrchestrator", "한글 TTS 서비스 사용 불가: ${player.getServiceName()}, 다음 서비스 시도")
+                currentKoreanTtsIndex.set(i + 1)
             }
         }
-        
-        // 모든 서비스 실패 — 인덱스 리셋하여 다음 호출에서 재시도 가능하게
-        Log.e("TtsOrchestrator", "🇰🇷 모든 한글 TTS 서비스 실패 — 인덱스 리셋")
-        currentKoreanTtsIndex = 0
+
+        Log.e("TtsOrchestrator", "모든 한글 TTS 서비스 실패 — 인덱스 리셋")
+        currentKoreanTtsIndex.set(0)
         onComplete?.invoke()
         return false
     }
@@ -103,14 +85,11 @@ class TtsOrchestrator @Inject constructor(
      * TTS 재생 중지
      */
     fun stop() {
-        Log.d("TtsOrchestrator", "TTS 중지")
         try {
-            // 모든 TTS 플레이어 중지
             googleTtsPlayer.stop()
             for (player in koreanTtsPlayers) {
                 player.stop()
             }
-            Log.d("TtsOrchestrator", "TTS 중지 완료")
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 중지 실패", e)
         }
@@ -120,11 +99,9 @@ class TtsOrchestrator @Inject constructor(
      * 모든 TTS 플레이어 해제 (앱 종료 시 사용)
      */
     fun releaseAllPlayers() {
-        Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제")
         try {
             googleTtsPlayer.release()
             samsungTtsPlayer.release()
-            Log.d("TtsOrchestrator", "모든 TTS 플레이어 해제 완료")
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 플레이어 해제 실패", e)
         }
@@ -141,8 +118,9 @@ class TtsOrchestrator @Inject constructor(
      * 현재 사용 중인 한글 TTS 서비스 이름 반환
      */
     fun getCurrentKoreanTtsServiceName(): String {
-        return if (currentKoreanTtsIndex < koreanTtsPlayers.size) {
-            koreanTtsPlayers[currentKoreanTtsIndex].getServiceName()
+        val index = currentKoreanTtsIndex.get()
+        return if (index < koreanTtsPlayers.size) {
+            koreanTtsPlayers[index].getServiceName()
         } else {
             "없음"
         }
@@ -182,9 +160,16 @@ class TtsOrchestrator @Inject constructor(
                     val success = speakKorean(sentence) { finished.complete(Unit) }
                     if (!success) finished.complete(Unit)
                 } else {
-                    speakEnglish(sentence) { finished.complete(Unit) }
+                    val success = speakEnglish(sentence) { finished.complete(Unit) }
+                    if (!success) finished.complete(Unit)
                 }
-                finished.await()
+                try {
+                    kotlinx.coroutines.withTimeout(15000L) {
+                        finished.await()
+                    }
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    Log.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 타임아웃")
+                }
                 kotlinx.coroutines.delay(400L)
             }
             onHighlight(null)
@@ -218,18 +203,23 @@ class TtsOrchestrator @Inject constructor(
     suspend fun speakAndWaitForCompletion(text: String, isKorean: Boolean, rate: Float): Long {
         val startTime = System.currentTimeMillis()
         val isKoreanText = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
-        
+
         val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
-        
+
         val success = if (isKoreanText) {
             speakKorean(text) { completionDeferred.complete(Unit) }
         } else {
             speakEnglish(text) { completionDeferred.complete(Unit) }
         }
-        
+
         if (success) {
-            // TTS 재생 완료까지 대기
-            completionDeferred.await()
+            try {
+                kotlinx.coroutines.withTimeout(30000L) {
+                    completionDeferred.await()
+                }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                Log.e("TtsOrchestrator", "speakAndWaitForCompletion 타임아웃")
+            }
             val endTime = System.currentTimeMillis()
             return endTime - startTime
         } else {
@@ -242,12 +232,9 @@ class TtsOrchestrator @Inject constructor(
      * TTS 일시 중지
      */
     fun pause() {
-        Log.d("TtsOrchestrator", "TTS 일시 중지")
         try {
-            // 현재 활성화된 TTS 플레이어 일시 중지
             googleTtsPlayer.pause()
             samsungTtsPlayer.pause()
-            Log.d("TtsOrchestrator", "TTS 일시 중지 완료")
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 일시 중지 실패", e)
         }
@@ -257,12 +244,9 @@ class TtsOrchestrator @Inject constructor(
      * TTS 재개
      */
     fun resume() {
-        Log.d("TtsOrchestrator", "TTS 재개")
         try {
-            // 현재 활성화된 TTS 플레이어 재개
             googleTtsPlayer.resume()
             samsungTtsPlayer.resume()
-            Log.d("TtsOrchestrator", "TTS 재개 완료")
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 재개 실패", e)
         }

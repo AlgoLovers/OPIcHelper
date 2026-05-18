@@ -24,13 +24,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
     override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
         return withContext(Dispatchers.IO) {
             if (files.isEmpty()) {
-                Log.d("AudioFileManager", "병합할 파일이 없습니다.")
                 return@withContext null
-            }
-
-            Log.d("AudioFileManager", "병합 시작: ${files.size}개 파일")
-            files.forEachIndexed { idx, file ->
-                Log.d("AudioFileManager", "파일 ${idx + 1}: ${file.name}, 크기: ${file.length()} bytes, 존재: ${file.exists()}")
             }
 
             // 출력 디렉토리 생성 (앱 내부 저장소 사용)
@@ -40,12 +34,10 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             }
 
             val output = File(outputDir, "english_writing_${scriptId}_merged.m4a")
-            Log.d("AudioFileManager", "출력 파일: ${output.absolutePath}")
 
             // 단일 파일인 경우 그대로 복사
             if (files.size == 1) {
                 files[0].copyTo(output, overwrite = true)
-                Log.d("AudioFileManager", "단일 파일 복사 완료: ${output.length()} bytes")
                 return@withContext output
             }
 
@@ -54,41 +46,34 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             
             try {
                 mergeWithMediaCodec(files, output)
-                Log.d("AudioFileManager", "MediaCodec 병합 완료: ${output.length()} bytes")
             } catch (e: Exception) {
                 Log.e("AudioFileManager", "MediaCodec 병합 실패, 헤더 분석 방식 사용", e)
                 try {
                     mergeWithHeaderAnalysis(files, output)
-                    Log.d("AudioFileManager", "헤더 분석 병합 완료: ${output.length()} bytes")
                 } catch (e2: Exception) {
                     Log.e("AudioFileManager", "헤더 분석 병합 실패, fallback 방식 사용", e2)
                     // Fallback: 간단한 파일 연결
                     FileOutputStream(output).use { out ->
-                        files.forEachIndexed { idx, file ->
-                            Log.d("AudioFileManager", "파일 ${idx + 1} 처리 시작: ${file.name}, 크기: ${file.length()} bytes")
+                        files.forEach { file ->
                             FileInputStream(file).use { input ->
                                 val bytesCopied = input.copyTo(out)
                                 totalBytesWritten += bytesCopied
-                                Log.d("AudioFileManager", "파일 ${idx + 1} 복사 완료: $bytesCopied bytes")
                             }
                         }
                     }
-                    
-                    Log.d("AudioFileManager", "Fallback 병합 완료: 총 ${totalBytesWritten} bytes")
                 }
             }
             
             // 원본 파일들 삭제
             files.forEach { file ->
                 if (file.exists()) {
-                    val deleted = file.delete()
-                    Log.d("AudioFileManager", "원본 파일 삭제: ${file.name}, 성공: $deleted")
+                    file.delete()
                 }
             }
 
             // 최종 파일 검증
             if (output.exists() && output.length() > 0) {
-                Log.d("AudioFileManager", "병합된 파일 검증 성공: ${output.absolutePath}, 크기: ${output.length()} bytes")
+                // 병합 성공
             } else {
                 Log.e("AudioFileManager", "병합된 파일 검증 실패: 존재=${output.exists()}, 크기=${output.length()}")
             }
@@ -115,7 +100,6 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                 val destinationFile = File(recordingsDir, fileName)
 
                 sourceFile.copyTo(destinationFile, overwrite = true)
-                Log.d("AudioFileManager", "녹음 파일 저장 완료: ${destinationFile.absolutePath}")
 
                 // 원본 파일 삭제
                 sourceFile.delete()
@@ -138,8 +122,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
     
     override fun deleteAudioFile(file: File) {
         if (file.exists()) {
-            val deleted = file.delete()
-            Log.d("AudioFileManager", "오디오 파일 삭제: ${file.name}, 성공: $deleted")
+            file.delete()
         }
     }
     
@@ -153,8 +136,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             }?.sortedByDescending { it.lastModified() }
             
             scriptFiles?.drop(keepLatestCount)?.forEach { file ->
-                val deleted = file.delete()
-                Log.d("AudioFileManager", "오래된 녹음 파일 삭제: ${file.name}, 성공: $deleted")
+                file.delete()
             }
         }
     }
@@ -176,8 +158,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             filesByScript?.forEach { (scriptId, files) ->
                 val sortedFiles = files.sortedByDescending { it.lastModified() }
                 sortedFiles.drop(keepLatestCount).forEach { file ->
-                    val deleted = file.delete()
-                    Log.d("AudioFileManager", "오래된 녹음 파일 삭제: ${file.name}, 성공: $deleted")
+                    file.delete()
                 }
             }
         }
@@ -210,11 +191,8 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             try {
                 val file = File(filePath)
                 if (file.exists()) {
-                    val deleted = file.delete()
-                    Log.d("AudioFileManager", "녹음 파일 삭제: $filePath, 성공: $deleted")
-                    deleted
+                    file.delete()
                 } else {
-                    Log.d("AudioFileManager", "삭제할 녹음 파일이 존재하지 않음: $filePath")
                     false
                 }
             } catch (e: Exception) {
@@ -312,8 +290,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             
             val outputFile = File(outputDir, "${fileName}.m4a")
             recordingFile.copyTo(outputFile, overwrite = true)
-            
-            Log.d("AudioFileManager", "녹음 파일 저장: ${outputFile.absolutePath}, 크기: ${outputFile.length()} bytes")
+
             outputFile
         }
     }
@@ -326,18 +303,12 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             }
             
             val outputFile = File(outputDir, "${mergedFileName}.m4a")
-            Log.d("AudioFileManager", "오디오 파일 병합 시작: 파일명=${mergedFileName}, 출력경로=${outputFile.absolutePath}")
-            Log.d("AudioFileManager", "병합할 파일들: ${files.map { it.absolutePath }}")
-            
+
             if (files.size == 1) {
                 files[0].copyTo(outputFile, overwrite = true)
-                Log.d("AudioFileManager", "단일 파일 복사 완료")
             } else {
                 mergeWithMediaCodec(files, outputFile)
-                Log.d("AudioFileManager", "MediaCodec 병합 완료")
             }
-            
-            Log.d("AudioFileManager", "오디오 파일 병합 완료: ${outputFile.absolutePath}, 크기: ${outputFile.length()} bytes")
             waitForFileReady(outputFile)
             outputFile
         }
@@ -353,22 +324,16 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
         return withContext(Dispatchers.IO) {
             val mergedDir = File(context.filesDir, "merged")
             if (!mergedDir.exists()) {
-                Log.d("AudioFileManager", "영작테스트 파일 확인: merged 디렉토리가 존재하지 않음")
                 return@withContext false
             }
-            
+
             val pattern = Regex("영작테스트_${category}_${scriptIndex}_.*")
-            Log.d("AudioFileManager", "영작테스트 파일 확인: 패턴=${pattern.pattern}")
-            
+
             val files = mergedDir.listFiles { file ->
-                val matches = file.name.matches(pattern)
-                Log.d("AudioFileManager", "영작테스트 파일 확인: 파일=${file.name}, 매치=${matches}")
-                matches
+                file.name.matches(pattern)
             }
-            
-            val hasFile = files?.isNotEmpty() == true
-            Log.d("AudioFileManager", "영작테스트 파일 확인: category=$category, scriptIndex=$scriptIndex, 결과=$hasFile")
-            hasFile
+
+            files?.isNotEmpty() == true
         }
     }
     
@@ -376,22 +341,16 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
         return withContext(Dispatchers.IO) {
             val mergedDir = File(context.filesDir, "merged")
             if (!mergedDir.exists()) {
-                Log.d("AudioFileManager", "영작테스트 파일 조회: merged 디렉토리가 존재하지 않음")
                 return@withContext null
             }
-            
+
             val pattern = Regex("영작테스트_${category}_${scriptIndex}_.*")
-            Log.d("AudioFileManager", "영작테스트 파일 조회: 패턴=${pattern.pattern}")
-            
+
             val files = mergedDir.listFiles { file ->
-                val matches = file.name.matches(pattern)
-                Log.d("AudioFileManager", "영작테스트 파일 조회: 파일=${file.name}, 매치=${matches}")
-                matches
+                file.name.matches(pattern)
             }
-            
-            val result = files?.maxByOrNull { it.lastModified() }
-            Log.d("AudioFileManager", "영작테스트 파일 조회: category=$category, scriptIndex=$scriptIndex, 결과=${result?.absolutePath}")
-            result
+
+            files?.maxByOrNull { it.lastModified() }
         }
     }
 
@@ -399,22 +358,16 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
         return withContext(Dispatchers.IO) {
             val recordingsDir = File(context.filesDir, "recordings")
             if (!recordingsDir.exists()) {
-                Log.d("AudioFileManager", "통암기 파일 확인: recordings 디렉토리가 존재하지 않음")
                 return@withContext false
             }
 
             val pattern = Regex("통암기_${category}_${scriptIndex}_.*")
-            Log.d("AudioFileManager", "통암기 파일 확인: 패턴=${pattern.pattern}")
 
             val files = recordingsDir.listFiles { file ->
-                val matches = file.name.matches(pattern)
-                Log.d("AudioFileManager", "통암기 파일 확인: 파일=${file.name}, 매치=${matches}")
-                matches
+                file.name.matches(pattern)
             }
 
-            val hasFile = files?.isNotEmpty() == true
-            Log.d("AudioFileManager", "통암기 파일 확인: category=$category, scriptIndex=$scriptIndex, 결과=$hasFile")
-            hasFile
+            files?.isNotEmpty() == true
         }
     }
 
@@ -422,22 +375,16 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
         return withContext(Dispatchers.IO) {
             val recordingsDir = File(context.filesDir, "recordings")
             if (!recordingsDir.exists()) {
-                Log.d("AudioFileManager", "통암기 파일 조회: recordings 디렉토리가 존재하지 않음")
                 return@withContext null
             }
 
             val pattern = Regex("통암기_${category}_${scriptIndex}_.*")
-            Log.d("AudioFileManager", "통암기 파일 조회: 패턴=${pattern.pattern}")
 
             val files = recordingsDir.listFiles { file ->
-                val matches = file.name.matches(pattern)
-                Log.d("AudioFileManager", "통암기 파일 조회: 파일=${file.name}, 매치=${matches}")
-                matches
+                file.name.matches(pattern)
             }
 
-            val result = files?.maxByOrNull { it.lastModified() }
-            Log.d("AudioFileManager", "통암기 파일 조회: category=$category, scriptIndex=$scriptIndex, 결과=${result?.absolutePath}")
-            result
+            files?.maxByOrNull { it.lastModified() }
         }
     }
 } 

@@ -4,6 +4,7 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TtsPlaybackController @Inject constructor() {
+class TtsPlaybackController @Inject constructor() : java.io.Closeable {
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var currentPlayJob: Job? = null
 
@@ -44,8 +45,14 @@ class TtsPlaybackController @Inject constructor() {
         ttsOrchestrator = orchestrator
     }
 
+    private fun stopCurrentAndPrepare() {
+        currentPlayJob?.cancel()
+        currentPlayJob = null
+        resetPlayState()
+    }
+
     fun playQuestion(question: String) {
-        forceStopTts()
+        stopCurrentAndPrepare()
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
@@ -68,7 +75,7 @@ class TtsPlaybackController @Inject constructor() {
     }
 
     fun playAnswer(answer: String) {
-        forceStopTts()
+        stopCurrentAndPrepare()
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
@@ -91,7 +98,7 @@ class TtsPlaybackController @Inject constructor() {
     }
 
     fun playMergedAudio(question: String, answer: String) {
-        forceStopTts()
+        stopCurrentAndPrepare()
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
@@ -183,6 +190,11 @@ class TtsPlaybackController @Inject constructor() {
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
         }
+    }
+
+    override fun close() {
+        cleanupTts()
+        coroutineScope.cancel()
     }
 
     fun forceStopTts() {

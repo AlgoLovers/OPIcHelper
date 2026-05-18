@@ -4,11 +4,9 @@ import android.content.Context
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import com.na982.opichelper.data.repository.AuthRepository
-import com.na982.opichelper.data.repository.QaDataLoaderImpl
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
-import com.na982.opichelper.data.repository.FullMemorizationRepositoryImpl
 import com.na982.opichelper.domain.audio.*
 import com.na982.opichelper.domain.manager.WakeLockManager
 import com.na982.opichelper.domain.repository.AudioFileManager
@@ -17,7 +15,6 @@ import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
-import com.na982.opichelper.domain.repository.FullMemorizationRepository
 import com.na982.opichelper.data.repository.LeveledQaDataLoader
 import com.na982.opichelper.data.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
@@ -99,9 +96,10 @@ object AppModule {
     fun provideQaDataManager(
         progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
         qaDataLoader: QaDataLoader,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+        progressPersistenceService: ProgressPersistenceService
     ): QaDataManager {
-        return QaDataManager(progressTracker, qaDataLoader, userPreferencesRepository)
+        return QaDataManager(progressTracker, qaDataLoader, userPreferencesRepository, progressPersistenceService)
     }
     
     @Provides
@@ -160,7 +158,7 @@ object AppModule {
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
         recordingTimeManager: RecordingTimeManager,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+        progressPersistenceService: ProgressPersistenceService
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
             qaDataManager = qaDataManager,
@@ -168,41 +166,23 @@ object AppModule {
             audioRecorder = audioRecorder,
             audioFileManager = audioFileManager,
             recordingTimeManager = recordingTimeManager,
-            progressTracker = progressTracker
+            progressPersistenceService = progressPersistenceService
         )
     }
-    
+
     @Provides
     @Singleton
     fun provideRepeatListeningRepository(
         ttsOrchestrator: TtsOrchestrator,
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
+        progressPersistenceService: ProgressPersistenceService,
         recordingTimeManager: RecordingTimeManager
     ): RepeatListeningRepository {
         return RepeatListeningRepositoryImpl(
             ttsOrchestrator = ttsOrchestrator,
-            progressTracker = progressTracker,
+            progressPersistenceService = progressPersistenceService,
             recordingTimeManager = recordingTimeManager
         )
     }
-    
-    @Provides
-    @Singleton
-    fun provideFullMemorizationRepository(
-        ttsOrchestrator: TtsOrchestrator,
-        audioRecorder: AudioRecorder,
-        audioPlayer: AudioPlayer,
-        audioFileManager: AudioFileManager,
-        qaDataManager: QaDataManager
-    ): FullMemorizationRepository {
-        return FullMemorizationRepositoryImpl(
-            ttsOrchestrator = ttsOrchestrator,
-            audioRecorder = audioRecorder,
-            audioPlayer = audioPlayer,
-            audioFileManager = audioFileManager,
-            qaDataManager = qaDataManager
-        )
-    }
-    
+
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
 } 
