@@ -476,18 +476,17 @@ class MemorizationViewModel @Inject constructor(
 
         viewModelScope.launch {
             fullMemorizationUseCase.state.collect { fsState ->
+                if (_uiState.value.currentMode !in setOf(
+                        CurrentMode.FULL_MEMORIZATION,
+                        CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
+                        CurrentMode.FULL_MEMORIZATION_RECORDING,
+                        CurrentMode.FULL_MEMORIZATION_PLAYING,
+                        CurrentMode.FULL_MEMORIZATION_WITH_FILE
+                    )) return@collect
+
                 when (fsState) {
-                    is FullMemorizationState.Idle -> {
-                        if (_uiState.value.currentMode in setOf(
-                                CurrentMode.FULL_MEMORIZATION,
-                                CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
-                                CurrentMode.FULL_MEMORIZATION_RECORDING,
-                                CurrentMode.FULL_MEMORIZATION_PLAYING,
-                                CurrentMode.FULL_MEMORIZATION_WITH_FILE
-                            )) {
-                            startMode(CurrentMode.FULL_MEMORIZATION)
-                        }
-                    }
+                    is FullMemorizationState.Idle ->
+                        startMode(CurrentMode.FULL_MEMORIZATION)
                     is FullMemorizationState.QuestionPlaying ->
                         startMode(CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING)
                     is FullMemorizationState.Recording ->
