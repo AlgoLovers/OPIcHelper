@@ -151,6 +151,13 @@ class QaDataManager(
         }
     }
     
+    fun hasNextQaItem(): Boolean {
+        val category = _currentCategory.value ?: return false
+        val items = itemsByCategory[category] ?: emptyList()
+        val currentIndex = itemIndexByCategory[category] ?: 0
+        return currentIndex < items.size - 1
+    }
+
     suspend fun nextQaItem() {
         val category = _currentCategory.value
         if (category != null) {

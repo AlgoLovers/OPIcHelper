@@ -144,9 +144,29 @@ class MemorizationViewModel @Inject constructor(
                 }
             }
             is MemorizeTestEvent.Completed -> {
-                stopMode()
+                if (userPreferencesRepository.isAutoAdvance()) {
+                    handleAutoAdvance()
+                } else {
+                    stopMode()
+                }
             }
             else -> {}
+        }
+    }
+
+    private fun handleAutoAdvance() {
+        viewModelScope.launch {
+            val hasMore = qaDataManager.hasNextQaItem()
+            if (hasMore) {
+                qaDataManager.nextQaItem()
+                stopMode()
+                startMode(CurrentMode.REPEAT_LISTENING)
+                ttsPlaybackController.stopTts()
+                ttsPlaybackController.clearHighlight()
+                startRepeatListening()
+            } else {
+                stopMode()
+            }
         }
     }
 

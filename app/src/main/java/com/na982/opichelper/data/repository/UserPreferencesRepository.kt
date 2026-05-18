@@ -72,4 +72,12 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
         _answerPlayCount.value = count
         prefs.edit().putInt("answer_play_count", count).apply()
     }
+
+    override fun isAutoAdvance(): Boolean {
+        return prefs.getBoolean("auto_advance", true)
+    }
+
+    override fun setAutoAdvance(enabled: Boolean) {
+        prefs.edit().putBoolean("auto_advance", enabled).apply()
+    }
 }
