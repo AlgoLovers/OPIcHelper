@@ -227,14 +227,14 @@ class QaDataManager(
     private suspend fun saveLastCategory(category: String) {
         val currentIndex = itemIndexByCategory[category] ?: 0
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, currentIndex)
+            ProgressPersistenceService.NavigationState(category, currentIndex, currentIndex)
         )
     }
 
     private suspend fun saveLastIndex(index: Int) {
         val category = _currentCategory.value
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, index)
+            ProgressPersistenceService.NavigationState(category, index, index)
         )
     }
     

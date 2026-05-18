@@ -36,7 +36,10 @@ class RepeatListeningUseCase @Inject constructor(
         val count = minOf(koSentences.size, enSentences.size)
 
         val navState = progressPersistenceService.loadNavigationState()
-        val startIndex = if (navState.category == data.category && navState.index in 0 until count) {
+        val startIndex = if (navState.category == data.category
+            && navState.scriptIndex == data.scriptIndex
+            && navState.index in 0 until count
+        ) {
             navState.index
         } else {
             0
@@ -46,7 +49,7 @@ class RepeatListeningUseCase @Inject constructor(
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
 
             progressPersistenceService.saveNavigationState(
-                ProgressPersistenceService.NavigationState(data.category, i)
+                ProgressPersistenceService.NavigationState(data.category, i, data.scriptIndex)
             )
 
             // 1. 한글 문장 TTS

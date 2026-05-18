@@ -38,7 +38,10 @@ class RepeatListeningRepositoryImpl(
         val count = minOf(koSentences.size, enSentences.size)
 
         val navState = progressPersistenceService.loadNavigationState()
-        val startIndex = if (navState.category == data.category && navState.index in 0 until count) {
+        val startIndex = if (navState.category == data.category
+            && navState.scriptIndex == data.scriptIndex
+            && navState.index in 0 until count
+        ) {
             navState.index
         } else {
             0
@@ -48,7 +51,7 @@ class RepeatListeningRepositoryImpl(
             if (!kotlinx.coroutines.currentCoroutineContext().isActive) break
 
             progressPersistenceService.saveNavigationState(
-                ProgressPersistenceService.NavigationState(data.category, i)
+                ProgressPersistenceService.NavigationState(data.category, i, data.scriptIndex)
             )
 
             // 1. 한글 문장 TTS
@@ -101,7 +104,7 @@ class RepeatListeningRepositoryImpl(
 
     override suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData? {
         val navState = progressPersistenceService.loadNavigationState()
-        return if (navState.category == category) {
+        return if (navState.category == category && navState.scriptIndex == scriptIndex) {
             TestProgressData(
                 category = category,
                 scriptIndex = scriptIndex,
@@ -115,13 +118,13 @@ class RepeatListeningRepositoryImpl(
 
     override suspend fun updateProgress(progressData: TestProgressData) {
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(progressData.category, progressData.currentSentenceIndex)
+            ProgressPersistenceService.NavigationState(progressData.category, progressData.currentSentenceIndex, progressData.scriptIndex)
         )
     }
 
     override suspend fun clearProgress(category: String, scriptIndex: Int) {
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, 0)
+            ProgressPersistenceService.NavigationState(category, 0, scriptIndex)
         )
     }
 }
