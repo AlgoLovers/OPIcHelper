@@ -2,6 +2,7 @@ package com.na982.opichelper.service
 
 import android.app.Notification
 import android.app.NotificationChannel
+import android.graphics.drawable.Icon
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
@@ -77,12 +78,18 @@ class TtsForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val stopAction = Notification.Action.Builder(
+            Icon.createWithResource(this, R.drawable.ic_launcher_foreground),
+            "정지",
+            stopIntent
+        ).build()
+
         return Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("OPIc Helper")
             .setContentText("TTS 재생 중")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
-            .addAction(0, "정지", stopIntent)
+            .addAction(stopAction)
             .setOngoing(true)
             .build()
     }
