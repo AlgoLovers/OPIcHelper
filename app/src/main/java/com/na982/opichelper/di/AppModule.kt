@@ -152,7 +152,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideEnglishWritingTestRepository(
-        qaDataManager: QaDataManager,
         ttsOrchestrator: TtsOrchestrator,
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
@@ -160,7 +159,6 @@ object AppModule {
         progressPersistenceService: ProgressPersistenceService
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
-            qaDataManager = qaDataManager,
             ttsOrchestrator = ttsOrchestrator,
             audioRecorder = audioRecorder,
             audioFileManager = audioFileManager,

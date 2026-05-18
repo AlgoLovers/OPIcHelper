@@ -272,21 +272,7 @@ class MemorizationViewModel @Inject constructor(
 
                 fullMemorizationUseCase.startFullMemorization(
                     category = category,
-                    scriptIndex = scriptIndex,
-                    onRecordingStateChange = { isRecording ->
-                        if (isRecording) {
-                            startMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
-                        } else {
-                            startMode(CurrentMode.FULL_MEMORIZATION)
-                        }
-                    },
-                    onPlayingStateChange = { isPlaying ->
-                        if (isPlaying) {
-                            startMode(CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING)
-                        } else {
-                            startMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
-                        }
-                    }
+                    scriptIndex = scriptIndex
                 )
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 모드 시작 실패", e)
@@ -311,11 +297,7 @@ class MemorizationViewModel @Inject constructor(
             try {
                 if (fullMemorizationUseCase.hasRecording()) {
                     startMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
-                    fullMemorizationUseCase.playRecordingWithHighlight { isPlaying ->
-                        if (!isPlaying) {
-                            startMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
-                        }
-                    }
+                    fullMemorizationUseCase.playRecordingWithHighlight()
                 }
             } catch (e: Exception) {
                 Log.e("MemorizationViewModel", "통암기 녹음 재생 실패", e)
@@ -517,6 +499,34 @@ class MemorizationViewModel @Inject constructor(
                         return@collect
                     }
                     updateFullMemorizationRecordingStatus()
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            fullMemorizationUseCase.state.collect { fsState ->
+                when (fsState) {
+                    is FullMemorizationState.Idle -> {
+                        if (_uiState.value.currentMode in setOf(
+                                CurrentMode.FULL_MEMORIZATION,
+                                CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
+                                CurrentMode.FULL_MEMORIZATION_RECORDING,
+                                CurrentMode.FULL_MEMORIZATION_PLAYING,
+                                CurrentMode.FULL_MEMORIZATION_WITH_FILE
+                            )) {
+                            startMode(CurrentMode.FULL_MEMORIZATION)
+                        }
+                    }
+                    is FullMemorizationState.QuestionPlaying ->
+                        startMode(CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING)
+                    is FullMemorizationState.Recording ->
+                        startMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
+                    is FullMemorizationState.Playing ->
+                        startMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
+                    is FullMemorizationState.WithFile -> {
+                        _uiState.value = _uiState.value.copy(hasFullMemorizationRecordingFile = fsState.hasRecording)
+                        startMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
+                    }
                 }
             }
         }
