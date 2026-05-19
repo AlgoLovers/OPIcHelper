@@ -189,14 +189,14 @@ private fun ModernCard(
                 Card(
                     shape = RoundedCornerShape(6.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = TertiaryOrange.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
                     ),
                     modifier = Modifier.height(24.dp)
                 ) {
                     Text(
                         text = "👆 탭하여 뒤집기",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TertiaryOrange,
+                        color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 12.sp
                     )

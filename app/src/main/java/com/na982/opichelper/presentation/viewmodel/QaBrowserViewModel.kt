@@ -24,7 +24,7 @@ data class QaBrowserState(
     val categories: List<String> = emptyList(),
     val selectedMemorizeLevel: String = MemorizeLevel.REPEAT_LISTENING.displayName,
     val currentUserLevel: String = "",
-    val repeatListeningCount: Int = 5
+    val answerPlayCount: Int = 1
 )
 
 @HiltViewModel
@@ -80,8 +80,8 @@ class QaBrowserViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            userPreferencesRepository.repeatListeningCount.collect { count ->
-                _uiState.value = _uiState.value.copy(repeatListeningCount = count)
+            userPreferencesRepository.answerPlayCount.collect { count ->
+                _uiState.value = _uiState.value.copy(answerPlayCount = count)
             }
         }
     }

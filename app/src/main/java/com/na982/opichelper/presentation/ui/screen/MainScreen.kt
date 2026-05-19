@@ -311,7 +311,7 @@ fun MainScreen(
                         AnswerPlayButton(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             isPlaying = playbackState.isAnswerPlaying,
-                            repeatCount = qaState.repeatListeningCount,
+                            repeatCount = qaState.answerPlayCount,
                             onPlayClick = {
                                 stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
                                 qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
