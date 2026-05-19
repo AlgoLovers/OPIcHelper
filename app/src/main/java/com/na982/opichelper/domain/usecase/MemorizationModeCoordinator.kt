@@ -41,7 +41,7 @@ class MemorizationModeCoordinator @Inject constructor() {
     }
 
     fun updateMode(mode: CurrentMode) {
-        if (_isRunning.value) {
+        if (_isRunning.value && _currentMode.value.group == mode.group) {
             _currentMode.value = mode
         }
     }
