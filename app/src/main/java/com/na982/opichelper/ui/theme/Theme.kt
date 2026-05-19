@@ -140,8 +140,9 @@ fun OPicHelperThemeWithMemorizeLevel(
         surface = surfaceColor,
         surfaceVariant = cardColor,
         primary = primaryColor,
-        onBackground = if (darkTheme) Color.White else Color.Black,
-        onSurface = if (darkTheme) Color.White else Color.Black
+        onBackground = if (darkTheme) TextPrimaryDark else TextPrimaryLight,
+        onSurface = if (darkTheme) TextPrimaryDark else TextPrimaryLight,
+        onSurfaceVariant = if (darkTheme) TextSecondaryDark else TextSecondaryLight
     )
 
     MaterialTheme(

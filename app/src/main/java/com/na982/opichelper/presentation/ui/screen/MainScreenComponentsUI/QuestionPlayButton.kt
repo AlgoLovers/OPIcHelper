@@ -17,7 +17,7 @@ fun QuestionPlayButton(
         onActivate = onPlayClick,
         onDeactivate = onStopClick,
         activeLabel = "질문 재생 중",
-        inactiveLabel = "질문 1회 재생",
+        inactiveLabel = "질문 재생",
         modifier = modifier
     )
 }
