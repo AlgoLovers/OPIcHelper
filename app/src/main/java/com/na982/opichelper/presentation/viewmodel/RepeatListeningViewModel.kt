@@ -39,25 +39,22 @@ class RepeatListeningViewModel @Inject constructor(
 
     override val _uiState = MutableStateFlow(RepeatListeningUiState())
     override fun resetUiState() = RepeatListeningUiState()
+    override fun initialMode() = CurrentMode.REPEAT_LISTENING
 
     override fun onStop() {
         _uiState.value = _uiState.value.copy(isCardFlipped = false, isPlaying = false)
         refreshResumeIndex()
     }
 
-    fun start() {
-        viewModelScope.launch {
-            try {
-                if (coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
-                    _uiState.value = _uiState.value.copy(isPlaying = true, resumeSentenceIndex = null)
-                    ttsCtrl.stopTts()
-                    ttsCtrl.clearHighlight()
-                    startRepeatListening()
-                }
-            } catch (e: Exception) {
-                Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
-                stop()
-            }
+    override suspend fun startMode() {
+        try {
+            _uiState.value = _uiState.value.copy(isPlaying = true, resumeSentenceIndex = null)
+            ttsCtrl.stopTts()
+            ttsCtrl.clearHighlight()
+            startRepeatListening()
+        } catch (e: Exception) {
+            Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
+            stop()
         }
     }
 
@@ -81,42 +78,33 @@ class RepeatListeningViewModel @Inject constructor(
         }
     }
 
-    private fun startRepeatListening() {
-        viewModelScope.launch {
-            try {
-                currentUseCaseJob?.cancel()
-                eventCollectJob?.cancel()
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    eventCollectJob = viewModelScope.launch {
-                        executeRepeatListeningUseCase.events.collect { event ->
-                            handleEvent(event)
-                        }
-                    }
-                    currentUseCaseJob = launch {
-                        val repeatListeningData = RepeatListeningData(
-                            category = currentItem.category,
-                            scriptIndex = qaDataManager.getCurrentIndex(),
-                            koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
-                            englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
-                        )
-                        executeRepeatListeningUseCase.execute(
-                            data = repeatListeningData,
-                            repeatCount = userPreferencesRepository.getRepeatListeningCount()
-                        )
-                    }
-                    coordinator.registerJob(currentUseCaseJob!!)
-                    coordinator.registerEventJob(eventCollectJob!!)
+    private suspend fun startRepeatListening() {
+        val currentItem = qaDataManager.getCurrentQaItem()
+        if (currentItem != null) {
+            val eventJob = viewModelScope.launch {
+                executeRepeatListeningUseCase.events.collect { event ->
+                    handleEvent(event)
                 }
-            } catch (e: Exception) {
-                Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
-                stop()
             }
+            val useCaseJob = viewModelScope.launch {
+                val repeatListeningData = RepeatListeningData(
+                    category = currentItem.category,
+                    scriptIndex = qaDataManager.getCurrentIndex(),
+                    koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
+                    englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
+                )
+                executeRepeatListeningUseCase.execute(
+                    data = repeatListeningData,
+                    repeatCount = userPreferencesRepository.getRepeatListeningCount()
+                )
+            }
+            coordinator.registerJob(useCaseJob)
+            coordinator.registerEventJob(eventJob)
+            useCaseJob.join()
         }
     }
 
     private fun handleEvent(event: MemorizeTestEvent) {
-        if (currentUseCaseJob?.isActive != true) return
         when (event) {
             is MemorizeTestEvent.CardFlip -> {
                 _uiState.value = _uiState.value.copy(isCardFlipped = event.isKorean)
