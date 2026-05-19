@@ -200,7 +200,7 @@ class QaDataManager(
         val lastCategory = navState.category
         if (lastCategory != null && itemsByCategory.containsKey(lastCategory)) {
             _currentCategory.value = lastCategory
-            itemIndexByCategory[lastCategory] = navState.index
+            itemIndexByCategory[lastCategory] = navState.scriptIndex
             updateCurrentQaItem()
         } else {
             val firstCategory = _categories.value.firstOrNull()
@@ -215,7 +215,7 @@ class QaDataManager(
         itemIndexByCategory[category] = index
         updateCurrentQaItem()
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, index, index)
+            ProgressPersistenceService.NavigationState(category, index, 0)
         )
     }
 
