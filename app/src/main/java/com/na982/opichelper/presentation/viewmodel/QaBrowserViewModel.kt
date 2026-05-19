@@ -5,9 +5,13 @@ import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+import com.na982.opichelper.domain.usecase.SearchQaItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -24,18 +28,27 @@ data class QaBrowserState(
     val categories: List<String> = emptyList(),
     val selectedMemorizeLevel: String = MemorizeLevel.REPEAT_LISTENING.displayName,
     val currentUserLevel: String = "",
-    val answerPlayCount: Int = 1
+    val answerPlayCount: Int = 1,
+    val completedCount: Int = 0
 )
 
 @HiltViewModel
 class QaBrowserViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val progressTracker: MemorizeTestProgressTracker
+    private val progressTracker: MemorizeTestProgressTracker,
+    private val searchQaItemsUseCase: SearchQaItemsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QaBrowserState())
     val uiState: StateFlow<QaBrowserState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<String>(extraBufferCapacity = 5)
+    val events: SharedFlow<String> = _events.asSharedFlow()
+
+    private suspend fun emitEvent(message: String) {
+        _events.emit(message)
+    }
 
     init {
         initQaData()
@@ -49,6 +62,7 @@ class QaBrowserViewModel @Inject constructor(
                 progressTracker.restoreAllProgress()
             } catch (e: Exception) {
                 Log.e("QaBrowserViewModel", "데이터 초기화 실패", e)
+                emitEvent("데이터를 불러올 수 없습니다")
             }
         }
         loadMemorizeLevel()
@@ -84,6 +98,24 @@ class QaBrowserViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(answerPlayCount = count)
             }
         }
+
+        viewModelScope.launch {
+            combine(
+                progressTracker.progressMap,
+                qaDataManager.currentCategory
+            ) { progressMap, category ->
+                if (category != null) {
+                    val level = _uiState.value.selectedMemorizeLevel
+                    val items = qaDataManager.getItemsInCategory(category)
+                    val completed = items.indices.count { scriptIndex ->
+                        val key = "${category}_${scriptIndex}_${level}"
+                        val progress = progressMap[key]
+                        progress != null && !progress.isMemorizeTestRunning && progress.currentSentenceIndex >= progress.totalSentences - 1
+                    }
+                    _uiState.value = _uiState.value.copy(completedCount = completed)
+                }
+            }.collect { }
+        }
     }
 
     fun selectCategory(category: String) {
@@ -102,6 +134,27 @@ class QaBrowserViewModel @Inject constructor(
         qaDataManager.clearError()
     }
 
+    fun isOnboardingCompleted(): Boolean {
+        return userPreferencesRepository.isOnboardingCompleted()
+    }
+
+    fun setOnboardingCompleted() {
+        userPreferencesRepository.setOnboardingCompleted()
+    }
+
+    fun search(query: String): List<QaItem> {
+        return searchQaItemsUseCase.search(query)
+    }
+
+    suspend fun navigateToItem(item: QaItem) {
+        qaDataManager.selectCategory(item.category)
+        val items = qaDataManager.getItemsInCategory(item.category)
+        val index = items.indexOfFirst { it.id == item.id }
+        if (index >= 0) {
+            qaDataManager.navigateToIndex(index)
+        }
+    }
+
     fun getItemsInCategory(category: String): List<QaItem> {
         return qaDataManager.getItemsInCategory(category)
     }
@@ -109,6 +162,20 @@ class QaBrowserViewModel @Inject constructor(
     fun setSelectedMemorizeLevel(level: String) {
         _uiState.value = _uiState.value.copy(selectedMemorizeLevel = level)
         userPreferencesRepository.setMemorizeLevel(level)
+        refreshCompletedCount()
+    }
+
+    private fun refreshCompletedCount() {
+        val category = _uiState.value.currentCategory ?: return
+        val level = _uiState.value.selectedMemorizeLevel
+        val items = qaDataManager.getItemsInCategory(category)
+        val progressMap = progressTracker.progressMap.value
+        val completed = items.indices.count { scriptIndex ->
+            val key = "${category}_${scriptIndex}_${level}"
+            val progress = progressMap[key]
+            progress != null && !progress.isMemorizeTestRunning && progress.currentSentenceIndex >= progress.totalSentences - 1
+        }
+        _uiState.value = _uiState.value.copy(completedCount = completed)
     }
 
     fun getCurrentAnswer(qaItem: QaItem?): String {

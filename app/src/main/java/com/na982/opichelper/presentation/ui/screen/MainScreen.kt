@@ -26,6 +26,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.ui.theme.*
 import androidx.compose.foundation.isSystemInDarkTheme
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import com.na982.opichelper.presentation.ui.component.OnboardingDialog
+import com.na982.opichelper.presentation.ui.component.SearchDialog
 
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -37,7 +43,8 @@ fun MainScreen(
     englishWritingTestViewModel: EnglishWritingTestViewModel = hiltViewModel(),
     fullMemorizationViewModel: FullMemorizationViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    permissionDenied: StateFlow<Boolean> = MutableStateFlow(false)
 ) {
     val playbackState by playbackViewModel.uiState.collectAsState()
     val qaState by qaViewModel.uiState.collectAsState()
@@ -49,6 +56,8 @@ fun MainScreen(
     val fullMemorizationState by fullMemorizationViewModel.uiState.collectAsState()
 
     val selectedLevel = qaState.selectedMemorizeLevel
+    val showOnboarding = remember { mutableStateOf(!qaViewModel.isOnboardingCompleted()) }
+    val showSearch = remember { mutableStateOf(false) }
     val isFullMemorizationPlaying by remember {
         derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING }
     }
@@ -99,13 +108,95 @@ fun MainScreen(
         }
         val totalCount = itemsInCategory.size
 
-        Surface(
+        val snackbarHostState = remember { SnackbarHostState() }
+
+        Scaffold(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
+            containerColor = MaterialTheme.colorScheme.background,
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { paddingValues ->
+            val scope = rememberCoroutineScope()
+
+            // 에러 이벤트 Snackbar 수집
+            LaunchedEffect(Unit) {
+                playbackViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+            LaunchedEffect(Unit) {
+                repeatListeningViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+            LaunchedEffect(Unit) {
+                englishWritingTestViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+            LaunchedEffect(Unit) {
+                fullMemorizationViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+            LaunchedEffect(Unit) {
+                qaViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+
+            // 권한 거부 피드백
+            val isPermissionDenied by permissionDenied.collectAsState()
+            var hasShownPermissionDenied by remember { mutableStateOf(false) }
+            LaunchedEffect(isPermissionDenied) {
+                if (isPermissionDenied && !hasShownPermissionDenied) {
+                    hasShownPermissionDenied = true
+                    snackbarHostState.showSnackbar(
+                        "녹음 권한이 필요합니다. 설정에서 권한을 허용해주세요.",
+                        duration = SnackbarDuration.Long
+                    )
+                }
+            }
+
+            // 온보딩 다이얼로그
+            if (showOnboarding.value) {
+                OnboardingDialog(
+                    onStartClick = {
+                        qaViewModel.setOnboardingCompleted()
+                        showOnboarding.value = false
+                    }
+                )
+            }
+
+            // 검색 다이얼로그
+            if (showSearch.value) {
+                SearchDialog(
+                    onDismiss = { showSearch.value = false },
+                    onResultClick = { item ->
+                        showSearch.value = false
+                        scope.launch {
+                            qaViewModel.navigateToItem(item)
+                        }
+                    },
+                    searchQuery = { query -> qaViewModel.search(query) }
+                )
+            }
+
+            // 이어서 듣기 프롬프트 (최초 1회만)
+            var hasShownResumePrompt by remember { mutableStateOf(false) }
+            LaunchedEffect(qaState.completedCount) {
+                if (qaState.completedCount > 0 && !showOnboarding.value && !hasShownResumePrompt) {
+                    hasShownResumePrompt = true
+                    snackbarHostState.showSnackbar(
+                        "이전 위치에서 이어서 듣기 가능",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+
             Column(
                 modifier = modifier
                     .fillMaxSize()
+                    .padding(paddingValues)
                     .padding(16.dp)
                     .statusBarsPadding()
                     .navigationBarsPadding()
@@ -116,6 +207,7 @@ fun MainScreen(
             AppTitle(
                 currentLevel = qaState.currentUserLevel,
                 onSettingsClick = onNavigateToSettings,
+                onSearchClick = { showSearch.value = true },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -197,6 +289,7 @@ fun MainScreen(
                         },
                         currentIndex = currentIndex,
                         totalCount = totalCount,
+                        completedCount = qaState.completedCount,
                         isFlipped = false,
                         currentCategory = category ?: "",
                         modifier = Modifier.fillMaxWidth()

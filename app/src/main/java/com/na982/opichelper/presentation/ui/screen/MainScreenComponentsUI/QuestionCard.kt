@@ -25,6 +25,7 @@ fun QuestionCard(
     highlightIndex: Int?,
     currentIndex: Int,
     totalCount: Int,
+    completedCount: Int = 0,
     isFlipped: Boolean = false,
     currentCategory: String = "",
     modifier: Modifier = Modifier
@@ -86,27 +87,49 @@ fun QuestionCard(
                             containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
-                        Row(
+                        Column(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            if (currentCategory.isNotEmpty()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (currentCategory.isNotEmpty()) {
+                                    Text(
+                                        text = currentCategory,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                                        fontSize = 18.sp
+                                    )
+                                }
                                 Text(
-                                    text = currentCategory,
+                                    text = "$currentIndex / $totalCount",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     fontSize = 18.sp
                                 )
                             }
-                            Text(
-                                text = "$currentIndex / $totalCount",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontSize = 18.sp
-                            )
+                            if (totalCount > 0 && completedCount > 0) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                LinearProgressIndicator(
+                                    progress = completedCount.toFloat() / totalCount,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(4.dp)
+                                        .clip(RoundedCornerShape(2.dp)),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+                                )
+                                Text(
+                                    text = "$completedCount/$totalCount 완료",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
                     }
                 }

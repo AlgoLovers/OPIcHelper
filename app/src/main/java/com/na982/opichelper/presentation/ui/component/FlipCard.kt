@@ -9,6 +9,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 
 /**
@@ -40,6 +45,11 @@ fun FlipCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .semantics {
+                role = Role.Button
+                contentDescription = "탭하여 영어/한국어 전환"
+                stateDescription = if (flipped) "한국어 표시 중" else "영어 표시 중"
+            }
             .clickable {
                 flipped = !flipped
                 onCardClick()
