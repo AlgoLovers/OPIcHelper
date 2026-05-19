@@ -49,12 +49,6 @@ fun MainScreen(
     val fullMemorizationState by fullMemorizationViewModel.uiState.collectAsState()
 
     val selectedLevel = qaState.selectedMemorizeLevel
-    val isFullMemorizationMode by remember {
-        derivedStateOf { coordinatorMode.group == ModeGroup.FULL_MEMORIZATION }
-    }
-    val isEnglishWritingTestMode by remember {
-        derivedStateOf { coordinatorMode.group == ModeGroup.ENGLISH_WRITING }
-    }
     val isFullMemorizationPlaying by remember {
         derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING }
     }
@@ -198,7 +192,7 @@ fun MainScreen(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
                         highlightIndex = when {
-                            (isFullMemorizationMode && isFullMemorizationPlaying) -> fullMemorizationState.highlightIndex
+                            (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying) -> fullMemorizationState.highlightIndex
                             else -> playbackState.questionHighlightIndex
                         },
                         currentIndex = currentIndex,
@@ -223,7 +217,7 @@ fun MainScreen(
                             modifier = Modifier.weight(1f)
                         )
 
-                        if (isFullMemorizationMode) {
+                        if (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION) {
                             FullMemorizationRecordingButton(
                                 isQuestionPlaying = isFullMemorizationQuestionPlaying,
                                 isRecording = isFullMemorizationRecording,
@@ -268,12 +262,12 @@ fun MainScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (!isFullMemorizationMode || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
+                    if (coordinatorMode.group != ModeGroup.FULL_MEMORIZATION || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
                         AnswerCard(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             currentAnswerKo = qaViewModel.getCurrentAnswerKo(qaItem),
                             highlightIndex = when {
-                                (isFullMemorizationMode && isFullMemorizationPlaying) || (coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING) -> fullMemorizationState.highlightIndex
+                                (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying) || (coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING) -> fullMemorizationState.highlightIndex
                                 playbackState.isEnglishWritingTestMergedFilePlaying -> playbackState.englishWritingTestMergedFileHighlightIndex
                                 else -> playbackState.answerHighlightIndex
                             },
@@ -281,7 +275,7 @@ fun MainScreen(
                             recordingHighlightIndex = playbackState.recordingHighlightIndex,
                             resumeHighlightIndex = if (!repeatListeningState.isPlaying) repeatListeningState.resumeSentenceIndex else null,
                             isFlipped = when {
-                                isEnglishWritingTestMode -> englishWritingTestState.isCardFlipped
+                                coordinatorMode.group == ModeGroup.ENGLISH_WRITING -> englishWritingTestState.isCardFlipped
                                 playbackState.isEnglishWritingTestMergedFilePlaying -> false
                                 repeatListeningState.isCardFlipped -> repeatListeningState.isCardFlipped
                                 else -> playbackState.isAnswerCardFlipped

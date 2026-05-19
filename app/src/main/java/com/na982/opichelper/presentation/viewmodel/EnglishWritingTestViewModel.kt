@@ -33,40 +33,36 @@ class EnglishWritingTestViewModel @Inject constructor(
 
     override val _uiState = MutableStateFlow(EnglishWritingTestUiState())
     override fun resetUiState() = EnglishWritingTestUiState()
+    override fun initialMode() = CurrentMode.ENGLISH_WRITING
 
     override fun onStop() {
         _uiState.value = _uiState.value.copy(isCardFlipped = false)
         viewModelScope.launch { coordinator.emitEvent(CoordinatorEvent.EnglishWritingStopped) }
     }
 
-    fun start() {
-        viewModelScope.launch {
-            try {
-                if (coordinator.requestMode(CurrentMode.ENGLISH_WRITING)) {
-                    ttsCtrl.stopTts()
-                    ttsCtrl.clearHighlight()
-                    startEnglishWritingTest()
-                }
-            } catch (e: Exception) {
-                Log.e("EnglishWritingTestVM", "영작 테스트 시작 실패", e)
-                stop()
-            }
+    override suspend fun startMode() {
+        try {
+            ttsCtrl.stopTts()
+            ttsCtrl.clearHighlight()
+            startEnglishWritingTest()
+        } catch (e: Exception) {
+            Log.e("EnglishWritingTestVM", "영작 테스트 시작 실패", e)
+            stop()
         }
     }
 
-    private fun startEnglishWritingTest() {
+    private suspend fun startEnglishWritingTest() {
         val currentItem = qaDataManager.currentQaItem.value
         if (currentItem != null) {
             val scriptIndex = qaDataManager.getCurrentIndex()
 
-            eventCollectJob?.cancel()
-            eventCollectJob = viewModelScope.launch {
+            val eventJob = viewModelScope.launch {
                 executeEnglishWritingTestUseCase.events.collect { event ->
                     handleEvent(event)
                 }
             }
 
-            currentUseCaseJob = viewModelScope.launch {
+            val useCaseJob = viewModelScope.launch {
                 try {
                     executeEnglishWritingTestUseCase.execute(
                         answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
@@ -79,13 +75,13 @@ class EnglishWritingTestViewModel @Inject constructor(
                     stop()
                 }
             }
-            coordinator.registerJob(currentUseCaseJob!!)
-            coordinator.registerEventJob(eventCollectJob!!)
+            coordinator.registerJob(useCaseJob)
+            coordinator.registerEventJob(eventJob)
+            useCaseJob.join()
         }
     }
 
     private fun handleEvent(event: MemorizeTestEvent) {
-        if (currentUseCaseJob?.isActive != true) return
         when (event) {
             is MemorizeTestEvent.CardFlip -> {
                 _uiState.value = _uiState.value.copy(isCardFlipped = event.isKorean)

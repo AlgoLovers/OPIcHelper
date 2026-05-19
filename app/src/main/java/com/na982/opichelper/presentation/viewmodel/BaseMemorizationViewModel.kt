@@ -18,19 +18,26 @@ abstract class BaseMemorizationViewModel<T>(
     private val progressTracker: MemorizeTestProgressTracker?
 ) : ViewModel() {
 
-    protected var currentUseCaseJob: Job? = null
-    protected var eventCollectJob: Job? = null
+    private var modeJob: Job? = null
 
     protected abstract val _uiState: MutableStateFlow<T>
     val uiState: StateFlow<T> get() = _uiState.asStateFlow()
 
     protected abstract fun resetUiState(): T
+    protected abstract fun initialMode(): CurrentMode
+    protected abstract suspend fun startMode()
 
     protected open fun onStop() {}
     protected open fun onLevelChangedExtra() {}
 
+    fun start() {
+        if (!coordinator.requestMode(initialMode())) return
+        modeJob = viewModelScope.launch { startMode() }
+    }
+
     fun stop() {
-        cancelJobs()
+        modeJob?.cancel()
+        modeJob = null
         coordinator.releaseMode()
         onStop()
 
@@ -49,7 +56,8 @@ abstract class BaseMemorizationViewModel<T>(
     }
 
     fun onLevelChanged() {
-        cancelJobs()
+        modeJob?.cancel()
+        modeJob = null
         coordinator.releaseMode()
         _uiState.value = resetUiState()
         onLevelChangedExtra()
@@ -57,15 +65,9 @@ abstract class BaseMemorizationViewModel<T>(
         ttsPlaybackController?.clearHighlight()
     }
 
-    protected fun cancelJobs() {
-        currentUseCaseJob?.cancel()
-        currentUseCaseJob = null
-        eventCollectJob?.cancel()
-        eventCollectJob = null
-    }
-
     override fun onCleared() {
         super.onCleared()
-        cancelJobs()
+        modeJob?.cancel()
+        modeJob = null
     }
 }
