@@ -86,7 +86,8 @@ fun MemorizeLevelSelector(
                         .clickable(enabled = currentIndex > 0) {
                             onLevelSelected(levels[currentIndex - 1])
                         }
-                        .padding(horizontal = 8.dp)
+                        .size(48.dp)
+                        .wrapContentHeight(Alignment.CenterVertically)
                 )
 
                 Text(
@@ -105,7 +106,8 @@ fun MemorizeLevelSelector(
                         .clickable(enabled = currentIndex < levels.size - 1) {
                             onLevelSelected(levels[currentIndex + 1])
                         }
-                        .padding(horizontal = 8.dp)
+                        .size(48.dp)
+                        .wrapContentHeight(Alignment.CenterVertically)
                 )
             }
 

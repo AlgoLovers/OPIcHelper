@@ -18,6 +18,8 @@ import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -38,9 +40,15 @@ class MainActivity : ComponentActivity() {
     private var qaViewModel: QaBrowserViewModel? = null
     private var navController: NavHostController? = null
 
+    private val _permissionDenied = MutableStateFlow(false)
+    val permissionDenied = _permissionDenied.asStateFlow()
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { _ ->
+    ) { granted ->
+        if (!granted) {
+            _permissionDenied.value = true
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,7 +81,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation(navController = navController)
+                    AppNavigation(
+                        navController = navController,
+                        permissionDenied = this@MainActivity.permissionDenied
+                    )
                 }
             }
         }

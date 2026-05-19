@@ -136,7 +136,7 @@ private fun ModernAnswerCard(
                         containerColor = if (isVisible) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
                         contentColor = if (isVisible) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
                     ),
-                    modifier = Modifier.height(24.dp),
+                    modifier = Modifier.height(36.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(

@@ -85,6 +85,7 @@ class FullMemorizationViewModel @Inject constructor(
             )
         } catch (e: Exception) {
             Log.e("FullMemorizationVM", "통암기 모드 시작 실패", e)
+            emitEvent("통암기를 시작할 수 없습니다")
             coordinator.releaseMode()
         }
     }
@@ -96,6 +97,7 @@ class FullMemorizationViewModel @Inject constructor(
                 updateRecordingStatus()
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "통암기 녹음 종료 실패", e)
+                emitEvent("녹음을 종료할 수 없습니다")
             }
         }
     }
@@ -109,6 +111,7 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "통암기 녹음 재생 실패", e)
+                emitEvent("녹음 재생에 실패했습니다")
                 coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
             }
         }
@@ -122,6 +125,7 @@ class FullMemorizationViewModel @Inject constructor(
                 updateRecordingStatus()
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "통암기 재생 중지 실패", e)
+                emitEvent("재생 중지에 실패했습니다")
                 coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
             }
         }

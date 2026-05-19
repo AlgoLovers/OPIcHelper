@@ -51,4 +51,7 @@ interface UserPreferencesRepository {
 
     fun isAutoAdvance(): Boolean
     fun setAutoAdvance(enabled: Boolean)
+
+    fun isOnboardingCompleted(): Boolean
+    fun setOnboardingCompleted()
 } 
