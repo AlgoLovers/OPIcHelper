@@ -33,7 +33,7 @@ class RepeatListeningRepositoryImpl(
             if (!currentCoroutineContext().isActive) break
 
             progressPersistenceService.saveNavigationState(
-                ProgressPersistenceService.NavigationState(data.category, i, data.scriptIndex)
+                ProgressPersistenceService.NavigationState(data.category, data.scriptIndex, i)
             )
 
             // 1. 한글 문장 TTS

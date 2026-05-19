@@ -4,7 +4,7 @@ import com.na982.opichelper.domain.entity.AppExitState
 import com.na982.opichelper.domain.entity.CategoryProgress
 
 interface ProgressPersistenceService {
-    data class NavigationState(val category: String?, val index: Int, val scriptIndex: Int = -1)
+    data class NavigationState(val category: String?, val scriptIndex: Int = -1, val sentenceIndex: Int = 0)
 
     suspend fun saveAppExitState(
         category: String,

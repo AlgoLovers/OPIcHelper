@@ -45,7 +45,7 @@ class EnglishWritingTestRepositoryImpl(
             if (!currentCoroutineContext().isActive) break
 
             progressPersistenceService.saveNavigationState(
-                ProgressPersistenceService.NavigationState(category, idx, scriptIndex)
+                ProgressPersistenceService.NavigationState(category, scriptIndex, idx)
             )
 
             // 1. 한글 문장 TTS
@@ -104,7 +104,7 @@ class EnglishWritingTestRepositoryImpl(
         }
 
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, 0, scriptIndex)
+            ProgressPersistenceService.NavigationState(category, scriptIndex, 0)
         )
     }
 }
