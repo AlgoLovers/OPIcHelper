@@ -17,7 +17,8 @@ import javax.inject.Inject
 
 data class RepeatListeningUiState(
     val isCardFlipped: Boolean = false,
-    val isPlaying: Boolean = false
+    val isPlaying: Boolean = false,
+    val resumeSentenceIndex: Int? = null
 )
 
 @HiltViewModel
@@ -41,13 +42,14 @@ class RepeatListeningViewModel @Inject constructor(
 
     override fun onStop() {
         _uiState.value = _uiState.value.copy(isCardFlipped = false, isPlaying = false)
+        refreshResumeIndex()
     }
 
     fun start() {
         viewModelScope.launch {
             try {
                 if (coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
-                    _uiState.value = _uiState.value.copy(isPlaying = true)
+                    _uiState.value = _uiState.value.copy(isPlaying = true, resumeSentenceIndex = null)
                     ttsCtrl.stopTts()
                     ttsCtrl.clearHighlight()
                     startRepeatListening()
@@ -55,6 +57,24 @@ class RepeatListeningViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
                 stop()
+            }
+        }
+    }
+
+    fun refreshResumeIndex() {
+        viewModelScope.launch {
+            val currentItem = qaDataManager.getCurrentQaItem()
+            if (currentItem != null) {
+                val answerText = qaDataManager.getCurrentAnswer(currentItem)
+                val totalCount = answerText.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }.size
+                val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
+                    currentItem.category, qaDataManager.getCurrentIndex(), totalCount
+                )
+                _uiState.value = _uiState.value.copy(
+                    resumeSentenceIndex = if (resumeIndex > 0) resumeIndex else null
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(resumeSentenceIndex = null)
             }
         }
     }
