@@ -37,7 +37,7 @@ fun AppTitle(
                 .fillMaxWidth()
                 .background(
                     brush = Brush.linearGradient(
-                        colors = listOf(GradientStart, GradientEnd, GradientAccent)
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
                     ),
                     shape = RoundedCornerShape(16.dp)
                 )
@@ -61,8 +61,8 @@ fun AppTitle(
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.3f),
-                                        Color.White.copy(alpha = 0.1f)
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.1f)
                                     )
                                 ),
                                 shape = RoundedCornerShape(16.dp)
@@ -71,8 +71,8 @@ fun AppTitle(
                                 width = 1.dp,
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.5f),
-                                        Color.White.copy(alpha = 0.2f)
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                                     )
                                 ),
                                 shape = RoundedCornerShape(16.dp)
@@ -89,7 +89,7 @@ fun AppTitle(
                                 modifier = Modifier
                                     .size(3.dp)
                                     .background(
-                                        color = Color.White.copy(alpha = 0.9f),
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                                         shape = androidx.compose.foundation.shape.CircleShape
                                     )
                             )
@@ -98,7 +98,7 @@ fun AppTitle(
                                 modifier = Modifier
                                     .size(3.dp)
                                     .background(
-                                        color = Color.White.copy(alpha = 0.9f),
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                                         shape = androidx.compose.foundation.shape.CircleShape
                                     )
                             )
@@ -107,7 +107,7 @@ fun AppTitle(
                                 modifier = Modifier
                                     .size(3.dp)
                                     .background(
-                                        color = Color.White.copy(alpha = 0.9f),
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                                         shape = androidx.compose.foundation.shape.CircleShape
                                     )
                             )
@@ -121,8 +121,8 @@ fun AppTitle(
                                 .background(
                                     brush = Brush.radialGradient(
                                         colors = listOf(
-                                            Color.White.copy(alpha = 0.8f),
-                                            Color.White.copy(alpha = 0.4f)
+                                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.4f)
                                         )
                                     ),
                                     shape = androidx.compose.foundation.shape.CircleShape
@@ -139,14 +139,14 @@ fun AppTitle(
                     text = "OPic Helper",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 24.sp
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "영어 말하기 실력 향상을 위한 최고의 도구",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.9f),
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                     fontSize = 12.sp
                 )
                 
@@ -156,13 +156,13 @@ fun AppTitle(
                     Card(
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Text(
                             text = "목표: $currentLevel",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             fontSize = 11.sp
@@ -177,13 +177,13 @@ fun AppTitle(
                     Card(
                         shape = RoundedCornerShape(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Text(
                             text = "🎯 목표 달성",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
                             fontSize = 9.sp
                         )
@@ -192,13 +192,13 @@ fun AppTitle(
                     Card(
                         shape = RoundedCornerShape(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Text(
                             text = "📚 체계적 학습",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
                             fontSize = 9.sp
                         )
@@ -207,13 +207,13 @@ fun AppTitle(
                     Card(
                         shape = RoundedCornerShape(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Text(
                             text = "🎧 실전 연습",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
                             fontSize = 9.sp
                         )

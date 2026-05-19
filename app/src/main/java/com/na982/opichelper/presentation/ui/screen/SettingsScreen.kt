@@ -52,7 +52,7 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .background(
                         brush = Brush.linearGradient(
-                            colors = listOf(GradientStart, GradientEnd, GradientAccent)
+                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
                         ),
                         shape = RoundedCornerShape(16.dp)
                     )
@@ -65,7 +65,7 @@ fun SettingsScreen(
                     Icon(
                         Icons.Filled.ArrowBack,
                         contentDescription = "뒤로가기",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
 
@@ -77,14 +77,14 @@ fun SettingsScreen(
                         text = "설정",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 24.sp
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "학습 환경을 설정하세요",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.9f),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                         fontSize = 12.sp
                     )
                 }

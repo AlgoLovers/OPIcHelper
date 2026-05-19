@@ -1,7 +1,6 @@
 package com.na982.opichelper.ui.theme
 
 import com.na982.opichelper.domain.entity.MemorizeLevel
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -18,32 +17,32 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = Color.White,
     primaryContainer = PrimaryBlueDark,
     onPrimaryContainer = Color.White,
-    
+
     secondary = SecondaryTeal,
     onSecondary = Color.White,
     secondaryContainer = SecondaryTealDark,
     onSecondaryContainer = Color.White,
-    
+
     tertiary = TertiaryOrange,
     onTertiary = Color.White,
     tertiaryContainer = TertiaryOrangeDark,
     onTertiaryContainer = Color.White,
-    
+
     background = BackgroundDark,
     onBackground = TextPrimaryDark,
     surface = SurfaceDark,
     onSurface = TextPrimaryDark,
     surfaceVariant = CardDark,
     onSurfaceVariant = TextSecondaryDark,
-    
+
     error = ErrorRed,
     onError = Color.White,
     errorContainer = ErrorRedDark,
     onErrorContainer = Color.White,
-    
+
     outline = NeutralGray,
     outlineVariant = NeutralGrayDark,
-    
+
     scrim = Color.Black.copy(alpha = 0.32f),
     inverseSurface = Color.White,
     inverseOnSurface = Color.Black,
@@ -55,32 +54,32 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.White,
     primaryContainer = PrimaryBlueLight,
     onPrimaryContainer = PrimaryBlueDark,
-    
+
     secondary = SecondaryTeal,
     onSecondary = Color.White,
     secondaryContainer = SecondaryTealLight,
     onSecondaryContainer = SecondaryTealDark,
-    
+
     tertiary = TertiaryOrange,
     onTertiary = Color.White,
     tertiaryContainer = TertiaryOrangeLight,
     onTertiaryContainer = TertiaryOrangeDark,
-    
+
     background = BackgroundLight,
     onBackground = TextPrimaryLight,
     surface = SurfaceLight,
     onSurface = TextPrimaryLight,
     surfaceVariant = CardLight,
     onSurfaceVariant = TextSecondaryLight,
-    
+
     error = ErrorRed,
     onError = Color.White,
     errorContainer = ErrorRedLight,
     onErrorContainer = ErrorRedDark,
-    
+
     outline = NeutralGray,
     outlineVariant = NeutralGrayLight,
-    
+
     scrim = Color.Black.copy(alpha = 0.32f),
     inverseSurface = Color.Black,
     inverseOnSurface = Color.White,
@@ -90,8 +89,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun OPicHelperTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false, // OPic Helper 브랜드 색상 유지
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -111,9 +109,6 @@ fun OPicHelperTheme(
     )
 }
 
-/**
- * 암기레벨별 동적 테마
- */
 @Composable
 fun OPicHelperThemeWithMemorizeLevel(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -126,23 +121,26 @@ fun OPicHelperThemeWithMemorizeLevel(
     }
 
     val level = MemorizeLevel.fromDisplayName(memorizeLevel)
-    val backgroundColor = getMemorizeLevelBackground(memorizeLevel, darkTheme)
-    val surfaceColor = getMemorizeLevelSurface(memorizeLevel, darkTheme)
-    val cardColor = getMemorizeLevelCard(memorizeLevel, darkTheme)
-    val primaryColor = when (level) {
-        MemorizeLevel.REPEAT_LISTENING -> if (darkTheme) MemorizeLevelColors.RepeatListening.primaryDark else MemorizeLevelColors.RepeatListening.primaryLight
-        MemorizeLevel.ENGLISH_WRITING -> if (darkTheme) MemorizeLevelColors.WritingTest.primaryDark else MemorizeLevelColors.WritingTest.primaryLight
-        MemorizeLevel.FULL_MEMORIZATION -> if (darkTheme) MemorizeLevelColors.FullMemorization.primaryDark else MemorizeLevelColors.FullMemorization.primaryLight
+    val levelColors = when (level) {
+        MemorizeLevel.REPEAT_LISTENING -> MemorizeLevelColors.RepeatListening
+        MemorizeLevel.ENGLISH_WRITING -> MemorizeLevelColors.WritingTest
+        MemorizeLevel.FULL_MEMORIZATION -> MemorizeLevelColors.FullMemorization
     }
 
     val dynamicColorScheme = baseColorScheme.copy(
-        background = backgroundColor,
-        surface = surfaceColor,
-        surfaceVariant = cardColor,
-        primary = primaryColor,
+        background = if (darkTheme) levelColors.backgroundDark else levelColors.backgroundLight,
+        surface = if (darkTheme) levelColors.surfaceDark else levelColors.surfaceLight,
+        surfaceVariant = if (darkTheme) levelColors.cardDark else levelColors.cardLight,
+        primary = if (darkTheme) levelColors.primaryDark else levelColors.primaryLight,
         onBackground = if (darkTheme) TextPrimaryDark else TextPrimaryLight,
         onSurface = if (darkTheme) TextPrimaryDark else TextPrimaryLight,
-        onSurfaceVariant = if (darkTheme) TextSecondaryDark else TextSecondaryLight
+        onSurfaceVariant = if (darkTheme) TextSecondaryDark else TextSecondaryLight,
+        primaryContainer = if (darkTheme) levelColors.primaryContainerDark else levelColors.primaryContainerLight,
+        onPrimaryContainer = if (darkTheme) levelColors.onPrimaryContainerDark else levelColors.onPrimaryContainerLight,
+        secondary = if (darkTheme) levelColors.secondaryDark else levelColors.secondaryLight,
+        onSecondary = if (darkTheme) levelColors.onSecondaryDark else levelColors.onSecondaryLight,
+        tertiary = if (darkTheme) levelColors.tertiaryDark else levelColors.tertiaryLight,
+        onTertiary = if (darkTheme) levelColors.onTertiaryDark else levelColors.onTertiaryLight
     )
 
     MaterialTheme(

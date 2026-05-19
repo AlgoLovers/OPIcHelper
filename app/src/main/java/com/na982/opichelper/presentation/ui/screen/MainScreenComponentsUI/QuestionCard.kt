@@ -50,7 +50,7 @@ fun QuestionCard(
                     .fillMaxWidth()
                     .background(
                         brush = Brush.linearGradient(
-                            colors = listOf(GradientStart, GradientEnd)
+                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                         ),
                         shape = RoundedCornerShape(16.dp)
                     )
@@ -69,7 +69,7 @@ fun QuestionCard(
                                 text = "진행사항",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 16.sp
                             )
                         }
@@ -83,7 +83,7 @@ fun QuestionCard(
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Row(
@@ -96,7 +96,7 @@ fun QuestionCard(
                                     text = currentCategory,
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White.copy(alpha = 0.8f),
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                                     fontSize = 18.sp
                                 )
                             }
@@ -104,7 +104,7 @@ fun QuestionCard(
                                 text = "$currentIndex / $totalCount",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 18.sp
                             )
                         }
