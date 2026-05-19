@@ -15,7 +15,7 @@ import androidx.core.content.ContextCompat
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
-import com.na982.opichelper.ui.theme.OPicHelperThemeWithMemorizeLevel
+import com.na982.opichelper.ui.theme.OPicHelperTheme
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
@@ -66,9 +66,8 @@ class MainActivity : ComponentActivity() {
 
             val isDarkTheme = isSystemInDarkTheme()
 
-            OPicHelperThemeWithMemorizeLevel(
-                darkTheme = isDarkTheme,
-                memorizeLevel = ""
+            OPicHelperTheme(
+                darkTheme = isDarkTheme
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

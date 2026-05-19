@@ -13,19 +13,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryBlue,
+    primary = PrimaryTeal,
     onPrimary = Color.White,
-    primaryContainer = PrimaryBlueDark,
+    primaryContainer = PrimaryTealDark,
     onPrimaryContainer = Color.White,
 
-    secondary = SecondaryTeal,
+    secondary = SecondaryCyan,
     onSecondary = Color.White,
-    secondaryContainer = SecondaryTealDark,
+    secondaryContainer = SecondaryCyanDark,
     onSecondaryContainer = Color.White,
 
-    tertiary = TertiaryOrange,
+    tertiary = TertiaryGreen,
     onTertiary = Color.White,
-    tertiaryContainer = TertiaryOrangeDark,
+    tertiaryContainer = TertiaryGreenDark,
     onTertiaryContainer = Color.White,
 
     background = BackgroundDark,
@@ -46,24 +46,24 @@ private val DarkColorScheme = darkColorScheme(
     scrim = Color.Black.copy(alpha = 0.32f),
     inverseSurface = Color.White,
     inverseOnSurface = Color.Black,
-    inversePrimary = PrimaryBlueLight
+    inversePrimary = PrimaryTealLight
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlue,
+    primary = PrimaryTeal,
     onPrimary = Color.White,
-    primaryContainer = PrimaryBlueLight,
-    onPrimaryContainer = PrimaryBlueDark,
+    primaryContainer = PrimaryTealLight,
+    onPrimaryContainer = PrimaryTealDark,
 
-    secondary = SecondaryTeal,
+    secondary = SecondaryCyan,
     onSecondary = Color.White,
-    secondaryContainer = SecondaryTealLight,
-    onSecondaryContainer = SecondaryTealDark,
+    secondaryContainer = SecondaryCyanLight,
+    onSecondaryContainer = SecondaryCyanDark,
 
-    tertiary = TertiaryOrange,
+    tertiary = TertiaryGreen,
     onTertiary = Color.White,
-    tertiaryContainer = TertiaryOrangeLight,
-    onTertiaryContainer = TertiaryOrangeDark,
+    tertiaryContainer = TertiaryGreenLight,
+    onTertiaryContainer = TertiaryGreenDark,
 
     background = BackgroundLight,
     onBackground = TextPrimaryLight,
@@ -83,7 +83,7 @@ private val LightColorScheme = lightColorScheme(
     scrim = Color.Black.copy(alpha = 0.32f),
     inverseSurface = Color.Black,
     inverseOnSurface = Color.White,
-    inversePrimary = PrimaryBlue
+    inversePrimary = PrimaryTeal
 )
 
 @Composable
