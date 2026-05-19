@@ -18,6 +18,7 @@ import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.presentation.viewmodel.CurrentMode
+import com.na982.opichelper.presentation.viewmodel.ModeGroup
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
@@ -49,17 +50,10 @@ fun MainScreen(
 
     val selectedLevel = qaState.selectedMemorizeLevel
     val isFullMemorizationMode by remember {
-        derivedStateOf { MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION }
+        derivedStateOf { coordinatorMode.group == ModeGroup.FULL_MEMORIZATION }
     }
     val isEnglishWritingTestMode by remember {
-        derivedStateOf {
-            coordinatorMode in setOf(
-                CurrentMode.ENGLISH_WRITING,
-                CurrentMode.ENGLISH_WRITING_RECORDING,
-                CurrentMode.ENGLISH_WRITING_PLAYING,
-                CurrentMode.ENGLISH_WRITING_WITH_FILE
-            )
-        }
+        derivedStateOf { coordinatorMode.group == ModeGroup.ENGLISH_WRITING }
     }
     val isFullMemorizationPlaying by remember {
         derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING }
@@ -373,13 +367,10 @@ private fun stopCurrentMemorization(
     englishWritingTestViewModel: EnglishWritingTestViewModel,
     fullMemorizationViewModel: FullMemorizationViewModel
 ) {
-    val currentMode = coordinator.currentMode.value
-    when {
-        currentMode == CurrentMode.REPEAT_LISTENING -> repeatListeningViewModel.stop()
-        currentMode in setOf(CurrentMode.ENGLISH_WRITING, CurrentMode.ENGLISH_WRITING_RECORDING,
-            CurrentMode.ENGLISH_WRITING_PLAYING, CurrentMode.ENGLISH_WRITING_WITH_FILE) -> englishWritingTestViewModel.stop()
-        currentMode in setOf(CurrentMode.FULL_MEMORIZATION, CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
-            CurrentMode.FULL_MEMORIZATION_RECORDING, CurrentMode.FULL_MEMORIZATION_PLAYING,
-            CurrentMode.FULL_MEMORIZATION_WITH_FILE) -> fullMemorizationViewModel.stop()
+    when (coordinator.currentMode.value.group) {
+        ModeGroup.REPEAT_LISTENING -> repeatListeningViewModel.stop()
+        ModeGroup.ENGLISH_WRITING -> englishWritingTestViewModel.stop()
+        ModeGroup.FULL_MEMORIZATION -> fullMemorizationViewModel.stop()
+        ModeGroup.NONE -> {}
     }
 }
