@@ -62,51 +62,101 @@ val GradientEnd = Color(0xFF009688)
 val GradientAccent = Color(0xFFFF9800)
 
 // 암기레벨별 색상 (라이트/다크 테마 구분)
+data class MemorizeLevelColorSet(
+    val backgroundLight: Color,
+    val surfaceLight: Color,
+    val primaryLight: Color,
+    val primaryContainerLight: Color,
+    val onPrimaryContainerLight: Color,
+    val secondaryLight: Color,
+    val onSecondaryLight: Color,
+    val tertiaryLight: Color,
+    val onTertiaryLight: Color,
+    val cardLight: Color,
+    val backgroundDark: Color,
+    val surfaceDark: Color,
+    val primaryDark: Color,
+    val primaryContainerDark: Color,
+    val onPrimaryContainerDark: Color,
+    val secondaryDark: Color,
+    val onSecondaryDark: Color,
+    val tertiaryDark: Color,
+    val onTertiaryDark: Color,
+    val cardDark: Color
+)
+
 object MemorizeLevelColors {
     // 반복 듣기 - 차분한 블루 톤
-    object RepeatListening {
-        // 라이트 테마
-        val backgroundLight = Color(0xFFF8FBFF)    // 매우 연한 블루 배경
-        val surfaceLight = Color(0xFFE3F2FD)       // 연한 블루 서피스
-        val primaryLight = Color(0xFF4A90E2)       // 차분한 블루
-        val cardLight = Color(0xFFF0F8FF)          // 연한 블루 카드
-        
-        // 다크 테마
-        val backgroundDark = Color(0xFF0A1A2E)     // 어두운 블루 배경
-        val surfaceDark = Color(0xFF1A2B3E)        // 어두운 블루 서피스
-        val primaryDark = Color(0xFF64B5F6)        // 밝은 블루 (다크에서)
-        val cardDark = Color(0xFF2A3B4E)           // 어두운 블루 카드
-    }
-    
+    val RepeatListening = MemorizeLevelColorSet(
+        backgroundLight = Color(0xFFF0F4FA),
+        surfaceLight = Color(0xFFE1EBF5),
+        primaryLight = Color(0xFF4A90E2),
+        primaryContainerLight = Color(0xFFD4E6FA),
+        onPrimaryContainerLight = Color(0xFF1A3F6E),
+        secondaryLight = Color(0xFF5B9BD5),
+        onSecondaryLight = Color(0xFFFFFFFF),
+        tertiaryLight = Color(0xFF7BAFD4),
+        onTertiaryLight = Color(0xFFFFFFFF),
+        cardLight = Color(0xFFECF2FA),
+        backgroundDark = Color(0xFF0A1A2E),
+        surfaceDark = Color(0xFF1A2B3E),
+        primaryDark = Color(0xFF64B5F6),
+        primaryContainerDark = Color(0xFF1E3A5F),
+        onPrimaryContainerDark = Color(0xFFB0D4F1),
+        secondaryDark = Color(0xFF4DB6AC),
+        onSecondaryDark = Color(0xFF00251A),
+        tertiaryDark = Color(0xFF81D4FA),
+        onTertiaryDark = Color(0xFF001D31),
+        cardDark = Color(0xFF2A3B4E)
+    )
+
     // 영작 테스트 - 따뜻한 오렌지 톤
-    object WritingTest {
-        // 라이트 테마
-        val backgroundLight = Color(0xFFFFF8F5)    // 매우 연한 오렌지 배경
-        val surfaceLight = Color(0xFFFFF3E0)       // 연한 오렌지 서피스
-        val primaryLight = Color(0xFFFF7043)       // 따뜻한 오렌지
-        val cardLight = Color(0xFFFFF0E6)          // 연한 오렌지 카드
-        
-        // 다크 테마
-        val backgroundDark = Color(0xFF2E1A0A)     // 어두운 오렌지 배경
-        val surfaceDark = Color(0xFF3E2A1A)        // 어두운 오렌지 서피스
-        val primaryDark = Color(0xFFFF8A65)        // 밝은 오렌지 (다크에서)
-        val cardDark = Color(0xFF4E3A2A)           // 어두운 오렌지 카드
-    }
-    
+    val WritingTest = MemorizeLevelColorSet(
+        backgroundLight = Color(0xFFFFF3ED),
+        surfaceLight = Color(0xFFFFE8DB),
+        primaryLight = Color(0xFFFF7043),
+        primaryContainerLight = Color(0xFFFFDCC8),
+        onPrimaryContainerLight = Color(0xFF6E2C0F),
+        secondaryLight = Color(0xFFFFAB91),
+        onSecondaryLight = Color(0xFF5C1F00),
+        tertiaryLight = Color(0xFFFFB74D),
+        onTertiaryLight = Color(0xFF5C3A00),
+        cardLight = Color(0xFFFFF0E6),
+        backgroundDark = Color(0xFF2E1A0A),
+        surfaceDark = Color(0xFF3E2A1A),
+        primaryDark = Color(0xFFFF8A65),
+        primaryContainerDark = Color(0xFF5C2D10),
+        onPrimaryContainerDark = Color(0xFFFFDCC8),
+        secondaryDark = Color(0xFFE64A19),
+        onSecondaryDark = Color(0xFFFFFFFF),
+        tertiaryDark = Color(0xFFFFB74D),
+        onTertiaryDark = Color(0xFF5C3A00),
+        cardDark = Color(0xFF4E3A2A)
+    )
+
     // 통암기 - 우아한 퍼플 톤
-    object FullMemorization {
-        // 라이트 테마
-        val backgroundLight = Color(0xFFFDF8FF)    // 매우 연한 퍼플 배경
-        val surfaceLight = Color(0xFFF3E5F5)       // 연한 퍼플 서피스
-        val primaryLight = Color(0xFF9C27B0)       // 우아한 퍼플
-        val cardLight = Color(0xFFF8F0FF)          // 연한 퍼플 카드
-        
-        // 다크 테마
-        val backgroundDark = Color(0xFF2A0A2E)     // 어두운 퍼플 배경
-        val surfaceDark = Color(0xFF3A1A3E)        // 어두운 퍼플 서피스
-        val primaryDark = Color(0xFFBA68C8)        // 밝은 퍼플 (다크에서)
-        val cardDark = Color(0xFF4A2A4E)           // 어두운 퍼플 카드
-    }
+    val FullMemorization = MemorizeLevelColorSet(
+        backgroundLight = Color(0xFFF6EEFA),
+        surfaceLight = Color(0xFFEDE0F3),
+        primaryLight = Color(0xFF9C27B0),
+        primaryContainerLight = Color(0xFFEFC8F5),
+        onPrimaryContainerLight = Color(0xFF3D005E),
+        secondaryLight = Color(0xFFBA68C8),
+        onSecondaryLight = Color(0xFFFFFFFF),
+        tertiaryLight = Color(0xFFCE93D8),
+        onTertiaryLight = Color(0xFF3B002E),
+        cardLight = Color(0xFFF5EAF9),
+        backgroundDark = Color(0xFF2A0A2E),
+        surfaceDark = Color(0xFF3A1A3E),
+        primaryDark = Color(0xFFBA68C8),
+        primaryContainerDark = Color(0xFF4A1A5E),
+        onPrimaryContainerDark = Color(0xFFEFC8F5),
+        secondaryDark = Color(0xFFAB47BC),
+        onSecondaryDark = Color(0xFFFFFFFF),
+        tertiaryDark = Color(0xFFCE93D8),
+        onTertiaryDark = Color(0xFF3B002E),
+        cardDark = Color(0xFF4A2A4E)
+    )
 }
 
 /**
