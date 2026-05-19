@@ -64,15 +64,17 @@ class RepeatListeningViewModel @Inject constructor(
     fun refreshResumeIndex() {
         viewModelScope.launch {
             val currentItem = qaDataManager.getCurrentQaItem()
-            if (currentItem != null) {
+            if (currentItem != null && !_uiState.value.isPlaying) {
                 val answerText = qaDataManager.getCurrentAnswer(currentItem)
                 val totalCount = answerText.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }.size
-                val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
-                    currentItem.category, qaDataManager.getCurrentIndex(), totalCount
-                )
-                _uiState.value = _uiState.value.copy(
-                    resumeSentenceIndex = if (resumeIndex > 0) resumeIndex else null
-                )
+                if (totalCount > 0) {
+                    val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
+                        currentItem.category, qaDataManager.getCurrentIndex(), totalCount
+                    )
+                    _uiState.value = _uiState.value.copy(resumeSentenceIndex = resumeIndex)
+                } else {
+                    _uiState.value = _uiState.value.copy(resumeSentenceIndex = null)
+                }
             } else {
                 _uiState.value = _uiState.value.copy(resumeSentenceIndex = null)
             }

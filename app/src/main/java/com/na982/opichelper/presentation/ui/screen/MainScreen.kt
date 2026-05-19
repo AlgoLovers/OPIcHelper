@@ -85,6 +85,11 @@ fun MainScreen(
         }
     }
 
+    // 반복듣기 모드 진입 시 이어서 듣기 위치 초기 갱신
+    LaunchedEffect(Unit) {
+        repeatListeningViewModel.refreshResumeIndex()
+    }
+
     val isDarkTheme = isSystemInDarkTheme()
 
     OPicHelperThemeWithMemorizeLevel(
@@ -238,9 +243,13 @@ fun MainScreen(
                                     if (MemorizeLevel.fromDisplayName(selectedLevel) != MemorizeLevel.FULL_MEMORIZATION) {
                                         playbackViewModel.stopTts()
                                     }
-                                    onMemorizeTestButtonClick(
-                                        selectedLevel, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel
-                                    )
+                                    if (repeatListeningState.isPlaying || coordinatorRunning) {
+                                        stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
+                                    } else {
+                                        onMemorizeTestButtonClick(
+                                            selectedLevel, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel
+                                        )
+                                    }
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (repeatListeningState.isPlaying || coordinatorRunning)
