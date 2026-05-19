@@ -45,14 +45,14 @@ fun CategorySelector(
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = PrimaryBlue.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 ) {
                     Text(
                         text = "📚 카테고리",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         fontSize = 14.sp
                     )
@@ -75,10 +75,10 @@ fun CategorySelector(
                             .menuAnchor()
                             .semantics { contentDescription = "Category selector" },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = PrimaryBlue,
-                            unfocusedBorderColor = NeutralGray,
-                            focusedLabelColor = PrimaryBlue,
-                            unfocusedLabelColor = NeutralGray
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         shape = RoundedCornerShape(12.dp),
                         textStyle = androidx.compose.ui.text.TextStyle(

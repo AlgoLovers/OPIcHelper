@@ -109,14 +109,14 @@ fun SettingsScreen(
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = PrimaryBlue.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 ) {
                     Text(
                         text = "📚 학습 레벨",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         fontSize = 14.sp
                     )
@@ -159,7 +159,7 @@ fun SettingsScreen(
                             selected = userLevel == level.name,
                             onClick = { viewModel.setUserLevel(level) },
                             colors = RadioButtonDefaults.colors(
-                                selectedColor = PrimaryBlue
+                                selectedColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
@@ -187,14 +187,14 @@ fun SettingsScreen(
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = PrimaryBlue.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 ) {
                     Text(
                         text = "🎧 학습 설정",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         fontSize = 14.sp
                     )
@@ -219,8 +219,8 @@ fun SettingsScreen(
                     valueRange = 2f..10f,
                     steps = 7,
                     colors = SliderDefaults.colors(
-                        thumbColor = PrimaryBlue,
-                        activeTrackColor = PrimaryBlue
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -244,8 +244,8 @@ fun SettingsScreen(
                     valueRange = 1f..10f,
                     steps = 8,
                     colors = SliderDefaults.colors(
-                        thumbColor = PrimaryBlue,
-                        activeTrackColor = PrimaryBlue
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -272,14 +272,14 @@ fun SettingsScreen(
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = PrimaryBlue.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 ) {
                     Text(
                         text = "ℹ️ 앱 정보",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         fontSize = 14.sp
                     )

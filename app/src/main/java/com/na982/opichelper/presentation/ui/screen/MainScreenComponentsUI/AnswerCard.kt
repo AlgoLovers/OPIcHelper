@@ -133,8 +133,8 @@ private fun ModernAnswerCard(
                     onClick = onHideClick,
                     shape = RoundedCornerShape(6.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = if (isVisible) TertiaryOrange.copy(alpha = 0.1f) else SuccessGreen.copy(alpha = 0.1f),
-                        contentColor = if (isVisible) TertiaryOrange else SuccessGreen
+                        containerColor = if (isVisible) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                        contentColor = if (isVisible) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
                     ),
                     modifier = Modifier.height(24.dp),
                     contentPadding = PaddingValues(0.dp)
@@ -152,14 +152,14 @@ private fun ModernAnswerCard(
                 Card(
                     shape = RoundedCornerShape(6.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = TertiaryOrange.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
                     ),
                     modifier = Modifier.height(24.dp)
                 ) {
                     Text(
                         text = "👆 탭하여 뒤집기",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TertiaryOrange,
+                        color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 12.sp
                     )

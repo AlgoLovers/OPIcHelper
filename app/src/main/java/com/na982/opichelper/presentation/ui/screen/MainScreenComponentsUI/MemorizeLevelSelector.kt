@@ -41,14 +41,14 @@ fun MemorizeLevelSelector(
             Card(
                 shape = RoundedCornerShape(8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = PrimaryBlue.copy(alpha = 0.1f)
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                 )
             ) {
                 Text(
                     text = "🎯 암기 레벨",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     fontSize = 14.sp
                 )
@@ -81,7 +81,7 @@ fun MemorizeLevelSelector(
                 Text(
                     text = "◀",
                     style = MaterialTheme.typography.titleLarge,
-                    color = if (currentIndex > 0) PrimaryBlue else Color.Gray.copy(alpha = 0.3f),
+                    color = if (currentIndex > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                     modifier = Modifier
                         .clickable(enabled = currentIndex > 0) {
                             onLevelSelected(levels[currentIndex - 1])
@@ -100,7 +100,7 @@ fun MemorizeLevelSelector(
                 Text(
                     text = "▶",
                     style = MaterialTheme.typography.titleLarge,
-                    color = if (currentIndex < levels.size - 1) PrimaryBlue else Color.Gray.copy(alpha = 0.3f),
+                    color = if (currentIndex < levels.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                     modifier = Modifier
                         .clickable(enabled = currentIndex < levels.size - 1) {
                             onLevelSelected(levels[currentIndex + 1])
