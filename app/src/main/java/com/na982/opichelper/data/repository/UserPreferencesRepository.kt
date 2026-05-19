@@ -69,7 +69,7 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
     }
 
     override fun isAutoAdvance(): Boolean {
-        return prefs.getBoolean(KEY_AUTO_ADVANCE, true)
+        return prefs.getBoolean(KEY_AUTO_ADVANCE, false)
     }
 
     override fun setAutoAdvance(enabled: Boolean) {
