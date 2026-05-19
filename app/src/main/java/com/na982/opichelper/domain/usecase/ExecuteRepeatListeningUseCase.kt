@@ -21,4 +21,8 @@ class ExecuteRepeatListeningUseCase @Inject constructor(
             repeatCount = repeatCount
         )
     }
+
+    suspend fun getResumeIndex(category: String, scriptIndex: Int, totalCount: Int): Int {
+        return repeatListeningRepository.getResumeIndex(category, scriptIndex, totalCount)
+    }
 }

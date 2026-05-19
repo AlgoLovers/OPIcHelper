@@ -78,6 +78,13 @@ fun MainScreen(
         fullMemorizationViewModel.onLevelChanged()
     }
 
+    // QA 아이템 변경 시 반복듣기 이어서 듣기 위치 갱신
+    LaunchedEffect(qaState.currentQaItem) {
+        if (!repeatListeningState.isPlaying) {
+            repeatListeningViewModel.refreshResumeIndex()
+        }
+    }
+
     val isDarkTheme = isSystemInDarkTheme()
 
     OPicHelperThemeWithMemorizeLevel(
@@ -269,6 +276,7 @@ fun MainScreen(
                             },
                             answerKoHighlightIndex = playbackState.answerKoHighlightIndex,
                             recordingHighlightIndex = playbackState.recordingHighlightIndex,
+                            resumeHighlightIndex = if (!repeatListeningState.isPlaying) repeatListeningState.resumeSentenceIndex else null,
                             isFlipped = when {
                                 isEnglishWritingTestMode -> englishWritingTestState.isCardFlipped
                                 playbackState.isEnglishWritingTestMergedFilePlaying -> false

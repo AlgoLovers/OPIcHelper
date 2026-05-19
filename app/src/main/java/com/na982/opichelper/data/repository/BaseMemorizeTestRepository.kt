@@ -38,6 +38,10 @@ abstract class BaseMemorizeTestRepository(
         }
     }
 
+    open suspend fun getResumeIndex(category: String, scriptIndex: Int, totalCount: Int): Int {
+        return resolveStartIndex(category, scriptIndex, totalCount)
+    }
+
     suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData? {
         val navState = progressPersistenceService.loadNavigationState()
         return if (navState.category == category && navState.scriptIndex == scriptIndex) {
