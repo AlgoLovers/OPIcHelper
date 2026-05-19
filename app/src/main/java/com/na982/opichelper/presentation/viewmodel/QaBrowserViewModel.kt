@@ -23,7 +23,8 @@ data class QaBrowserState(
     val error: String? = null,
     val categories: List<String> = emptyList(),
     val selectedMemorizeLevel: String = MemorizeLevel.REPEAT_LISTENING.displayName,
-    val currentUserLevel: String = ""
+    val currentUserLevel: String = "",
+    val repeatListeningCount: Int = 5
 )
 
 @HiltViewModel
@@ -75,6 +76,12 @@ class QaBrowserViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferencesRepository.userLevel.collect { userLevel ->
                 _uiState.value = _uiState.value.copy(currentUserLevel = userLevel.name)
+            }
+        }
+
+        viewModelScope.launch {
+            userPreferencesRepository.repeatListeningCount.collect { count ->
+                _uiState.value = _uiState.value.copy(repeatListeningCount = count)
             }
         }
     }
