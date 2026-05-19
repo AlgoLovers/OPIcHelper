@@ -2,9 +2,11 @@ package com.na982.opichelper.presentation.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,35 +22,45 @@ fun HighlightText(
 ) {
     val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
 
-    Column(modifier = modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         sentences.forEachIndexed { index, sentence ->
             val isHighlighted = highlightIndex == index
             val isRecordingHighlighted = recordingHighlightIndex == index
             val isResumeHighlighted = resumeHighlightIndex == index
 
-            val backgroundColor = when {
-                isRecordingHighlighted -> MaterialTheme.colorScheme.errorContainer
-                isHighlighted -> MaterialTheme.colorScheme.primaryContainer
-                isResumeHighlighted -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                else -> Color.Transparent
-            }
-            val textColor = when {
-                isRecordingHighlighted -> MaterialTheme.colorScheme.onErrorContainer
-                isHighlighted -> MaterialTheme.colorScheme.onPrimaryContainer
-                isResumeHighlighted -> MaterialTheme.colorScheme.onPrimaryContainer
-                else -> MaterialTheme.colorScheme.onSurface
-            }
-            val fontSize = when {
-                isRecordingHighlighted -> 20.sp
-                isHighlighted -> 20.sp
-                isResumeHighlighted -> 18.sp
-                else -> 18.sp
-            }
-            val fontWeight = when {
-                isRecordingHighlighted -> FontWeight.Bold
-                isHighlighted -> FontWeight.Bold
-                isResumeHighlighted -> FontWeight.SemiBold
-                else -> FontWeight.Normal
+            val (backgroundColor, textColor, fontSize, fontWeight) = when {
+                isRecordingHighlighted -> {
+                    HighlightStyle(
+                        bg = MaterialTheme.colorScheme.error,
+                        text = MaterialTheme.colorScheme.onError,
+                        size = 22.sp,
+                        weight = FontWeight.ExtraBold
+                    )
+                }
+                isHighlighted -> {
+                    HighlightStyle(
+                        bg = MaterialTheme.colorScheme.primary,
+                        text = MaterialTheme.colorScheme.onPrimary,
+                        size = 22.sp,
+                        weight = FontWeight.ExtraBold
+                    )
+                }
+                isResumeHighlighted -> {
+                    HighlightStyle(
+                        bg = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        text = MaterialTheme.colorScheme.primary,
+                        size = 18.sp,
+                        weight = FontWeight.SemiBold
+                    )
+                }
+                else -> {
+                    HighlightStyle(
+                        bg = Color.Transparent,
+                        text = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        size = 16.sp,
+                        weight = FontWeight.Normal
+                    )
+                }
             }
 
             Text(
@@ -58,9 +70,17 @@ fun HighlightText(
                 fontWeight = fontWeight,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp))
                     .background(backgroundColor)
-                    .padding(vertical = 2.dp, horizontal = 4.dp)
+                    .padding(vertical = 6.dp, horizontal = 10.dp)
             )
         }
     }
 }
+
+private data class HighlightStyle(
+    val bg: Color,
+    val text: Color,
+    val size: androidx.compose.ui.unit.TextUnit,
+    val weight: FontWeight
+)
