@@ -16,7 +16,8 @@ import android.util.Log
 import javax.inject.Inject
 
 data class RepeatListeningUiState(
-    val isCardFlipped: Boolean = false
+    val isCardFlipped: Boolean = false,
+    val isPlaying: Boolean = false
 )
 
 @HiltViewModel
@@ -39,13 +40,14 @@ class RepeatListeningViewModel @Inject constructor(
     override fun resetUiState() = RepeatListeningUiState()
 
     override fun onStop() {
-        _uiState.value = _uiState.value.copy(isCardFlipped = false)
+        _uiState.value = _uiState.value.copy(isCardFlipped = false, isPlaying = false)
     }
 
     fun start() {
         viewModelScope.launch {
             try {
                 if (coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
+                    _uiState.value = _uiState.value.copy(isPlaying = true)
                     ttsCtrl.stopTts()
                     ttsCtrl.clearHighlight()
                     startRepeatListening()
@@ -128,10 +130,7 @@ class RepeatListeningViewModel @Inject constructor(
             if (hasMore) {
                 qaDataManager.nextQaItem()
                 _uiState.value = _uiState.value.copy(isCardFlipped = false)
-                coordinator.releaseMode()
-                if (!coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
-                    return@launch
-                }
+                coordinator.updateMode(CurrentMode.REPEAT_LISTENING)
                 ttsCtrl.stopTts()
                 ttsCtrl.clearHighlight()
                 startRepeatListening()

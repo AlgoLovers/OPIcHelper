@@ -236,7 +236,7 @@ fun MainScreen(
                                     )
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (coordinatorRunning)
+                                    containerColor = if (repeatListeningState.isPlaying || coordinatorRunning)
                                         MaterialTheme.colorScheme.error
                                     else
                                         MaterialTheme.colorScheme.primary
@@ -245,7 +245,7 @@ fun MainScreen(
                             ) {
                                 Text(
                                     text = when {
-                                        coordinatorRunning -> "${selectedLevel} 종료"
+                                        repeatListeningState.isPlaying || coordinatorRunning -> "${selectedLevel} 종료"
                                         MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.ENGLISH_WRITING -> "부분암기 테스트"
                                         MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION -> "통암기"
                                         else -> selectedLevel.ifEmpty { "암기 테스트" }
