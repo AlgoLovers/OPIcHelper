@@ -42,6 +42,11 @@ abstract class BaseMemorizeTestRepository(
         return resolveStartIndex(category, scriptIndex, totalCount)
     }
 
+    open suspend fun hasSavedProgress(category: String, scriptIndex: Int): Boolean {
+        val navState = progressPersistenceService.loadNavigationState()
+        return navState.category == category && navState.scriptIndex == scriptIndex
+    }
+
     suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData? {
         val navState = progressPersistenceService.loadNavigationState()
         return if (navState.category == category && navState.scriptIndex == scriptIndex) {
