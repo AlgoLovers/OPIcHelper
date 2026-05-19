@@ -71,12 +71,7 @@ class RepeatListeningViewModel @Inject constructor(
                     val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
                         currentItem.category, qaDataManager.getCurrentIndex(), totalCount
                     )
-                    val hasSavedProgress = executeRepeatListeningUseCase.hasSavedProgress(
-                        currentItem.category, qaDataManager.getCurrentIndex()
-                    )
-                    _uiState.value = _uiState.value.copy(
-                        resumeSentenceIndex = if (hasSavedProgress) resumeIndex else null
-                    )
+                    _uiState.value = _uiState.value.copy(resumeSentenceIndex = resumeIndex)
                 } else {
                     _uiState.value = _uiState.value.copy(resumeSentenceIndex = null)
                 }
