@@ -41,8 +41,6 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .statusBarsPadding()
-                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -55,7 +53,7 @@ fun SettingsScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent)
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
@@ -64,38 +62,40 @@ fun SettingsScreen(
                         ),
                         shape = RoundedCornerShape(16.dp)
                     )
-                    .padding(20.dp)
+                    .padding(16.dp)
             ) {
-                IconButton(
-                    onClick = onNavigateBack,
-                    modifier = Modifier.align(Alignment.TopStart)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Filled.ArrowBack,
-                        contentDescription = "뒤로가기",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "뒤로가기",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "설정",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 24.sp
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "학습 환경을 설정하세요",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
-                        fontSize = 12.sp
+                        fontSize = 22.sp,
+                        maxLines = 1
                     )
                 }
+                Text(
+                    text = "학습 환경을 설정하세요",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    modifier = Modifier.padding(start = 48.dp)
+                )
             }
         }
 

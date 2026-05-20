@@ -38,7 +38,6 @@ abstract class BaseMemorizationViewModel<T>(
     protected abstract suspend fun startMode()
 
     protected open fun onStop() {}
-    protected open fun onLevelChangedExtra() {}
 
     fun start() {
         if (!coordinator.requestMode(initialMode())) return
@@ -48,15 +47,12 @@ abstract class BaseMemorizationViewModel<T>(
     fun stop() {
         modeJob?.cancel()
         modeJob = null
-        coordinator.releaseMode()
         onStop()
+        coordinator.releaseMode()
 
         viewModelScope.launch {
             ttsPlaybackController?.stopTts()
             ttsPlaybackController?.clearHighlight()
-        }
-
-        viewModelScope.launch {
             try {
                 progressTracker?.persistChangedProgress()
             } catch (e: Exception) {
@@ -70,9 +66,10 @@ abstract class BaseMemorizationViewModel<T>(
         modeJob = null
         coordinator.releaseMode()
         _uiState.value = resetUiState()
-        onLevelChangedExtra()
-        ttsPlaybackController?.stopTts()
-        ttsPlaybackController?.clearHighlight()
+        viewModelScope.launch {
+            ttsPlaybackController?.stopTts()
+            ttsPlaybackController?.clearHighlight()
+        }
     }
 
     override fun onCleared() {

@@ -25,38 +25,26 @@ class RecordingFileRepositoryImpl(
 
     override suspend fun hasRecordingFile(category: String, scriptIndex: Int): Boolean {
         return mutex.withLock {
-            val recordingsDir = getRecordingsDirectory()
-            val files = recordingsDir.listFiles()
-
-            if (files != null) {
-                for (file in files) {
-                    if (file.name.startsWith("통암기_${category}_${scriptIndex}_") && file.name.endsWith(".m4a")) {
-                        currentRecordingPath = file.absolutePath
-                        return@withLock true
-                    }
-                }
+            val path = findRecordingFilePath(category, scriptIndex)
+            if (path != null) {
+                currentRecordingPath = path
+                true
+            } else {
+                false
             }
-
-            false
         }
     }
 
     override suspend fun getRecordingFilePath(category: String, scriptIndex: Int): String? {
         return mutex.withLock {
-            val recordingsDir = getRecordingsDirectory()
-            val files = recordingsDir.listFiles()
-
-            if (files != null) {
-                for (file in files) {
-                    if (file.name.startsWith("통암기_${category}_${scriptIndex}_") && file.name.endsWith(".m4a")) {
-                        currentRecordingPath = file.absolutePath
-                        return@withLock file.absolutePath
-                    }
-                }
+            val path = findRecordingFilePath(category, scriptIndex)
+            if (path != null) {
+                currentRecordingPath = path
+                path
+            } else {
+                currentRecordingPath = null
+                null
             }
-
-            currentRecordingPath = null
-            null
         }
     }
 
@@ -101,32 +89,18 @@ class RecordingFileRepositoryImpl(
         onPlayingStateChange: (Boolean) -> Unit,
         onHighlight: (Int?) -> Unit
     ) {
-        val filePath = mutex.withLock {
-            val path = findRecordingFilePath(category, scriptIndex)
-            if (path != null) {
-                currentPlayingPath = path
-            }
-            path
-        }
-
-        if (filePath == null) {
-            Log.e("RecordingFileRepositoryImpl", "playRecordingFile: 재생할 녹음 파일이 없음")
-            return
-        }
-
-        try {
-            onPlayingStateChange(true)
-            awaitPlaybackCompletion(filePath)
-            onPlayingStateChange(false)
-        } catch (e: Exception) {
-            Log.e("RecordingFileRepositoryImpl", "playRecordingFile 실패", e)
-            onPlayingStateChange(false)
-        } finally {
-            mutex.withLock { currentPlayingPath = null }
-        }
+        playRecordingInternal(category, scriptIndex, onPlayingStateChange)
     }
 
     override suspend fun playRecordingFileSimple(
+        category: String,
+        scriptIndex: Int,
+        onPlayingStateChange: (Boolean) -> Unit
+    ) {
+        playRecordingInternal(category, scriptIndex, onPlayingStateChange)
+    }
+
+    private suspend fun playRecordingInternal(
         category: String,
         scriptIndex: Int,
         onPlayingStateChange: (Boolean) -> Unit
@@ -140,7 +114,7 @@ class RecordingFileRepositoryImpl(
         }
 
         if (filePath == null) {
-            Log.e("RecordingFileRepositoryImpl", "playRecordingFileSimple: 재생할 녹음 파일이 없음")
+            Log.e("RecordingFileRepositoryImpl", "재생할 녹음 파일이 없음")
             return
         }
 
@@ -149,7 +123,7 @@ class RecordingFileRepositoryImpl(
             awaitPlaybackCompletion(filePath)
             onPlayingStateChange(false)
         } catch (e: Exception) {
-            Log.e("RecordingFileRepositoryImpl", "playRecordingFileSimple 실패", e)
+            Log.e("RecordingFileRepositoryImpl", "녹음 재생 실패", e)
             onPlayingStateChange(false)
         } finally {
             mutex.withLock { currentPlayingPath = null }
@@ -159,6 +133,13 @@ class RecordingFileRepositoryImpl(
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun awaitPlaybackCompletion(filePath: String) {
         suspendCancellableCoroutine { cont ->
+            cont.invokeOnCancellation {
+                try {
+                    recordingAudioPlayer.stopRecording()
+                } catch (e: Exception) {
+                    Log.e("RecordingFileRepositoryImpl", "취소 시 재생 중지 실패", e)
+                }
+            }
             recordingAudioPlayer.playRecording(filePath) {
                 if (cont.isActive) cont.resume(Unit) {}
             }

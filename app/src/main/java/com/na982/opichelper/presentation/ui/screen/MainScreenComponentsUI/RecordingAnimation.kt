@@ -36,7 +36,8 @@ fun RecordingAnimation(
         ) {
             Box(
                 modifier = Modifier
-                    .size(180.dp)
+                    .fillMaxWidth(0.5f)
+                    .aspectRatio(1f)
                     .background(
                         color = MaterialTheme.colorScheme.error,
                         shape = CircleShape
@@ -46,7 +47,7 @@ fun RecordingAnimation(
                 Text(
                     text = "■",
                     color = MaterialTheme.colorScheme.onError,
-                    fontSize = 72.sp
+                    fontSize = 48.sp
                 )
             }
 

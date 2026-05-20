@@ -197,9 +197,7 @@ fun MainScreen(
                 modifier = modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(16.dp)
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -277,6 +275,25 @@ fun MainScreen(
                             modifier = Modifier.padding(16.dp),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
+                    }
+                }
+                qaItem == null -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = if (category == null) "카테고리를 선택하면 질문이 표시됩니다" else "이 카테고리에 질문이 없습니다",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 qaItem != null -> {
@@ -389,6 +406,7 @@ fun MainScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        val isRepeatListening = MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.REPEAT_LISTENING
                         AnswerPlayButton(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             isPlaying = playbackState.isAnswerPlaying,
@@ -398,21 +416,23 @@ fun MainScreen(
                                 qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
                             },
                             onStopClick = { playbackViewModel.stopTts() },
-                            modifier = Modifier.weight(1f)
+                            modifier = if (isRepeatListening) Modifier.fillMaxWidth() else Modifier.weight(1f)
                         )
 
-                        MemorizeLevelPlaybackButton(
-                            selectedLevel = selectedLevel,
-                            onPlayEnglishWritingTest = { playbackViewModel.playEnglishWritingTestMergedFile() },
-                            onStopEnglishWritingTest = { playbackViewModel.stopEnglishWritingTestMergedFile() },
-                            onPlayFullMemorization = { fullMemorizationViewModel.playRecording() },
-                            onStopFullMemorization = { fullMemorizationViewModel.stopPlaying() },
-                            hasEnglishWritingTestMergedFile = playbackState.hasEnglishWritingTestMergedFile,
-                            isEnglishWritingTestMergedFilePlaying = playbackState.isEnglishWritingTestMergedFilePlaying,
-                            hasFullMemorizationRecording = fullMemorizationState.hasRecordingFile,
-                            isFullMemorizationRecordingPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING,
-                            modifier = Modifier.weight(1f)
-                        )
+                        if (!isRepeatListening) {
+                            MemorizeLevelPlaybackButton(
+                                selectedLevel = selectedLevel,
+                                onPlayEnglishWritingTest = { playbackViewModel.playEnglishWritingTestMergedFile() },
+                                onStopEnglishWritingTest = { playbackViewModel.stopEnglishWritingTestMergedFile() },
+                                onPlayFullMemorization = { fullMemorizationViewModel.playRecording() },
+                                onStopFullMemorization = { fullMemorizationViewModel.stopPlaying() },
+                                hasEnglishWritingTestMergedFile = playbackState.hasEnglishWritingTestMergedFile,
+                                isEnglishWritingTestMergedFilePlaying = playbackState.isEnglishWritingTestMergedFilePlaying,
+                                hasFullMemorizationRecording = fullMemorizationState.hasRecordingFile,
+                                isFullMemorizationRecordingPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))

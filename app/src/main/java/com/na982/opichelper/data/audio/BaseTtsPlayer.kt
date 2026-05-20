@@ -6,6 +6,8 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -19,11 +21,15 @@ abstract class BaseTtsPlayer(
     private val serviceName: String,
     protected val logTag: String
 ) : TtsPlayer {
-    
+
+    @Volatile
     protected var tts: TextToSpeech? = null
+    @Volatile
     protected var isInitialized = false
     @Volatile
     protected var _isPlaying = false
+
+    private val speakMutex = Mutex()
     
     init {
         initializeTts()
@@ -50,7 +56,13 @@ abstract class BaseTtsPlayer(
     }
     
     override suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
-        return if (isAvailable()) {
+        if (!isAvailable()) {
+            Log.e(logTag, "$serviceName 사용 불가")
+            onComplete?.invoke()
+            return false
+        }
+
+        return speakMutex.withLock {
             try {
                 // 능동적으로 엔진을 정지시키고 완전히 idle일 때까지 대기
                 tts?.stop()
@@ -106,10 +118,10 @@ abstract class BaseTtsPlayer(
                     _isPlaying = false
                     safeComplete()
                     onComplete?.invoke()
-                    return false
+                    return@withLock false
                 }
 
-                // onStart 콜백 대기 (최대 2초) — 실제 재생 시작 확인
+                // onStart 콜백 대기 (최대 2초)
                 val startDeadline = System.currentTimeMillis() + 2000
                 while (!started && System.currentTimeMillis() < startDeadline) {
                     kotlinx.coroutines.delay(50)
@@ -119,7 +131,7 @@ abstract class BaseTtsPlayer(
                     _isPlaying = false
                     safeComplete()
                     onComplete?.invoke()
-                    return false
+                    return@withLock false
                 }
 
                 // 재생 완료까지 대기 (최대 30초 안전 타임아웃)
@@ -140,10 +152,6 @@ abstract class BaseTtsPlayer(
                 onComplete?.invoke()
                 false
             }
-        } else {
-            Log.e(logTag, "$serviceName 사용 불가")
-            onComplete?.invoke()
-            false
         }
     }
     
@@ -157,10 +165,14 @@ abstract class BaseTtsPlayer(
         val finished = kotlinx.coroutines.CompletableDeferred<Unit>()
         val done = AtomicBoolean(false)
 
-        speak(text) {
+        val result = speak(text) {
             if (done.compareAndSet(false, true)) {
                 finished.complete(Unit)
             }
+        }
+
+        if (!result && !finished.isCompleted) {
+            finished.complete(Unit)
         }
 
         finished.await()

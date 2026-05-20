@@ -11,6 +11,8 @@
 
 # Hilt
 -dontwarn dagger.hilt.**
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
 
 # Kotlin Coroutines
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
@@ -18,6 +20,3 @@
 -keepclassmembers class kotlinx.coroutines.** {
     volatile <fields>;
 }
-
-# Android TTS
--keep class android.speech.tts.** { *; }

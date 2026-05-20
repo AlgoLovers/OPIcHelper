@@ -54,33 +54,38 @@ class EnglishWritingTestViewModel @Inject constructor(
 
     private suspend fun startEnglishWritingTest() {
         val currentItem = qaDataManager.currentQaItem.value
-        if (currentItem != null) {
-            val scriptIndex = qaDataManager.getCurrentIndex()
-
-            val eventJob = viewModelScope.launch {
-                executeEnglishWritingTestUseCase.events.collect { event ->
-                    handleEvent(event)
-                }
-            }
-
-            val useCaseJob = viewModelScope.launch {
-                try {
-                    executeEnglishWritingTestUseCase.execute(
-                        answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
-                        answerEn = qaDataManager.getCurrentAnswer(currentItem),
-                        category = currentItem.category,
-                        scriptIndex = scriptIndex
-                    )
-                } catch (e: Exception) {
-                    Log.e("EnglishWritingTestVM", "영작 테스트 실행 중 오류", e)
-                    emitEvent("영작 테스트 실행 중 오류가 발생했습니다")
-                    stop()
-                }
-            }
-            coordinator.registerJob(useCaseJob)
-            coordinator.registerEventJob(eventJob)
-            useCaseJob.join()
+        if (currentItem == null) {
+            Log.e("EnglishWritingTestVM", "현재 QA 아이템이 없음")
+            emitEvent("질문 데이터를 불러올 수 없습니다")
+            stop()
+            return
         }
+
+        val scriptIndex = qaDataManager.getCurrentIndex()
+
+        val eventJob = viewModelScope.launch {
+            executeEnglishWritingTestUseCase.events.collect { event ->
+                handleEvent(event)
+            }
+        }
+
+        val useCaseJob = viewModelScope.launch {
+            try {
+                executeEnglishWritingTestUseCase.execute(
+                    answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
+                    answerEn = qaDataManager.getCurrentAnswer(currentItem),
+                    category = currentItem.category,
+                    scriptIndex = scriptIndex
+                )
+            } catch (e: Exception) {
+                Log.e("EnglishWritingTestVM", "영작 테스트 실행 중 오류", e)
+                emitEvent("영작 테스트 실행 중 오류가 발생했습니다")
+                stop()
+            }
+        }
+        coordinator.registerJob(useCaseJob)
+        coordinator.registerEventJob(eventJob)
+        useCaseJob.join()
     }
 
     private fun handleEvent(event: MemorizeTestEvent) {

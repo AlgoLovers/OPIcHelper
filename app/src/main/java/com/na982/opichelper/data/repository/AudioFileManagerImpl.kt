@@ -12,6 +12,7 @@ import android.media.MediaMuxer
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaCodec
+import android.os.Build
 import java.nio.ByteBuffer
 import kotlinx.coroutines.delay
 
@@ -238,7 +239,8 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                             if (extractorFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
                                 codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_KEY_FRAME
                             }
-                            if (extractorFlags and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME != 0) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                                && extractorFlags and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME != 0) {
                                 codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
                             }
                             bufferInfo.flags = codecFlags

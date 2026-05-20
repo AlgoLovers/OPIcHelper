@@ -31,7 +31,7 @@ fun PlayStopToggleButton(
     ) {
         Text(
             text = if (isActive) activeLabel else inactiveLabel,
-            color = MaterialTheme.colorScheme.onPrimary
+            color = if (isActive) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary
         )
     }
 }

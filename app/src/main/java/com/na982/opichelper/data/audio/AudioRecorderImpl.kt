@@ -3,6 +3,7 @@ package com.na982.opichelper.data.audio
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
+import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import android.Manifest
@@ -40,7 +41,7 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
         this.outputFile = outputFile
 
         try {
-            recorder = MediaRecorder(context).apply {
+            recorder = createMediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
@@ -76,5 +77,14 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
         recorder = null
         outputFile = null
         return file
+    }
+
+    @Suppress("DEPRECATION")
+    private fun createMediaRecorder(): MediaRecorder {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(context)
+        } else {
+            MediaRecorder()
+        }
     }
 } 
