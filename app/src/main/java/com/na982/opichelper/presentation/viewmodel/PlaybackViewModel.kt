@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
@@ -154,8 +155,12 @@ class PlaybackViewModel @Inject constructor(
             val playCount = userPreferencesRepository.getAnswerPlayCount()
             for (i in 1..playCount) {
                 ttsPlaybackController.playAnswer(answer)
-                // 재생 완료 대기
-                ttsPlaybackController.isAnswerPlaying.first { !it }
+                withTimeoutOrNull(60_000L) {
+                    ttsPlaybackController.isAnswerPlaying.first { !it }
+                } ?: run {
+                    Log.w("PlaybackViewModel", "답변 재생 완료 대기 타임아웃")
+                    ttsPlaybackController.stopTts()
+                }
             }
         }
     }
@@ -173,7 +178,8 @@ class PlaybackViewModel @Inject constructor(
             ttsPlaybackController.forceStopTts()
             ttsPlaybackController.clearHighlight()
             playMergedFileUseCase.stop()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e("PlaybackViewModel", "TTS 정리 중 오류", e)
         }
     }
 
@@ -184,12 +190,18 @@ class PlaybackViewModel @Inject constructor(
         playMergedFileUseCase.release()
     }
 
+    @Suppress("NewApi")
     fun onBackgroundMove() {
         if (_uiState.value.isPlaying) {
-            application.startService(TtsForegroundService.startIntent(application))
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                application.startForegroundService(TtsForegroundService.startIntent(application))
+            } else {
+                application.startService(TtsForegroundService.startIntent(application))
+            }
         }
     }
 
+    @Suppress("NewApi")
     fun onForegroundReturn() {
         application.stopService(TtsForegroundService.stopIntent(application))
     }

@@ -19,7 +19,9 @@ fun MemorizeLevelPlaybackButton(
     modifier: Modifier = Modifier
 ) {
     when (MemorizeLevel.fromDisplayName(selectedLevel)) {
-        MemorizeLevel.REPEAT_LISTENING -> {}
+        MemorizeLevel.REPEAT_LISTENING -> {
+            // 반복듣기 모드에서는 별도 재생 버튼 없음
+        }
         MemorizeLevel.ENGLISH_WRITING -> {
             if (hasEnglishWritingTestMergedFile) {
                 PlayStopToggleButton(

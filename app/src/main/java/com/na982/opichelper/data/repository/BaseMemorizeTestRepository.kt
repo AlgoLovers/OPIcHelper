@@ -12,7 +12,7 @@ abstract class BaseMemorizeTestRepository(
     protected val progressPersistenceService: ProgressPersistenceService
 ) {
     private val _events = MutableSharedFlow<MemorizeTestEvent>(
-        extraBufferCapacity = 1
+        extraBufferCapacity = 8
     )
     val events: SharedFlow<MemorizeTestEvent> = _events.asSharedFlow()
 
@@ -42,7 +42,7 @@ abstract class BaseMemorizeTestRepository(
         return resolveStartIndex(category, scriptIndex, totalCount)
     }
 
-    suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData? {
+    suspend fun getCurrentProgress(category: String, scriptIndex: Int, totalSentences: Int = 0): TestProgressData? {
         val navState = progressPersistenceService.loadNavigationState()
         return if (navState.category == category && navState.scriptIndex == scriptIndex) {
             TestProgressData(
@@ -50,7 +50,7 @@ abstract class BaseMemorizeTestRepository(
                 scriptIndex = scriptIndex,
                 memorizeLevel = memorizeLevel.displayName,
                 currentSentenceIndex = navState.sentenceIndex,
-                totalSentences = 0,
+                totalSentences = totalSentences,
                 isMemorizeTestRunning = false
             )
         } else null

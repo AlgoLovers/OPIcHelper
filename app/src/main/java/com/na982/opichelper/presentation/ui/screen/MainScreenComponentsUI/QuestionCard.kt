@@ -11,6 +11,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -101,7 +102,10 @@ fun QuestionCard(
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                                        fontSize = 18.sp
+                                        fontSize = 16.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
                                 }
                                 Text(
@@ -109,7 +113,7 @@ fun QuestionCard(
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = 18.sp
+                                    fontSize = 16.sp
                                 )
                             }
                             if (totalCount > 0 && completedCount > 0) {
@@ -204,23 +208,6 @@ private fun ModernCard(
                         color = titleColor,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        fontSize = 12.sp
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                // 플립 힌트 아이콘
-                Card(
-                    shape = RoundedCornerShape(6.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
-                    ),
-                    modifier = Modifier.height(24.dp)
-                ) {
-                    Text(
-                        text = "👆 탭하여 뒤집기",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 12.sp
                     )
                 }

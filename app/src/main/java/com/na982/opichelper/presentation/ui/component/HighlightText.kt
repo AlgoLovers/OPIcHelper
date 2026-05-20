@@ -11,8 +11,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+private val SentenceRegex = Regex("(?<=[.!?])\\s+")
 
 @Composable
 fun HighlightText(
@@ -22,7 +25,9 @@ fun HighlightText(
     resumeHighlightIndex: Int? = null,
     modifier: Modifier = Modifier
 ) {
-    val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+    val sentences = remember(text) {
+        text.split(SentenceRegex).map { it.trim() }.filter { it.isNotEmpty() }
+    }
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         sentences.forEachIndexed { index, sentence ->
@@ -88,6 +93,6 @@ fun HighlightText(
 private data class HighlightStyle(
     val bg: Color,
     val text: Color,
-    val size: androidx.compose.ui.unit.TextUnit,
+    val size: TextUnit,
     val weight: FontWeight
 )

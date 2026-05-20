@@ -70,9 +70,12 @@ class EnglishWritingTestRepositoryImpl(
 
             val recordingFile = audioRecorder.startRecording()
             val startTime = System.currentTimeMillis()
-            delay(recordingDuration)
+            try {
+                delay(recordingDuration)
+            } finally {
+                audioRecorder.stopRecording()
+            }
             val actualRecordingTime = System.currentTimeMillis() - startTime
-            audioRecorder.stopRecording()
 
             recordingTimeManager.saveRecordingTime(category, scriptIndex, idx, actualRecordingTime)
 
@@ -94,10 +97,13 @@ class EnglishWritingTestRepositoryImpl(
             val timestamp = dateFormat.format(Date())
             val mergedFileName = "영작테스트_${category}_${scriptIndex}_${timestamp}"
 
-            audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
-
-            recordingFiles.forEach { file ->
-                if (file.exists()) file.delete()
+            try {
+                audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
+                recordingFiles.forEach { file ->
+                    if (file.exists()) file.delete()
+                }
+            } catch (e: Exception) {
+                Log.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지", e)
             }
 
             emit(MemorizeTestEvent.MergedFileCreated)

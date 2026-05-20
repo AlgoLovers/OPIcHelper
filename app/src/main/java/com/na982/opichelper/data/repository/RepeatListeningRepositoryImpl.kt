@@ -29,8 +29,8 @@ class RepeatListeningRepositoryImpl(
 
         val startIndex = resolveStartIndex(data.category, data.scriptIndex, count)
 
-        for (i in startIndex until count) {
-            if (!currentCoroutineContext().isActive) break
+        sentenceLoop@ for (i in startIndex until count) {
+            if (!currentCoroutineContext().isActive) break@sentenceLoop
 
             progressPersistenceService.saveNavigationState(
                 ProgressPersistenceService.NavigationState(data.category, data.scriptIndex, i)
@@ -55,11 +55,11 @@ class RepeatListeningRepositoryImpl(
             val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
             delay(adaptiveDelay)
 
-            if (!currentCoroutineContext().isActive) break
+            if (!currentCoroutineContext().isActive) break@sentenceLoop
 
             // 2. 영문 문장 N회 TTS
             for (j in 1..repeatCount) {
-                if (!currentCoroutineContext().isActive) break
+                if (!currentCoroutineContext().isActive) break@sentenceLoop
 
                 emit(MemorizeTestEvent.CardFlip(false))
                 delay(100)
@@ -71,7 +71,7 @@ class RepeatListeningRepositoryImpl(
                     recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)
                 }
 
-                if (!currentCoroutineContext().isActive) break
+                if (!currentCoroutineContext().isActive) break@sentenceLoop
 
                 val restTime = (enDuration * 1.2).toLong()
                 delay(restTime)

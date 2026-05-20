@@ -5,10 +5,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -16,10 +18,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 
-/**
- * FlipCard: 재사용 가능한 플립 카드 컴포저블 (질문/답변 모두 사용 가능)
- * frontContent: 앞면(영문), backContent: 뒷면(한글)
- */
 @Composable
 fun FlipCard(
     modifier: Modifier = Modifier,
@@ -29,22 +27,22 @@ fun FlipCard(
     backContent: @Composable () -> Unit
 ) {
     var flipped by remember { mutableStateOf(isFlipped) }
+
+    LaunchedEffect(isFlipped) {
+        flipped = isFlipped
+    }
+
     val rotation by animateFloatAsState(
         targetValue = if (flipped) 180f else 0f,
         animationSpec = tween(durationMillis = 800)
     )
-    
-    //Log.d("FlipCard", "Rendering with flipped=$flipped, rotation=$rotation, isFlipped=$isFlipped")
 
-    // isFlipped가 변경되면 flipped 상태 업데이트
-    LaunchedEffect(isFlipped) {
-        flipped = isFlipped
-        //Log.d("FlipCard", "External flip triggered: $isFlipped")
-    }
+    val cameraDistancePx = with(LocalDensity.current) { 16.dp.toPx() }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 48.dp)
             .semantics {
                 role = Role.Button
                 contentDescription = "탭하여 영어/한국어 전환"
@@ -56,7 +54,7 @@ fun FlipCard(
             }
             .graphicsLayer {
                 rotationX = rotation
-                cameraDistance = 16.dp.value * density
+                cameraDistance = cameraDistancePx * density
             }
     ) {
         if (rotation <= 90f) {
@@ -69,4 +67,4 @@ fun FlipCard(
             }
         }
     }
-} 
+}

@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import com.na982.opichelper.presentation.ui.component.FlipCard
 import com.na982.opichelper.presentation.ui.component.HighlightText
 import com.na982.opichelper.ui.theme.*
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 
 @Composable
 fun AnswerCard(
@@ -128,7 +125,6 @@ private fun ModernAnswerCard(
                 }
                 Spacer(modifier = Modifier.weight(1f))
 
-                // 숨기기/보이기 버튼 (탭하여 뒤집기 왼쪽)
                 FilledTonalButton(
                     onClick = onHideClick,
                     shape = RoundedCornerShape(6.dp),
@@ -137,31 +133,12 @@ private fun ModernAnswerCard(
                         contentColor = if (isVisible) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
                     ),
                     modifier = Modifier.height(36.dp),
-                    contentPadding = PaddingValues(0.dp)
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                 ) {
                     Text(
                         text = if (isVisible) "숨기기" else "보이기",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // 플립 힌트
-                Card(
-                    shape = RoundedCornerShape(6.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
-                    ),
-                    modifier = Modifier.height(24.dp)
-                ) {
-                    Text(
-                        text = "👆 탭하여 뒤집기",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        fontSize = 12.sp
                     )
                 }
             }

@@ -13,7 +13,7 @@ interface RepeatListeningRepository {
     )
 
     suspend fun getResumeIndex(category: String, scriptIndex: Int, totalCount: Int): Int
-    suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData?
+    suspend fun getCurrentProgress(category: String, scriptIndex: Int, totalSentences: Int): TestProgressData?
     suspend fun updateProgress(progressData: TestProgressData)
     suspend fun clearProgress(category: String, scriptIndex: Int)
 }

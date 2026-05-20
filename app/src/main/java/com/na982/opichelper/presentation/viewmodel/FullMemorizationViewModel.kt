@@ -34,19 +34,17 @@ class FullMemorizationViewModel @Inject constructor(
 
     override suspend fun startMode() {
         try {
-            checkRecordingStatus()
+            refreshRecordingStatus()
 
             val category = qaDataManager.getCurrentCategory() ?: ""
             val scriptIndex = qaDataManager.getCurrentIndex()
 
-            // 하이라이트 인덱스 수집
             viewModelScope.launch {
                 fullMemorizationUseCase.highlightIndex.collect { index ->
                     _uiState.value = _uiState.value.copy(highlightIndex = index)
                 }
             }
 
-            // UseCase 상태 → 코디네이터 모드 동기화
             viewModelScope.launch {
                 fullMemorizationUseCase.state.collect { fsState ->
                     when (fsState) {
@@ -70,11 +68,10 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             }
 
-            // 코디네이터 이벤트 수집
             viewModelScope.launch {
                 coordinator.events.collect { event ->
                     if (event is CoordinatorEvent.RecordingStateChanged) {
-                        updateRecordingStatus()
+                        refreshRecordingStatus()
                     }
                 }
             }
@@ -94,7 +91,7 @@ class FullMemorizationViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 fullMemorizationUseCase.stopRecording()
-                updateRecordingStatus()
+                refreshRecordingStatus()
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "통암기 녹음 종료 실패", e)
                 emitEvent("녹음을 종료할 수 없습니다")
@@ -105,7 +102,7 @@ class FullMemorizationViewModel @Inject constructor(
     fun playRecording() {
         viewModelScope.launch {
             try {
-                if (fullMemorizationUseCase.hasRecording()) {
+                if (_uiState.value.hasRecordingFile) {
                     coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
                     fullMemorizationUseCase.playRecordingWithHighlight()
                 }
@@ -122,7 +119,7 @@ class FullMemorizationViewModel @Inject constructor(
             try {
                 fullMemorizationUseCase.cancelPlayback()
                 coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
-                updateRecordingStatus()
+                refreshRecordingStatus()
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "통암기 재생 중지 실패", e)
                 emitEvent("재생 중지에 실패했습니다")
@@ -131,11 +128,7 @@ class FullMemorizationViewModel @Inject constructor(
         }
     }
 
-    suspend fun hasRecording(): Boolean {
-        return _uiState.value.hasRecordingFile
-    }
-
-    fun updateRecordingStatus() {
+    fun refreshRecordingStatus() {
         viewModelScope.launch {
             try {
                 val hasRecording = fullMemorizationUseCase.hasRecording()
@@ -146,20 +139,11 @@ class FullMemorizationViewModel @Inject constructor(
         }
     }
 
-    private suspend fun checkRecordingStatus() {
-        try {
-            val hasRecording = fullMemorizationUseCase.hasRecording()
-            _uiState.value = _uiState.value.copy(hasRecordingFile = hasRecording)
-        } catch (e: Exception) {
-            Log.e("FullMemorizationVM", "녹음 파일 상태 확인 실패", e)
-        }
-    }
-
     fun deleteRecording() {
         viewModelScope.launch {
             try {
                 fullMemorizationUseCase.clearRecording()
-                updateRecordingStatus()
+                refreshRecordingStatus()
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "녹음 파일 삭제 실패", e)
             }
@@ -168,12 +152,21 @@ class FullMemorizationViewModel @Inject constructor(
 
     override fun onStop() {
         viewModelScope.launch {
-            fullMemorizationUseCase.cancelPlayback()
+            try {
+                fullMemorizationUseCase.cancelPlayback()
+            } catch (e: Exception) {
+                Log.e("FullMemorizationVM", "cancelPlayback 실패", e)
+            }
         }
     }
 
     override fun onCleared() {
         super.onCleared()
+        viewModelScope.launch {
+            try {
+                fullMemorizationUseCase.cancelPlayback()
+            } catch (_: Exception) { }
+        }
         fullMemorizationUseCase.close()
     }
 }

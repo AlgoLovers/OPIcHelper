@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,6 +30,7 @@ class MemorizationModeCoordinator @Inject constructor() {
     val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
     private val _owner = AtomicReference(ModeGroup.NONE)
+    private val _lock = Any()
 
     private val _events = MutableSharedFlow<CoordinatorEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<CoordinatorEvent> = _events.asSharedFlow()
@@ -36,7 +38,7 @@ class MemorizationModeCoordinator @Inject constructor() {
     private var activeJob: Job? = null
     private var eventJob: Job? = null
 
-    fun requestMode(mode: CurrentMode): Boolean {
+    fun requestMode(mode: CurrentMode): Boolean = synchronized(_lock) {
         val result = _currentMode.compareAndSet(CurrentMode.NONE, mode)
         if (result) {
             _isRunning.value = true
@@ -45,13 +47,13 @@ class MemorizationModeCoordinator @Inject constructor() {
         return result
     }
 
-    fun updateMode(mode: CurrentMode) {
+    fun updateMode(mode: CurrentMode) = synchronized(_lock) {
         if (_isRunning.value && _currentMode.value.group == mode.group && _owner.get() == mode.group) {
             _currentMode.value = mode
         }
     }
 
-    fun releaseMode() {
+    fun releaseMode() = synchronized(_lock) {
         _currentMode.value = CurrentMode.NONE
         _isRunning.value = false
         _owner.set(ModeGroup.NONE)
@@ -61,17 +63,17 @@ class MemorizationModeCoordinator @Inject constructor() {
         eventJob = null
     }
 
-    fun registerJob(job: Job) {
+    fun registerJob(job: Job) = synchronized(_lock) {
         activeJob?.cancel()
         activeJob = job
     }
 
-    fun registerEventJob(job: Job) {
+    fun registerEventJob(job: Job) = synchronized(_lock) {
         eventJob?.cancel()
         eventJob = job
     }
 
-    fun cancelJobs() {
+    fun cancelJobs() = synchronized(_lock) {
         activeJob?.cancel()
         activeJob = null
         eventJob?.cancel()
