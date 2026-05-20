@@ -79,6 +79,10 @@ class RepeatListeningRepositoryImpl(
             emit(MemorizeTestEvent.Highlight(null))
         }
 
+        progressPersistenceService.saveNavigationState(
+            ProgressPersistenceService.NavigationState(data.category, data.scriptIndex, 0)
+        )
+
         emit(MemorizeTestEvent.CardFlip(false))
         emit(MemorizeTestEvent.Highlight(null))
         emit(MemorizeTestEvent.Completed)
