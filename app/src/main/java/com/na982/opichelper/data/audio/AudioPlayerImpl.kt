@@ -7,10 +7,12 @@ import android.util.Log
 
 class AudioPlayerImpl : AudioPlayer {
     @Volatile private var player: MediaPlayer? = null
-    override val isPlaying: Boolean
-        get() = player?.isPlaying == true
+    private val lock = Any()
 
-    override fun play(file: File, onCompletion: () -> Unit) {
+    override val isPlaying: Boolean
+        get() = synchronized(lock) { player?.isPlaying == true }
+
+    override fun play(file: File, onCompletion: () -> Unit) = synchronized(lock) {
         stop()
         player = MediaPlayer().apply {
             try {
@@ -38,7 +40,7 @@ class AudioPlayerImpl : AudioPlayer {
         }
     }
 
-    override fun stop() {
+    override fun stop() = synchronized(lock) {
         try {
             player?.let { mediaPlayer ->
                 if (mediaPlayer.isPlaying) {
@@ -51,21 +53,19 @@ class AudioPlayerImpl : AudioPlayer {
         }
         player = null
     }
-    
-    /**
-     * 완전한 리소스 해제 (앱 종료 시 사용)
-     */
+
     override fun release() {
-        try {
-            // 1. 재생 중지
-            stop()
-        } catch (e: Exception) {
-            Log.e("AudioPlayerImpl", "완전한 리소스 해제 중 오류", e)
+        synchronized(lock) {
+            try {
+                stop()
+            } catch (e: Exception) {
+                Log.e("AudioPlayerImpl", "완전한 리소스 해제 중 오류", e)
+            }
         }
     }
-    
+
     override fun stopAudio() {
-        stop()
+        synchronized(lock) { stop() }
     }
     
     override fun getDuration(filePath: String): Int {

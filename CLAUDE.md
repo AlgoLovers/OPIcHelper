@@ -41,7 +41,10 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 ### ViewModel 구조
 - `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 3개 (QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker)
 - `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기. 의존성 3개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator)
-- `MemorizationViewModel`: 암기 테스트 3모드 로직. CurrentMode 상태 머신. SharedFlow 이벤트 구독. 의존성 6개 (TtsPlaybackController, QaDataManager, ExecuteRepeatListeningUseCase, ExecuteEnglishWritingTestUseCase, FullMemorizationUseCase, MemorizeTestProgressTracker)
+- `RepeatListeningViewModel`: 반복듣기 모드 전담. 의존성 6개 (ExecuteRepeatListeningUseCase, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator)
+- `EnglishWritingTestViewModel`: 영작테스트 모드 전담. 의존성 5개 (ExecuteEnglishWritingTestUseCase, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator)
+- `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 3개 (FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator)
+- `MemorizationModeCoordinator`: 3개 모드 상호 배제, 상태 머신, Job 관리. @Singleton
 - `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator
 
 ### TTS 재생 흐름 (핵심 경로)
@@ -137,12 +140,6 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 
 | 항목 | 상태 | 우선순위 |
 |------|------|----------|
-| MemorizationViewModel SRP 위반 (3개 모드 통합 + 6개 분산 StateFlow) | 미해결 | 중간 |
-| MainScreen 다중 StateFlow 구독 (11개 개별 collect) | 미해결 | 중간 |
-| EnglishWritingTestRepositoryImpl이 QaDataManager(구현체) 직접 참조 | 미해결 | 중간 |
-| Dual DI 등록 (@Inject constructor + @Provides 중복, 7개 클래스) | 미해결 | 중간 |
-| TtsPlaybackController에 TtsOrchestrator를 setter로 주입 | 미해결 | 낮음 |
-| ScriptProgress가 domain/repository에 위치 | 미해결 | 낮음 |
 | Domain 계층 Android import (Log, Context, PowerManager) | 미해결 | 낮음 |
 | Data 계층 Log.d 잔존 (RecordingFileRepositoryImpl 등) | 미해결 | 낮음 |
 | WakeLock deprecated API (@Suppress("DEPRECATION") 처리) | 완화 | 낮음 |
@@ -170,6 +167,28 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | 고아 테스트 (MainViewModelTest, TtsViewModelTest) | 삭제 (0028) |
 | 반복듣기 모드에서 답변 녹음 버튼 표시 버그 | isFullMemorizationMode 파생 소스 변경 (0030) |
 | 컴파일 경고 24개 | unused param/deprecated API 수정 (0030) |
+| NavigationState 스크립트/문장 인덱스 오염 | scriptIndex 필드 추가 (0046) |
+| RepeatListeningUseCase 중복 로직 | 삭제, ExecuteRepeatListeningUseCase만 사용 (0047) |
+| EnglishWritingTestRepoImpl QaDataManager 미사용 의존성 | 제거 (0047) |
+| FullMemorizationUseCase 콜백 기반 상태 전달 | FullMemorizationState StateFlow 전환 (0047) |
+| MemorizationUiState 15개 파생 불리언 | 확장 프로퍼티로 전환, updateUiState() 삭제 (0048) |
+| EnglishWritingTestRepositoryImpl QaDataManager 직접 참조 | 미사용 의존성 제거 (0047) |
+| Dual DI 등록 7개 클래스 | @Provides만 사용하도록 정리 (0037) |
+| TtsPlaybackController setter 주입 | 생성자 주입으로 이미 전환됨 (0036) |
+| ScriptProgress domain/repository 위치 | domain/entity로 이동 (0039) |
+| AudioPlayerImpl/AudioRecorderImpl 경쟁 상태 | synchronized(lock)/@Synchronized 적용 (0055) |
+| RecordingFileRepositoryImpl AtomicReference TOCTOU | Mutex 교체, !! 제거 (0055) |
+| FullMemorizationUseCase 복합 상태 경쟁 | Mutex 적용, _isRecording/_isPlaying 제거 (0055) |
+| TtsPlaybackController currentPlayJob 가시성 | @Volatile 추가, stopCurrentAndPrepare에 stop 추가 (0055) |
+| MemorizationViewModel SRP 위반 (3모드 통합) | 3개 ViewModel 분리 + MemorizationModeCoordinator (0056) |
+| MainScreen 다중 StateFlow 구독 | derivedStateOf 도입, LaunchedEffect 정리 (0057) |
+| PlayStopToggleButton 중복 버튼 패턴 | 공통 컴포넌트 추출, 4개 버튼 위임 (0061) |
+| QaDataManager navigate 패턴 중복 | navigateTo() 추출, saveCurrentProgress 데드 코드 제거 (0061) |
+| PlaybackViewModel 이중 노출 (setMergedAudioPlaying) | 미사용 메서드 제거 (0061) |
+| SharedPreferences 키 인라인 리터럴 | 키 상수화, 미사용 DI 바인딩 제거 (0061) |
+| ViewModel stop/onLevelChanged 중복 | BaseMemorizationViewModel 추출 (0062) |
+| Repository TTS 재생 패턴 중복 | BaseMemorizeTestRepository 추출 (0062) |
+| MainScreen LaunchedEffect 크로스 VM 릴레이 | 코디네이터 이벤트 시스템으로 이관 (0062) |
 
 ## Git 커밋 규칙
 

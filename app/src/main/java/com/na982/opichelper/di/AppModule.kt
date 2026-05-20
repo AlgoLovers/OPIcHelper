@@ -3,7 +3,6 @@ package com.na982.opichelper.di
 import android.content.Context
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
-import com.na982.opichelper.data.repository.AuthRepository
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
@@ -22,7 +21,6 @@ import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import com.na982.opichelper.data.audio.RecordingAudioPlayerImpl
-import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -94,20 +92,13 @@ object AppModule {
     @Provides
     @Singleton
     fun provideQaDataManager(
-        progressTracker: com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker,
         qaDataLoader: QaDataLoader,
         userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
         progressPersistenceService: ProgressPersistenceService
     ): QaDataManager {
-        return QaDataManager(progressTracker, qaDataLoader, userPreferencesRepository, progressPersistenceService)
+        return QaDataManager(qaDataLoader, userPreferencesRepository, progressPersistenceService)
     }
-    
-    @Provides
-    @Singleton
-    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
-    }
-    
+
     @Provides
     @Singleton
     fun provideRecordingTimeManager(@ApplicationContext context: Context): RecordingTimeManager {
@@ -134,12 +125,6 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideAuthRepository(@ApplicationContext context: Context): AuthRepository {
-        return AuthRepository(context)
-    }
-    
-    @Provides
-    @Singleton
     fun provideUserPreferencesRepository(@ApplicationContext context: Context): com.na982.opichelper.domain.repository.UserPreferencesRepository {
         return com.na982.opichelper.data.repository.UserPreferencesRepository(context)
     }
@@ -153,7 +138,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideEnglishWritingTestRepository(
-        qaDataManager: QaDataManager,
         ttsOrchestrator: TtsOrchestrator,
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
@@ -161,7 +145,6 @@ object AppModule {
         progressPersistenceService: ProgressPersistenceService
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
-            qaDataManager = qaDataManager,
             ttsOrchestrator = ttsOrchestrator,
             audioRecorder = audioRecorder,
             audioFileManager = audioFileManager,

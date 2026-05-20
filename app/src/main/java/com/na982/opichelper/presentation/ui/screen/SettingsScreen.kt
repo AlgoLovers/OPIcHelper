@@ -169,6 +169,91 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 학습 설정 카드
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                // 헤더 배지
+                Card(
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = PrimaryBlue.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Text(
+                        text = "🎧 학습 설정",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryBlue,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        fontSize = 14.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 반복듣기 횟수
+                Text(
+                    text = "반복듣기 횟수: ${uiState.repeatListeningCount}회",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "한국어→영어 반복 횟수 (2~10회)",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Slider(
+                    value = uiState.repeatListeningCount.toFloat(),
+                    onValueChange = { viewModel.setRepeatListeningCount(it.toInt()) },
+                    valueRange = 2f..10f,
+                    steps = 7,
+                    colors = SliderDefaults.colors(
+                        thumbColor = PrimaryBlue,
+                        activeTrackColor = PrimaryBlue
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 답변 재생 횟수
+                Text(
+                    text = "답변 재생 횟수: ${uiState.answerPlayCount}회",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "답변 TTS 연속 재생 횟수 (1~10회)",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Slider(
+                    value = uiState.answerPlayCount.toFloat(),
+                    onValueChange = { viewModel.setAnswerPlayCount(it.toInt()) },
+                    valueRange = 1f..10f,
+                    steps = 8,
+                    colors = SliderDefaults.colors(
+                        thumbColor = PrimaryBlue,
+                        activeTrackColor = PrimaryBlue
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // 앱 정보 카드
         Card(
             modifier = Modifier

@@ -6,18 +6,15 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.repository.RecordingTimeManager
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * SharedPreferences를 사용한 녹음 시간 관리 구현체
  */
-@Singleton
-class RecordingTimeManagerImpl @Inject constructor(
+class RecordingTimeManagerImpl(
     private val context: Context
 ) : RecordingTimeManager {
-    
-    private val prefs: SharedPreferences = context.getSharedPreferences("recording_times", Context.MODE_PRIVATE)
+
+    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
     
     override fun saveRecordingTime(category: String, scriptIndex: Int, sentenceIndex: Int, recordingTimeMs: Long) {
@@ -77,6 +74,11 @@ class RecordingTimeManagerImpl @Inject constructor(
     }
     
     private fun getKey(category: String, scriptIndex: Int): String {
-        return "recording_times_${category}_${scriptIndex}"
+        return "${KEY_RECORDING_TIMES_PREFIX}${category}_${scriptIndex}"
+    }
+
+    companion object {
+        private const val PREFS_NAME = "recording_times"
+        private const val KEY_RECORDING_TIMES_PREFIX = "recording_times_"
     }
 } 

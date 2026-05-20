@@ -39,8 +39,7 @@ class TtsRegressionTest {
             samsungTtsPlayer = samsungTtsPlayer
         )
 
-        ttsPlaybackController = TtsPlaybackController()
-        ttsPlaybackController.setTtsOrchestrator(ttsOrchestrator)
+        ttsPlaybackController = TtsPlaybackController(ttsOrchestrator)
     }
 
     private fun waitForTtsInitialization() {
@@ -97,7 +96,6 @@ class TtsRegressionTest {
 
         assertFalse(publicMethods.contains("setInitialized"))
         assertFalse(publicMethods.contains("waitForInitialization"))
-        assertTrue(publicMethods.contains("setTtsOrchestrator"))
     }
 
     @Test

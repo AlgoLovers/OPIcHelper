@@ -43,11 +43,7 @@ class TtsIntegrationTest {
         )
         
         // TTS 재생 컨트롤러 초기화
-        ttsPlaybackController = TtsPlaybackController(
-            ttsPlayer = googleTtsPlayer,
-            audioPlayer = mockAudioPlayer()
-        )
-        ttsPlaybackController.setTtsOrchestrator(ttsOrchestrator)
+        ttsPlaybackController = TtsPlaybackController(ttsOrchestrator)
     }
 
     /**
@@ -149,30 +145,4 @@ class TtsIntegrationTest {
         assertEquals("삼성 TTS", samsungTtsPlayer.getServiceName())
     }
 
-    private fun mockAudioPlayer(): com.na982.opichelper.domain.audio.AudioPlayer {
-        return object : com.na982.opichelper.domain.audio.AudioPlayer {
-            override fun play(file: java.io.File, onComplete: () -> Unit) {
-                // 테스트용 더미 구현
-                onComplete()
-            }
-            
-            override fun stop() {
-                // 테스트용 더미 구현
-            }
-            
-            override val isPlaying: Boolean = false
-            
-            override fun getDuration(filePath: String): Int {
-                return 1000 // 테스트용 더미 값
-            }
-            
-            override fun playAudio(filePath: String) {
-                // 테스트용 더미 구현
-            }
-
-            override fun stopAudio() {
-                // 테스트용 더미 구현
-            }
-        }
-    }
-} 
+}

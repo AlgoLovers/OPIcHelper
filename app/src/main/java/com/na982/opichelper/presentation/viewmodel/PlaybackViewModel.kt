@@ -5,14 +5,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlaybackController
+import com.na982.opichelper.domain.usecase.CoordinatorEvent
+import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
+import com.na982.opichelper.service.TtsForegroundService
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.app.Application
 
 data class PlaybackState(
     val hasEnglishWritingTestMergedFile: Boolean = false,
@@ -36,19 +40,17 @@ data class PlaybackState(
 class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
-    ttsOrchestrator: TtsOrchestrator
+    private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+    private val coordinator: MemorizationModeCoordinator,
+    private val application: Application
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlaybackState())
     val uiState: StateFlow<PlaybackState> = _uiState.asStateFlow()
 
-    val hasEnglishWritingTestMergedFile: StateFlow<Boolean> = playMergedFileUseCase.hasFile
-    val isEnglishWritingTestMergedFilePlaying: StateFlow<Boolean> = playMergedFileUseCase.isPlaying
-    val englishWritingTestMergedFileHighlightIndex: StateFlow<Int?> = playMergedFileUseCase.highlightIndex
-
     init {
-        ttsPlaybackController.setTtsOrchestrator(ttsOrchestrator)
         setupStateCombination()
+        setupCoordinatorEventHandling()
     }
 
     private fun setupStateCombination() {
@@ -89,12 +91,30 @@ class PlaybackViewModel @Inject constructor(
         }
     }
 
-    fun setAnswerCardFlipped(isFlipped: Boolean) {
-        _uiState.value = _uiState.value.copy(isAnswerCardFlipped = isFlipped)
+    private fun setupCoordinatorEventHandling() {
+        viewModelScope.launch {
+            coordinator.events.collect { event ->
+                when (event) {
+                    is CoordinatorEvent.EnglishWritingCompleted -> {
+                        stopEnglishWritingTestMergedFile()
+                        checkEnglishWritingTestMergedFile()
+                    }
+                    is CoordinatorEvent.EnglishWritingStopped -> {
+                        checkEnglishWritingTestMergedFile()
+                    }
+                    is CoordinatorEvent.RecordingStateChanged -> {
+                        // FullMemorizationViewModel에서 직접 처리
+                    }
+                    is CoordinatorEvent.LevelChanged -> {
+                        // BaseMemorizationViewModel.onLevelChanged()에서 처리
+                    }
+                }
+            }
+        }
     }
 
-    fun setMergedAudioPlaying(isPlaying: Boolean) {
-        _uiState.value = _uiState.value.copy(isEnglishWritingTestMergedFilePlaying = isPlaying)
+    fun setAnswerCardFlipped(isFlipped: Boolean) {
+        _uiState.value = _uiState.value.copy(isAnswerCardFlipped = isFlipped)
     }
 
     fun playEnglishWritingTestMergedFile() {
@@ -112,7 +132,7 @@ class PlaybackViewModel @Inject constructor(
     fun playQuestion(question: String) {
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
-            ttsPlaybackController.stopAllTts()
+            ttsPlaybackController.stopTts()
             ttsPlaybackController.playQuestion(question)
         }
     }
@@ -120,14 +140,19 @@ class PlaybackViewModel @Inject constructor(
     fun playAnswer(answer: String) {
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
-            ttsPlaybackController.stopAllTts()
-            ttsPlaybackController.playAnswer(answer)
+            ttsPlaybackController.stopTts()
+            val playCount = userPreferencesRepository.getAnswerPlayCount()
+            for (i in 1..playCount) {
+                ttsPlaybackController.playAnswer(answer)
+                // 재생 완료 대기
+                ttsPlaybackController.isAnswerPlaying.first { !it }
+            }
         }
     }
 
-    fun stopAllTts() {
+    fun stopTts() {
         viewModelScope.launch {
-            ttsPlaybackController.stopAllTts()
+            ttsPlaybackController.stopTts()
             playMergedFileUseCase.stop()
             ttsPlaybackController.clearHighlight()
         }
@@ -150,27 +175,12 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun onBackgroundMove() {
-        viewModelScope.launch {
-            try {
-                if (_uiState.value.isPlaying) {
-                    ttsPlaybackController.pauseTts()
-                }
-                ttsPlaybackController.clearHighlight()
-            } catch (e: Exception) {
-                Log.e("PlaybackViewModel", "백그라운드 이동 처리 실패", e)
-            }
+        if (_uiState.value.isPlaying) {
+            application.startService(TtsForegroundService.startIntent(application))
         }
     }
 
     fun onForegroundReturn() {
-        viewModelScope.launch {
-            try {
-                if (_uiState.value.isPlaying) {
-                    ttsPlaybackController.resumeTts()
-                }
-            } catch (e: Exception) {
-                Log.e("PlaybackViewModel", "포그라운드 복귀 처리 실패", e)
-            }
-        }
+        application.stopService(TtsForegroundService.stopIntent(application))
     }
 }

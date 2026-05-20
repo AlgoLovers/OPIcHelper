@@ -16,31 +16,29 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
     @Volatile private var recorder: MediaRecorder? = null
     @Volatile private var outputFile: File? = null
 
+    @Synchronized
     override fun startRecording(): File {
         return startRecording("recording_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()))
     }
-    
+
+    @Synchronized
     override fun startRecording(scriptId: String): File {
-        // 권한 확인
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) 
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED) {
             throw SecurityException("오디오 녹음 권한이 필요합니다.")
         }
-        
-        // scriptId가 이미 절대 경로인지 확인
+
         val outputFile = if (scriptId.startsWith("/")) {
-            // 이미 절대 경로인 경우
             File(scriptId)
         } else {
-            // 상대 경로인 경우
             val recordingsDir = File(context.filesDir, "recordings")
             if (!recordingsDir.exists()) recordingsDir.mkdirs()
             val fileName = "${scriptId}_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.m4a"
             File(recordingsDir, fileName)
         }
-        
+
         this.outputFile = outputFile
-        
+
         try {
             recorder = MediaRecorder(context).apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
@@ -55,12 +53,14 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
         } catch (e: Exception) {
             recorder?.release()
             recorder = null
+            this.outputFile = null
             throw RuntimeException("녹음을 시작할 수 없습니다: ${e.message}", e)
         }
-        
+
         return outputFile
     }
 
+    @Synchronized
     override fun stopRecording(): File? {
         try {
             recorder?.stop()
