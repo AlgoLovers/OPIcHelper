@@ -52,9 +52,10 @@ abstract class BaseTtsPlayer(
     override suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
         return if (isAvailable()) {
             try {
-                // stop() 이후 TTS 엔진이 완전히 정지될 때까지 대기
+                // 능동적으로 엔진을 정지시키고 완전히 idle일 때까지 대기
+                tts?.stop()
                 var waitCount = 0
-                while (tts?.isSpeaking == true && waitCount < 20) {
+                while (tts?.isSpeaking == true && waitCount < 40) {
                     kotlinx.coroutines.delay(50)
                     waitCount++
                 }
@@ -81,21 +82,21 @@ abstract class BaseTtsPlayer(
                     }
                     override fun onDone(utteranceId: String?) {
                         _isPlaying = false
-                        onComplete?.invoke()
                         safeComplete()
+                        onComplete?.invoke()
                     }
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         Log.e(logTag, "$serviceName 재생 오류")
                         _isPlaying = false
-                        onComplete?.invoke()
                         safeComplete()
+                        onComplete?.invoke()
                     }
                     override fun onError(utteranceId: String?, errorCode: Int) {
                         Log.e(logTag, "$serviceName 재생 오류: $errorCode")
                         _isPlaying = false
-                        onComplete?.invoke()
                         safeComplete()
+                        onComplete?.invoke()
                     }
                 })
 

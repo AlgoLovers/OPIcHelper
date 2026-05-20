@@ -41,8 +41,6 @@ class RepeatListeningRepositoryImpl(
             delay(100)
             emit(MemorizeTestEvent.KoreanHighlight(i))
 
-            ttsOrchestrator.stop()
-            delay(50)
             ttsOrchestrator.speakAndWaitForCompletion(koSentences[i], isKorean = true, rate = 1.0f)
 
             val enSentence = enSentences[i]
@@ -67,8 +65,6 @@ class RepeatListeningRepositoryImpl(
                 delay(100)
                 emit(MemorizeTestEvent.Highlight(i))
 
-                ttsOrchestrator.stop()
-                delay(50)
                 val enDuration = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i], isKorean = false, rate = 1.0f)
 
                 if (j == 1) {
