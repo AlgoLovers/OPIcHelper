@@ -1,6 +1,7 @@
 package com.na982.opichelper.data.repository
 
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
+import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.TestProgressData
@@ -23,7 +24,7 @@ abstract class BaseMemorizeTestRepository(
     protected abstract val memorizeLevel: MemorizeLevel
 
     protected fun splitSentences(text: String): List<String> {
-        return text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        return SentenceSplitter.split(text)
     }
 
     protected suspend fun resolveStartIndex(category: String, scriptIndex: Int, totalCount: Int): Int {

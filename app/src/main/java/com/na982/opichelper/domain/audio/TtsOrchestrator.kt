@@ -148,7 +148,7 @@ class TtsOrchestrator @Inject constructor(
      * 문장별 하이라이트와 함께 TTS 재생
      */
     suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
-        val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        val sentences = SentenceSplitter.split(text)
 
         try {
             for ((idx, sentence) in sentences.withIndex()) {

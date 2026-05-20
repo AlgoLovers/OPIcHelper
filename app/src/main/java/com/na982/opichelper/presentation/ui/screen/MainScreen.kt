@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import com.na982.opichelper.presentation.ui.component.OnboardingDialog
+import com.na982.opichelper.presentation.ui.component.PipOverlay
 import com.na982.opichelper.presentation.ui.component.SearchDialog
 
 
@@ -47,6 +48,7 @@ fun MainScreen(
     permissionDenied: StateFlow<Boolean> = MutableStateFlow(false)
 ) {
     val playbackState by playbackViewModel.uiState.collectAsState()
+    val pipState by playbackViewModel.pipState.collectAsState()
     val qaState by qaViewModel.uiState.collectAsState()
     val coordinator = repeatListeningViewModel.modeCoordinator
     val coordinatorMode by coordinator.currentMode.collectAsState()
@@ -87,6 +89,14 @@ fun MainScreen(
         repeatListeningViewModel.refreshResumeIndex()
     }
 
+    // 통암기 모드 문장 텍스트를 PlaybackViewModel로 릴레이 (PiP용)
+    LaunchedEffect(fullMemorizationState.currentSentenceEn, fullMemorizationState.currentSentenceKo) {
+        playbackViewModel.setFullMemorizationSentence(
+            fullMemorizationState.currentSentenceEn,
+            fullMemorizationState.currentSentenceKo
+        )
+    }
+
     val isDarkTheme = isSystemInDarkTheme()
 
     OPicHelperThemeWithMemorizeLevel(
@@ -95,6 +105,13 @@ fun MainScreen(
     ) {
         BackHandler(enabled = false) {}
 
+        if (pipState.isPipMode) {
+            PipOverlay(
+                sentenceEn = pipState.currentSentenceEn,
+                sentenceKo = pipState.currentSentenceKo,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
         val qaItem = qaState.currentQaItem
         val category = qaState.currentCategory
         val itemsInCategory = remember(category) {
@@ -451,6 +468,7 @@ fun MainScreen(
                 }
             }
         }
+    }
     }
     }
 }

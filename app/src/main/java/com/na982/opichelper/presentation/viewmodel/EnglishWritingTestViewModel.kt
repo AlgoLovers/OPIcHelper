@@ -2,6 +2,7 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
+import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
@@ -95,7 +96,8 @@ class EnglishWritingTestViewModel @Inject constructor(
             }
             is MemorizeTestEvent.KoreanHighlight -> {
                 if (event.index != null) {
-                    ttsCtrl.setAnswerKoHighlightIndex(event.index)
+                    val sentence = getSentenceFromAnswer(event.index, isKorean = true)
+                    ttsCtrl.setAnswerKoHighlightIndex(event.index, sentence)
                 } else {
                     ttsCtrl.clearHighlight()
                 }
@@ -118,5 +120,15 @@ class EnglishWritingTestViewModel @Inject constructor(
             }
             else -> {}
         }
+    }
+
+    private fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
+        val currentItem = qaDataManager.currentQaItem.value ?: return null
+        val text = if (isKorean) {
+            qaDataManager.getCurrentAnswerKo(currentItem)
+        } else {
+            qaDataManager.getCurrentAnswer(currentItem)
+        }
+        return SentenceSplitter.split(text).getOrNull(index)
     }
 }

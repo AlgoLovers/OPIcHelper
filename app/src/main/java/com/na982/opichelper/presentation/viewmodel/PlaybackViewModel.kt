@@ -1,5 +1,6 @@
 package com.na982.opichelper.presentation.viewmodel
 
+import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,6 +53,12 @@ class PlaybackViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PlaybackState())
     val uiState: StateFlow<PlaybackState> = _uiState.asStateFlow()
 
+    private val _pipState = MutableStateFlow(PipState())
+    val pipState: StateFlow<PipState> = _pipState.asStateFlow()
+
+    private val _fullMemorizationSentenceEn = MutableStateFlow<String?>(null)
+    private val _fullMemorizationSentenceKo = MutableStateFlow<String?>(null)
+
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 5)
     val events: SharedFlow<String> = _events.asSharedFlow()
 
@@ -98,6 +105,32 @@ class PlaybackViewModel @Inject constructor(
                     isEnglishWritingTestMergedFilePlaying = isPlaying,
                     englishWritingTestMergedFileHighlightIndex = highlightIndex
                 )
+            }.collect { }
+        }
+
+        viewModelScope.launch {
+            combine(
+                ttsPlaybackController.currentQuestionSentence,
+                ttsPlaybackController.currentAnswerSentence,
+                ttsPlaybackController.currentAnswerKoSentence,
+                ttsPlaybackController.isPlaying,
+                _fullMemorizationSentenceEn,
+                _fullMemorizationSentenceKo
+            ) { values ->
+                val questionSentence = values[0] as String?
+                val answerSentence = values[1] as String?
+                val answerKoSentence = values[2] as String?
+                val isPlaying = values[3] as Boolean
+                val fmSentenceEn = values[4] as String?
+                val fmSentenceKo = values[5] as String?
+                val sentenceEn = fmSentenceEn ?: answerSentence ?: questionSentence
+                val sentenceKo = fmSentenceKo ?: answerKoSentence
+                _pipState.value = _pipState.value.copy(
+                    currentSentenceEn = sentenceEn,
+                    currentSentenceKo = sentenceKo,
+                    isPlaying = isPlaying
+                )
+                updateNotificationSentence(sentenceEn, sentenceKo)
             }.collect { }
         }
     }
@@ -204,5 +237,35 @@ class PlaybackViewModel @Inject constructor(
     @Suppress("NewApi")
     fun onForegroundReturn() {
         application.stopService(TtsForegroundService.stopIntent(application))
+    }
+
+    fun setPipMode(isPip: Boolean) {
+        _pipState.value = _pipState.value.copy(isPipMode = isPip)
+    }
+
+    fun togglePlayPause() {
+        if (_uiState.value.isPlaying) {
+            ttsPlaybackController.pauseTts()
+        } else {
+            ttsPlaybackController.resumeTts()
+        }
+    }
+
+    fun stopPlayback() {
+        ttsPlaybackController.stopTts()
+    }
+
+    fun setFullMemorizationSentence(en: String?, ko: String?) {
+        _fullMemorizationSentenceEn.value = en
+        _fullMemorizationSentenceKo.value = ko
+    }
+
+    @Suppress("NewApi")
+    private fun updateNotificationSentence(sentenceEn: String?, sentenceKo: String?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && _uiState.value.isPlaying) {
+            application.startService(
+                TtsForegroundService.updateSentenceIntent(application, sentenceEn, sentenceKo)
+            )
+        }
     }
 }

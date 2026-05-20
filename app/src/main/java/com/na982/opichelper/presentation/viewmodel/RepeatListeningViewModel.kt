@@ -2,6 +2,7 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
+import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
@@ -64,7 +65,7 @@ class RepeatListeningViewModel @Inject constructor(
             val currentItem = qaDataManager.getCurrentQaItem()
             if (currentItem != null && !_uiState.value.isPlaying) {
                 val answerText = qaDataManager.getCurrentAnswer(currentItem)
-                val totalCount = answerText.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }.size
+                val totalCount = SentenceSplitter.split(answerText).size
                 if (totalCount > 0) {
                     val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
                         currentItem.category, qaDataManager.getCurrentIndex(), totalCount
@@ -112,14 +113,16 @@ class RepeatListeningViewModel @Inject constructor(
             }
             is MemorizeTestEvent.Highlight -> {
                 if (event.index != null) {
-                    ttsCtrl.setAnswerHighlightIndex(event.index)
+                    val sentence = getSentenceFromAnswer(event.index, isKorean = false)
+                    ttsCtrl.setAnswerHighlightIndex(event.index, sentence)
                 } else {
                     ttsCtrl.clearHighlight()
                 }
             }
             is MemorizeTestEvent.KoreanHighlight -> {
                 if (event.index != null) {
-                    ttsCtrl.setAnswerKoHighlightIndex(event.index)
+                    val sentence = getSentenceFromAnswer(event.index, isKorean = true)
+                    ttsCtrl.setAnswerKoHighlightIndex(event.index, sentence)
                 } else {
                     ttsCtrl.clearHighlight()
                 }
@@ -149,5 +152,15 @@ class RepeatListeningViewModel @Inject constructor(
                 stop()
             }
         }
+    }
+
+    private fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
+        val currentItem = qaDataManager.getCurrentQaItem() ?: return null
+        val text = if (isKorean) {
+            qaDataManager.getCurrentAnswerKo(currentItem)
+        } else {
+            qaDataManager.getCurrentAnswer(currentItem)
+        }
+        return SentenceSplitter.split(text).getOrNull(index)
     }
 }

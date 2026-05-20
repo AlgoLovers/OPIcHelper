@@ -42,6 +42,15 @@ class TtsPlaybackController @Inject constructor(
     private val _recordingHighlightIndex = MutableStateFlow<Int?>(null)
     val recordingHighlightIndex: StateFlow<Int?> = _recordingHighlightIndex.asStateFlow()
 
+    private val _currentQuestionSentence = MutableStateFlow<String?>(null)
+    val currentQuestionSentence: StateFlow<String?> = _currentQuestionSentence.asStateFlow()
+
+    private val _currentAnswerSentence = MutableStateFlow<String?>(null)
+    val currentAnswerSentence: StateFlow<String?> = _currentAnswerSentence.asStateFlow()
+
+    private val _currentAnswerKoSentence = MutableStateFlow<String?>(null)
+    val currentAnswerKoSentence: StateFlow<String?> = _currentAnswerKoSentence.asStateFlow()
+
     private fun stopCurrentAndPrepare() {
         ttsOrchestrator.stop()
         currentPlayJob?.cancel()
@@ -57,8 +66,10 @@ class TtsPlaybackController @Inject constructor(
                 _isPlaying.value = true
                 _isQuestionPlaying.value = true
 
+                val sentences = SentenceSplitter.split(question)
                 ttsOrchestrator.speakWithHighlight(question) { index ->
                     _questionHighlightIndex.value = index
+                    _currentQuestionSentence.value = index?.let { sentences.getOrNull(it) }
                 }
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
@@ -67,6 +78,7 @@ class TtsPlaybackController @Inject constructor(
                     _isPlaying.value = false
                     _isQuestionPlaying.value = false
                     _questionHighlightIndex.value = null
+                    _currentQuestionSentence.value = null
                 }
             }
         }
@@ -80,8 +92,10 @@ class TtsPlaybackController @Inject constructor(
                 _isPlaying.value = true
                 _isAnswerPlaying.value = true
 
+                val sentences = SentenceSplitter.split(answer)
                 ttsOrchestrator.speakWithHighlight(answer) { index ->
                     _answerHighlightIndex.value = index
+                    _currentAnswerSentence.value = index?.let { sentences.getOrNull(it) }
                 }
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
@@ -90,6 +104,7 @@ class TtsPlaybackController @Inject constructor(
                     _isPlaying.value = false
                     _isAnswerPlaying.value = false
                     _answerHighlightIndex.value = null
+                    _currentAnswerSentence.value = null
                 }
             }
         }
@@ -103,20 +118,26 @@ class TtsPlaybackController @Inject constructor(
                 _isPlaying.value = true
 
                 _isQuestionPlaying.value = true
+                val questionSentences = SentenceSplitter.split(question)
                 ttsOrchestrator.speakWithHighlight(question) { index ->
                     _questionHighlightIndex.value = index
+                    _currentQuestionSentence.value = index?.let { questionSentences.getOrNull(it) }
                 }
                 _isQuestionPlaying.value = false
                 _questionHighlightIndex.value = null
+                _currentQuestionSentence.value = null
 
                 kotlinx.coroutines.delay(500)
 
                 _isAnswerPlaying.value = true
+                val answerSentences = SentenceSplitter.split(answer)
                 ttsOrchestrator.speakWithHighlight(answer) { index ->
                     _answerHighlightIndex.value = index
+                    _currentAnswerSentence.value = index?.let { answerSentences.getOrNull(it) }
                 }
                 _isAnswerPlaying.value = false
                 _answerHighlightIndex.value = null
+                _currentAnswerSentence.value = null
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
             } finally {
@@ -151,6 +172,9 @@ class TtsPlaybackController @Inject constructor(
         _answerHighlightIndex.value = null
         _answerKoHighlightIndex.value = null
         _recordingHighlightIndex.value = null
+        _currentQuestionSentence.value = null
+        _currentAnswerSentence.value = null
+        _currentAnswerKoSentence.value = null
     }
 
     fun pauseTts() {
@@ -206,12 +230,14 @@ class TtsPlaybackController @Inject constructor(
         _questionHighlightIndex.value = index
     }
 
-    fun setAnswerHighlightIndex(index: Int) {
+    fun setAnswerHighlightIndex(index: Int, sentence: String? = null) {
         _answerHighlightIndex.value = index
+        _currentAnswerSentence.value = sentence
     }
 
-    fun setAnswerKoHighlightIndex(index: Int) {
+    fun setAnswerKoHighlightIndex(index: Int, sentence: String? = null) {
         _answerKoHighlightIndex.value = index
+        _currentAnswerKoSentence.value = sentence
     }
 
     fun setRecordingHighlightIndex(index: Int) {
@@ -223,5 +249,8 @@ class TtsPlaybackController @Inject constructor(
         _answerHighlightIndex.value = null
         _answerKoHighlightIndex.value = null
         _recordingHighlightIndex.value = null
+        _currentQuestionSentence.value = null
+        _currentAnswerSentence.value = null
+        _currentAnswerKoSentence.value = null
     }
 }
