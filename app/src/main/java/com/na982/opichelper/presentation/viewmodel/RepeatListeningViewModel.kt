@@ -16,7 +16,9 @@ import android.util.Log
 import javax.inject.Inject
 
 data class RepeatListeningUiState(
-    val isCardFlipped: Boolean = false
+    val isCardFlipped: Boolean = false,
+    val isPlaying: Boolean = false,
+    val resumeSentenceIndex: Int? = null
 )
 
 @HiltViewModel
@@ -37,62 +39,73 @@ class RepeatListeningViewModel @Inject constructor(
 
     override val _uiState = MutableStateFlow(RepeatListeningUiState())
     override fun resetUiState() = RepeatListeningUiState()
+    override fun initialMode() = CurrentMode.REPEAT_LISTENING
 
     override fun onStop() {
-        _uiState.value = _uiState.value.copy(isCardFlipped = false)
+        _uiState.value = _uiState.value.copy(isCardFlipped = false, isPlaying = false)
+        refreshResumeIndex()
     }
 
-    fun start() {
+    override suspend fun startMode() {
+        try {
+            _uiState.value = _uiState.value.copy(isPlaying = true, resumeSentenceIndex = null)
+            ttsCtrl.stopTts()
+            ttsCtrl.clearHighlight()
+            startRepeatListening()
+        } catch (e: Exception) {
+            Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
+            emitEvent("반복듣기를 시작할 수 없습니다")
+            stop()
+        }
+    }
+
+    fun refreshResumeIndex() {
         viewModelScope.launch {
-            try {
-                if (coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
-                    ttsCtrl.stopTts()
-                    ttsCtrl.clearHighlight()
-                    startRepeatListening()
+            val currentItem = qaDataManager.getCurrentQaItem()
+            if (currentItem != null && !_uiState.value.isPlaying) {
+                val answerText = qaDataManager.getCurrentAnswer(currentItem)
+                val totalCount = answerText.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }.size
+                if (totalCount > 0) {
+                    val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
+                        currentItem.category, qaDataManager.getCurrentIndex(), totalCount
+                    )
+                    _uiState.value = _uiState.value.copy(resumeSentenceIndex = resumeIndex)
+                } else {
+                    _uiState.value = _uiState.value.copy(resumeSentenceIndex = null)
                 }
-            } catch (e: Exception) {
-                Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
-                stop()
+            } else {
+                _uiState.value = _uiState.value.copy(resumeSentenceIndex = null)
             }
         }
     }
 
-    private fun startRepeatListening() {
-        viewModelScope.launch {
-            try {
-                currentUseCaseJob?.cancel()
-                eventCollectJob?.cancel()
-                val currentItem = qaDataManager.getCurrentQaItem()
-                if (currentItem != null) {
-                    eventCollectJob = viewModelScope.launch {
-                        executeRepeatListeningUseCase.events.collect { event ->
-                            handleEvent(event)
-                        }
-                    }
-                    currentUseCaseJob = launch {
-                        val repeatListeningData = RepeatListeningData(
-                            category = currentItem.category,
-                            scriptIndex = qaDataManager.getCurrentIndex(),
-                            koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
-                            englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
-                        )
-                        executeRepeatListeningUseCase.execute(
-                            data = repeatListeningData,
-                            repeatCount = userPreferencesRepository.getRepeatListeningCount()
-                        )
-                    }
-                    coordinator.registerJob(currentUseCaseJob!!)
-                    coordinator.registerEventJob(eventCollectJob!!)
+    private suspend fun startRepeatListening() {
+        val currentItem = qaDataManager.getCurrentQaItem()
+        if (currentItem != null) {
+            val eventJob = viewModelScope.launch {
+                executeRepeatListeningUseCase.events.collect { event ->
+                    handleEvent(event)
                 }
-            } catch (e: Exception) {
-                Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
-                stop()
             }
+            val useCaseJob = viewModelScope.launch {
+                val repeatListeningData = RepeatListeningData(
+                    category = currentItem.category,
+                    scriptIndex = qaDataManager.getCurrentIndex(),
+                    koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
+                    englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
+                )
+                executeRepeatListeningUseCase.execute(
+                    data = repeatListeningData,
+                    repeatCount = userPreferencesRepository.getRepeatListeningCount()
+                )
+            }
+            coordinator.registerJob(useCaseJob)
+            coordinator.registerEventJob(eventJob)
+            useCaseJob.join()
         }
     }
 
     private fun handleEvent(event: MemorizeTestEvent) {
-        if (currentUseCaseJob?.isActive != true) return
         when (event) {
             is MemorizeTestEvent.CardFlip -> {
                 _uiState.value = _uiState.value.copy(isCardFlipped = event.isKorean)
@@ -128,10 +141,7 @@ class RepeatListeningViewModel @Inject constructor(
             if (hasMore) {
                 qaDataManager.nextQaItem()
                 _uiState.value = _uiState.value.copy(isCardFlipped = false)
-                coordinator.releaseMode()
-                if (!coordinator.requestMode(CurrentMode.REPEAT_LISTENING)) {
-                    return@launch
-                }
+                coordinator.updateMode(CurrentMode.REPEAT_LISTENING)
                 ttsCtrl.stopTts()
                 ttsCtrl.clearHighlight()
                 startRepeatListening()

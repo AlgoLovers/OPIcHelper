@@ -8,6 +8,7 @@ import com.na982.opichelper.presentation.ui.component.PlayStopToggleButton
 fun AnswerPlayButton(
     @Suppress("UNUSED_PARAMETER") currentAnswer: String,
     isPlaying: Boolean,
+    repeatCount: Int = 1,
     onPlayClick: () -> Unit,
     onStopClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -17,7 +18,7 @@ fun AnswerPlayButton(
         onActivate = onPlayClick,
         onDeactivate = onStopClick,
         activeLabel = "답변 재생 중",
-        inactiveLabel = "답변 1회 재생",
+        inactiveLabel = "답변 ${repeatCount}회 재생",
         modifier = modifier
     )
 }

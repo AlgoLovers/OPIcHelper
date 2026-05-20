@@ -38,14 +38,14 @@ fun RecordingAnimation(
                 modifier = Modifier
                     .size(180.dp)
                     .background(
-                        color = Color.Red,
+                        color = MaterialTheme.colorScheme.error,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "■",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onError,
                     fontSize = 72.sp
                 )
             }

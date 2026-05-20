@@ -30,85 +30,63 @@ class FullMemorizationViewModel @Inject constructor(
 
     override val _uiState = MutableStateFlow(FullMemorizationUiState())
     override fun resetUiState() = FullMemorizationUiState()
+    override fun initialMode() = CurrentMode.FULL_MEMORIZATION
 
-    init {
-        viewModelScope.launch {
-            fullMemorizationUseCase.highlightIndex.collect { index ->
-                _uiState.value = _uiState.value.copy(highlightIndex = index)
-            }
-        }
+    override suspend fun startMode() {
+        try {
+            checkRecordingStatus()
 
-        viewModelScope.launch {
-            var isFirst = true
-            qaDataManager.currentQaItem.collect { currentItem ->
-                if (currentItem != null) {
-                    if (isFirst) {
-                        isFirst = false
-                        return@collect
-                    }
-                    updateRecordingStatus()
+            val category = qaDataManager.getCurrentCategory() ?: ""
+            val scriptIndex = qaDataManager.getCurrentIndex()
+
+            // 하이라이트 인덱스 수집
+            viewModelScope.launch {
+                fullMemorizationUseCase.highlightIndex.collect { index ->
+                    _uiState.value = _uiState.value.copy(highlightIndex = index)
                 }
             }
-        }
 
-        viewModelScope.launch {
-            fullMemorizationUseCase.state.collect { fsState ->
-                val currentMode = coordinator.currentMode.value
-                if (currentMode !in setOf(
-                        CurrentMode.FULL_MEMORIZATION,
-                        CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
-                        CurrentMode.FULL_MEMORIZATION_RECORDING,
-                        CurrentMode.FULL_MEMORIZATION_PLAYING,
-                        CurrentMode.FULL_MEMORIZATION_WITH_FILE
-                    )) return@collect
-
-                when (fsState) {
-                    is FullMemorizationState.Idle -> {
-                        coordinator.updateMode(CurrentMode.FULL_MEMORIZATION)
-                    }
-                    is FullMemorizationState.QuestionPlaying -> {
-                        coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING)
-                    }
-                    is FullMemorizationState.Recording -> {
-                        coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
-                    }
-                    is FullMemorizationState.Playing -> {
-                        coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
-                    }
-                    is FullMemorizationState.WithFile -> {
-                        _uiState.value = _uiState.value.copy(hasRecordingFile = fsState.hasRecording)
-                        coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
+            // UseCase 상태 → 코디네이터 모드 동기화
+            viewModelScope.launch {
+                fullMemorizationUseCase.state.collect { fsState ->
+                    when (fsState) {
+                        is FullMemorizationState.Idle -> {
+                            coordinator.updateMode(CurrentMode.FULL_MEMORIZATION)
+                        }
+                        is FullMemorizationState.QuestionPlaying -> {
+                            coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING)
+                        }
+                        is FullMemorizationState.Recording -> {
+                            coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_RECORDING)
+                        }
+                        is FullMemorizationState.Playing -> {
+                            coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
+                        }
+                        is FullMemorizationState.WithFile -> {
+                            _uiState.value = _uiState.value.copy(hasRecordingFile = fsState.hasRecording)
+                            coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
+                        }
                     }
                 }
             }
-        }
 
-        viewModelScope.launch {
-            coordinator.events.collect { event ->
-                if (event is CoordinatorEvent.RecordingStateChanged) {
-                    updateRecordingStatus()
+            // 코디네이터 이벤트 수집
+            viewModelScope.launch {
+                coordinator.events.collect { event ->
+                    if (event is CoordinatorEvent.RecordingStateChanged) {
+                        updateRecordingStatus()
+                    }
                 }
             }
-        }
-    }
 
-    fun start() {
-        viewModelScope.launch {
-            try {
-                coordinator.requestMode(CurrentMode.FULL_MEMORIZATION)
-                checkRecordingStatus()
-
-                val category = qaDataManager.getCurrentCategory() ?: ""
-                val scriptIndex = qaDataManager.getCurrentIndex()
-
-                fullMemorizationUseCase.startFullMemorization(
-                    category = category,
-                    scriptIndex = scriptIndex
-                )
-            } catch (e: Exception) {
-                Log.e("FullMemorizationVM", "통암기 모드 시작 실패", e)
-                coordinator.releaseMode()
-            }
+            fullMemorizationUseCase.startFullMemorization(
+                category = category,
+                scriptIndex = scriptIndex
+            )
+        } catch (e: Exception) {
+            Log.e("FullMemorizationVM", "통암기 모드 시작 실패", e)
+            emitEvent("통암기를 시작할 수 없습니다")
+            coordinator.releaseMode()
         }
     }
 
@@ -119,6 +97,7 @@ class FullMemorizationViewModel @Inject constructor(
                 updateRecordingStatus()
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "통암기 녹음 종료 실패", e)
+                emitEvent("녹음을 종료할 수 없습니다")
             }
         }
     }
@@ -132,6 +111,7 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "통암기 녹음 재생 실패", e)
+                emitEvent("녹음 재생에 실패했습니다")
                 coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
             }
         }
@@ -145,6 +125,7 @@ class FullMemorizationViewModel @Inject constructor(
                 updateRecordingStatus()
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "통암기 재생 중지 실패", e)
+                emitEvent("재생 중지에 실패했습니다")
                 coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
             }
         }

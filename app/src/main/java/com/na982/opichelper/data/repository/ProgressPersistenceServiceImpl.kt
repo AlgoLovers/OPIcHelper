@@ -18,8 +18,8 @@ class ProgressPersistenceServiceImpl(
         private const val KEY_APP_EXIT_STATE = "app_exit_state"
         private const val KEY_CATEGORY_PROGRESS_PREFIX = "category_progress_"
         private const val KEY_NAV_CATEGORY = "last_category"
-        private const val KEY_NAV_INDEX = "last_index"
         private const val KEY_NAV_SCRIPT_INDEX = "last_script_index"
+        private const val KEY_NAV_SENTENCE_INDEX = "last_sentence_index"
     }
 
     override suspend fun saveAppExitState(
@@ -60,8 +60,9 @@ class ProgressPersistenceServiceImpl(
         try {
             prefs.edit().apply {
                 putString(KEY_NAV_CATEGORY, state.category)
-                putInt(KEY_NAV_INDEX, state.index)
                 putInt(KEY_NAV_SCRIPT_INDEX, state.scriptIndex)
+                putInt(KEY_NAV_SENTENCE_INDEX, state.sentenceIndex)
+                remove("last_index")
                 apply()
             }
         } catch (e: Exception) {
@@ -73,12 +74,12 @@ class ProgressPersistenceServiceImpl(
         return try {
             ProgressPersistenceService.NavigationState(
                 category = prefs.getString(KEY_NAV_CATEGORY, null),
-                index = prefs.getInt(KEY_NAV_INDEX, 0),
-                scriptIndex = prefs.getInt(KEY_NAV_SCRIPT_INDEX, -1)
+                scriptIndex = prefs.getInt(KEY_NAV_SCRIPT_INDEX, -1),
+                sentenceIndex = prefs.getInt(KEY_NAV_SENTENCE_INDEX, 0)
             )
         } catch (e: Exception) {
             Log.e("ProgressPersistenceService", "네비게이션 상태 로드 실패", e)
-            ProgressPersistenceService.NavigationState(null, 0, -1)
+            ProgressPersistenceService.NavigationState(null, -1, 0)
         }
     }
 

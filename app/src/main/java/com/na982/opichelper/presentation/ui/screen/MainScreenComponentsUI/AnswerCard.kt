@@ -26,12 +26,13 @@ fun AnswerCard(
     highlightIndex: Int?,
     answerKoHighlightIndex: Int? = null,
     recordingHighlightIndex: Int? = null,
+    resumeHighlightIndex: Int? = null,
     isFlipped: Boolean = false,
     isRepeatListeningCardFlipped: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var isVisible by remember { mutableStateOf(true) }
-    
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -49,6 +50,7 @@ fun AnswerCard(
                     content = currentAnswer,
                     highlightIndex = highlightIndex,
                     recordingHighlightIndex = recordingHighlightIndex,
+                    resumeHighlightIndex = resumeHighlightIndex,
                     backgroundColor = MaterialTheme.colorScheme.surface,
                     titleColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onSurface,
@@ -64,6 +66,7 @@ fun AnswerCard(
                     content = currentAnswerKo,
                     highlightIndex = answerKoHighlightIndex,
                     recordingHighlightIndex = recordingHighlightIndex,
+                    resumeHighlightIndex = resumeHighlightIndex,
                     backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                     titleColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -83,6 +86,7 @@ private fun ModernAnswerCard(
     content: String,
     highlightIndex: Int?,
     recordingHighlightIndex: Int?,
+    resumeHighlightIndex: Int?,
     backgroundColor: Color,
     titleColor: Color,
     @Suppress("UNUSED_PARAMETER") contentColor: Color,
@@ -123,16 +127,16 @@ private fun ModernAnswerCard(
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                
+
                 // 숨기기/보이기 버튼 (탭하여 뒤집기 왼쪽)
                 FilledTonalButton(
                     onClick = onHideClick,
                     shape = RoundedCornerShape(6.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = if (isVisible) TertiaryOrange.copy(alpha = 0.1f) else SuccessGreen.copy(alpha = 0.1f),
-                        contentColor = if (isVisible) TertiaryOrange else SuccessGreen
+                        containerColor = if (isVisible) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                        contentColor = if (isVisible) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
                     ),
-                    modifier = Modifier.height(24.dp),
+                    modifier = Modifier.height(36.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
@@ -141,38 +145,39 @@ private fun ModernAnswerCard(
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 // 플립 힌트
                 Card(
                     shape = RoundedCornerShape(6.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = TertiaryOrange.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
                     ),
                     modifier = Modifier.height(24.dp)
                 ) {
                     Text(
                         text = "👆 탭하여 뒤집기",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TertiaryOrange,
+                        color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 12.sp
                     )
                 }
             }
-            
+
             // 내용 섹션 (숨김 상태에 따라 조건부 표시)
             if (isVisible) {
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 HighlightText(
                     text = content,
                     highlightIndex = highlightIndex,
                     recordingHighlightIndex = recordingHighlightIndex,
+                    resumeHighlightIndex = resumeHighlightIndex,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
-} 
+}

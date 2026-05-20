@@ -6,6 +6,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 @Composable
 fun PlayStopToggleButton(
@@ -23,7 +25,9 @@ fun PlayStopToggleButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isActive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         ),
-        modifier = modifier
+        modifier = modifier.semantics {
+            contentDescription = if (isActive) activeLabel else inactiveLabel
+        }
     ) {
         Text(
             text = if (isActive) activeLabel else inactiveLabel,

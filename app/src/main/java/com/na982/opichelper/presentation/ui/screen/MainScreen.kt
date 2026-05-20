@@ -18,6 +18,7 @@ import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.presentation.viewmodel.CurrentMode
+import com.na982.opichelper.presentation.viewmodel.ModeGroup
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
@@ -25,6 +26,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.ui.theme.*
 import androidx.compose.foundation.isSystemInDarkTheme
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import com.na982.opichelper.presentation.ui.component.OnboardingDialog
+import com.na982.opichelper.presentation.ui.component.SearchDialog
 
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -36,7 +43,8 @@ fun MainScreen(
     englishWritingTestViewModel: EnglishWritingTestViewModel = hiltViewModel(),
     fullMemorizationViewModel: FullMemorizationViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    permissionDenied: StateFlow<Boolean> = MutableStateFlow(false)
 ) {
     val playbackState by playbackViewModel.uiState.collectAsState()
     val qaState by qaViewModel.uiState.collectAsState()
@@ -48,19 +56,8 @@ fun MainScreen(
     val fullMemorizationState by fullMemorizationViewModel.uiState.collectAsState()
 
     val selectedLevel = qaState.selectedMemorizeLevel
-    val isFullMemorizationMode by remember {
-        derivedStateOf { MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION }
-    }
-    val isEnglishWritingTestMode by remember {
-        derivedStateOf {
-            coordinatorMode in setOf(
-                CurrentMode.ENGLISH_WRITING,
-                CurrentMode.ENGLISH_WRITING_RECORDING,
-                CurrentMode.ENGLISH_WRITING_PLAYING,
-                CurrentMode.ENGLISH_WRITING_WITH_FILE
-            )
-        }
-    }
+    val showOnboarding = remember { mutableStateOf(!qaViewModel.isOnboardingCompleted()) }
+    val showSearch = remember { mutableStateOf(false) }
     val isFullMemorizationPlaying by remember {
         derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING }
     }
@@ -76,6 +73,18 @@ fun MainScreen(
         repeatListeningViewModel.onLevelChanged()
         englishWritingTestViewModel.onLevelChanged()
         fullMemorizationViewModel.onLevelChanged()
+    }
+
+    // QA 아이템 변경 시 반복듣기 이어서 듣기 위치 갱신
+    LaunchedEffect(qaState.currentQaItem) {
+        if (!repeatListeningState.isPlaying) {
+            repeatListeningViewModel.refreshResumeIndex()
+        }
+    }
+
+    // 반복듣기 모드 진입 시 이어서 듣기 위치 초기 갱신
+    LaunchedEffect(Unit) {
+        repeatListeningViewModel.refreshResumeIndex()
     }
 
     val isDarkTheme = isSystemInDarkTheme()
@@ -99,13 +108,95 @@ fun MainScreen(
         }
         val totalCount = itemsInCategory.size
 
-        Surface(
+        val snackbarHostState = remember { SnackbarHostState() }
+
+        Scaffold(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
+            containerColor = MaterialTheme.colorScheme.background,
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { paddingValues ->
+            val scope = rememberCoroutineScope()
+
+            // 에러 이벤트 Snackbar 수집
+            LaunchedEffect(Unit) {
+                playbackViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+            LaunchedEffect(Unit) {
+                repeatListeningViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+            LaunchedEffect(Unit) {
+                englishWritingTestViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+            LaunchedEffect(Unit) {
+                fullMemorizationViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+            LaunchedEffect(Unit) {
+                qaViewModel.events.collect { message ->
+                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+                }
+            }
+
+            // 권한 거부 피드백
+            val isPermissionDenied by permissionDenied.collectAsState()
+            var hasShownPermissionDenied by remember { mutableStateOf(false) }
+            LaunchedEffect(isPermissionDenied) {
+                if (isPermissionDenied && !hasShownPermissionDenied) {
+                    hasShownPermissionDenied = true
+                    snackbarHostState.showSnackbar(
+                        "녹음 권한이 필요합니다. 설정에서 권한을 허용해주세요.",
+                        duration = SnackbarDuration.Long
+                    )
+                }
+            }
+
+            // 온보딩 다이얼로그
+            if (showOnboarding.value) {
+                OnboardingDialog(
+                    onStartClick = {
+                        qaViewModel.setOnboardingCompleted()
+                        showOnboarding.value = false
+                    }
+                )
+            }
+
+            // 검색 다이얼로그
+            if (showSearch.value) {
+                SearchDialog(
+                    onDismiss = { showSearch.value = false },
+                    onResultClick = { item ->
+                        showSearch.value = false
+                        scope.launch {
+                            qaViewModel.navigateToItem(item)
+                        }
+                    },
+                    searchQuery = { query -> qaViewModel.search(query) }
+                )
+            }
+
+            // 이어서 듣기 프롬프트 (최초 1회만)
+            var hasShownResumePrompt by remember { mutableStateOf(false) }
+            LaunchedEffect(qaState.completedCount) {
+                if (qaState.completedCount > 0 && !showOnboarding.value && !hasShownResumePrompt) {
+                    hasShownResumePrompt = true
+                    snackbarHostState.showSnackbar(
+                        "이전 위치에서 이어서 듣기 가능",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+
             Column(
                 modifier = modifier
                     .fillMaxSize()
+                    .padding(paddingValues)
                     .padding(16.dp)
                     .statusBarsPadding()
                     .navigationBarsPadding()
@@ -116,6 +207,7 @@ fun MainScreen(
             AppTitle(
                 currentLevel = qaState.currentUserLevel,
                 onSettingsClick = onNavigateToSettings,
+                onSearchClick = { showSearch.value = true },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -192,11 +284,12 @@ fun MainScreen(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
                         highlightIndex = when {
-                            (isFullMemorizationMode && isFullMemorizationPlaying) -> fullMemorizationState.highlightIndex
+                            (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying) -> fullMemorizationState.highlightIndex
                             else -> playbackState.questionHighlightIndex
                         },
                         currentIndex = currentIndex,
                         totalCount = totalCount,
+                        completedCount = qaState.completedCount,
                         isFlipped = false,
                         currentCategory = category ?: "",
                         modifier = Modifier.fillMaxWidth()
@@ -217,7 +310,7 @@ fun MainScreen(
                             modifier = Modifier.weight(1f)
                         )
 
-                        if (isFullMemorizationMode) {
+                        if (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION) {
                             FullMemorizationRecordingButton(
                                 isQuestionPlaying = isFullMemorizationQuestionPlaying,
                                 isRecording = isFullMemorizationRecording,
@@ -231,12 +324,16 @@ fun MainScreen(
                                     if (MemorizeLevel.fromDisplayName(selectedLevel) != MemorizeLevel.FULL_MEMORIZATION) {
                                         playbackViewModel.stopTts()
                                     }
-                                    onMemorizeTestButtonClick(
-                                        selectedLevel, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel
-                                    )
+                                    if (repeatListeningState.isPlaying || coordinatorRunning) {
+                                        stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
+                                    } else {
+                                        onMemorizeTestButtonClick(
+                                            selectedLevel, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel
+                                        )
+                                    }
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (coordinatorRunning)
+                                    containerColor = if (repeatListeningState.isPlaying || coordinatorRunning)
                                         MaterialTheme.colorScheme.error
                                     else
                                         MaterialTheme.colorScheme.primary
@@ -245,7 +342,7 @@ fun MainScreen(
                             ) {
                                 Text(
                                     text = when {
-                                        coordinatorRunning -> "${selectedLevel} 종료"
+                                        repeatListeningState.isPlaying || coordinatorRunning -> "${selectedLevel} 종료"
                                         MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.ENGLISH_WRITING -> "부분암기 테스트"
                                         MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION -> "통암기"
                                         else -> selectedLevel.ifEmpty { "암기 테스트" }
@@ -258,19 +355,20 @@ fun MainScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (!isFullMemorizationMode || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
+                    if (coordinatorMode.group != ModeGroup.FULL_MEMORIZATION || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
                         AnswerCard(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             currentAnswerKo = qaViewModel.getCurrentAnswerKo(qaItem),
                             highlightIndex = when {
-                                (isFullMemorizationMode && isFullMemorizationPlaying) || (coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING) -> fullMemorizationState.highlightIndex
+                                (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying) || (coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING) -> fullMemorizationState.highlightIndex
                                 playbackState.isEnglishWritingTestMergedFilePlaying -> playbackState.englishWritingTestMergedFileHighlightIndex
                                 else -> playbackState.answerHighlightIndex
                             },
                             answerKoHighlightIndex = playbackState.answerKoHighlightIndex,
                             recordingHighlightIndex = playbackState.recordingHighlightIndex,
+                            resumeHighlightIndex = if (!repeatListeningState.isPlaying) repeatListeningState.resumeSentenceIndex else null,
                             isFlipped = when {
-                                isEnglishWritingTestMode -> englishWritingTestState.isCardFlipped
+                                coordinatorMode.group == ModeGroup.ENGLISH_WRITING -> englishWritingTestState.isCardFlipped
                                 playbackState.isEnglishWritingTestMergedFilePlaying -> false
                                 repeatListeningState.isCardFlipped -> repeatListeningState.isCardFlipped
                                 else -> playbackState.isAnswerCardFlipped
@@ -294,6 +392,7 @@ fun MainScreen(
                         AnswerPlayButton(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             isPlaying = playbackState.isAnswerPlaying,
+                            repeatCount = qaState.answerPlayCount,
                             onPlayClick = {
                                 stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
                                 qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
@@ -355,13 +454,10 @@ private fun stopCurrentMemorization(
     englishWritingTestViewModel: EnglishWritingTestViewModel,
     fullMemorizationViewModel: FullMemorizationViewModel
 ) {
-    val currentMode = coordinator.currentMode.value
-    when {
-        currentMode == CurrentMode.REPEAT_LISTENING -> repeatListeningViewModel.stop()
-        currentMode in setOf(CurrentMode.ENGLISH_WRITING, CurrentMode.ENGLISH_WRITING_RECORDING,
-            CurrentMode.ENGLISH_WRITING_PLAYING, CurrentMode.ENGLISH_WRITING_WITH_FILE) -> englishWritingTestViewModel.stop()
-        currentMode in setOf(CurrentMode.FULL_MEMORIZATION, CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING,
-            CurrentMode.FULL_MEMORIZATION_RECORDING, CurrentMode.FULL_MEMORIZATION_PLAYING,
-            CurrentMode.FULL_MEMORIZATION_WITH_FILE) -> fullMemorizationViewModel.stop()
+    when (coordinator.currentMode.value.group) {
+        ModeGroup.REPEAT_LISTENING -> repeatListeningViewModel.stop()
+        ModeGroup.ENGLISH_WRITING -> englishWritingTestViewModel.stop()
+        ModeGroup.FULL_MEMORIZATION -> fullMemorizationViewModel.stop()
+        ModeGroup.NONE -> {}
     }
 }

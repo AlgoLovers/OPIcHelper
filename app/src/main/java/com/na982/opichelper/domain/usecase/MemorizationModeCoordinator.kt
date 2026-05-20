@@ -1,6 +1,7 @@
 package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.presentation.viewmodel.CurrentMode
+import com.na982.opichelper.presentation.viewmodel.ModeGroup
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -8,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,6 +28,8 @@ class MemorizationModeCoordinator @Inject constructor() {
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
+    private val _owner = AtomicReference(ModeGroup.NONE)
+
     private val _events = MutableSharedFlow<CoordinatorEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<CoordinatorEvent> = _events.asSharedFlow()
 
@@ -36,12 +40,13 @@ class MemorizationModeCoordinator @Inject constructor() {
         val result = _currentMode.compareAndSet(CurrentMode.NONE, mode)
         if (result) {
             _isRunning.value = true
+            _owner.set(mode.group)
         }
         return result
     }
 
     fun updateMode(mode: CurrentMode) {
-        if (_isRunning.value) {
+        if (_isRunning.value && _currentMode.value.group == mode.group && _owner.get() == mode.group) {
             _currentMode.value = mode
         }
     }
@@ -49,6 +54,7 @@ class MemorizationModeCoordinator @Inject constructor() {
     fun releaseMode() {
         _currentMode.value = CurrentMode.NONE
         _isRunning.value = false
+        _owner.set(ModeGroup.NONE)
         activeJob?.cancel()
         activeJob = null
         eventJob?.cancel()

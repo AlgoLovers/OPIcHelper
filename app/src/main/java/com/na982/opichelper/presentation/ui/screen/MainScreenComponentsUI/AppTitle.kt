@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +23,7 @@ import com.na982.opichelper.ui.theme.*
 fun AppTitle(
     currentLevel: String = "",
     onSettingsClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -37,98 +39,35 @@ fun AppTitle(
                 .fillMaxWidth()
                 .background(
                     brush = Brush.linearGradient(
-                        colors = listOf(GradientStart, GradientEnd, GradientAccent)
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary)
                     ),
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(20.dp)
         ) {
-            // 설정 버튼 (우측 상단) - 미니멀하고 현대적인 디자인
-            IconButton(
-                onClick = onSettingsClick,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(52.dp)
+            // 검색 & 설정 버튼 (우측 상단)
+            Row(
+                modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                Surface(
-                    modifier = Modifier.size(48.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.Transparent
+                IconButton(
+                    onClick = onSearchClick,
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0.3f),
-                                        Color.White.copy(alpha = 0.1f)
-                                    )
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            .border(
-                                width = 1.dp,
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0.5f),
-                                        Color.White.copy(alpha = 0.2f)
-                                    )
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // 미니멀한 설정 아이콘 (점 3개)
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // 첫 번째 점
-                            Box(
-                                modifier = Modifier
-                                    .size(3.dp)
-                                    .background(
-                                        color = Color.White.copy(alpha = 0.9f),
-                                        shape = androidx.compose.foundation.shape.CircleShape
-                                    )
-                            )
-                            // 두 번째 점
-                            Box(
-                                modifier = Modifier
-                                    .size(3.dp)
-                                    .background(
-                                        color = Color.White.copy(alpha = 0.9f),
-                                        shape = androidx.compose.foundation.shape.CircleShape
-                                    )
-                            )
-                            // 세 번째 점
-                            Box(
-                                modifier = Modifier
-                                    .size(3.dp)
-                                    .background(
-                                        color = Color.White.copy(alpha = 0.9f),
-                                        shape = androidx.compose.foundation.shape.CircleShape
-                                    )
-                            )
-                        }
-                        
-                        // 우측 상단 작은 원형 배지 (선택적)
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .size(6.dp)
-                                .background(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            Color.White.copy(alpha = 0.8f),
-                                            Color.White.copy(alpha = 0.4f)
-                                        )
-                                    ),
-                                    shape = androidx.compose.foundation.shape.CircleShape
-                                )
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "검색",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+                IconButton(
+                    onClick = onSettingsClick,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = "설정",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
             }
             
@@ -139,14 +78,14 @@ fun AppTitle(
                     text = "OPic Helper",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 24.sp
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "영어 말하기 실력 향상을 위한 최고의 도구",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.9f),
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                     fontSize = 12.sp
                 )
                 
@@ -156,13 +95,13 @@ fun AppTitle(
                     Card(
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Text(
                             text = "목표: $currentLevel",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             fontSize = 11.sp
@@ -177,13 +116,13 @@ fun AppTitle(
                     Card(
                         shape = RoundedCornerShape(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Text(
                             text = "🎯 목표 달성",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
                             fontSize = 9.sp
                         )
@@ -192,13 +131,13 @@ fun AppTitle(
                     Card(
                         shape = RoundedCornerShape(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Text(
                             text = "📚 체계적 학습",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
                             fontSize = 9.sp
                         )
@@ -207,13 +146,13 @@ fun AppTitle(
                     Card(
                         shape = RoundedCornerShape(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
                         Text(
                             text = "🎧 실전 연습",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
                             fontSize = 9.sp
                         )

@@ -200,7 +200,7 @@ class QaDataManager(
         val lastCategory = navState.category
         if (lastCategory != null && itemsByCategory.containsKey(lastCategory)) {
             _currentCategory.value = lastCategory
-            itemIndexByCategory[lastCategory] = navState.index
+            itemIndexByCategory[lastCategory] = navState.scriptIndex
             updateCurrentQaItem()
         } else {
             val firstCategory = _categories.value.firstOrNull()
@@ -215,12 +215,33 @@ class QaDataManager(
         itemIndexByCategory[category] = index
         updateCurrentQaItem()
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, index, index)
+            ProgressPersistenceService.NavigationState(category, index, 0)
         )
     }
 
     fun clearError() {
         _error.value = null
+    }
+
+    fun searchItems(query: String): List<QaItem> {
+        if (query.length < 2) return emptyList()
+        val lowerQuery = query.lowercase()
+        return itemsByCategory.values.flatten().filter { item ->
+            item.questionEn.lowercase().contains(lowerQuery) ||
+            item.questionKo.lowercase().contains(lowerQuery) ||
+            item.answers.values.any { answer ->
+                answer.answerEn.lowercase().contains(lowerQuery) ||
+                answer.answerKo.lowercase().contains(lowerQuery)
+            }
+        }
+    }
+
+    suspend fun navigateToIndex(index: Int) {
+        val category = _currentCategory.value ?: return
+        val items = itemsByCategory[category] ?: emptyList()
+        if (index in 0 until items.size) {
+            navigateTo(category, index)
+        }
     }
 
     fun release() {

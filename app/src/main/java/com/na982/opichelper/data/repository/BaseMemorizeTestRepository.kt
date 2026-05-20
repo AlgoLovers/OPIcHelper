@@ -30,12 +30,16 @@ abstract class BaseMemorizeTestRepository(
         val navState = progressPersistenceService.loadNavigationState()
         return if (navState.category == category
             && navState.scriptIndex == scriptIndex
-            && navState.index in 0 until totalCount
+            && navState.sentenceIndex in 0 until totalCount
         ) {
-            navState.index
+            navState.sentenceIndex
         } else {
             0
         }
+    }
+
+    open suspend fun getResumeIndex(category: String, scriptIndex: Int, totalCount: Int): Int {
+        return resolveStartIndex(category, scriptIndex, totalCount)
     }
 
     suspend fun getCurrentProgress(category: String, scriptIndex: Int): TestProgressData? {
@@ -45,7 +49,7 @@ abstract class BaseMemorizeTestRepository(
                 category = category,
                 scriptIndex = scriptIndex,
                 memorizeLevel = memorizeLevel.displayName,
-                currentSentenceIndex = navState.index,
+                currentSentenceIndex = navState.sentenceIndex,
                 totalSentences = 0,
                 isMemorizeTestRunning = false
             )
@@ -54,13 +58,13 @@ abstract class BaseMemorizeTestRepository(
 
     suspend fun updateProgress(progressData: TestProgressData) {
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(progressData.category, progressData.currentSentenceIndex, progressData.scriptIndex)
+            ProgressPersistenceService.NavigationState(progressData.category, progressData.scriptIndex, progressData.currentSentenceIndex)
         )
     }
 
     suspend fun clearProgress(category: String, scriptIndex: Int) {
         progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, 0, scriptIndex)
+            ProgressPersistenceService.NavigationState(category, scriptIndex, 0)
         )
     }
 }

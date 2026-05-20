@@ -8,15 +8,17 @@
 - **신규 기능 추가 시**: 관련 계층 3개(data/domain/presentation)의 CLAUDE.md를 모두 확인
 - **버그 수정 시**: 루트의 "알려진 기술 부채"와 해당 계층의 주의사항 확인
 - **DI 변경 시**: `di/CLAUDE.md`에서 바인딩 규칙 확인
-- **프로젝트 전체 파악**: [ARCHITECTURE.md](ARCHITECTURE.md) → 모듈별 아키텍처 문서 순서로 읽기
+- **프로젝트 전체 파악**: [ARCHITECTURE.md](.claude/architecture/ARCHITECTURE.md) → 모듈별 아키텍처 문서 순서로 읽기
 
 | 문서 | 내용 |
 |------|------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | 전체 아키텍처 개요, 다이어그램, 읽기 순서 |
-| [ARCHITECTURE_DATA.md](ARCHITECTURE_DATA.md) | Data 계층 아키텍처 상세 |
-| [ARCHITECTURE_DOMAIN.md](ARCHITECTURE_DOMAIN.md) | Domain 계층 아키텍처 상세 |
-| [ARCHITECTURE_PRESENTATION.md](ARCHITECTURE_PRESENTATION.md) | Presentation 계층 아키텍처 상세 |
-| [ARCHITECTURE_IMPROVEMENT_PLAN.md](ARCHITECTURE_IMPROVEMENT_PLAN.md) | 구조적 결함 및 개선 계획 |
+| [ARCHITECTURE.md](.claude/architecture/ARCHITECTURE.md) | 전체 아키텍처 개요, 다이어그램, 읽기 순서 |
+| [ARCHITECTURE_DATA.md](.claude/architecture/ARCHITECTURE_DATA.md) | Data 계층 아키텍처 상세 |
+| [ARCHITECTURE_DOMAIN.md](.claude/architecture/ARCHITECTURE_DOMAIN.md) | Domain 계층 아키텍처 상세 |
+| [ARCHITECTURE_PRESENTATION.md](.claude/architecture/ARCHITECTURE_PRESENTATION.md) | Presentation 계층 아키텍처 상세 |
+| [ARCHITECTURE_IMPROVEMENT_PLAN.md](.claude/plans/ARCHITECTURE_IMPROVEMENT_PLAN.md) | 구조적 결함 및 개선 계획 |
+| [REFACTORING_PLAN.md](.claude/plans/REFACTORING_PLAN.md) | 리팩토링 계획 |
+| [SCRIPT_EDIT_PLAN.md](.claude/plans/SCRIPT_EDIT_PLAN.md) | 스크립트 편집 기능 구현 계획 |
 | `data/CLAUDE.md` | TTS 플레이어 구현체, Repository 구현체, SharedPreferences 키 맵 |
 | `domain/CLAUDE.md` | Entity, UseCase, Repository 인터페이스, TTS 오케스트레이터, 재생 컨트롤러 |
 | `presentation/CLAUDE.md` | ViewModel, Compose UI, 네비게이션, 상태 흐름 |

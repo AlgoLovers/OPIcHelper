@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.na982.opichelper.presentation.ui.screen.MainScreen
 import com.na982.opichelper.presentation.ui.screen.SettingsScreen
+import kotlinx.coroutines.flow.StateFlow
 
 sealed class Screen(val route: String) {
     object Main : Screen("main")
@@ -13,7 +14,10 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(
+    navController: NavHostController,
+    permissionDenied: StateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
+) {
     NavHost(
         navController = navController,
         startDestination = Screen.Main.route
@@ -22,7 +26,8 @@ fun AppNavigation(navController: NavHostController) {
             MainScreen(
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
-                }
+                },
+                permissionDenied = permissionDenied
             )
         }
 

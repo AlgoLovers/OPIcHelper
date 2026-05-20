@@ -76,6 +76,14 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
         prefs.edit().putBoolean(KEY_AUTO_ADVANCE, enabled).apply()
     }
 
+    override fun isOnboardingCompleted(): Boolean {
+        return prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
+    }
+
+    override fun setOnboardingCompleted() {
+        prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, true).apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "user_prefs"
         private const val KEY_USER_LEVEL = "user_level"
@@ -84,5 +92,6 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
         private const val KEY_REPEAT_LISTENING_COUNT = "repeat_listening_count"
         private const val KEY_ANSWER_PLAY_COUNT = "answer_play_count"
         private const val KEY_AUTO_ADVANCE = "auto_advance"
+        private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
     }
 }

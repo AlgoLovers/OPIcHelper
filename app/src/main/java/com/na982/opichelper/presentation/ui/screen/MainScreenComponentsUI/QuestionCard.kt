@@ -25,6 +25,7 @@ fun QuestionCard(
     highlightIndex: Int?,
     currentIndex: Int,
     totalCount: Int,
+    completedCount: Int = 0,
     isFlipped: Boolean = false,
     currentCategory: String = "",
     modifier: Modifier = Modifier
@@ -50,7 +51,7 @@ fun QuestionCard(
                     .fillMaxWidth()
                     .background(
                         brush = Brush.linearGradient(
-                            colors = listOf(GradientStart, GradientEnd)
+                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                         ),
                         shape = RoundedCornerShape(16.dp)
                     )
@@ -69,7 +70,7 @@ fun QuestionCard(
                                 text = "진행사항",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 16.sp
                             )
                         }
@@ -83,30 +84,52 @@ fun QuestionCard(
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.2f)
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                         )
                     ) {
-                        Row(
+                        Column(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            if (currentCategory.isNotEmpty()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (currentCategory.isNotEmpty()) {
+                                    Text(
+                                        text = currentCategory,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                                        fontSize = 18.sp
+                                    )
+                                }
                                 Text(
-                                    text = currentCategory,
+                                    text = "$currentIndex / $totalCount",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White.copy(alpha = 0.8f),
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     fontSize = 18.sp
                                 )
                             }
-                            Text(
-                                text = "$currentIndex / $totalCount",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontSize = 18.sp
-                            )
+                            if (totalCount > 0 && completedCount > 0) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                LinearProgressIndicator(
+                                    progress = completedCount.toFloat() / totalCount,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(4.dp)
+                                        .clip(RoundedCornerShape(2.dp)),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+                                )
+                                Text(
+                                    text = "$completedCount/$totalCount 완료",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -189,14 +212,14 @@ private fun ModernCard(
                 Card(
                     shape = RoundedCornerShape(6.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = TertiaryOrange.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
                     ),
                     modifier = Modifier.height(24.dp)
                 ) {
                     Text(
                         text = "👆 탭하여 뒤집기",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TertiaryOrange,
+                        color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         fontSize = 12.sp
                     )
