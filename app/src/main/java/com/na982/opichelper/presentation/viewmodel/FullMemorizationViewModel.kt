@@ -1,6 +1,7 @@
 package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.FullMemorizationState
@@ -14,7 +15,9 @@ import javax.inject.Inject
 
 data class FullMemorizationUiState(
     val hasRecordingFile: Boolean = false,
-    val highlightIndex: Int? = null
+    val highlightIndex: Int? = null,
+    val currentSentenceEn: String? = null,
+    val currentSentenceKo: String? = null
 )
 
 @HiltViewModel
@@ -41,7 +44,13 @@ class FullMemorizationViewModel @Inject constructor(
 
             viewModelScope.launch {
                 fullMemorizationUseCase.highlightIndex.collect { index ->
-                    _uiState.value = _uiState.value.copy(highlightIndex = index)
+                    val sentenceEn = index?.let { getSentenceFromAnswer(it, isKorean = false) }
+                    val sentenceKo = index?.let { getSentenceFromAnswer(it, isKorean = true) }
+                    _uiState.value = _uiState.value.copy(
+                        highlightIndex = index,
+                        currentSentenceEn = sentenceEn,
+                        currentSentenceKo = sentenceKo
+                    )
                 }
             }
 
@@ -168,5 +177,15 @@ class FullMemorizationViewModel @Inject constructor(
             } catch (_: Exception) { }
         }
         fullMemorizationUseCase.close()
+    }
+
+    private fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
+        val currentItem = qaDataManager.currentQaItem.value ?: return null
+        val text = if (isKorean) {
+            qaDataManager.getCurrentAnswerKo(currentItem)
+        } else {
+            qaDataManager.getCurrentAnswer(currentItem)
+        }
+        return SentenceSplitter.split(text).getOrNull(index)
     }
 }

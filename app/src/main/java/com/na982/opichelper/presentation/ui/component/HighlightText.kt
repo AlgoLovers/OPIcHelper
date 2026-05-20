@@ -14,8 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val SentenceRegex = Regex("(?<=[.!?])\\s+")
+import com.na982.opichelper.domain.audio.SentenceSplitter
 
 @Composable
 fun HighlightText(
@@ -26,7 +25,7 @@ fun HighlightText(
     modifier: Modifier = Modifier
 ) {
     val sentences = remember(text) {
-        text.split(SentenceRegex).map { it.trim() }.filter { it.isNotEmpty() }
+        SentenceSplitter.split(text)
     }
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
