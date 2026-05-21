@@ -130,8 +130,7 @@ class PlaybackViewModel @Inject constructor(
                 _pipState.value = _pipState.value.copy(
                     currentSentenceEn = sentenceEn,
                     currentSentenceKo = sentenceKo,
-                    isPlaying = isPlaying || isMemorizationRunning,
-                    isMemorizationRunning = isMemorizationRunning
+                    isPlaying = isPlaying || isMemorizationRunning
                 )
                 updateNotificationSentence(sentenceEn, sentenceKo)
             }.collect { }
@@ -263,9 +262,10 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun stopPlayback() {
-        ttsPlaybackController.stopTts()
         if (coordinator.isRunning.value) {
             _stopMemorizationCallback?.invoke()
+        } else {
+            ttsPlaybackController.stopTts()
         }
     }
 

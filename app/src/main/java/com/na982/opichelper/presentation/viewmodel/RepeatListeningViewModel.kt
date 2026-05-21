@@ -121,8 +121,10 @@ class RepeatListeningViewModel @Inject constructor(
             }
             is MemorizeTestEvent.KoreanHighlight -> {
                 if (event.index != null) {
-                    val sentence = getSentenceFromAnswer(event.index, isKorean = true)
-                    ttsCtrl.setAnswerKoHighlightIndex(event.index, sentence)
+                    val koSentence = getSentenceFromAnswer(event.index, isKorean = true)
+                    val enSentence = getSentenceFromAnswer(event.index, isKorean = false)
+                    ttsCtrl.setAnswerKoHighlightIndex(event.index, koSentence)
+                    ttsCtrl.setAnswerHighlightIndex(event.index, enSentence)
                 } else {
                     ttsCtrl.clearHighlight()
                 }
