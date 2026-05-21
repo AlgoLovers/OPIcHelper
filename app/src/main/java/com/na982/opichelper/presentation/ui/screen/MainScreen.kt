@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.BackHandler
@@ -31,7 +32,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import com.na982.opichelper.presentation.ui.component.OnboardingDialog
+import com.na982.opichelper.presentation.ui.component.PipPermissionDialog
 import com.na982.opichelper.presentation.ui.component.SearchDialog
+import com.na982.opichelper.presentation.ui.component.openPipSettings
 
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -57,7 +60,9 @@ fun MainScreen(
 
     val selectedLevel = qaState.selectedMemorizeLevel
     val showOnboarding = remember { mutableStateOf(!qaViewModel.isOnboardingCompleted()) }
+    val showPipGuide = remember { mutableStateOf(!qaViewModel.isPipGuideCompleted()) }
     val showSearch = remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val isFullMemorizationPlaying by remember {
         derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING }
     }
@@ -178,6 +183,21 @@ fun MainScreen(
                     onStartClick = {
                         qaViewModel.setOnboardingCompleted()
                         showOnboarding.value = false
+                    }
+                )
+            }
+
+            // PiP 권한 안내 다이얼로그
+            if (!showOnboarding.value && showPipGuide.value) {
+                PipPermissionDialog(
+                    onDismiss = {
+                        qaViewModel.setPipGuideCompleted()
+                        showPipGuide.value = false
+                    },
+                    onOpenSettings = {
+                        qaViewModel.setPipGuideCompleted()
+                        showPipGuide.value = false
+                        openPipSettings(context)
                     }
                 )
             }
