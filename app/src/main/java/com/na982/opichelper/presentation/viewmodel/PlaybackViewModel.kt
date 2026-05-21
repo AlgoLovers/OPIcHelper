@@ -45,6 +45,7 @@ data class PlaybackState(
 class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
+    private val ttsOrchestrator: com.na982.opichelper.domain.audio.TtsOrchestrator,
     private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
     private val coordinator: MemorizationModeCoordinator,
     private val application: Application
@@ -61,6 +62,9 @@ class PlaybackViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 5)
     val events: SharedFlow<String> = _events.asSharedFlow()
+
+    @Volatile
+    private var lastPlayingTimestamp: Long = 0L
 
     private suspend fun emitEvent(message: String) {
         _events.emit(message)
@@ -82,8 +86,10 @@ class PlaybackViewModel @Inject constructor(
                 ttsPlaybackController.answerKoHighlightIndex,
                 ttsPlaybackController.recordingHighlightIndex
             ) { values ->
+                val playing = values[0] as Boolean
+                if (playing) lastPlayingTimestamp = System.currentTimeMillis()
                 _uiState.value = _uiState.value.copy(
-                    isPlaying = values[0] as Boolean,
+                    isPlaying = playing,
                     isQuestionPlaying = values[1] as Boolean,
                     isAnswerPlaying = values[2] as Boolean,
                     questionHighlightIndex = values[3] as Int?,
@@ -132,6 +138,7 @@ class PlaybackViewModel @Inject constructor(
                 val sentenceEn = fmSentenceEn ?: answerSentence ?: questionSentence
                 val sentenceKo = fmSentenceKo ?: answerKoSentence
                 val active = isPlaying || isMemorizationRunning || isMergedFilePlaying
+                if (active) lastPlayingTimestamp = System.currentTimeMillis()
                 _pipState.value = _pipState.value.copy(
                     currentSentenceEn = if (sentenceEn != null) sentenceEn else if (active) _pipState.value.currentSentenceEn else null,
                     currentSentenceKo = if (sentenceKo != null) sentenceKo else if (active) _pipState.value.currentSentenceKo else null,
@@ -275,8 +282,17 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun shouldEnterPip(): Boolean {
-        return _uiState.value.isPlaying || coordinator.isRunning.value || playMergedFileUseCase.isPlaying.value
+        val isPlaying = _uiState.value.isPlaying
+        val isCoordinatorRunning = coordinator.isRunning.value
+        val isMergedPlaying = playMergedFileUseCase.isPlaying.value
+        val isTtsSpeaking = ttsPlaybackController.isPlaying.value || ttsOrchestrator.isSpeaking.value
+        val recentlyPlayed = System.currentTimeMillis() - lastPlayingTimestamp < 30_000L
+        return isPlaying || isCoordinatorRunning || isMergedPlaying || isTtsSpeaking || recentlyPlayed
     }
+
+    fun isCoordinatorRunning(): Boolean = coordinator.isRunning.value
+
+    fun isMergedFilePlaying(): Boolean = playMergedFileUseCase.isPlaying.value
 
     fun setFullMemorizationSentence(en: String?, ko: String?) {
         _fullMemorizationSentenceEn.value = en

@@ -81,6 +81,7 @@ class MainActivity : ComponentActivity() {
         }
 
         registerPipActionReceiver()
+        setPipParams()
 
         setContent {
             val navController = rememberNavController()
@@ -120,24 +121,31 @@ class MainActivity : ComponentActivity() {
     }
 
     @Suppress("NewApi")
-    private fun enterPipMode() {
-        val stopIcon = Icon.createWithResource(this, R.drawable.ic_stop)
-        val stopIntent = PendingIntent.getBroadcast(
-            this, 1,
-            Intent(ACTION_PIP_STOP),
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        val stopAction = android.app.RemoteAction(stopIcon, "정지", "정지", stopIntent)
-
-        val params = android.app.PictureInPictureParams.Builder()
-            .setAspectRatio(android.util.Rational(16, 9))
-            .setActions(listOf(stopAction))
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            params.setAutoEnterEnabled(true)
+    private fun setPipParams() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val params = android.app.PictureInPictureParams.Builder()
+                .setAspectRatio(android.util.Rational(16, 9))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                params.setAutoEnterEnabled(false)
+            }
+            setPictureInPictureParams(params.build())
         }
-        val entered = enterPictureInPictureMode(params.build())
-        if (!entered) {
-            Log.w("MainActivity", "PiP 진입 실패 — 기기 설정에서 PiP 권한을 확인하세요")
+    }
+
+    @Suppress("NewApi")
+    private fun enterPipMode() {
+        try {
+            val params = android.app.PictureInPictureParams.Builder()
+                .setAspectRatio(android.util.Rational(16, 9))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                params.setAutoEnterEnabled(true)
+            }
+            val entered = enterPictureInPictureMode(params.build())
+            if (!entered) {
+                Log.w("MainActivity", "PiP 진입 실패")
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "enterPipMode 예외", e)
         }
     }
 
@@ -156,6 +164,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isInPictureInPictureMode) {
+            if (playbackViewModel?.shouldEnterPip() == true) {
+                enterPipMode()
+            }
+        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isInPictureInPictureMode) {
             playbackViewModel?.onBackgroundMove()
         }
@@ -242,9 +255,22 @@ class MainActivity : ComponentActivity() {
             }
             playbackViewModel?.pipState?.collect { state ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    updatePipActions(state.isPlaying, state.isPaused, state.isPausable)
+                    updatePipAutoEnter(state.isPlaying)
+                    if (isInPictureInPictureMode) {
+                        updatePipActions(state.isPlaying, state.isPaused, state.isPausable)
+                    }
                 }
             }
+        }
+    }
+
+    @Suppress("NewApi")
+    private fun updatePipAutoEnter(isPlaying: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val params = android.app.PictureInPictureParams.Builder()
+                .setAspectRatio(android.util.Rational(16, 9))
+                .setAutoEnterEnabled(isPlaying)
+            setPictureInPictureParams(params.build())
         }
     }
 

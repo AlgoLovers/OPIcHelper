@@ -2,6 +2,9 @@ package com.na982.opichelper.domain.audio
 
 import android.content.Context
 import android.util.Log
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
@@ -15,6 +18,8 @@ class TtsOrchestrator @Inject constructor(
     private val googleTtsPlayer: TtsPlayer,
     private val samsungTtsPlayer: TtsPlayer
 ) {
+    private val _isSpeaking = MutableStateFlow(false)
+    val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
     
     // 한글 TTS 플레이어들 (폴백 순서)
     private val koreanTtsPlayers = listOf(
@@ -37,11 +42,15 @@ class TtsOrchestrator @Inject constructor(
      */
     suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
         val isKorean = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
-
-        return if (isKorean) {
-            speakKorean(text, onComplete)
-        } else {
-            speakEnglish(text, onComplete)
+        _isSpeaking.value = true
+        return try {
+            if (isKorean) {
+                speakKorean(text, onComplete)
+            } else {
+                speakEnglish(text, onComplete)
+            }
+        } finally {
+            _isSpeaking.value = false
         }
     }
     
@@ -86,6 +95,7 @@ class TtsOrchestrator @Inject constructor(
      */
     fun stop() {
         try {
+            _isSpeaking.value = false
             googleTtsPlayer.stop()
             for (player in koreanTtsPlayers) {
                 player.stop()
@@ -149,6 +159,7 @@ class TtsOrchestrator @Inject constructor(
      */
     suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
         val sentences = SentenceSplitter.split(text)
+        _isSpeaking.value = true
 
         try {
             for ((idx, sentence) in sentences.withIndex()) {
@@ -177,6 +188,8 @@ class TtsOrchestrator @Inject constructor(
             stop()
             onHighlight(null)
             throw e
+        } finally {
+            _isSpeaking.value = false
         }
     }
     
@@ -205,6 +218,7 @@ class TtsOrchestrator @Inject constructor(
     suspend fun speakAndWaitForCompletion(text: String, isKorean: Boolean, rate: Float): Long {
         val startTime = System.currentTimeMillis()
         val isKoreanText = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
+        _isSpeaking.value = true
 
         val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
 
@@ -214,19 +228,23 @@ class TtsOrchestrator @Inject constructor(
             speakEnglish(text) { completionDeferred.complete(Unit) }
         }
 
-        if (success) {
-            try {
-                kotlinx.coroutines.withTimeout(30000L) {
-                    completionDeferred.await()
+        return try {
+            if (success) {
+                try {
+                    kotlinx.coroutines.withTimeout(30000L) {
+                        completionDeferred.await()
+                    }
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    Log.e("TtsOrchestrator", "speakAndWaitForCompletion 타임아웃")
                 }
-            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                Log.e("TtsOrchestrator", "speakAndWaitForCompletion 타임아웃")
+                val endTime = System.currentTimeMillis()
+                endTime - startTime
+            } else {
+                completionDeferred.complete(Unit)
+                0L
             }
-            val endTime = System.currentTimeMillis()
-            return endTime - startTime
-        } else {
-            completionDeferred.complete(Unit)
-            return 0L
+        } finally {
+            _isSpeaking.value = false
         }
     }
     
