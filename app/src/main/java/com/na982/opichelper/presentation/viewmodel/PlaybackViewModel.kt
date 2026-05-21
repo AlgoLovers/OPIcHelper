@@ -115,7 +115,8 @@ class PlaybackViewModel @Inject constructor(
                 ttsPlaybackController.currentAnswerKoSentence,
                 ttsPlaybackController.isPlaying,
                 _fullMemorizationSentenceEn,
-                _fullMemorizationSentenceKo
+                _fullMemorizationSentenceKo,
+                coordinator.isRunning
             ) { values ->
                 val questionSentence = values[0] as String?
                 val answerSentence = values[1] as String?
@@ -123,12 +124,14 @@ class PlaybackViewModel @Inject constructor(
                 val isPlaying = values[3] as Boolean
                 val fmSentenceEn = values[4] as String?
                 val fmSentenceKo = values[5] as String?
+                val isMemorizationRunning = values[6] as Boolean
                 val sentenceEn = fmSentenceEn ?: answerSentence ?: questionSentence
                 val sentenceKo = fmSentenceKo ?: answerKoSentence
                 _pipState.value = _pipState.value.copy(
                     currentSentenceEn = sentenceEn,
                     currentSentenceKo = sentenceKo,
-                    isPlaying = isPlaying
+                    isPlaying = isPlaying || isMemorizationRunning,
+                    isMemorizationRunning = isMemorizationRunning
                 )
                 updateNotificationSentence(sentenceEn, sentenceKo)
             }.collect { }
@@ -246,13 +249,24 @@ class PlaybackViewModel @Inject constructor(
     fun togglePlayPause() {
         if (_uiState.value.isPlaying) {
             ttsPlaybackController.pauseTts()
+        } else if (coordinator.isRunning.value) {
+            ttsPlaybackController.pauseTts()
         } else {
             ttsPlaybackController.resumeTts()
         }
     }
 
+    private var _stopMemorizationCallback: (() -> Unit)? = null
+
+    fun setStopMemorizationCallback(callback: () -> Unit) {
+        _stopMemorizationCallback = callback
+    }
+
     fun stopPlayback() {
         ttsPlaybackController.stopTts()
+        if (coordinator.isRunning.value) {
+            _stopMemorizationCallback?.invoke()
+        }
     }
 
     fun shouldEnterPip(): Boolean {
@@ -266,7 +280,9 @@ class PlaybackViewModel @Inject constructor(
 
     @Suppress("NewApi")
     private fun updateNotificationSentence(sentenceEn: String?, sentenceKo: String?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && _uiState.value.isPlaying) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+            && (_uiState.value.isPlaying || coordinator.isRunning.value)
+        ) {
             application.startService(
                 TtsForegroundService.updateSentenceIntent(application, sentenceEn, sentenceKo)
             )
