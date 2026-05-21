@@ -97,6 +97,13 @@ fun MainScreen(
         )
     }
 
+    // PiP 정지 버튼에서 현재 암기 모드를 올바르게 중지하도록 콜백 연결
+    LaunchedEffect(Unit) {
+        playbackViewModel.setStopMemorizationCallback {
+            stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
+        }
+    }
+
     val isDarkTheme = isSystemInDarkTheme()
 
     OPicHelperThemeWithMemorizeLevel(
