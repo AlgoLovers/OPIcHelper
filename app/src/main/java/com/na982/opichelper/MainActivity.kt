@@ -124,7 +124,7 @@ class MainActivity : ComponentActivity() {
     private fun setPipParams() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(16, 9))
+                .setAspectRatio(android.util.Rational(5, 3))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 params.setAutoEnterEnabled(false)
             }
@@ -136,7 +136,7 @@ class MainActivity : ComponentActivity() {
     private fun enterPipMode() {
         try {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(16, 9))
+                .setAspectRatio(android.util.Rational(5, 3))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 params.setAutoEnterEnabled(true)
             }
@@ -268,7 +268,7 @@ class MainActivity : ComponentActivity() {
     private fun updatePipAutoEnter(isPlaying: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(16, 9))
+                .setAspectRatio(android.util.Rational(5, 3))
                 .setAutoEnterEnabled(isPlaying)
             setPictureInPictureParams(params.build())
         }
@@ -279,7 +279,7 @@ class MainActivity : ComponentActivity() {
         if (!isInPictureInPictureMode) return
 
         val params = android.app.PictureInPictureParams.Builder()
-            .setAspectRatio(android.util.Rational(16, 9))
+            .setAspectRatio(android.util.Rational(5, 3))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             params.setAutoEnterEnabled(isPlaying)
