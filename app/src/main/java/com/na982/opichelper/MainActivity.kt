@@ -121,8 +121,17 @@ class MainActivity : ComponentActivity() {
 
     @Suppress("NewApi")
     private fun enterPipMode() {
+        val stopIcon = Icon.createWithResource(this, R.drawable.ic_stop)
+        val stopIntent = PendingIntent.getBroadcast(
+            this, 1,
+            Intent(ACTION_PIP_STOP),
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        val stopAction = android.app.RemoteAction(stopIcon, "정지", "정지", stopIntent)
+
         val params = android.app.PictureInPictureParams.Builder()
-            .setAspectRatio(android.util.Rational(239, 100))
+            .setAspectRatio(android.util.Rational(16, 9))
+            .setActions(listOf(stopAction))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             params.setAutoEnterEnabled(true)
         }
@@ -244,7 +253,7 @@ class MainActivity : ComponentActivity() {
         if (!isInPictureInPictureMode) return
 
         val params = android.app.PictureInPictureParams.Builder()
-            .setAspectRatio(android.util.Rational(239, 100))
+            .setAspectRatio(android.util.Rational(16, 9))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             params.setAutoEnterEnabled(isPlaying)
