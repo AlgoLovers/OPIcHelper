@@ -113,8 +113,7 @@ class MainActivity : ComponentActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val isPlaying = playbackViewModel?.uiState?.value?.isPlaying == true
-            if (isPlaying) {
+            if (playbackViewModel?.shouldEnterPip() == true) {
                 enterPipMode()
             }
         }

@@ -225,7 +225,7 @@ class PlaybackViewModel @Inject constructor(
 
     @Suppress("NewApi")
     fun onBackgroundMove() {
-        if (_uiState.value.isPlaying) {
+        if (_uiState.value.isPlaying || coordinator.isRunning.value) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 application.startForegroundService(TtsForegroundService.startIntent(application))
             } else {
@@ -253,6 +253,10 @@ class PlaybackViewModel @Inject constructor(
 
     fun stopPlayback() {
         ttsPlaybackController.stopTts()
+    }
+
+    fun shouldEnterPip(): Boolean {
+        return _uiState.value.isPlaying || coordinator.isRunning.value
     }
 
     fun setFullMemorizationSentence(en: String?, ko: String?) {
