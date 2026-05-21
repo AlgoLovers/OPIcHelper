@@ -126,7 +126,10 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             params.setAutoEnterEnabled(true)
         }
-        enterPictureInPictureMode(params.build())
+        val entered = enterPictureInPictureMode(params.build())
+        if (!entered) {
+            Log.w("MainActivity", "PiP 진입 실패 — 기기 설정에서 PiP 권한을 확인하세요")
+        }
     }
 
     override fun onPictureInPictureModeChanged(
