@@ -24,6 +24,9 @@ class TtsPlaybackController @Inject constructor(
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
+
     private val _isQuestionPlaying = MutableStateFlow(false)
     val isQuestionPlaying: StateFlow<Boolean> = _isQuestionPlaying.asStateFlow()
 
@@ -76,6 +79,7 @@ class TtsPlaybackController @Inject constructor(
             } finally {
                 if (currentPlayJob == myJob) {
                     _isPlaying.value = false
+                    _isPaused.value = false
                     _isQuestionPlaying.value = false
                     _questionHighlightIndex.value = null
                     _currentQuestionSentence.value = null
@@ -102,6 +106,7 @@ class TtsPlaybackController @Inject constructor(
             } finally {
                 if (currentPlayJob == myJob) {
                     _isPlaying.value = false
+                    _isPaused.value = false
                     _isAnswerPlaying.value = false
                     _answerHighlightIndex.value = null
                     _currentAnswerSentence.value = null
@@ -143,6 +148,7 @@ class TtsPlaybackController @Inject constructor(
             } finally {
                 if (currentPlayJob == myJob) {
                     _isPlaying.value = false
+                    _isPaused.value = false
                     _isQuestionPlaying.value = false
                     _isAnswerPlaying.value = false
                     _questionHighlightIndex.value = null
@@ -166,6 +172,7 @@ class TtsPlaybackController @Inject constructor(
 
     private fun resetPlayState() {
         _isPlaying.value = false
+        _isPaused.value = false
         _isQuestionPlaying.value = false
         _isAnswerPlaying.value = false
         _questionHighlightIndex.value = null
@@ -180,6 +187,7 @@ class TtsPlaybackController @Inject constructor(
     fun pauseTts() {
         try {
             ttsOrchestrator.pause()
+            _isPaused.value = true
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 일시 중지 실패", e)
         }
@@ -188,6 +196,7 @@ class TtsPlaybackController @Inject constructor(
     fun resumeTts() {
         try {
             ttsOrchestrator.resume()
+            _isPaused.value = false
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 재개 실패", e)
         }

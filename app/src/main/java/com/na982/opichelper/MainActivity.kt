@@ -169,6 +169,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         isFinishing = true
+        playbackViewModel?.cleanupAllTtsSync()
         unregisterPipActionReceiver()
         cleanupAllResources()
     }
@@ -229,14 +230,14 @@ class MainActivity : ComponentActivity() {
             }
             playbackViewModel?.pipState?.collect { state ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    updatePipActions(state.isPlaying)
+                    updatePipActions(state.isPlaying, state.isPaused, state.isPausable)
                 }
             }
         }
     }
 
     @Suppress("NewApi")
-    private fun updatePipActions(isPlaying: Boolean) {
+    private fun updatePipActions(isPlaying: Boolean, isPaused: Boolean, isPausable: Boolean) {
         if (!isInPictureInPictureMode) return
 
         val params = android.app.PictureInPictureParams.Builder()
@@ -248,23 +249,26 @@ class MainActivity : ComponentActivity() {
 
         val actions = ArrayList<android.app.RemoteAction>()
 
-        val playPauseIcon = Icon.createWithResource(
-            this,
-            if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
-        )
-        val playPauseIntent = PendingIntent.getBroadcast(
-            this, 0,
-            Intent(ACTION_PIP_PLAY_PAUSE),
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        actions.add(
-            android.app.RemoteAction(
-                playPauseIcon,
-                if (isPlaying) "일시정지" else "재생",
-                if (isPlaying) "일시정지" else "재생",
-                playPauseIntent
+        if (isPausable) {
+            val showPause = isPlaying && !isPaused
+            val playPauseIcon = Icon.createWithResource(
+                this,
+                if (showPause) R.drawable.ic_pause else R.drawable.ic_play
             )
-        )
+            val playPauseIntent = PendingIntent.getBroadcast(
+                this, 0,
+                Intent(ACTION_PIP_PLAY_PAUSE),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            actions.add(
+                android.app.RemoteAction(
+                    playPauseIcon,
+                    if (showPause) "일시정지" else "재생",
+                    if (showPause) "일시정지" else "재생",
+                    playPauseIntent
+                )
+            )
+        }
 
         val stopIcon = Icon.createWithResource(this, R.drawable.ic_stop)
         val stopIntent = PendingIntent.getBroadcast(

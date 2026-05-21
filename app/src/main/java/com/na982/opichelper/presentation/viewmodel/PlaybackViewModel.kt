@@ -114,23 +114,30 @@ class PlaybackViewModel @Inject constructor(
                 ttsPlaybackController.currentAnswerSentence,
                 ttsPlaybackController.currentAnswerKoSentence,
                 ttsPlaybackController.isPlaying,
+                ttsPlaybackController.isPaused,
                 _fullMemorizationSentenceEn,
                 _fullMemorizationSentenceKo,
-                coordinator.isRunning
+                coordinator.isRunning,
+                playMergedFileUseCase.isPlaying
             ) { values ->
                 val questionSentence = values[0] as String?
                 val answerSentence = values[1] as String?
                 val answerKoSentence = values[2] as String?
                 val isPlaying = values[3] as Boolean
-                val fmSentenceEn = values[4] as String?
-                val fmSentenceKo = values[5] as String?
-                val isMemorizationRunning = values[6] as Boolean
+                val isPaused = values[4] as Boolean
+                val fmSentenceEn = values[5] as String?
+                val fmSentenceKo = values[6] as String?
+                val isMemorizationRunning = values[7] as Boolean
+                val isMergedFilePlaying = values[8] as Boolean
                 val sentenceEn = fmSentenceEn ?: answerSentence ?: questionSentence
                 val sentenceKo = fmSentenceKo ?: answerKoSentence
+                val active = isPlaying || isMemorizationRunning || isMergedFilePlaying
                 _pipState.value = _pipState.value.copy(
-                    currentSentenceEn = sentenceEn,
-                    currentSentenceKo = sentenceKo,
-                    isPlaying = isPlaying || isMemorizationRunning
+                    currentSentenceEn = if (sentenceEn != null) sentenceEn else if (active) _pipState.value.currentSentenceEn else null,
+                    currentSentenceKo = if (sentenceKo != null) sentenceKo else if (active) _pipState.value.currentSentenceKo else null,
+                    isPlaying = active,
+                    isPaused = if (active) isPaused else false,
+                    isPausable = !isMergedFilePlaying
                 )
                 updateNotificationSentence(sentenceEn, sentenceKo)
             }.collect { }
@@ -227,7 +234,7 @@ class PlaybackViewModel @Inject constructor(
 
     @Suppress("NewApi")
     fun onBackgroundMove() {
-        if (_uiState.value.isPlaying || coordinator.isRunning.value) {
+        if (_uiState.value.isPlaying || coordinator.isRunning.value || playMergedFileUseCase.isPlaying.value) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 application.startForegroundService(TtsForegroundService.startIntent(application))
             } else {
@@ -246,12 +253,10 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun togglePlayPause() {
-        if (_uiState.value.isPlaying) {
-            ttsPlaybackController.pauseTts()
-        } else if (coordinator.isRunning.value) {
-            ttsPlaybackController.pauseTts()
-        } else {
+        if (ttsPlaybackController.isPaused.value) {
             ttsPlaybackController.resumeTts()
+        } else if (_uiState.value.isPlaying || coordinator.isRunning.value) {
+            ttsPlaybackController.pauseTts()
         }
     }
 
@@ -270,7 +275,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun shouldEnterPip(): Boolean {
-        return _uiState.value.isPlaying || coordinator.isRunning.value
+        return _uiState.value.isPlaying || coordinator.isRunning.value || playMergedFileUseCase.isPlaying.value
     }
 
     fun setFullMemorizationSentence(en: String?, ko: String?) {
