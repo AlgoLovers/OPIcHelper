@@ -142,6 +142,14 @@ class QaBrowserViewModel @Inject constructor(
         userPreferencesRepository.setOnboardingCompleted()
     }
 
+    fun isPipGuideCompleted(): Boolean {
+        return userPreferencesRepository.isPipGuideCompleted()
+    }
+
+    fun setPipGuideCompleted() {
+        userPreferencesRepository.setPipGuideCompleted()
+    }
+
     fun search(query: String): List<QaItem> {
         return searchQaItemsUseCase.search(query)
     }

@@ -84,6 +84,14 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
         prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, true).apply()
     }
 
+    override fun isPipGuideCompleted(): Boolean {
+        return prefs.getBoolean(KEY_PIP_GUIDE_COMPLETED, false)
+    }
+
+    override fun setPipGuideCompleted() {
+        prefs.edit().putBoolean(KEY_PIP_GUIDE_COMPLETED, true).apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "user_prefs"
         private const val KEY_USER_LEVEL = "user_level"
@@ -93,5 +101,6 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
         private const val KEY_ANSWER_PLAY_COUNT = "answer_play_count"
         private const val KEY_AUTO_ADVANCE = "auto_advance"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
+        private const val KEY_PIP_GUIDE_COMPLETED = "pip_guide_completed"
     }
 }

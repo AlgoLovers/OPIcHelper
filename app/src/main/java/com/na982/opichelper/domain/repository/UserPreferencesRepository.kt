@@ -54,4 +54,7 @@ interface UserPreferencesRepository {
 
     fun isOnboardingCompleted(): Boolean
     fun setOnboardingCompleted()
+
+    fun isPipGuideCompleted(): Boolean
+    fun setPipGuideCompleted()
 } 
