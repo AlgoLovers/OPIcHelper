@@ -179,9 +179,7 @@ class TtsPlaybackController @Inject constructor(
 
     fun pauseTts() {
         try {
-            if (_isPlaying.value) {
-                ttsOrchestrator.pause()
-            }
+            ttsOrchestrator.pause()
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 일시 중지 실패", e)
         }
@@ -189,9 +187,7 @@ class TtsPlaybackController @Inject constructor(
 
     fun resumeTts() {
         try {
-            if (_isPlaying.value) {
-                ttsOrchestrator.resume()
-            }
+            ttsOrchestrator.resume()
         } catch (e: Exception) {
             Log.e("TtsPlaybackController", "TTS 재개 실패", e)
         }
