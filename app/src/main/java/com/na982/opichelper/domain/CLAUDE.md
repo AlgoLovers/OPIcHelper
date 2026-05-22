@@ -29,41 +29,42 @@ domain/
 
 | 파일 | 역할 | 비고 |
 |------|------|------|
-| `TtsPlayer.kt` | TTS 엔진 인터페이스 | speak, stop, pause, resume, isPlaying, isAvailable, getServiceName, speakWithHighlight, speakAndGetDuration, release |
+| `TtsPlayer.kt` | TTS 엔진 인터페이스 | speak(TtsSpeakResult 반환), stop, pause, resume, isPlaying, isAvailable, getServiceName, release |
+| `TtsSpeakResult.kt` | TTS 재생 결과 sealed class | Success(durationMs), Error(message), Timeout, Unavailable |
+| `HighlightStateHolder.kt` | **@Singleton** 하이라이트 상태 관리 | 7개 StateFlow (4개 highlightIndex + 3개 sentence). TtsPlaybackController에서 분리 추출 |
 | `AudioPlayer.kt` | 오디오 파일 재생 인터페이스 | Data 계층에서 구현. java.io.File 사용 |
 | `AudioRecorder.kt` | 녹음 인터페이스 | Data 계층에서 구현. java.io.File 사용 |
 | `RecordingAudioPlayer.kt` | 녹음 재생 전용 인터페이스 | Data 계층에서 구현 |
 | `MemorizeTestEvent.kt` | 암기 테스트 이벤트 sealed class | CardFlip, Highlight, KoreanHighlight, RecordingHighlight, RecordingStateChange, MergedFileCreated, Completed |
-| `TtsOrchestrator.kt` | 언어 감지→TTS 라우팅 | 한국어: Samsung, 영어: Google. speakWithHighlight로 문장별 하이라이트 지원 (15초 타임아웃). 한글 TTS 폴백: 모든 서비스 실패 시 index 0 리셋. Hilt에 의해 싱글톤 보장 |
-| `TtsPlaybackController.kt` | **@Singleton** 재생 상태 관리 | playQuestion/playAnswer/playMergedAudio. 7개 StateFlow 제공 (isPlaying, isQuestionPlaying, isAnswerPlaying + 4개 highlightIndex). setQuestionHighlightIndex/setAnswerHighlightIndex/setAnswerKoHighlightIndex/setRecordingHighlightIndex/clearHighlight. pauseTts/resumeTts/cleanupTts/close. TtsOrchestrator는 setter로 주입됨 (생성자 아님) |
+| `TtsOrchestrator.kt` | 언어 감지→TTS 라우팅 | 한국어: Samsung, 영어: Google. speak()는 TtsSpeakResult 반환. speakWithHighlight로 문장별 하이라이트 지원. 한글 TTS 폴백: 모든 서비스 실패 시 index 0 리셋. Hilt에 의해 싱글톤 보장 |
+| `TtsPlaybackController.kt` | **@Singleton** 재생 상태 관리 | playQuestion/playAnswer/playMergedAudio. 4개 재생 StateFlow (isPlaying, isPaused, isQuestionPlaying, isAnswerPlaying). 하이라이트는 HighlightStateHolder에 위임. stopAndReset()으로 stop 통합 |
 
 ### TtsPlaybackController 핵심 API
 
 ```
-playQuestion()       → stopCurrentAndPrepare() + 코루틴에서 speakWithHighlight
+playQuestion()       → stopAndReset() + 코루틴에서 speakWithHighlight
 playAnswer()         → 동일 패턴
 playMergedAudio()    → 질문 TTS → 500ms 딜레이 → 답변 TTS 순차 재생
-stopCurrentAndPrepare() → 기존 Job 취소 + 상태 리셋 (TTS stop 호출 안함)
-stopTts() / stopAllTts() → 동일: TTS stop + Job 취소 + 상태 리셋 + 하이라이트 제거
-forceStopTts()       → TTS stop + Job 취소 + 상태 리셋 (하이라이트 유지)
-setAnswerHighlightIndex(idx)    → answerHighlightIndex StateFlow 업데이트
-setAnswerKoHighlightIndex(idx)  → answerKoHighlightIndex StateFlow 업데이트
-setRecordingHighlightIndex(idx) → recordingHighlightIndex StateFlow 업데이트
-clearHighlight()     → 모든 highlightIndex를 null로 리셋
+stopAndReset(clearHighlight) → Job 취소(1차) + orchestrator.stop(안전망) + 상태 리셋
+stopTts()            → stopAndReset(clearHighlight = true)
+forceStopTts()       → stopAndReset(clearHighlight = false)
+setAnswerHighlightIndex(idx)    → HighlightStateHolder에 위임
+setAnswerKoHighlightIndex(idx)  → HighlightStateHolder에 위임
+setRecordingHighlightIndex(idx) → HighlightStateHolder에 위임
+clearHighlight()     → HighlightStateHolder.clearHighlight()
 pauseTts() / resumeTts() → TTS 일시정지/재개
-cleanupTts()         → forceStopTts + clearHighlight
+cleanupTts()         → stopTts + releaseAllPlayers
 close()              → Closeable 구현, 코루틴 스코프 취소
 ```
 
-**주의**: playQuestion/playAnswer/playMergedAudio는 `stopCurrentAndPrepare()`를 사용. `forceStopTts()`를 사용하면 TTS 엔진에 불필요한 stop이 추가로 전송되어 간헐적 재생 불가 버그 발생 가능. `stopTts()`와 `stopAllTts()`는 동일한 동작.
+**주의**: stopAndReset()은 Job 취소를 1차 메커니즘으로 사용. BaseTtsPlayer의 CancellationException 핸들러가 엔진을 정지함. orchestrator.stop()은 안전망.
 
 ### TtsOrchestrator 핵심 API
 
 ```
-speak(text, onComplete)                — 기본 TTS 재생 (언어 자동 감지)
-speakWithHighlight(text, onHighlight)  — 문장별 하이라이트 콜백 (15초/문장 타임아웃)
-speakAndWaitForCompletion(text, ...)   — 완료 대기 (30초 타임아웃), isKorean/rate 파라미터는 미사용
-speakAndGetDuration(text, ...)         — 재생 후 경과 시간 반환, isKorean/rate 파라미터는 미사용
+speak(text)                            — TTS 재생 (TtsSpeakResult 반환, 언어 자동 감지)
+speakWithHighlight(text, onHighlight)  — 문장별 하이라이트 콜백
+speakAndWaitForCompletion(text, ...)   — 완료 대기 후 durationMs 반환, isKorean/rate 파라미터는 미사용
 stop() / pause() / resume()            — 재생 제어
 releaseAllPlayers()                     — 모든 TTS 플레이어 해제 (앱 종료 시)
 isPlaying()                            — 현재 재생 중 여부

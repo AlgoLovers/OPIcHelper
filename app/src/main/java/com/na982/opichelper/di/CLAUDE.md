@@ -13,7 +13,8 @@
 | `@Named("google") TtsPlayer` | `GoogleTtsPlayer` | @Provides |
 | `@Named("samsung") TtsPlayer` | `SamsungTtsPlayer` | @Provides |
 | `TtsOrchestrator` | 직접 제공 (Application context 주입) | @Provides @Singleton |
-| `TtsPlaybackController` | `@Inject constructor` + `@Singleton` | **Hilt 자동 제공** (AppModule에 명시 없음) |
+| `TtsPlaybackController` | `@Inject constructor` + `@Singleton` | **Hilt 자동 제공** (TtsOrchestrator + HighlightStateHolder 주입) |
+| `HighlightStateHolder` | `@Inject constructor` + `@Singleton` | **Hilt 자동 제공** (하이라이트 상태 단일 진실 공급원) |
 
 ### 오디오
 | 바인딩 | 구현체 | 제공 방식 |
@@ -51,7 +52,7 @@ Hilt는 `@Provides`를 우선 사용하므로 `@Inject constructor`의 `@Singlet
 - ViewModel은 `@HiltViewModel` + `@Inject constructor`로 자동 주입 (모듈에서 제공하지 않음)
 - `SharedPreferences`는 `opic_prefs` 하나만 @Provides로 제공. 다른 prefs (user_prefs, auth_prefs, recording_times)는 각 Repository에서 `Context.getSharedPreferences()`으로 직접 생성
 - `QaDataManager`는 `ProgressPersistenceService`와 `MemorizeTestProgressTracker`를 주입받음
-- `TtsPlaybackController`는 생성자에 매개변수가 없으며, `setTtsOrchestrator()`로 PlaybackViewModel.init에서 주입받음 (DI 보장 불안정)
+- `TtsPlaybackController`는 생성자 주입으로 TtsOrchestrator + HighlightStateHolder를 받음
 
 ## 규칙
 - 새 Repository 인터페이스 추가 시: domain에 인터페이스 → data에 구현체 → AppModule에 @Provides 바인딩

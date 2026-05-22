@@ -14,7 +14,7 @@ data/
 
 | 파일 | 역할 | 주의사항 |
 |------|------|----------|
-| `BaseTtsPlayer.kt` | Android TTS 추상 베이스. speak/stop/release 공통 로직 | `initializeTts()`에서 TextToSpeech 콜백으로 초기화. speak()는 Mutex로 직렬화, onStart 콜백으로 재생 시작 보장(2초 타임아웃), 재생 완료까지 대기(30초 타임아웃), 능동적 stop() + isSpeaking 폴링으로 엔진 정지 대기 |
+| `BaseTtsPlayer.kt` | Android TTS 추상 베이스. speak/stop/release 공통 로직 | `initializeTts()`에서 TextToSpeech 콜백으로 초기화. speak()는 Mutex로 직렬화, TtsSpeakResult 반환 (Success(durationMs)/Error/Timeout/Unavailable). onStart 콜백으로 재생 시작 보장(2초 타임아웃), 재생 완료까지 대기(30초 타임아웃), 능동적 stop() + isSpeaking 폴링으로 엔진 정지 대기. CancellationException 시 tts?.stop() 호출 |
 | `GoogleTtsPlayer.kt` | 영어 TTS (Locale.US) | `@Named("google")`으로 AppModule에서 주입. speakAndGetDuration()에서 버전별 속도 최적화 |
 | `SamsungTtsPlayer.kt` | 한국어 TTS (Locale.KOREAN) | `@Named("samsung")`으로 AppModule에서 주입. 한글 TTS 실패 시 폴백은 TtsOrchestrator에서 처리(index 0 리셋) |
 | `AudioRecorderImpl.kt` | MediaRecorder(context) 기반 녹음. AAC/M4A 128kbps, 44100Hz | stopRecording 내부에서 release 자동 호출. Context 필요 생성자 사용 |
@@ -24,13 +24,12 @@ data/
 ### BaseTtsPlayer.speak() 재생 보장 메커니즘
 
 1. `tts?.stop()` + `isSpeaking` 폴링: 능동적으로 엔진 정지 후 완전히 idle일 때까지 대기 (최대 2초)
-2. `tts.speak()` 반환값 검사: `ERROR` 반환 시 즉시 실패 처리
-3. `onStart` 콜백 대기: 실제 재생 시작 확인 (2초 타임아웃, 초과 시 실패 처리)
-4. `completionDeferred.await()`: 재생 완료까지 대기 (30초 안전 타임아웃)
+2. `tts.speak()` 반환값 검사: `ERROR` 반환 시 즉시 `TtsSpeakResult.Error` 반환
+3. `onStart` 콜백 대기: 실제 재생 시작 확인 (2초 타임아웃, 초과 시 `TtsSpeakResult.Error` 반환)
+4. `completionDeferred.await()`: 재생 완료까지 대기 (30초 안전 타임아웃, 초과 시 `TtsSpeakResult.Timeout` 반환)
+5. `CancellationException` 시 `tts?.stop()` 호출 후 재throw
 
-이 메커니즘은 간헐적 TTS 재생 불가 버그를 방지합니다. speak()는 재생 완료 후 반환됩니다.
-
-**주의**: 동시에 여러 코루틴에서 speak() 호출 시 UtteranceProgressListener가 덮어씌워질 수 있음. 현재는 TtsPlaybackController의 Job 취소로 직렬화되어 보호됨.
+이 메커니즘은 간헐적 TTS 재생 불가 버그를 방지합니다. speak()는 재생 완료 후 `TtsSpeakResult`를 반환합니다.
 
 ### TTS 레이트 로직
 

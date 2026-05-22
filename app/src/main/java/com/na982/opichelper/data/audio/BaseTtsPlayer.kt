@@ -5,16 +5,13 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import com.na982.opichelper.domain.audio.TtsPlayer
-import kotlinx.coroutines.*
+import com.na982.opichelper.domain.audio.TtsSpeakResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * TTS 플레이어들의 공통 로직을 담은 베이스 클래스
- * Android TextToSpeech 기반 TTS 플레이어들의 공통 기능 제공
- */
 abstract class BaseTtsPlayer(
     protected val context: Context,
     private val locale: Locale,
@@ -30,11 +27,11 @@ abstract class BaseTtsPlayer(
     protected var _isPlaying = false
 
     private val speakMutex = Mutex()
-    
+
     init {
         initializeTts()
     }
-    
+
     private fun initializeTts() {
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -46,49 +43,41 @@ abstract class BaseTtsPlayer(
             }
         }
     }
-    
-    override fun isAvailable(): Boolean {
-        return isInitialized
-    }
-    
-    override fun getServiceName(): String {
-        return serviceName
-    }
-    
-    override suspend fun speak(text: String, onComplete: (() -> Unit)?): Boolean {
+
+    override fun isAvailable(): Boolean = isInitialized
+
+    override fun getServiceName(): String = serviceName
+
+    override suspend fun speak(text: String): TtsSpeakResult {
         if (!isAvailable()) {
             Log.e(logTag, "$serviceName 사용 불가")
-            onComplete?.invoke()
-            return false
+            return TtsSpeakResult.Unavailable
         }
 
         return speakMutex.withLock {
-            val onCompleteCalled = AtomicBoolean(false)
+            val completed = AtomicBoolean(false)
             try {
-                // 능동적으로 엔진을 정지시키고 완전히 idle일 때까지 대기
                 tts?.stop()
                 var waitCount = 0
                 while (tts?.isSpeaking == true && waitCount < 40) {
                     kotlinx.coroutines.delay(50)
                     waitCount++
                 }
-                // 엔진이 idle 보고 후에도 내부 상태 전환 시간 확보
                 if (waitCount > 0) {
                     kotlinx.coroutines.delay(150)
                 }
 
-                // 기본 설정 적용
                 tts?.setSpeechRate(getSpeechRate())
                 tts?.setPitch(getPitch())
 
                 val utteranceId = "${logTag.lowercase()}_${System.currentTimeMillis()}"
-                val completionDeferred = kotlinx.coroutines.CompletableDeferred<Unit>()
-                val completed = AtomicBoolean(false)
+                val startTime = System.currentTimeMillis()
+                val completionDeferred = kotlinx.coroutines.CompletableDeferred<TtsSpeakResult>()
                 var started = false
 
-                fun safeComplete() {
+                fun safeComplete(result: TtsSpeakResult) {
                     if (completed.compareAndSet(false, true)) {
-                        completionDeferred.complete(Unit)
+                        completionDeferred.complete(result)
                     }
                 }
 
@@ -99,21 +88,19 @@ abstract class BaseTtsPlayer(
                     }
                     override fun onDone(utteranceId: String?) {
                         _isPlaying = false
-                        safeComplete()
-                        if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
+                        val duration = System.currentTimeMillis() - startTime
+                        safeComplete(TtsSpeakResult.Success(duration))
                     }
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         Log.e(logTag, "$serviceName 재생 오류")
                         _isPlaying = false
-                        safeComplete()
-                        if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
+                        safeComplete(TtsSpeakResult.Error("재생 오류"))
                     }
                     override fun onError(utteranceId: String?, errorCode: Int) {
                         Log.e(logTag, "$serviceName 재생 오류: $errorCode")
                         _isPlaying = false
-                        safeComplete()
-                        if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
+                        safeComplete(TtsSpeakResult.Error("오류 코드: $errorCode"))
                     }
                 })
 
@@ -121,12 +108,9 @@ abstract class BaseTtsPlayer(
                 if (result == TextToSpeech.ERROR) {
                     Log.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
                     _isPlaying = false
-                    safeComplete()
-                    if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
-                    return@withLock false
+                    return@withLock TtsSpeakResult.Error("speak() 반환 ERROR")
                 }
 
-                // onStart 콜백 대기 (최대 2초)
                 val startDeadline = System.currentTimeMillis() + 2000
                 while (!started && System.currentTimeMillis() < startDeadline) {
                     kotlinx.coroutines.delay(50)
@@ -134,12 +118,9 @@ abstract class BaseTtsPlayer(
                 if (!started) {
                     Log.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
                     _isPlaying = false
-                    safeComplete()
-                    if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
-                    return@withLock false
+                    return@withLock TtsSpeakResult.Error("재생 시작 타임아웃")
                 }
 
-                // 재생 완료까지 대기 (최대 30초 안전 타임아웃)
                 try {
                     kotlinx.coroutines.withTimeout(30000L) {
                         completionDeferred.await()
@@ -147,47 +128,20 @@ abstract class BaseTtsPlayer(
                 } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                     Log.e(logTag, "$serviceName 재생 완료 타임아웃")
                     _isPlaying = false
-                    if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
+                    TtsSpeakResult.Timeout
                 }
-
-                true
             } catch (e: CancellationException) {
                 _isPlaying = false
-                if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
+                tts?.stop()
                 throw e
             } catch (e: Exception) {
                 Log.e(logTag, "$serviceName 오류", e)
                 _isPlaying = false
-                if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
-                false
+                TtsSpeakResult.Error(e.message ?: "알 수 없는 오류")
             }
         }
     }
-    
-    override suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
-        // 기본 구현: 하이라이트 없이 재생
-        speak(text, null)
-    }
-    
-    override suspend fun speakAndGetDuration(text: String, isKorean: Boolean, rate: Float): Long {
-        val start = System.currentTimeMillis()
-        val finished = kotlinx.coroutines.CompletableDeferred<Unit>()
-        val done = AtomicBoolean(false)
 
-        val result = speak(text) {
-            if (done.compareAndSet(false, true)) {
-                finished.complete(Unit)
-            }
-        }
-
-        if (!result && !finished.isCompleted) {
-            finished.complete(Unit)
-        }
-
-        finished.await()
-        return System.currentTimeMillis() - start
-    }
-    
     override fun stop() {
         try {
             tts?.stop()
@@ -196,10 +150,9 @@ abstract class BaseTtsPlayer(
             Log.e(logTag, "$serviceName 중지 실패", e)
         }
     }
-    
+
     override fun pause() {
         try {
-            // Android TTS는 pause 기능이 없으므로 stop으로 대체
             tts?.stop()
             _isPlaying = false
         } catch (e: Exception) {
@@ -208,18 +161,11 @@ abstract class BaseTtsPlayer(
     }
 
     override fun resume() {
-        try {
-            // Android TTS는 resume 기능이 없으므로
-            Log.w(logTag, "$serviceName 재개 불가 - Android TTS 제한")
-        } catch (e: Exception) {
-            Log.e(logTag, "$serviceName 재개 실패", e)
-        }
+        Log.w(logTag, "$serviceName 재개 불가 - Android TTS 제한")
     }
-    
-    override fun isPlaying(): Boolean {
-        return _isPlaying || (tts?.isSpeaking == true)
-    }
-    
+
+    override fun isPlaying(): Boolean = _isPlaying || (tts?.isSpeaking == true)
+
     override fun release() {
         try {
             tts?.stop()
@@ -231,14 +177,7 @@ abstract class BaseTtsPlayer(
         isInitialized = false
         _isPlaying = false
     }
-    
-    /**
-     * 음성 속도 설정 (하위 클래스에서 오버라이드 가능)
-     */
+
     protected open fun getSpeechRate(): Float = 0.8f
-    
-    /**
-     * 음성 피치 설정 (하위 클래스에서 오버라이드 가능)
-     */
     protected open fun getPitch(): Float = 1.0f
-} 
+}

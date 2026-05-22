@@ -191,6 +191,11 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | ViewModel stop/onLevelChanged 중복 | BaseMemorizationViewModel 추출 (0062) |
 | Repository TTS 재생 패턴 중복 | BaseMemorizeTestRepository 추출 (0062) |
 | MainScreen LaunchedEffect 크로스 VM 릴레이 | 코디네이터 이벤트 시스템으로 이관 (0062) |
+| TTS 콜백-코루틴 변환 3단계 중복 | TtsSpeakResult 도입, onComplete 콜백 제거, CompletableDeferred 단일화 (0096) |
+| TtsOrchestrator 중첩 CompletableDeferred 타임아웃 충돌 | speak() 직접 await로 간소화, speakAndGetDuration 제거 (0096) |
+| TtsPlaybackController 이중 stop 경쟁 상태 | stopAndReset() 통합, Job 취소 1차 + orchestrator.stop 안전망 (0096) |
+| TtsPlaybackController SRP 위반 (10개 StateFlow) | HighlightStateHolder 분리, 하이라이트 상태 단일 진실 공급원 (0096) |
+| TtsPlayer 인터페이스 미사용 메서드 | speakWithHighlight, speakAndGetDuration 제거 (0096) |
 
 ## Git 커밋 규칙
 

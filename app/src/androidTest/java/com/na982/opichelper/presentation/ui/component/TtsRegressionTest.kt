@@ -4,6 +4,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlaybackController
+import com.na982.opichelper.domain.audio.HighlightStateHolder
+import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.data.audio.GoogleTtsPlayer
 import com.na982.opichelper.data.audio.SamsungTtsPlayer
 import kotlinx.coroutines.flow.first
@@ -39,7 +41,8 @@ class TtsRegressionTest {
             samsungTtsPlayer = samsungTtsPlayer
         )
 
-        ttsPlaybackController = TtsPlaybackController(ttsOrchestrator)
+        val highlightStateHolder = HighlightStateHolder()
+        ttsPlaybackController = TtsPlaybackController(ttsOrchestrator, highlightStateHolder)
     }
 
     private fun waitForTtsInitialization() {
@@ -108,9 +111,9 @@ class TtsRegressionTest {
     @Test
     fun should_not_have_tts_orchestrator_initialization_error() = runTest {
         val englishText = "Test text"
-        val result = ttsOrchestrator.speak(englishText, null)
+        val result = ttsOrchestrator.speak(englishText)
 
-        assertTrue(result)
+        assertTrue(result is TtsSpeakResult.Success)
     }
 
     @Test
