@@ -23,17 +23,17 @@ class TtsPlaybackController @Inject constructor(
     @Volatile
     private var currentPlayJob: Job? = null
 
-    private val _isPlaying = MutableStateFlow(false)
-    val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
-
-    private val _isPaused = MutableStateFlow(false)
-    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
-
     private val _isQuestionPlaying = MutableStateFlow(false)
     val isQuestionPlaying: StateFlow<Boolean> = _isQuestionPlaying.asStateFlow()
 
     private val _isAnswerPlaying = MutableStateFlow(false)
     val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
+
+    val isPlaying: StateFlow<Boolean> get() = _isPlaying
+    private val _isPlaying = MutableStateFlow(false)
+
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
 
     val questionHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.questionHighlightIndex
     val answerHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.answerHighlightIndex
@@ -56,12 +56,10 @@ class TtsPlaybackController @Inject constructor(
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
-                _isPlaying.value = true
                 _isQuestionPlaying.value = true
-
-                val sentences = SentenceSplitter.split(question)
-                ttsOrchestrator.speakWithHighlight(question) { index ->
-                    highlightStateHolder.setQuestionHighlight(index ?: -1, index?.let { sentences.getOrNull(it) })
+                updateIsPlaying()
+                ttsOrchestrator.speakWithHighlight(question) { index, sentence ->
+                    highlightStateHolder.setQuestionHighlight(index, sentence)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -69,10 +67,10 @@ class TtsPlaybackController @Inject constructor(
                 Log.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
-                    _isPlaying.value = false
-                    _isPaused.value = false
                     _isQuestionPlaying.value = false
-                    highlightStateHolder.setQuestionHighlight(-1)
+                    _isPaused.value = false
+                    updateIsPlaying()
+                    highlightStateHolder.setQuestionHighlight(null)
                 }
             }
         }
@@ -83,12 +81,10 @@ class TtsPlaybackController @Inject constructor(
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
-                _isPlaying.value = true
                 _isAnswerPlaying.value = true
-
-                val sentences = SentenceSplitter.split(answer)
-                ttsOrchestrator.speakWithHighlight(answer) { index ->
-                    highlightStateHolder.setAnswerHighlight(index ?: -1, index?.let { sentences.getOrNull(it) })
+                updateIsPlaying()
+                ttsOrchestrator.speakWithHighlight(answer) { index, sentence ->
+                    highlightStateHolder.setAnswerHighlight(index, sentence)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -96,10 +92,10 @@ class TtsPlaybackController @Inject constructor(
                 Log.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
-                    _isPlaying.value = false
-                    _isPaused.value = false
                     _isAnswerPlaying.value = false
-                    highlightStateHolder.setAnswerHighlight(-1)
+                    _isPaused.value = false
+                    updateIsPlaying()
+                    highlightStateHolder.setAnswerHighlight(null)
                 }
             }
         }
@@ -110,37 +106,35 @@ class TtsPlaybackController @Inject constructor(
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
-                _isPlaying.value = true
-
                 _isQuestionPlaying.value = true
-                val questionSentences = SentenceSplitter.split(question)
-                ttsOrchestrator.speakWithHighlight(question) { index ->
-                    highlightStateHolder.setQuestionHighlight(index ?: -1, index?.let { questionSentences.getOrNull(it) })
+                updateIsPlaying()
+                ttsOrchestrator.speakWithHighlight(question) { index, sentence ->
+                    highlightStateHolder.setQuestionHighlight(index, sentence)
                 }
                 _isQuestionPlaying.value = false
-                highlightStateHolder.setQuestionHighlight(-1)
+                highlightStateHolder.setQuestionHighlight(null)
 
                 kotlinx.coroutines.delay(500)
 
                 _isAnswerPlaying.value = true
-                val answerSentences = SentenceSplitter.split(answer)
-                ttsOrchestrator.speakWithHighlight(answer) { index ->
-                    highlightStateHolder.setAnswerHighlight(index ?: -1, index?.let { answerSentences.getOrNull(it) })
+                updateIsPlaying()
+                ttsOrchestrator.speakWithHighlight(answer) { index, sentence ->
+                    highlightStateHolder.setAnswerHighlight(index, sentence)
                 }
                 _isAnswerPlaying.value = false
-                highlightStateHolder.setAnswerHighlight(-1)
+                highlightStateHolder.setAnswerHighlight(null)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
-                    _isPlaying.value = false
-                    _isPaused.value = false
                     _isQuestionPlaying.value = false
                     _isAnswerPlaying.value = false
-                    highlightStateHolder.setQuestionHighlight(-1)
-                    highlightStateHolder.setAnswerHighlight(-1)
+                    _isPaused.value = false
+                    updateIsPlaying()
+                    highlightStateHolder.setQuestionHighlight(null)
+                    highlightStateHolder.setAnswerHighlight(null)
                 }
             }
         }
@@ -148,11 +142,15 @@ class TtsPlaybackController @Inject constructor(
 
     fun stopTts() = stopAndReset(clearHighlight = true)
 
+    private fun updateIsPlaying() {
+        _isPlaying.value = _isQuestionPlaying.value || _isAnswerPlaying.value
+    }
+
     private fun resetPlayState() {
-        _isPlaying.value = false
-        _isPaused.value = false
         _isQuestionPlaying.value = false
         _isAnswerPlaying.value = false
+        _isPaused.value = false
+        updateIsPlaying()
     }
 
     fun pauseTts() {

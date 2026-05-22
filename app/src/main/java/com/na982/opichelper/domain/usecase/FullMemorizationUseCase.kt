@@ -66,7 +66,7 @@ class FullMemorizationUseCase @Inject constructor(
             if (qaItem != null) {
                 ttsOrchestrator.speakWithHighlight(
                     text = qaItem.questionEn,
-                    onHighlight = { index -> _highlightIndex.value = index }
+                    onHighlight = { index, _ -> _highlightIndex.value = index }
                 )
                 _highlightIndex.value = null
                 delay(500L)

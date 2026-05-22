@@ -100,22 +100,22 @@ class TtsOrchestrator @Inject constructor(
         }
     }
 
-    suspend fun speakWithHighlight(text: String, onHighlight: (Int?) -> Unit) {
+    suspend fun speakWithHighlight(text: String, onHighlight: (index: Int?, sentence: String?) -> Unit) {
         val sentences = SentenceSplitter.split(text)
         _isSpeaking.value = true
 
         try {
             for ((idx, sentence) in sentences.withIndex()) {
-                onHighlight(idx)
+                onHighlight(idx, sentence)
                 val result = speakInternal(sentence)
                 if (result is TtsSpeakResult.Error || result is TtsSpeakResult.Timeout) {
                     Log.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 실패: $result")
                 }
                 delay(400L)
             }
-            onHighlight(null)
+            onHighlight(null, null)
         } catch (e: CancellationException) {
-            onHighlight(null)
+            onHighlight(null, null)
             throw e
         } finally {
             _isSpeaking.value = false

@@ -29,23 +29,23 @@ class HighlightStateHolder @Inject constructor() {
     private val _currentAnswerKoSentence = MutableStateFlow<String?>(null)
     val currentAnswerKoSentence: StateFlow<String?> = _currentAnswerKoSentence.asStateFlow()
 
-    fun setQuestionHighlight(index: Int, sentence: String? = null) {
-        _questionHighlightIndex.value = if (index < 0) null else index
-        _currentQuestionSentence.value = if (index < 0) null else sentence
+    fun setQuestionHighlight(index: Int?, sentence: String? = null) {
+        _questionHighlightIndex.value = index
+        _currentQuestionSentence.value = sentence
     }
 
-    fun setAnswerHighlight(index: Int, sentence: String? = null) {
-        _answerHighlightIndex.value = if (index < 0) null else index
-        _currentAnswerSentence.value = if (index < 0) null else sentence
+    fun setAnswerHighlight(index: Int?, sentence: String? = null) {
+        _answerHighlightIndex.value = index
+        _currentAnswerSentence.value = sentence
     }
 
-    fun setAnswerKoHighlight(index: Int, sentence: String? = null) {
-        _answerKoHighlightIndex.value = if (index < 0) null else index
-        _currentAnswerKoSentence.value = if (index < 0) null else sentence
+    fun setAnswerKoHighlight(index: Int?, sentence: String? = null) {
+        _answerKoHighlightIndex.value = index
+        _currentAnswerKoSentence.value = sentence
     }
 
-    fun setRecordingHighlight(index: Int) {
-        _recordingHighlightIndex.value = if (index < 0) null else index
+    fun setRecordingHighlight(index: Int?) {
+        _recordingHighlightIndex.value = index
     }
 
     fun clearHighlight() {
