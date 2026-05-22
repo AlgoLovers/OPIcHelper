@@ -185,7 +185,6 @@ class TtsOrchestrator @Inject constructor(
             }
             onHighlight(null)
         } catch (e: kotlinx.coroutines.CancellationException) {
-            stop()
             onHighlight(null)
             throw e
         } finally {

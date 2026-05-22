@@ -63,6 +63,7 @@ abstract class BaseTtsPlayer(
         }
 
         return speakMutex.withLock {
+            val onCompleteCalled = AtomicBoolean(false)
             try {
                 // 능동적으로 엔진을 정지시키고 완전히 idle일 때까지 대기
                 tts?.stop()
@@ -70,6 +71,10 @@ abstract class BaseTtsPlayer(
                 while (tts?.isSpeaking == true && waitCount < 40) {
                     kotlinx.coroutines.delay(50)
                     waitCount++
+                }
+                // 엔진이 idle 보고 후에도 내부 상태 전환 시간 확보
+                if (waitCount > 0) {
+                    kotlinx.coroutines.delay(150)
                 }
 
                 // 기본 설정 적용
@@ -95,20 +100,20 @@ abstract class BaseTtsPlayer(
                     override fun onDone(utteranceId: String?) {
                         _isPlaying = false
                         safeComplete()
-                        onComplete?.invoke()
+                        if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
                     }
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         Log.e(logTag, "$serviceName 재생 오류")
                         _isPlaying = false
                         safeComplete()
-                        onComplete?.invoke()
+                        if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
                     }
                     override fun onError(utteranceId: String?, errorCode: Int) {
                         Log.e(logTag, "$serviceName 재생 오류: $errorCode")
                         _isPlaying = false
                         safeComplete()
-                        onComplete?.invoke()
+                        if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
                     }
                 })
 
@@ -117,7 +122,7 @@ abstract class BaseTtsPlayer(
                     Log.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
                     _isPlaying = false
                     safeComplete()
-                    onComplete?.invoke()
+                    if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
                     return@withLock false
                 }
 
@@ -130,7 +135,7 @@ abstract class BaseTtsPlayer(
                     Log.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
                     _isPlaying = false
                     safeComplete()
-                    onComplete?.invoke()
+                    if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
                     return@withLock false
                 }
 
@@ -142,14 +147,18 @@ abstract class BaseTtsPlayer(
                 } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                     Log.e(logTag, "$serviceName 재생 완료 타임아웃")
                     _isPlaying = false
-                    onComplete?.invoke()
+                    if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
                 }
 
                 true
+            } catch (e: CancellationException) {
+                _isPlaying = false
+                if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
+                throw e
             } catch (e: Exception) {
                 Log.e(logTag, "$serviceName 오류", e)
                 _isPlaying = false
-                onComplete?.invoke()
+                if (onCompleteCalled.compareAndSet(false, true)) onComplete?.invoke()
                 false
             }
         }

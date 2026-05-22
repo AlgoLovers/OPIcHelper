@@ -8,6 +8,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -74,6 +75,8 @@ class TtsPlaybackController @Inject constructor(
                     _questionHighlightIndex.value = index
                     _currentQuestionSentence.value = index?.let { sentences.getOrNull(it) }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
             } finally {
@@ -101,6 +104,8 @@ class TtsPlaybackController @Inject constructor(
                     _answerHighlightIndex.value = index
                     _currentAnswerSentence.value = index?.let { sentences.getOrNull(it) }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
             } finally {
@@ -143,6 +148,8 @@ class TtsPlaybackController @Inject constructor(
                 _isAnswerPlaying.value = false
                 _answerHighlightIndex.value = null
                 _currentAnswerSentence.value = null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
             } finally {
