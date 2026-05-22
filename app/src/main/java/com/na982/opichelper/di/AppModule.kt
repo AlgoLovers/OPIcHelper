@@ -76,11 +76,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideTtsOrchestrator(
-        @ApplicationContext context: Context,
         @Named("google") googleTtsPlayer: TtsPlayer,
         @Named("samsung") samsungTtsPlayer: TtsPlayer
     ): TtsOrchestrator {
-        return TtsOrchestrator(context, googleTtsPlayer, samsungTtsPlayer)
+        return TtsOrchestrator(googleTtsPlayer, samsungTtsPlayer)
     }
     
     @Provides

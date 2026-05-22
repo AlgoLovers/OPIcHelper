@@ -35,7 +35,6 @@ class TtsIntegrationTest {
         Log.d("TtsIntegrationTest", "TTS 초기화 완료")
 
         ttsOrchestrator = TtsOrchestrator(
-            context = context,
             googleTtsPlayer = googleTtsPlayer,
             samsungTtsPlayer = samsungTtsPlayer
         )

@@ -35,7 +35,6 @@ class TtsPlaybackController @Inject constructor(
     private val _isAnswerPlaying = MutableStateFlow(false)
     val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
 
-    // Highlight state delegated to HighlightStateHolder
     val questionHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.questionHighlightIndex
     val answerHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.answerHighlightIndex
     val answerKoHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.answerKoHighlightIndex

@@ -1,6 +1,5 @@
 package com.na982.opichelper.domain.audio
 
-import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -11,21 +10,25 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 class TtsOrchestrator @Inject constructor(
-    private val context: Context,
     private val googleTtsPlayer: TtsPlayer,
     private val samsungTtsPlayer: TtsPlayer
 ) {
     private val _isSpeaking = MutableStateFlow(false)
     val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
 
+    private val allPlayers = listOf(googleTtsPlayer, samsungTtsPlayer)
     private val koreanTtsPlayers = listOf(samsungTtsPlayer)
     private val currentKoreanTtsIndex = AtomicInteger(0)
 
-    suspend fun speak(text: String): TtsSpeakResult {
+    private suspend fun speakInternal(text: String): TtsSpeakResult {
         val isKorean = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
+        return if (isKorean) speakKorean(text) else speakEnglish(text)
+    }
+
+    suspend fun speak(text: String): TtsSpeakResult {
         _isSpeaking.value = true
         return try {
-            if (isKorean) speakKorean(text) else speakEnglish(text)
+            speakInternal(text)
         } finally {
             _isSpeaking.value = false
         }
@@ -60,10 +63,7 @@ class TtsOrchestrator @Inject constructor(
     fun stop() {
         try {
             _isSpeaking.value = false
-            googleTtsPlayer.stop()
-            for (player in koreanTtsPlayers) {
-                player.stop()
-            }
+            allPlayers.forEach { it.stop() }
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 중지 실패", e)
         }
@@ -71,16 +71,13 @@ class TtsOrchestrator @Inject constructor(
 
     fun releaseAllPlayers() {
         try {
-            googleTtsPlayer.release()
-            samsungTtsPlayer.release()
+            allPlayers.forEach { it.release() }
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 플레이어 해제 실패", e)
         }
     }
 
-    fun isPlaying(): Boolean {
-        return googleTtsPlayer.isPlaying() || koreanTtsPlayers.any { it.isPlaying() }
-    }
+    fun isPlaying(): Boolean = allPlayers.any { it.isPlaying() }
 
     fun getCurrentKoreanTtsServiceName(): String {
         val index = currentKoreanTtsIndex.get()
@@ -110,7 +107,7 @@ class TtsOrchestrator @Inject constructor(
         try {
             for ((idx, sentence) in sentences.withIndex()) {
                 onHighlight(idx)
-                val result = speak(sentence)
+                val result = speakInternal(sentence)
                 if (result is TtsSpeakResult.Error || result is TtsSpeakResult.Timeout) {
                     Log.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 실패: $result")
                 }
@@ -129,7 +126,7 @@ class TtsOrchestrator @Inject constructor(
     suspend fun speakAndWaitForCompletion(text: String, isKorean: Boolean, rate: Float): Long {
         _isSpeaking.value = true
         return try {
-            val result = speak(text)
+            val result = speakInternal(text)
             if (result is TtsSpeakResult.Success) result.durationMs else 0L
         } finally {
             _isSpeaking.value = false
@@ -138,8 +135,7 @@ class TtsOrchestrator @Inject constructor(
 
     fun pause() {
         try {
-            googleTtsPlayer.pause()
-            samsungTtsPlayer.pause()
+            allPlayers.forEach { it.pause() }
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 일시 중지 실패", e)
         }
@@ -147,8 +143,7 @@ class TtsOrchestrator @Inject constructor(
 
     fun resume() {
         try {
-            googleTtsPlayer.resume()
-            samsungTtsPlayer.resume()
+            allPlayers.forEach { it.resume() }
         } catch (e: Exception) {
             Log.e("TtsOrchestrator", "TTS 재개 실패", e)
         }
