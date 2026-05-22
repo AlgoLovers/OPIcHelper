@@ -23,8 +23,7 @@ abstract class BaseTtsPlayer(
     protected var tts: TextToSpeech? = null
     @Volatile
     protected var isInitialized = false
-    @Volatile
-    protected var _isPlaying = false
+    private val _isPlaying = AtomicBoolean(false)
 
     private val speakMutex = Mutex()
 
@@ -84,22 +83,22 @@ abstract class BaseTtsPlayer(
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {
                         started = true
-                        _isPlaying = true
+                        _isPlaying.set(true)
                     }
                     override fun onDone(utteranceId: String?) {
-                        _isPlaying = false
+                        _isPlaying.set(false)
                         val duration = System.currentTimeMillis() - startTime
                         safeComplete(TtsSpeakResult.Success(duration))
                     }
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         Log.e(logTag, "$serviceName 재생 오류")
-                        _isPlaying = false
+                        _isPlaying.set(false)
                         safeComplete(TtsSpeakResult.Error("재생 오류"))
                     }
                     override fun onError(utteranceId: String?, errorCode: Int) {
                         Log.e(logTag, "$serviceName 재생 오류: $errorCode")
-                        _isPlaying = false
+                        _isPlaying.set(false)
                         safeComplete(TtsSpeakResult.Error("오류 코드: $errorCode"))
                     }
                 })
@@ -107,7 +106,7 @@ abstract class BaseTtsPlayer(
                 val result = tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
                 if (result == TextToSpeech.ERROR) {
                     Log.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
-                    _isPlaying = false
+                    _isPlaying.set(false)
                     return@withLock TtsSpeakResult.Error("speak() 반환 ERROR")
                 }
 
@@ -117,7 +116,7 @@ abstract class BaseTtsPlayer(
                 }
                 if (!started) {
                     Log.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
-                    _isPlaying = false
+                    _isPlaying.set(false)
                     return@withLock TtsSpeakResult.Error("재생 시작 타임아웃")
                 }
 
@@ -127,16 +126,16 @@ abstract class BaseTtsPlayer(
                     }
                 } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                     Log.e(logTag, "$serviceName 재생 완료 타임아웃")
-                    _isPlaying = false
+                    _isPlaying.set(false)
                     TtsSpeakResult.Timeout
                 }
             } catch (e: CancellationException) {
-                _isPlaying = false
+                _isPlaying.set(false)
                 tts?.stop()
                 throw e
             } catch (e: Exception) {
                 Log.e(logTag, "$serviceName 오류", e)
-                _isPlaying = false
+                _isPlaying.set(false)
                 TtsSpeakResult.Error(e.message ?: "알 수 없는 오류")
             }
         }
@@ -145,7 +144,7 @@ abstract class BaseTtsPlayer(
     override fun stop() {
         try {
             tts?.stop()
-            _isPlaying = false
+            _isPlaying.set(false)
         } catch (e: Exception) {
             Log.e(logTag, "$serviceName 중지 실패", e)
         }
@@ -154,7 +153,7 @@ abstract class BaseTtsPlayer(
     override fun pause() {
         try {
             tts?.stop()
-            _isPlaying = false
+            _isPlaying.set(false)
         } catch (e: Exception) {
             Log.e(logTag, "$serviceName 일시 중지 실패", e)
         }
@@ -164,7 +163,7 @@ abstract class BaseTtsPlayer(
         Log.w(logTag, "$serviceName 재개 불가 - Android TTS 제한")
     }
 
-    override fun isPlaying(): Boolean = _isPlaying || (tts?.isSpeaking == true)
+    override fun isPlaying(): Boolean = _isPlaying.get() || (tts?.isSpeaking == true)
 
     override fun release() {
         try {
@@ -175,7 +174,7 @@ abstract class BaseTtsPlayer(
         }
         tts = null
         isInitialized = false
-        _isPlaying = false
+        _isPlaying.set(false)
     }
 
     protected open fun getSpeechRate(): Float = 0.8f
