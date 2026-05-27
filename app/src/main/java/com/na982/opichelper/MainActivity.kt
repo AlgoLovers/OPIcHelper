@@ -15,6 +15,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +32,7 @@ import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -90,6 +92,29 @@ class MainActivity : ComponentActivity() {
             this@MainActivity.playbackViewModel = pvm
             this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
+
+            pvm.setRepeatQuestionCallback {
+                val qaItem = qaVm.uiState.value.currentQaItem
+                if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
+            }
+            pvm.setRepeatAnswerCallback {
+                val qaItem = qaVm.uiState.value.currentQaItem
+                if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+            }
+            pvm.setNextCallback {
+                lifecycleScope.launch {
+                    val qaItem = qaVm.nextQaItemSync()
+                    if (qaItem != null) {
+                        pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                qaVm.uiState.collect { state ->
+                    pvm.setHasNextItem(qaVm.hasNextQaItem())
+                }
+            }
 
             val isDarkTheme = isSystemInDarkTheme()
 

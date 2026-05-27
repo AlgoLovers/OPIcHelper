@@ -6,5 +6,7 @@ data class PipState(
     val currentSentenceKo: String? = null,
     val isPlaying: Boolean = false,
     val isPaused: Boolean = false,
-    val isPausable: Boolean = true
+    val isPausable: Boolean = true,
+    val hasCompleted: Boolean = false,
+    val hasNextItem: Boolean = false
 )

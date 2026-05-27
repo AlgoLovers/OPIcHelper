@@ -127,6 +127,14 @@ class QaBrowserViewModel @Inject constructor(
         viewModelScope.launch { qaDataManager.nextQaItem() }
     }
 
+    fun hasNextQaItem(): Boolean = qaDataManager.hasNextQaItem()
+
+    suspend fun nextQaItemSync(): QaItem? {
+        if (!qaDataManager.hasNextQaItem()) return null
+        qaDataManager.nextQaItem()
+        return qaDataManager.currentQaItem.value
+    }
+
     fun previousQaItem() {
         viewModelScope.launch { qaDataManager.previousQaItem() }
     }

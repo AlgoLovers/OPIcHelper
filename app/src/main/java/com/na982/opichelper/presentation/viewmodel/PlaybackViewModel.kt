@@ -68,6 +68,22 @@ class PlaybackViewModel @Inject constructor(
     @Volatile
     private var lastPlayingTimestamp: Long = 0L
 
+    @Volatile
+    private var wasStoppedByUser: Boolean = false
+
+    @Volatile
+    private var _hasNextItem: Boolean = false
+    @Volatile
+    private var _repeatQuestionCallback: (() -> Unit)? = null
+    @Volatile
+    private var _repeatAnswerCallback: (() -> Unit)? = null
+    @Volatile
+    private var _nextCallback: (() -> Unit)? = null
+
+    enum class LastPlayedType { QUESTION, ANSWER, NONE }
+    @Volatile
+    private var lastPlayedType: LastPlayedType = LastPlayedType.NONE
+
     private suspend fun emitEvent(message: String) {
         _events.emit(message)
     }
@@ -141,13 +157,20 @@ class PlaybackViewModel @Inject constructor(
                 val sentenceKo = fmSentenceKo ?: answerKoSentence
                 val active = isPlaying || isMemorizationRunning || isMergedFilePlaying
                 if (active) lastPlayingTimestamp = System.currentTimeMillis()
-                _pipState.update { it.copy(
-                    currentSentenceEn = if (sentenceEn != null) sentenceEn else if (active) _pipState.value.currentSentenceEn else null,
-                    currentSentenceKo = if (sentenceKo != null) sentenceKo else if (active) _pipState.value.currentSentenceKo else null,
-                    isPlaying = active,
-                    isPaused = if (active) isPaused else false,
-                    isPausable = !isMergedFilePlaying
-                ) }
+                _pipState.update { prev ->
+                    val wasPlaying = prev.isPlaying
+                    val completed = wasPlaying && !active && !wasStoppedByUser
+                    if (completed) wasStoppedByUser = false
+                    prev.copy(
+                        currentSentenceEn = if (sentenceEn != null) sentenceEn else if (active) prev.currentSentenceEn else null,
+                        currentSentenceKo = if (sentenceKo != null) sentenceKo else if (active) prev.currentSentenceKo else null,
+                        isPlaying = active,
+                        isPaused = if (active) isPaused else false,
+                        isPausable = !isMergedFilePlaying,
+                        hasCompleted = if (active) false else completed,
+                        hasNextItem = _hasNextItem
+                    )
+                }
                 updateNotificationSentence(sentenceEn, sentenceKo)
             }.collect { }
         }
@@ -192,6 +215,8 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun playQuestion(question: String) {
+        wasStoppedByUser = false
+        lastPlayedType = LastPlayedType.QUESTION
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
             ttsPlaybackController.stopTts()
@@ -200,6 +225,8 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun playAnswer(answer: String) {
+        wasStoppedByUser = false
+        lastPlayedType = LastPlayedType.ANSWER
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
             ttsPlaybackController.stopTts()
@@ -236,6 +263,9 @@ class PlaybackViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        _repeatQuestionCallback = null
+        _repeatAnswerCallback = null
+        _nextCallback = null
         ttsPlaybackController.cleanupTts()
         playMergedFileUseCase.stop()
         playMergedFileUseCase.release()
@@ -258,13 +288,18 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun setPipMode(isPip: Boolean) {
-        _pipState.update { it.copy(isPipMode = isPip) }
+        if (!isPip) wasStoppedByUser = false
+        _pipState.update { it.copy(
+            isPipMode = isPip,
+            hasCompleted = if (!isPip) false else it.hasCompleted
+        ) }
     }
 
     fun togglePlayPause() {
         if (ttsPlaybackController.isPaused.value) {
             ttsPlaybackController.clearPausedState()
         } else if (_uiState.value.isPlaying || coordinator.isRunning.value) {
+            wasStoppedByUser = true
             ttsPlaybackController.stopAndMarkPaused()
         }
     }
@@ -275,7 +310,27 @@ class PlaybackViewModel @Inject constructor(
         _stopMemorizationCallback = callback
     }
 
+    fun setRepeatQuestionCallback(callback: () -> Unit) { _repeatQuestionCallback = callback }
+    fun setRepeatAnswerCallback(callback: () -> Unit) { _repeatAnswerCallback = callback }
+    fun setNextCallback(callback: () -> Unit) { _nextCallback = callback }
+    fun setHasNextItem(hasNext: Boolean) { _hasNextItem = hasNext }
+
+    fun repeatPlayback() {
+        _pipState.update { it.copy(hasCompleted = false) }
+        when (lastPlayedType) {
+            LastPlayedType.QUESTION -> _repeatQuestionCallback?.invoke()
+            LastPlayedType.ANSWER -> _repeatAnswerCallback?.invoke()
+            else -> {}
+        }
+    }
+
+    fun playNextItem() {
+        _pipState.update { it.copy(hasCompleted = false) }
+        _nextCallback?.invoke()
+    }
+
     fun stopPlayback() {
+        wasStoppedByUser = true
         if (coordinator.isRunning.value) {
             _stopMemorizationCallback?.invoke()
         } else {
