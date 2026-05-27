@@ -206,6 +206,40 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | GoogleTtsPlayer/SamsungTtsPlayer 데드 코드 | destroy(), release() 중복 오버라이드 제거 (0104) |
 | EnglishWritingTestRepositoryImpl Completed 누락 | 이벤트 발행 추가 (0104) |
 | SettingsViewModel StateFlow 경쟁 | MutableStateFlow.update 사용 (0104) |
+| MemorizationModeCoordinator 순환 의존성 | CurrentMode/ModeGroup을 domain 계층으로 이동 (0109) |
+| FullMemorizationUseCase 즉시 상태 전환 | playRecordingWithHighlight() premature WithFile(true) 제거 (0109) |
+| FullMemorizationViewModel onCleared() 취소된 scope | viewModelScope.launch 제거, close() 직접 호출 (0109) |
+| BaseTtsPlayer 타임아웃 stale 콜백 | 리스너 해제 + tts.stop() 추가 (0109) |
+| FullMemorizationUseCase mutex 점유 | playRecordingSimple() mutex는 상태체크에만 사용 (0110) |
+| StateFlow .value = .value.copy() 경쟁 상태 | 전 ViewModel .update { it.copy() } 전환 (0110) |
+| AudioFileManagerImpl 하드코딩 1024바이트 스킵 | mergeWithHeaderAnalysis() 폴백 제거 (0110) |
+| AudioFileManagerImpl MediaExtractor 누수 | try/finally로 extractor.release 보장 (0110) |
+| AudioFileManagerImpl 병합 실패 시 소스 삭제 | 검증 후에만 삭제, 실패 시 원본 유지 (0110) |
+| RecordingFileRepositoryImpl 스레드 미안전 | @Volatile 추가 (0110) |
+| TtsPlaybackController pauseTts/resumeTts 오해 유발 | stopAndMarkPaused/clearPausedState로 이름 변경 (0111) |
+| PlayMergedFileUseCase 분할 정규식 불일치 | SentenceSplitter.split() 사용 (0111) |
+| PlayMergedFileUseCase release() 누수 | checkFileJob 취소 추가 (0111) |
+| MemorizeTestProgressTracker TOCTOU | persistChangedProgress() 단일 mutex.withLock 래핑 (0111) |
+| UserLevel.valueOf 크래시 | try-catch 기본값 폴백 (0111) |
+| LeveledQaDataLoader e.printStackTrace() | Log.e() 변경 (0111) |
+| RecordingTimeManagerImpl 스레드 미안전 | @Synchronized 추가 (0111) |
+| EnglishWritingTestRepositoryImpl 취소 시 파일 잔존 | CancellationException catch에서 파일 정리 (0111) |
+| RepeatListeningRepositoryImpl TTS 실패 미처리 | 반환값 0L 체크, 실패 시 문장 스킵 (0112) |
+| BaseMemorizationViewModel onLevelChanged 진행상황 미저장 | persistChangedProgress() 추가 (0112) |
+| FullMemorizationViewModel startMode() 코루틴 누수 | modeJob 컨텍스트에서 launch (0112) |
+| RepeatListeningViewModel handleAutoAdvance eventJob 누적 | cancelEventJob() 추가 (0112) |
+| MainScreen permissionDenied 재생성 | remember { MutableStateFlow(false) } (0112) |
+| GoogleTtsPlayer 중복 SDK 분기 | TIRAMISU/UPSIDE_DOWN_CAKE 통합 (0113) |
+| GoogleTtsPlayer/SamsungTtsPlayer 불필요 getPitch() | 제거 (0113) |
+| PlayMergedFileUseCase 미사용 currentItem | 파라미터 제거 (0113) |
+| QuestionPlayButton/AnswerPlayButton 미사용 파라미터 | currentQuestion/currentAnswer 제거 (0113) |
+| QuestionCard/AnswerCard 미사용 contentColor | 파라미터 제거 (0113) |
+| SettingsScreen 하드코딩 버전 | PackageInfo에서 동적 읽기 (0113) |
+| ProgressPersistenceServiceImpl 하드코딩 "opic_prefs" | 상수화 (0113) |
+| BaseTtsPlayer 매직넘버 | IS_SPEAKING_POLL_INTERVAL 등 상수화 (0113) |
+| TtsPlaybackController 하드코딩 500ms | MERGED_AUDIO_DELAY_MS 상수화 (0113) |
+| AudioRecorderImpl SimpleDateFormat 매번 생성 | 캐시 (0113) |
+| RecordingAudioPlayerImpl getDuration() 매번 생성 | 결과 캐시 (0113) |
 
 ## Git 커밋 규칙
 

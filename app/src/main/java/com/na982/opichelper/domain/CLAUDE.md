@@ -52,7 +52,7 @@ setAnswerHighlightIndex(idx)    → HighlightStateHolder에 위임 (HighlightInf
 setAnswerKoHighlightIndex(idx)  → HighlightStateHolder에 위임 (HighlightInfo)
 setRecordingHighlightIndex(idx) → HighlightStateHolder에 위임 (HighlightInfo)
 clearHighlight()     → HighlightStateHolder.clearHighlight()
-pauseTts() / resumeTts() → TTS 일시정지/재개
+stopAndMarkPaused() / clearPausedState() → TTS 일시정지/재개 (이전 pauseTts/resumeTsd)
 cleanupTts()         → stopTts + releaseAllPlayers
 close()              → Closeable 구현, 코루틴 스코프 취소
 ```
