@@ -70,6 +70,11 @@ abstract class BaseMemorizationViewModel<T>(
         viewModelScope.launch {
             ttsPlaybackController?.stopTts()
             ttsPlaybackController?.clearHighlight()
+            try {
+                progressTracker?.persistChangedProgress()
+            } catch (e: Exception) {
+                Log.e("BaseMemorizationVM", "레벨 변경 시 진행상황 저장 실패", e)
+            }
         }
     }
 

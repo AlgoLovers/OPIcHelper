@@ -41,7 +41,10 @@ class RepeatListeningRepositoryImpl(
             delay(100)
             emit(MemorizeTestEvent.KoreanHighlight(i))
 
-            ttsOrchestrator.speakAndWaitForCompletion(koSentences[i])
+            val koDuration = ttsOrchestrator.speakAndWaitForCompletion(koSentences[i])
+            if (koDuration <= 0L) {
+                continue@sentenceLoop
+            }
 
             val enSentence = enSentences[i]
             val enWordCount = enSentence.split("\\s+".toRegex()).size
@@ -66,6 +69,7 @@ class RepeatListeningRepositoryImpl(
                 emit(MemorizeTestEvent.Highlight(i))
 
                 val enDuration = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i])
+                if (enDuration <= 0L) continue@sentenceLoop
 
                 if (j == 1) {
                     recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)

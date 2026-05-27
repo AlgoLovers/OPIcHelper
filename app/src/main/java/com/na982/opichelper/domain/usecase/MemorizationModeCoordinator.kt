@@ -71,6 +71,11 @@ class MemorizationModeCoordinator @Inject constructor() {
         eventJob = job
     }
 
+    fun cancelEventJob() = synchronized(_lock) {
+        eventJob?.cancel()
+        eventJob = null
+    }
+
     fun cancelJobs() = synchronized(_lock) {
         activeJob?.cancel()
         activeJob = null

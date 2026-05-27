@@ -144,6 +144,7 @@ class RepeatListeningViewModel @Inject constructor(
 
     private fun handleAutoAdvance() {
         viewModelScope.launch {
+            coordinator.cancelEventJob()
             val hasMore = qaDataManager.hasNextQaItem()
             if (hasMore) {
                 qaDataManager.nextQaItem()

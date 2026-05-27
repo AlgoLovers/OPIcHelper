@@ -30,6 +30,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import com.na982.opichelper.presentation.ui.component.OnboardingDialog
 import com.na982.opichelper.presentation.ui.component.PipPermissionDialog
@@ -47,7 +48,7 @@ fun MainScreen(
     fullMemorizationViewModel: FullMemorizationViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
     onNavigateToSettings: () -> Unit = {},
-    permissionDenied: StateFlow<Boolean> = MutableStateFlow(false)
+    permissionDenied: StateFlow<Boolean> = remember { MutableStateFlow(false) }
 ) {
     val playbackState by playbackViewModel.uiState.collectAsState()
     val qaState by qaViewModel.uiState.collectAsState()

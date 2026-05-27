@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 import android.util.Log
 import javax.inject.Inject
 
@@ -44,7 +45,9 @@ class FullMemorizationViewModel @Inject constructor(
             val category = qaDataManager.getCurrentCategory() ?: ""
             val scriptIndex = qaDataManager.getCurrentIndex()
 
-            viewModelScope.launch {
+            val modeContext = coroutineContext
+
+            viewModelScope.launch(modeContext) {
                 fullMemorizationUseCase.highlightIndex.collect { index ->
                     val sentenceEn = index?.let { getSentenceFromAnswer(it, isKorean = false) }
                     val sentenceKo = index?.let { getSentenceFromAnswer(it, isKorean = true) }
@@ -56,7 +59,7 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             }
 
-            viewModelScope.launch {
+            viewModelScope.launch(modeContext) {
                 fullMemorizationUseCase.state.collect { fsState ->
                     when (fsState) {
                         is FullMemorizationState.Idle -> {
@@ -79,7 +82,7 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             }
 
-            viewModelScope.launch {
+            viewModelScope.launch(modeContext) {
                 coordinator.events.collect { event ->
                     if (event is CoordinatorEvent.RecordingStateChanged) {
                         refreshRecordingStatus()
