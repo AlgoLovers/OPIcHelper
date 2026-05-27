@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
@@ -77,25 +78,25 @@ class QaBrowserViewModel @Inject constructor(
                 qaDataManager.isLoading,
                 qaDataManager.error
             ) { currentQaItem: QaItem?, currentCategory: String?, categories: List<String>, isLoading: Boolean, error: String? ->
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     currentQaItem = currentQaItem,
                     currentCategory = currentCategory,
                     categories = categories,
                     isLoading = isLoading,
                     error = error
-                )
+                ) }
             }.collect { }
         }
 
         viewModelScope.launch {
             userPreferencesRepository.userLevel.collect { userLevel ->
-                _uiState.value = _uiState.value.copy(currentUserLevel = userLevel.name)
+                _uiState.update { it.copy(currentUserLevel = userLevel.name) }
             }
         }
 
         viewModelScope.launch {
             userPreferencesRepository.answerPlayCount.collect { count ->
-                _uiState.value = _uiState.value.copy(answerPlayCount = count)
+                _uiState.update { it.copy(answerPlayCount = count) }
             }
         }
 
@@ -112,7 +113,7 @@ class QaBrowserViewModel @Inject constructor(
                         val progress = progressMap[key]
                         progress != null && !progress.isMemorizeTestRunning && progress.currentSentenceIndex >= progress.totalSentences - 1
                     }
-                    _uiState.value = _uiState.value.copy(completedCount = completed)
+                    _uiState.update { it.copy(completedCount = completed) }
                 }
             }.collect { }
         }
@@ -168,7 +169,7 @@ class QaBrowserViewModel @Inject constructor(
     }
 
     fun setSelectedMemorizeLevel(level: String) {
-        _uiState.value = _uiState.value.copy(selectedMemorizeLevel = level)
+        _uiState.update { it.copy(selectedMemorizeLevel = level) }
         userPreferencesRepository.setMemorizeLevel(level)
         refreshCompletedCount()
     }
@@ -183,7 +184,7 @@ class QaBrowserViewModel @Inject constructor(
             val progress = progressMap[key]
             progress != null && !progress.isMemorizeTestRunning && progress.currentSentenceIndex >= progress.totalSentences - 1
         }
-        _uiState.value = _uiState.value.copy(completedCount = completed)
+        _uiState.update { it.copy(completedCount = completed) }
     }
 
     fun getCurrentAnswer(qaItem: QaItem?): String {

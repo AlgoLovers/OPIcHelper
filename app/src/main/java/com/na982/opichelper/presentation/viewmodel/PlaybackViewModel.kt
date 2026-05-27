@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -89,7 +90,7 @@ class PlaybackViewModel @Inject constructor(
             ) { values ->
                 val playing = values[0] as Boolean
                 if (playing) lastPlayingTimestamp = System.currentTimeMillis()
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isPlaying = playing,
                     isQuestionPlaying = values[1] as Boolean,
                     isAnswerPlaying = values[2] as Boolean,
@@ -97,7 +98,7 @@ class PlaybackViewModel @Inject constructor(
                     answerHighlight = values[4] as HighlightInfo,
                     answerKoHighlight = values[5] as HighlightInfo,
                     recordingHighlight = values[6] as HighlightInfo
-                )
+                ) }
             }.collect { }
         }
 
@@ -107,11 +108,11 @@ class PlaybackViewModel @Inject constructor(
                 playMergedFileUseCase.isPlaying,
                 playMergedFileUseCase.highlightIndex
             ) { hasFile, isPlaying, highlightIndex ->
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     hasEnglishWritingTestMergedFile = hasFile,
                     isEnglishWritingTestMergedFilePlaying = isPlaying,
                     englishWritingTestMergedFileHighlightIndex = highlightIndex
-                )
+                ) }
             }.collect { }
         }
 
@@ -140,13 +141,13 @@ class PlaybackViewModel @Inject constructor(
                 val sentenceKo = fmSentenceKo ?: answerKoSentence
                 val active = isPlaying || isMemorizationRunning || isMergedFilePlaying
                 if (active) lastPlayingTimestamp = System.currentTimeMillis()
-                _pipState.value = _pipState.value.copy(
+                _pipState.update { it.copy(
                     currentSentenceEn = if (sentenceEn != null) sentenceEn else if (active) _pipState.value.currentSentenceEn else null,
                     currentSentenceKo = if (sentenceKo != null) sentenceKo else if (active) _pipState.value.currentSentenceKo else null,
                     isPlaying = active,
                     isPaused = if (active) isPaused else false,
                     isPausable = !isMergedFilePlaying
-                )
+                ) }
                 updateNotificationSentence(sentenceEn, sentenceKo)
             }.collect { }
         }
@@ -175,7 +176,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun setAnswerCardFlipped(isFlipped: Boolean) {
-        _uiState.value = _uiState.value.copy(isAnswerCardFlipped = isFlipped)
+        _uiState.update { it.copy(isAnswerCardFlipped = isFlipped) }
     }
 
     fun playEnglishWritingTestMergedFile() {
@@ -257,7 +258,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun setPipMode(isPip: Boolean) {
-        _pipState.value = _pipState.value.copy(isPipMode = isPip)
+        _pipState.update { it.copy(isPipMode = isPip) }
     }
 
     fun togglePlayPause() {

@@ -20,7 +20,9 @@ class RecordingFileRepositoryImpl(
 ) : RecordingFileRepository {
 
     private val mutex = Mutex()
+    @Volatile
     private var currentRecordingPath: String? = null
+    @Volatile
     private var currentPlayingPath: String? = null
 
     override suspend fun hasRecordingFile(category: String, scriptIndex: Int): Boolean {

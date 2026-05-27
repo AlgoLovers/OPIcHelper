@@ -14,7 +14,6 @@ import android.media.MediaFormat
 import android.media.MediaCodec
 import android.os.Build
 import java.nio.ByteBuffer
-import kotlinx.coroutines.delay
 
 /**
  * AudioFileManager 구현체
@@ -43,40 +42,36 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             }
 
             // 여러 파일인 경우 MediaCodec을 우선적으로 사용한 병합
-            var totalBytesWritten = 0L
-            
+            var mergeSuccess = false
+
             try {
                 mergeWithMediaCodec(files, output)
+                mergeSuccess = output.exists() && output.length() > 0
             } catch (e: Exception) {
-                Log.e("AudioFileManager", "MediaCodec 병합 실패, 헤더 분석 방식 사용", e)
+                Log.e("AudioFileManager", "MediaCodec 병합 실패, 파일 연결 방식 사용", e)
                 try {
-                    mergeWithHeaderAnalysis(files, output)
-                } catch (e2: Exception) {
-                    Log.e("AudioFileManager", "헤더 분석 병합 실패, fallback 방식 사용", e2)
-                    // Fallback: 간단한 파일 연결
                     FileOutputStream(output).use { out ->
                         files.forEach { file ->
                             FileInputStream(file).use { input ->
-                                val bytesCopied = input.copyTo(out)
-                                totalBytesWritten += bytesCopied
+                                input.copyTo(out)
                             }
                         }
                     }
-                }
-            }
-            
-            // 원본 파일들 삭제
-            files.forEach { file ->
-                if (file.exists()) {
-                    file.delete()
+                    mergeSuccess = output.exists() && output.length() > 0
+                } catch (e2: Exception) {
+                    Log.e("AudioFileManager", "파일 연결 병합도 실패", e2)
                 }
             }
 
-            // 최종 파일 검증
-            if (output.exists() && output.length() > 0) {
-                // 병합 성공
+            // 병합 성공 시에만 원본 파일 삭제
+            if (mergeSuccess) {
+                files.forEach { file ->
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                }
             } else {
-                Log.e("AudioFileManager", "병합된 파일 검증 실패: 존재=${output.exists()}, 크기=${output.length()}")
+                Log.e("AudioFileManager", "병합 실패로 원본 파일 유지")
             }
 
             output
@@ -209,75 +204,57 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
         var totalDuration = 0L
 
         try {
+            val buffer = ByteBuffer.allocate(1024 * 1024)
+            val bufferInfo = android.media.MediaCodec.BufferInfo()
+
             files.forEachIndexed { _, file ->
                 val extractor = MediaExtractor()
-                extractor.setDataSource(file.absolutePath)
+                try {
+                    extractor.setDataSource(file.absolutePath)
 
-                for (trackIndex in 0 until extractor.trackCount) {
-                    val format = extractor.getTrackFormat(trackIndex)
-                    if (format.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
-                        if (audioTrackIndex == -1) {
-                            audioTrackIndex = muxer.addTrack(format)
-                            muxer.start()
-                        }
-
-                        extractor.selectTrack(trackIndex)
-                        val buffer = ByteBuffer.allocate(1024 * 1024)
-                        val bufferInfo = android.media.MediaCodec.BufferInfo()
-
-                        while (true) {
-                            val sampleSize = extractor.readSampleData(buffer, 0)
-                            if (sampleSize < 0) break
-
-                            bufferInfo.offset = 0
-                            bufferInfo.size = sampleSize
-                            bufferInfo.presentationTimeUs = extractor.sampleTime + totalDuration
-                            
-                            // MediaExtractor의 플래그를 MediaCodec의 플래그로 변환
-                            val extractorFlags = extractor.sampleFlags
-                            var codecFlags = 0
-                            if (extractorFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
-                                codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_KEY_FRAME
+                    for (trackIndex in 0 until extractor.trackCount) {
+                        val format = extractor.getTrackFormat(trackIndex)
+                        if (format.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
+                            if (audioTrackIndex == -1) {
+                                audioTrackIndex = muxer.addTrack(format)
+                                muxer.start()
                             }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-                                && extractorFlags and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME != 0) {
-                                codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
+
+                            extractor.selectTrack(trackIndex)
+
+                            while (true) {
+                                val sampleSize = extractor.readSampleData(buffer, 0)
+                                if (sampleSize < 0) break
+
+                                bufferInfo.offset = 0
+                                bufferInfo.size = sampleSize
+                                bufferInfo.presentationTimeUs = extractor.sampleTime + totalDuration
+
+                                val extractorFlags = extractor.sampleFlags
+                                var codecFlags = 0
+                                if (extractorFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
+                                    codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_KEY_FRAME
+                                }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                                    && extractorFlags and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME != 0) {
+                                    codecFlags = codecFlags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
+                                }
+                                bufferInfo.flags = codecFlags
+
+                                muxer.writeSampleData(audioTrackIndex, buffer, bufferInfo)
+                                extractor.advance()
                             }
-                            bufferInfo.flags = codecFlags
 
-                            muxer.writeSampleData(audioTrackIndex, buffer, bufferInfo)
-                            extractor.advance()
+                            totalDuration += extractor.getTrackFormat(trackIndex).getLong(MediaFormat.KEY_DURATION)
+                            break
                         }
-
-                        totalDuration += extractor.getTrackFormat(trackIndex).getLong(MediaFormat.KEY_DURATION)
-                        extractor.release()
-                        break
                     }
+                } finally {
+                    extractor.release()
                 }
             }
         } finally {
             muxer.release()
-        }
-    }
-
-    private fun mergeWithHeaderAnalysis(files: List<File>, output: File) {
-        FileOutputStream(output).use { out ->
-            files.forEachIndexed { index, file ->
-                val input = FileInputStream(file)
-                val buffer = ByteArray(8192)
-                var bytesRead: Int
-
-                // 첫 번째 파일이 아닌 경우 헤더 스킵
-                if (index > 0) {
-                    // 간단한 헤더 스킵 (실제로는 더 정교한 분석 필요)
-                    input.skip(1024) // 대략적인 헤더 크기
-                }
-
-                while (input.read(buffer).also { bytesRead = it } != -1) {
-                    out.write(buffer, 0, bytesRead)
-                }
-                input.close()
-            }
         }
     }
 
@@ -312,34 +289,22 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                 try {
                     mergeWithMediaCodec(files, outputFile)
                 } catch (e: Exception) {
-                    Log.e("AudioFileManager", "MediaCodec 병합 실패, 헤더 분석 방식 사용", e)
-                    try {
-                        mergeWithHeaderAnalysis(files, outputFile)
-                    } catch (e2: Exception) {
-                        Log.e("AudioFileManager", "헤더 분석 병합 실패, 파일 연결 방식 사용", e2)
-                        FileOutputStream(outputFile).use { out ->
-                            files.forEach { file ->
-                                FileInputStream(file).use { input ->
-                                    input.copyTo(out)
-                                }
+                    Log.e("AudioFileManager", "MediaCodec 병합 실패, 파일 연결 방식 사용", e)
+                    FileOutputStream(outputFile).use { out ->
+                        files.forEach { file ->
+                            FileInputStream(file).use { input ->
+                                input.copyTo(out)
                             }
                         }
                     }
                 }
             }
-            waitForFileReady(outputFile)
             outputFile
         }
     }
 
-    private suspend fun waitForFileReady(file: File) {
-        var attempts = 0
-        while ((!file.exists() || file.length() == 0L) && attempts < 30) {
-            delay(100L)
-            attempts++
-        }
-    }
-    
+
+
     override suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean {
         return withContext(Dispatchers.IO) {
             val mergedDir = File(context.filesDir, "merged")

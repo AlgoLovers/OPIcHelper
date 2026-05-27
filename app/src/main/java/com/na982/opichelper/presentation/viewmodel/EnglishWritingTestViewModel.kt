@@ -12,6 +12,7 @@ import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import android.util.Log
 import javax.inject.Inject
@@ -38,7 +39,7 @@ class EnglishWritingTestViewModel @Inject constructor(
     override fun initialMode() = CurrentMode.ENGLISH_WRITING
 
     override fun onStop() {
-        _uiState.value = _uiState.value.copy(isCardFlipped = false)
+        _uiState.update { it.copy(isCardFlipped = false) }
         viewModelScope.launch { coordinator.emitEvent(CoordinatorEvent.EnglishWritingStopped) }
     }
 
@@ -93,7 +94,7 @@ class EnglishWritingTestViewModel @Inject constructor(
     private fun handleEvent(event: MemorizeTestEvent) {
         when (event) {
             is MemorizeTestEvent.CardFlip -> {
-                _uiState.value = _uiState.value.copy(isCardFlipped = event.isKorean)
+                _uiState.update { it.copy(isCardFlipped = event.isKorean) }
             }
             is MemorizeTestEvent.KoreanHighlight -> {
                 if (event.index != null) {

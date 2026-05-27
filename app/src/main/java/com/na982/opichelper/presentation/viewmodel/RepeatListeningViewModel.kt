@@ -13,6 +13,7 @@ import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import android.util.Log
 import javax.inject.Inject
@@ -44,13 +45,13 @@ class RepeatListeningViewModel @Inject constructor(
     override fun initialMode() = CurrentMode.REPEAT_LISTENING
 
     override fun onStop() {
-        _uiState.value = _uiState.value.copy(isCardFlipped = false, isPlaying = false)
+        _uiState.update { it.copy(isCardFlipped = false, isPlaying = false) }
         refreshResumeIndex()
     }
 
     override suspend fun startMode() {
         try {
-            _uiState.value = _uiState.value.copy(isPlaying = true, resumeSentenceIndex = null)
+            _uiState.update { it.copy(isPlaying = true, resumeSentenceIndex = null) }
             ttsCtrl.stopTts()
             ttsCtrl.clearHighlight()
             startRepeatListening()
@@ -71,12 +72,12 @@ class RepeatListeningViewModel @Inject constructor(
                     val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
                         currentItem.category, qaDataManager.getCurrentIndex(), totalCount
                     )
-                    _uiState.value = _uiState.value.copy(resumeSentenceIndex = resumeIndex)
+                    _uiState.update { it.copy(resumeSentenceIndex = resumeIndex) }
                 } else {
-                    _uiState.value = _uiState.value.copy(resumeSentenceIndex = null)
+                    _uiState.update { it.copy(resumeSentenceIndex = null) }
                 }
             } else {
-                _uiState.value = _uiState.value.copy(resumeSentenceIndex = null)
+                _uiState.update { it.copy(resumeSentenceIndex = null) }
             }
         }
     }
@@ -110,7 +111,7 @@ class RepeatListeningViewModel @Inject constructor(
     private fun handleEvent(event: MemorizeTestEvent) {
         when (event) {
             is MemorizeTestEvent.CardFlip -> {
-                _uiState.value = _uiState.value.copy(isCardFlipped = event.isKorean)
+                _uiState.update { it.copy(isCardFlipped = event.isKorean) }
             }
             is MemorizeTestEvent.Highlight -> {
                 if (event.index != null) {
@@ -146,7 +147,7 @@ class RepeatListeningViewModel @Inject constructor(
             val hasMore = qaDataManager.hasNextQaItem()
             if (hasMore) {
                 qaDataManager.nextQaItem()
-                _uiState.value = _uiState.value.copy(isCardFlipped = false)
+                _uiState.update { it.copy(isCardFlipped = false) }
                 coordinator.updateMode(CurrentMode.REPEAT_LISTENING)
                 ttsCtrl.stopTts()
                 ttsCtrl.clearHighlight()

@@ -10,6 +10,7 @@ import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import android.util.Log
 import javax.inject.Inject
@@ -47,11 +48,11 @@ class FullMemorizationViewModel @Inject constructor(
                 fullMemorizationUseCase.highlightIndex.collect { index ->
                     val sentenceEn = index?.let { getSentenceFromAnswer(it, isKorean = false) }
                     val sentenceKo = index?.let { getSentenceFromAnswer(it, isKorean = true) }
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         highlightIndex = index,
                         currentSentenceEn = sentenceEn,
                         currentSentenceKo = sentenceKo
-                    )
+                    ) }
                 }
             }
 
@@ -71,7 +72,7 @@ class FullMemorizationViewModel @Inject constructor(
                             coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_PLAYING)
                         }
                         is FullMemorizationState.WithFile -> {
-                            _uiState.value = _uiState.value.copy(hasRecordingFile = fsState.hasRecording)
+                            _uiState.update { it.copy(hasRecordingFile = fsState.hasRecording) }
                             coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
                         }
                     }
@@ -142,7 +143,7 @@ class FullMemorizationViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val hasRecording = fullMemorizationUseCase.hasRecording()
-                _uiState.value = _uiState.value.copy(hasRecordingFile = hasRecording)
+                _uiState.update { it.copy(hasRecordingFile = hasRecording) }
             } catch (e: Exception) {
                 Log.e("FullMemorizationVM", "녹음 파일 상태 확인 실패", e)
             }

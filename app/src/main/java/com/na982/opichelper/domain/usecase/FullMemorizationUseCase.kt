@@ -143,19 +143,20 @@ class FullMemorizationUseCase @Inject constructor(
         }
     }
 
-    suspend fun playRecordingSimple() = mutex.withLock {
-        try {
-            val qaItem = qaDataManager.getCurrentQaItem() ?: return@withLock
-            val category = qaItem.category
+    suspend fun playRecordingSimple() {
+        val qaItem = mutex.withLock {
+            val item = qaDataManager.getCurrentQaItem() ?: return
+            val category = item.category
             val scriptIndex = qaDataManager.getCurrentIndex()
-
-            if (!recordingFileRepository.hasRecordingFile(category, scriptIndex)) return@withLock
-
+            if (!recordingFileRepository.hasRecordingFile(category, scriptIndex)) return
             _state.value = FullMemorizationState.Playing
+            category to scriptIndex
+        } ?: return
 
+        try {
             recordingFileRepository.playRecordingFileSimple(
-                category = category,
-                scriptIndex = scriptIndex,
+                category = qaItem.first,
+                scriptIndex = qaItem.second,
                 onPlayingStateChange = { playing ->
                     if (!playing) {
                         _state.value = FullMemorizationState.WithFile(hasRecording = true)
