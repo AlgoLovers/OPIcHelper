@@ -36,7 +36,7 @@ domain/
 | `AudioRecorder.kt` | 녹음 인터페이스 | Data 계층에서 구현. java.io.File 사용 |
 | `RecordingAudioPlayer.kt` | 녹음 재생 전용 인터페이스 | Data 계층에서 구현 |
 | `MemorizeTestEvent.kt` | 암기 테스트 이벤트 sealed class | CardFlip, Highlight, KoreanHighlight, RecordingHighlight, RecordingStateChange, MergedFileCreated, Completed |
-| `TtsOrchestrator.kt` | 언어 감지→TTS 라우팅 | 한국어: Samsung, 영어: Google. speak()는 TtsSpeakResult 반환. speakWithHighlight로 문장별 하이라이트 지원. 한글 TTS 폴백: 모든 서비스 실패 시 index 0 리셋. Hilt에 의해 싱글톤 보장 |
+| `TtsOrchestrator.kt` | 언어 감지→TTS 라우팅 | 한국어: Samsung, 영어: Google. UserPreferencesRepository 주입으로 영어 TTS 속도 제어. speak()는 TtsSpeakResult 반환. speakWithHighlight로 문장별 하이라이트 지원. 한글 TTS 폴백: 모든 서비스 실패 시 index 0 리셋. Hilt에 의해 싱글톤 보장 |
 | `TtsPlaybackController.kt` | **@Singleton** 재생 상태 관리 | playQuestion/playAnswer/playMergedAudio. 4개 재생 StateFlow (isPlaying, isPaused, isQuestionPlaying, isAnswerPlaying). 하이라이트는 HighlightStateHolder에 위임. stopAndReset()으로 stop 통합 |
 
 ### TtsPlaybackController 핵심 API
@@ -64,7 +64,7 @@ close()              → Closeable 구현, 코루틴 스코프 취소
 ```
 speak(text)                            — TTS 재생 (TtsSpeakResult 반환, 언어 자동 감지)
 speakWithHighlight(text, onHighlight)  — 문장별 하이라이트 콜백
-speakAndWaitForCompletion(text, ...)   — 완료 대기 후 durationMs 반환, isKorean/rate 파라미터는 미사용
+speakAndWaitForCompletion(text)          — 완료 대기 후 durationMs 반환
 stop() / pause() / resume()            — 재생 제어
 releaseAllPlayers()                     — 모든 TTS 플레이어 해제 (앱 종료 시)
 isPlaying()                            — 현재 재생 중 여부

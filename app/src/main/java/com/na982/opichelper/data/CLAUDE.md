@@ -33,11 +33,15 @@ data/
 
 ### TTS 레이트 로직
 
-| Android 버전 | Google (영어) | Samsung (한국어) |
-|-------------|---------------|------------------|
+사용자가 `setSpeechRate()`로 설정한 값이 우선. 미설정 시 SDK 버전별 기본값 사용.
+
+| Android 버전 | Google (영어) 기본 | Samsung (한국어) 기본 |
+|-------------|-------------------|---------------------|
 | 14+ | 0.8f | 1.1f |
 | 13 | 0.8f | 0.9f |
 | 12 이하 | 0.7f | 0.8f |
+
+영어 TTS 속도는 설정 화면 슬라이더(0.5x~1.5x)에서 제어. `TtsOrchestrator.speakEnglish()`에서 `UserPreferencesRepository.getEnglishTtsRate()` 읽어 `GoogleTtsPlayer.setSpeechRate()` 적용.
 
 ## repository/ — 데이터 영속성 & 비즈니스 로직 구현
 

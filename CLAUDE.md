@@ -196,6 +196,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | TtsPlaybackController 이중 stop 경쟁 상태 | stopAndReset() 통합, Job 취소 1차 + orchestrator.stop 안전망 (0096) |
 | TtsPlaybackController SRP 위반 (10개 StateFlow) | HighlightStateHolder 분리, 하이라이트 상태 단일 진실 공급원 (0096) |
 | TtsPlayer 인터페이스 미사용 메서드 | speakWithHighlight, speakAndGetDuration 제거 (0096) |
+| 영어 TTS 속도 제어 | 설정 슬라이더, UserPreferencesRepository 연동, speakAndWaitForCompletion 정리 (0100) |
 
 ## Git 커밋 규칙
 
