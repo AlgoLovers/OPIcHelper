@@ -39,6 +39,9 @@ abstract class BaseTtsPlayer(
                 val result = tts?.setLanguage(locale)
                 isInitialized = result == TextToSpeech.LANG_AVAILABLE ||
                                result == TextToSpeech.LANG_COUNTRY_AVAILABLE
+                if (!isInitialized && result == TextToSpeech.LANG_MISSING_DATA) {
+                    Log.w(logTag, "$serviceName 언어 데이터 미설치 (LANG_MISSING_DATA)")
+                }
             } else {
                 Log.e(logTag, "$serviceName 초기화 실패")
             }
@@ -68,6 +71,7 @@ abstract class BaseTtsPlayer(
                     kotlinx.coroutines.delay(50)
                     waitCount++
                 }
+                // 엔진 stop 후 완전히 idle로 전환되기 위한 정착 대기
                 if (waitCount > 0) {
                     kotlinx.coroutines.delay(150)
                 }
@@ -123,6 +127,7 @@ abstract class BaseTtsPlayer(
                 if (!started) {
                     Log.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
                     _isPlaying.set(false)
+                    tts?.setOnUtteranceProgressListener(null)
                     return@withLock TtsSpeakResult.Error("재생 시작 타임아웃")
                 }
 
@@ -156,20 +161,7 @@ abstract class BaseTtsPlayer(
         }
     }
 
-    override fun pause() {
-        try {
-            tts?.stop()
-            _isPlaying.set(false)
-        } catch (e: Exception) {
-            Log.e(logTag, "$serviceName 일시 중지 실패", e)
-        }
-    }
-
-    override fun resume() {
-        Log.w(logTag, "$serviceName 재개 불가 - Android TTS 제한")
-    }
-
-    override fun isPlaying(): Boolean = _isPlaying.get() || (tts?.isSpeaking == true)
+    override fun isPlaying(): Boolean = _isPlaying.get()
 
     override fun release() {
         try {

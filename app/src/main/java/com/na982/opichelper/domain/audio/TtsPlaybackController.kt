@@ -29,8 +29,8 @@ class TtsPlaybackController @Inject constructor(
     private val _isAnswerPlaying = MutableStateFlow(false)
     val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
 
-    val isPlaying: StateFlow<Boolean> get() = _isPlaying
     private val _isPlaying = MutableStateFlow(false)
+    val isPlaying: StateFlow<Boolean> get() = _isPlaying
 
     private val _isPaused = MutableStateFlow(false)
     val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
@@ -111,12 +111,12 @@ class TtsPlaybackController @Inject constructor(
                 ttsOrchestrator.speakWithHighlight(question) { index, sentence ->
                     highlightStateHolder.setQuestionHighlight(index, sentence)
                 }
+                _isAnswerPlaying.value = true
                 _isQuestionPlaying.value = false
                 highlightStateHolder.setQuestionHighlight(null)
 
                 kotlinx.coroutines.delay(500)
 
-                _isAnswerPlaying.value = true
                 updateIsPlaying()
                 ttsOrchestrator.speakWithHighlight(answer) { index, sentence ->
                     highlightStateHolder.setAnswerHighlight(index, sentence)
@@ -186,11 +186,7 @@ class TtsPlaybackController @Inject constructor(
         coroutineScope.cancel()
     }
 
-    fun forceStopTts() = stopAndReset(clearHighlight = false)
-
-    fun getCurrentKoreanTtsServiceName(): String {
-        return ttsOrchestrator.getCurrentKoreanTtsServiceName()
-    }
+    fun stopWithoutClearingHighlight() = stopAndReset(clearHighlight = false)
 
     fun setQuestionHighlightIndex(index: Int) {
         highlightStateHolder.setQuestionHighlight(index)

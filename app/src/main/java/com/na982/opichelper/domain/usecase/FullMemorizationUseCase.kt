@@ -136,7 +136,9 @@ class FullMemorizationUseCase @Inject constructor(
                 }
                 _highlightIndex.value = null
             }
-            _state.value = FullMemorizationState.WithFile(hasRecording = true)
+            if (_state.value is FullMemorizationState.Playing) {
+                _state.value = FullMemorizationState.WithFile(hasRecording = true)
+            }
         } catch (e: Exception) {
             Log.e("FullMemorizationUseCase", "녹음 재생 실패", e)
             _state.value = FullMemorizationState.WithFile(hasRecording = true)
@@ -169,16 +171,16 @@ class FullMemorizationUseCase @Inject constructor(
         }
     }
 
-    suspend fun hasRecording(): Boolean {
+    suspend fun hasRecording() = mutex.withLock {
         val qaItem = qaDataManager.getCurrentQaItem()
-        return if (qaItem != null) {
+        if (qaItem != null) {
             recordingFileRepository.hasRecordingFile(qaItem.category, qaDataManager.getCurrentIndex())
         } else {
             false
         }
     }
 
-    suspend fun clearRecording() {
+    suspend fun clearRecording() = mutex.withLock {
         val qaItem = qaDataManager.getCurrentQaItem()
         if (qaItem != null) {
             recordingFileRepository.deleteRecordingFile(qaItem.category, qaDataManager.getCurrentIndex())
@@ -195,7 +197,7 @@ class FullMemorizationUseCase @Inject constructor(
     override fun close() {
         playbackJob?.cancel()
         playbackJob = null
-        _state.value = FullMemorizationState.WithFile(hasRecording = true)
+        _state.value = FullMemorizationState.Idle
         _highlightIndex.value = null
         scope.cancel()
     }
