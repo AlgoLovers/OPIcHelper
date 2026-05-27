@@ -6,7 +6,6 @@ import com.na982.opichelper.presentation.ui.component.PlayStopToggleButton
 
 @Composable
 fun QuestionPlayButton(
-    @Suppress("UNUSED_PARAMETER") currentQuestion: String,
     isPlaying: Boolean,
     onPlayClick: () -> Unit,
     onStopClick: () -> Unit,

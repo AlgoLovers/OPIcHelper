@@ -15,6 +15,4 @@ class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> 0.9f
         else -> 0.8f
     }
-
-    override fun getPitch(): Float = 1.0f
 }

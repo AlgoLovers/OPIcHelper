@@ -7,6 +7,8 @@ import java.io.File
 
 class RecordingAudioPlayerImpl : RecordingAudioPlayer {
     @Volatile private var player: MediaPlayer? = null
+    private var cachedDuration: Int = 0
+    private var cachedDurationPath: String? = null
     private val lock = Any()
 
     override val isPlaying: Boolean
@@ -99,11 +101,15 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
     }
 
     override fun getDuration(filePath: String): Int {
+        if (cachedDurationPath == filePath && cachedDuration > 0) return cachedDuration
         val mediaPlayer = MediaPlayer()
         return try {
             mediaPlayer.setDataSource(filePath)
             mediaPlayer.prepare()
-            mediaPlayer.duration
+            val duration = mediaPlayer.duration
+            cachedDuration = duration
+            cachedDurationPath = filePath
+            duration
         } catch (e: Exception) {
             Log.e("RecordingAudioPlayerImpl", "getDuration 실패: $filePath", e)
             0

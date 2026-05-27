@@ -1,6 +1,7 @@
 package com.na982.opichelper.presentation.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -386,8 +387,16 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("버전", fontWeight = FontWeight.Medium)
+                    val context = LocalContext.current
+                    val versionName = remember {
+                        try {
+                            context.packageManager.getPackageInfo(context.packageName, 0)?.versionName ?: "Unknown"
+                        } catch (e: Exception) {
+                            "Unknown"
+                        }
+                    }
                     Text(
-                        "1.0.0",
+                        versionName,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }

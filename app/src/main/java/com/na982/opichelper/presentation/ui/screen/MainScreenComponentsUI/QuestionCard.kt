@@ -151,8 +151,7 @@ fun QuestionCard(
                     content = currentQuestion,
                     highlightIndex = highlightIndex,
                     backgroundColor = MaterialTheme.colorScheme.surface,
-                    titleColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    titleColor = MaterialTheme.colorScheme.primary
                 )
             },
             backContent = {
@@ -161,8 +160,7 @@ fun QuestionCard(
                     content = currentQuestionKo,
                     highlightIndex = highlightIndex,
                     backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-                    titleColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    titleColor = MaterialTheme.colorScheme.primary
                 )
             }
         )
@@ -175,8 +173,7 @@ private fun ModernCard(
     content: String,
     highlightIndex: Int?,
     backgroundColor: Color,
-    titleColor: Color,
-    @Suppress("UNUSED_PARAMETER") contentColor: Color
+    titleColor: Color
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),

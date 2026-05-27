@@ -53,9 +53,9 @@ class PlayMergedFileUseCase @Inject constructor(
                 if (mergedFile == null || !mergedFile.exists()) return@launch
 
                 if (!recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
-                    playWithDefaultHighlight(mergedFile, currentItem)
+                    playWithDefaultHighlight(mergedFile)
                 } else {
-                    playWithExactHighlight(mergedFile, currentItem, category, scriptIndex)
+                    playWithExactHighlight(mergedFile, category, scriptIndex)
                 }
             } catch (e: Exception) {
                 _isPlaying.value = false
@@ -66,11 +66,11 @@ class PlayMergedFileUseCase @Inject constructor(
         }
     }
 
-    private suspend fun playWithDefaultHighlight(mergedFile: File, currentItem: QaItem) {
+    private suspend fun playWithDefaultHighlight(mergedFile: File) {
         _isPlaying.value = true
         audioPlayer.playAudio(mergedFile.absolutePath)
 
-        val answerText = qaDataManager.getCurrentAnswer(currentItem)
+        val answerText = qaDataManager.getCurrentAnswer(qaDataManager.getCurrentQaItem() ?: return)
         val sentences = SentenceSplitter.split(answerText)
 
         for (i in sentences.indices) {
@@ -86,7 +86,7 @@ class PlayMergedFileUseCase @Inject constructor(
         _highlightIndex.value = null
     }
 
-    private suspend fun playWithExactHighlight(mergedFile: File, @Suppress("UNUSED_PARAMETER") currentItem: QaItem?, category: String, scriptIndex: Int) {
+    private suspend fun playWithExactHighlight(mergedFile: File, category: String, scriptIndex: Int) {
         _isPlaying.value = true
         audioPlayer.playAudio(mergedFile.absolutePath)
 

@@ -19,6 +19,12 @@ abstract class BaseTtsPlayer(
     protected val logTag: String
 ) : TtsPlayer {
 
+    companion object {
+        private const val IS_SPEAKING_POLL_INTERVAL_MS = 50L
+        private const val IS_SPEAKING_MAX_POLLS = 40
+        private const val ENGINE_SETTLE_DELAY_MS = 150L
+    }
+
     @Volatile
     protected var tts: TextToSpeech? = null
     @Volatile
@@ -67,13 +73,12 @@ abstract class BaseTtsPlayer(
             try {
                 tts?.stop()
                 var waitCount = 0
-                while (tts?.isSpeaking == true && waitCount < 40) {
-                    kotlinx.coroutines.delay(50)
+                while (tts?.isSpeaking == true && waitCount < IS_SPEAKING_MAX_POLLS) {
+                    kotlinx.coroutines.delay(IS_SPEAKING_POLL_INTERVAL_MS)
                     waitCount++
                 }
-                // 엔진 stop 후 완전히 idle로 전환되기 위한 정착 대기
                 if (waitCount > 0) {
-                    kotlinx.coroutines.delay(150)
+                    kotlinx.coroutines.delay(ENGINE_SETTLE_DELAY_MS)
                 }
 
                 tts?.setSpeechRate(getSpeechRate())

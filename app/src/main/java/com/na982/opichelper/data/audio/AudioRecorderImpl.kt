@@ -14,12 +14,14 @@ import java.util.Locale
 import com.na982.opichelper.domain.audio.AudioRecorder
 
 class AudioRecorderImpl(private val context: Context) : AudioRecorder {
+    private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+
     @Volatile private var recorder: MediaRecorder? = null
     @Volatile private var outputFile: File? = null
 
     @Synchronized
     override fun startRecording(): File {
-        return startRecording("recording_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()))
+        return startRecording("recording_" + dateFormat.format(Date()))
     }
 
     @Synchronized
@@ -34,7 +36,7 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
         } else {
             val recordingsDir = File(context.filesDir, "recordings")
             if (!recordingsDir.exists()) recordingsDir.mkdirs()
-            val fileName = "${scriptId}_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.m4a"
+            val fileName = "${scriptId}_${dateFormat.format(Date())}.m4a"
             File(recordingsDir, fileName)
         }
 

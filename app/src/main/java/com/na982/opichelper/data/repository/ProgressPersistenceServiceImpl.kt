@@ -11,10 +11,11 @@ import com.na982.opichelper.domain.repository.ProgressPersistenceService
 class ProgressPersistenceServiceImpl(
     private val context: Context
 ) : ProgressPersistenceService {
-    private val prefs: SharedPreferences = context.getSharedPreferences("opic_prefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
 
     companion object {
+        private const val PREFS_NAME = "opic_prefs"
         private const val KEY_APP_EXIT_STATE = "app_exit_state"
         private const val KEY_CATEGORY_PROGRESS_PREFIX = "category_progress_"
         private const val KEY_NAV_CATEGORY = "last_category"
@@ -62,7 +63,6 @@ class ProgressPersistenceServiceImpl(
                 putString(KEY_NAV_CATEGORY, state.category)
                 putInt(KEY_NAV_SCRIPT_INDEX, state.scriptIndex)
                 putInt(KEY_NAV_SENTENCE_INDEX, state.sentenceIndex)
-                remove("last_index")
                 apply()
             }
         } catch (e: Exception) {

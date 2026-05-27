@@ -50,7 +50,6 @@ fun AnswerCard(
                     resumeHighlightIndex = resumeHighlightIndex,
                     backgroundColor = MaterialTheme.colorScheme.surface,
                     titleColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
                     isVisible = isVisible,
                     onHideClick = {
                         isVisible = !isVisible
@@ -66,7 +65,6 @@ fun AnswerCard(
                     resumeHighlightIndex = resumeHighlightIndex,
                     backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                     titleColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     isVisible = isVisible,
                     onHideClick = {
                         isVisible = !isVisible
@@ -86,7 +84,6 @@ private fun ModernAnswerCard(
     resumeHighlightIndex: Int?,
     backgroundColor: Color,
     titleColor: Color,
-    @Suppress("UNUSED_PARAMETER") contentColor: Color,
     isVisible: Boolean = true,
     onHideClick: () -> Unit
 ) {

@@ -353,7 +353,6 @@ fun MainScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         QuestionPlayButton(
-                            currentQuestion = qaItem.questionEn,
                             isPlaying = playbackState.isQuestionPlaying,
                             onPlayClick = {
                                 stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
@@ -444,7 +443,6 @@ fun MainScreen(
                     ) {
                         val isRepeatListening = MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.REPEAT_LISTENING
                         AnswerPlayButton(
-                            currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             isPlaying = playbackState.isAnswerPlaying,
                             repeatCount = qaState.answerPlayCount,
                             onPlayClick = {

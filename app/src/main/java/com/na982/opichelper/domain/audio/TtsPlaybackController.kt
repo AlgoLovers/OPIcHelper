@@ -19,6 +19,10 @@ class TtsPlaybackController @Inject constructor(
     private val ttsOrchestrator: TtsOrchestrator,
     private val highlightStateHolder: HighlightStateHolder
 ) : java.io.Closeable {
+    companion object {
+        private const val MERGED_AUDIO_DELAY_MS = 500L
+    }
+
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     @Volatile
     private var currentPlayJob: Job? = null
@@ -112,7 +116,7 @@ class TtsPlaybackController @Inject constructor(
                 _isQuestionPlaying.value = false
                 highlightStateHolder.setQuestionHighlight(null)
 
-                kotlinx.coroutines.delay(500)
+                kotlinx.coroutines.delay(MERGED_AUDIO_DELAY_MS)
 
                 updateIsPlaying()
                 ttsOrchestrator.speakWithHighlight(answer) { index, sentence ->
