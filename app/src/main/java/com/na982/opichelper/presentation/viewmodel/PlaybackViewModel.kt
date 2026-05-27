@@ -263,9 +263,9 @@ class PlaybackViewModel @Inject constructor(
 
     fun togglePlayPause() {
         if (ttsPlaybackController.isPaused.value) {
-            ttsPlaybackController.resumeTts()
+            ttsPlaybackController.clearPausedState()
         } else if (_uiState.value.isPlaying || coordinator.isRunning.value) {
-            ttsPlaybackController.pauseTts()
+            ttsPlaybackController.stopAndMarkPaused()
         }
     }
 

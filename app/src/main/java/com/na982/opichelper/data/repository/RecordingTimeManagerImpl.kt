@@ -17,6 +17,7 @@ class RecordingTimeManagerImpl(
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
     
+    @Synchronized
     override fun saveRecordingTime(category: String, scriptIndex: Int, sentenceIndex: Int, recordingTimeMs: Long) {
         val key = getKey(category, scriptIndex)
         val times = getAllRecordingTimes(category, scriptIndex).toMutableList()

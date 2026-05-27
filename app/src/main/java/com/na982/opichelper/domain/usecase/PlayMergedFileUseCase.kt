@@ -1,6 +1,7 @@
 package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.AudioPlayer
+import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataManager
@@ -29,6 +30,7 @@ class PlayMergedFileUseCase @Inject constructor(
 ) : java.io.Closeable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var playJob: Job? = null
+    private var checkFileJob: Job? = null
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
@@ -69,7 +71,7 @@ class PlayMergedFileUseCase @Inject constructor(
         audioPlayer.playAudio(mergedFile.absolutePath)
 
         val answerText = qaDataManager.getCurrentAnswer(currentItem)
-        val sentences = answerText.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotEmpty() }
+        val sentences = SentenceSplitter.split(answerText)
 
         for (i in sentences.indices) {
             if (!currentCoroutineContext().isActive) break
@@ -111,7 +113,8 @@ class PlayMergedFileUseCase @Inject constructor(
     }
 
     fun checkFile() {
-        scope.launch {
+        checkFileJob?.cancel()
+        checkFileJob = scope.launch {
             val currentItem = qaDataManager.getCurrentQaItem() ?: return@launch
             val category = currentItem.category
             val scriptIndex = qaDataManager.getCurrentIndex()
@@ -133,6 +136,8 @@ class PlayMergedFileUseCase @Inject constructor(
     fun release() {
         playJob?.cancel()
         playJob = null
+        checkFileJob?.cancel()
+        checkFileJob = null
         _isPlaying.value = false
         _highlightIndex.value = null
         audioPlayer.stop()

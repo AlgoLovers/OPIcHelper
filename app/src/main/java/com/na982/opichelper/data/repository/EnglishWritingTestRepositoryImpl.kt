@@ -41,50 +41,57 @@ class EnglishWritingTestRepositoryImpl(
 
         val recordingFiles = mutableListOf<File>()
 
-        for (idx in startIndex until count) {
-            if (!currentCoroutineContext().isActive) break
+        try {
+            for (idx in startIndex until count) {
+                if (!currentCoroutineContext().isActive) break
 
-            progressPersistenceService.saveNavigationState(
-                ProgressPersistenceService.NavigationState(category, scriptIndex, idx)
-            )
+                progressPersistenceService.saveNavigationState(
+                    ProgressPersistenceService.NavigationState(category, scriptIndex, idx)
+                )
 
-            // 1. 한글 문장 TTS
-            emit(MemorizeTestEvent.CardFlip(true))
-            delay(100)
-            emit(MemorizeTestEvent.KoreanHighlight(idx))
+                // 1. 한글 문장 TTS
+                emit(MemorizeTestEvent.CardFlip(true))
+                delay(100)
+                emit(MemorizeTestEvent.KoreanHighlight(idx))
 
-            ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx])
+                ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx])
 
-            if (!currentCoroutineContext().isActive) break
+                if (!currentCoroutineContext().isActive) break
 
-            // 2. 녹음
-            emit(MemorizeTestEvent.RecordingHighlight(idx))
-            emit(MemorizeTestEvent.RecordingStateChange(true))
+                // 2. 녹음
+                emit(MemorizeTestEvent.RecordingHighlight(idx))
+                emit(MemorizeTestEvent.RecordingStateChange(true))
 
-            val savedTtsTime = recordingTimeManager.getRecordingTime(category, scriptIndex, idx)
-            val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
-                savedTtsTime
-            } else {
-                (enSentences[idx].length * 100L).coerceAtLeast(3000L)
+                val savedTtsTime = recordingTimeManager.getRecordingTime(category, scriptIndex, idx)
+                val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
+                    savedTtsTime
+                } else {
+                    (enSentences[idx].length * 100L).coerceAtLeast(3000L)
+                }
+
+                val recordingFile = audioRecorder.startRecording()
+                val startTime = System.currentTimeMillis()
+                try {
+                    delay(recordingDuration)
+                } finally {
+                    audioRecorder.stopRecording()
+                }
+                val actualRecordingTime = System.currentTimeMillis() - startTime
+
+                recordingTimeManager.saveRecordingTime(category, scriptIndex, idx, actualRecordingTime)
+
+                val savedFile = audioFileManager.saveRecordingFile(recordingFile, "english_writing_${category}_${scriptIndex}_${idx}")
+                recordingFiles.add(savedFile)
+
+                emit(MemorizeTestEvent.RecordingStateChange(false))
+                emit(MemorizeTestEvent.RecordingHighlight(null))
+                emit(MemorizeTestEvent.KoreanHighlight(null))
             }
-
-            val recordingFile = audioRecorder.startRecording()
-            val startTime = System.currentTimeMillis()
-            try {
-                delay(recordingDuration)
-            } finally {
-                audioRecorder.stopRecording()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            recordingFiles.forEach { file ->
+                if (file.exists()) file.delete()
             }
-            val actualRecordingTime = System.currentTimeMillis() - startTime
-
-            recordingTimeManager.saveRecordingTime(category, scriptIndex, idx, actualRecordingTime)
-
-            val savedFile = audioFileManager.saveRecordingFile(recordingFile, "english_writing_${category}_${scriptIndex}_${idx}")
-            recordingFiles.add(savedFile)
-
-            emit(MemorizeTestEvent.RecordingStateChange(false))
-            emit(MemorizeTestEvent.RecordingHighlight(null))
-            emit(MemorizeTestEvent.KoreanHighlight(null))
+            throw e
         }
 
         emit(MemorizeTestEvent.CardFlip(false))

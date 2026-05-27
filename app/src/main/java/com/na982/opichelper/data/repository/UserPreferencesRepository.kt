@@ -25,7 +25,11 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
 
     init {
         val savedLevel = prefs.getString(KEY_USER_LEVEL, UserLevel.IH.name)
-        _userLevel.value = UserLevel.valueOf(savedLevel ?: UserLevel.IH.name)
+        _userLevel.value = try {
+            UserLevel.valueOf(savedLevel ?: UserLevel.IH.name)
+        } catch (e: IllegalArgumentException) {
+            UserLevel.IH
+        }
 
         _englishTtsRate.value = prefs.getFloat(KEY_ENGLISH_TTS_RATE, 0.8f)
         _repeatListeningCount.value = prefs.getInt(KEY_REPEAT_LISTENING_COUNT, 5)

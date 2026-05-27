@@ -115,26 +115,24 @@ class MemorizeTestProgressTracker @Inject constructor(
      */
     suspend fun persistChangedProgress() {
         try {
-            val changedProgress = mutex.withLock {
-                _progressMap.value.values.filter { it.needsSave }
-            }
+            mutex.withLock {
+                val changedProgress = _progressMap.value.values.filter { it.needsSave }
 
-            if (changedProgress.isNotEmpty()) {
-                changedProgress.forEach { scriptProgress: ScriptProgress ->
-                    val categoryProgress = CategoryProgress(
-                        category = scriptProgress.category,
-                        scriptIndex = scriptProgress.scriptIndex,
-                        memorizeLevel = scriptProgress.memorizeLevel,
-                        currentSentenceIndex = scriptProgress.currentSentenceIndex,
-                        totalSentences = scriptProgress.totalSentences,
-                        isMemorizeTestRunning = scriptProgress.isMemorizeTestRunning,
-                        timestamp = scriptProgress.timestamp
-                    )
+                if (changedProgress.isNotEmpty()) {
+                    changedProgress.forEach { scriptProgress: ScriptProgress ->
+                        val categoryProgress = CategoryProgress(
+                            category = scriptProgress.category,
+                            scriptIndex = scriptProgress.scriptIndex,
+                            memorizeLevel = scriptProgress.memorizeLevel,
+                            currentSentenceIndex = scriptProgress.currentSentenceIndex,
+                            totalSentences = scriptProgress.totalSentences,
+                            isMemorizeTestRunning = scriptProgress.isMemorizeTestRunning,
+                            timestamp = scriptProgress.timestamp
+                        )
 
-                    progressPersistenceService.saveCategoryProgress(categoryProgress)
-                }
+                        progressPersistenceService.saveCategoryProgress(categoryProgress)
+                    }
 
-                mutex.withLock {
                     val currentMap = _progressMap.value.toMutableMap()
                     changedProgress.forEach { scriptProgress: ScriptProgress ->
                         val key = scriptProgress.getKey()
@@ -142,8 +140,6 @@ class MemorizeTestProgressTracker @Inject constructor(
                     }
                     _progressMap.value = currentMap
                 }
-            } else {
-                // 저장할 진행 상황 없음
             }
         } catch (e: Exception) {
             Log.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)

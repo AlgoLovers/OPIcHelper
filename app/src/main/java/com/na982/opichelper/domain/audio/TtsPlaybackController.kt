@@ -150,10 +150,7 @@ class TtsPlaybackController @Inject constructor(
         updateIsPlaying()
     }
 
-    fun pauseTts() {
-        // Android TTS does not support true pause — stop the current utterance and mark paused.
-        // The speakWithHighlight loop will continue to the next sentence unless the Job is cancelled.
-        // Since pause is effectively stop, cancel the play job to prevent the loop from resuming.
+    fun stopAndMarkPaused() {
         currentPlayJob?.cancel()
         currentPlayJob = null
         ttsOrchestrator.stop()
@@ -162,9 +159,7 @@ class TtsPlaybackController @Inject constructor(
         _isPaused.value = true
     }
 
-    fun resumeTts() {
-        // Android TTS does not support resume after stop. Clear paused state.
-        // The caller must re-invoke playQuestion/playAnswer to restart playback.
+    fun clearPausedState() {
         _isPaused.value = false
         highlightStateHolder.clearHighlight()
     }
