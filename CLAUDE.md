@@ -197,6 +197,15 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | TtsPlaybackController SRP 위반 (10개 StateFlow) | HighlightStateHolder 분리, 하이라이트 상태 단일 진실 공급원 (0096) |
 | TtsPlayer 인터페이스 미사용 메서드 | speakWithHighlight, speakAndGetDuration 제거 (0096) |
 | 영어 TTS 속도 제어 | 설정 슬라이더, UserPreferencesRepository 연동, speakAndWaitForCompletion 정리 (0100) |
+| TtsOrchestrator DI 이중 등록 | @Inject constructor 제거, @Provides만 사용 (0102) |
+| TtsOrchestrator _isSpeaking 경쟁 상태 | AtomicInteger 참조 카운터 도입 (0102) |
+| 한글 문장 분할 미지원 | SentenceSplitter 공백 없는 마침표 분할 지원 (0103) |
+| isPlaying TOCTOU | tts?.isSpeaking 제거, _isPlaying 단일 소스 (0103) |
+| FullMemorizationUseCase Mutex 미보호 | hasRecording/clearRecording Mutex 적용 (0103) |
+| TtsPlayer pause/resume 오해 유발 | 인터페이스에서 제거 (0104) |
+| GoogleTtsPlayer/SamsungTtsPlayer 데드 코드 | destroy(), release() 중복 오버라이드 제거 (0104) |
+| EnglishWritingTestRepositoryImpl Completed 누락 | 이벤트 발행 추가 (0104) |
+| SettingsViewModel StateFlow 경쟁 | MutableStateFlow.update 사용 (0104) |
 
 ## Git 커밋 규칙
 
