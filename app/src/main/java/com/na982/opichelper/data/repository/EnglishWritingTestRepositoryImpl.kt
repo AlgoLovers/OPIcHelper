@@ -53,7 +53,7 @@ class EnglishWritingTestRepositoryImpl(
             delay(100)
             emit(MemorizeTestEvent.KoreanHighlight(idx))
 
-            ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx], isKorean = true, rate = 0.8f)
+            ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx])
 
             if (!currentCoroutineContext().isActive) break
 

@@ -1,6 +1,7 @@
 package com.na982.opichelper.domain.audio
 
 import android.util.Log
+import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +12,8 @@ import javax.inject.Inject
 
 class TtsOrchestrator @Inject constructor(
     private val googleTtsPlayer: TtsPlayer,
-    private val samsungTtsPlayer: TtsPlayer
+    private val samsungTtsPlayer: TtsPlayer,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) {
     private val _isSpeaking = MutableStateFlow(false)
     val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
@@ -35,6 +37,7 @@ class TtsOrchestrator @Inject constructor(
     }
 
     private suspend fun speakEnglish(text: String): TtsSpeakResult {
+        googleTtsPlayer.setSpeechRate(userPreferencesRepository.getEnglishTtsRate())
         return googleTtsPlayer.speak(text)
     }
 
@@ -122,8 +125,7 @@ class TtsOrchestrator @Inject constructor(
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    suspend fun speakAndWaitForCompletion(text: String, isKorean: Boolean, rate: Float): Long {
+    suspend fun speakAndWaitForCompletion(text: String): Long {
         _isSpeaking.value = true
         return try {
             val result = speakInternal(text)

@@ -257,6 +257,31 @@ fun SettingsScreen(
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 영어 TTS 속도
+                Text(
+                    text = "영어 TTS 속도: ${"%.1f".format(uiState.englishTtsRate)}x",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "영어 음성 재생 속도 (0.5x~1.5x)",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Slider(
+                    value = uiState.englishTtsRate,
+                    onValueChange = { viewModel.setEnglishTtsRate(it) },
+                    valueRange = 0.5f..1.5f,
+                    steps = 9,
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 

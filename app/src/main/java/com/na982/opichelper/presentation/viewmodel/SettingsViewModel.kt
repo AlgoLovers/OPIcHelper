@@ -16,7 +16,8 @@ data class SettingsUiState(
     val currentUserLevel: String = "",
     val currentKoreanTtsService: String = "",
     val repeatListeningCount: Int = 5,
-    val answerPlayCount: Int = 1
+    val answerPlayCount: Int = 1,
+    val englishTtsRate: Float = 0.8f
 )
 
 @HiltViewModel
@@ -47,6 +48,12 @@ class SettingsViewModel @Inject constructor(
             }
         }
 
+        viewModelScope.launch {
+            userPreferencesRepository.englishTtsRate.collect { rate ->
+                _uiState.value = _uiState.value.copy(englishTtsRate = rate)
+            }
+        }
+
         _uiState.value = _uiState.value.copy(
             currentKoreanTtsService = ttsOrchestrator.getCurrentKoreanTtsServiceName()
         )
@@ -64,5 +71,9 @@ class SettingsViewModel @Inject constructor(
 
     fun setAnswerPlayCount(count: Int) {
         userPreferencesRepository.setAnswerPlayCount(count.coerceIn(1, 10))
+    }
+
+    fun setEnglishTtsRate(rate: Float) {
+        userPreferencesRepository.setEnglishTtsRate(rate.coerceIn(0.5f, 1.5f))
     }
 }

@@ -24,6 +24,8 @@ abstract class BaseTtsPlayer(
     @Volatile
     protected var isInitialized = false
     private val _isPlaying = AtomicBoolean(false)
+    @Volatile
+    protected var userSpeechRate: Float? = null
 
     private val speakMutex = Mutex()
 
@@ -44,6 +46,10 @@ abstract class BaseTtsPlayer(
     }
 
     override fun isAvailable(): Boolean = isInitialized
+
+    override fun setSpeechRate(rate: Float) {
+        userSpeechRate = rate
+    }
 
     override fun getServiceName(): String = serviceName
 
@@ -177,6 +183,6 @@ abstract class BaseTtsPlayer(
         _isPlaying.set(false)
     }
 
-    protected open fun getSpeechRate(): Float = 0.8f
+    protected open fun getSpeechRate(): Float = userSpeechRate ?: 0.8f
     protected open fun getPitch(): Float = 1.0f
 }

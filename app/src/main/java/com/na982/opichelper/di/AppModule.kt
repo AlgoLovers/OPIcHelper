@@ -77,9 +77,10 @@ object AppModule {
     @Singleton
     fun provideTtsOrchestrator(
         @Named("google") googleTtsPlayer: TtsPlayer,
-        @Named("samsung") samsungTtsPlayer: TtsPlayer
+        @Named("samsung") samsungTtsPlayer: TtsPlayer,
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
     ): TtsOrchestrator {
-        return TtsOrchestrator(googleTtsPlayer, samsungTtsPlayer)
+        return TtsOrchestrator(googleTtsPlayer, samsungTtsPlayer, userPreferencesRepository)
     }
     
     @Provides
