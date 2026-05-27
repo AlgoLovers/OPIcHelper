@@ -9,8 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -109,32 +108,33 @@ class FullMemorizationUseCase @Inject constructor(
             if (filePath != null) {
                 playbackJob?.cancel()
                 playbackJob = scope.launch {
+                    val times = if (recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
+                        recordingTimeManager.getAllRecordingTimes(category, scriptIndex)
+                    } else {
+                        listOf(2000L, 2000L, 2000L, 2000L, 2000L)
+                    }
+
+                    val highlightJob = launch {
+                        delay(1200L)
+                        for (i in times.indices) {
+                            ensureActive()
+                            _highlightIndex.value = i
+                            delay(times[i])
+                        }
+                        _highlightIndex.value = null
+                    }
+
                     try {
                         recordingFileRepository.playRecordingFileSimple(category, scriptIndex) { playing ->
                             if (!playing) {
                                 _state.value = FullMemorizationState.WithFile(hasRecording = true)
                             }
                         }
-                    } catch (e: Exception) {
-                        Log.e("FullMemorizationUseCase", "녹음 재생 실패", e)
-                        _state.value = FullMemorizationState.WithFile(hasRecording = true)
+                    } finally {
+                        highlightJob.cancel()
+                        _highlightIndex.value = null
                     }
                 }
-
-                delay(1200L)
-
-                val times = if (recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
-                    recordingTimeManager.getAllRecordingTimes(category, scriptIndex)
-                } else {
-                    listOf(2000L, 2000L, 2000L, 2000L, 2000L)
-                }
-
-                for (i in times.indices) {
-                    if (!currentCoroutineContext().isActive) break
-                    _highlightIndex.value = i
-                    delay(times[i])
-                }
-                _highlightIndex.value = null
             }
             if (_state.value is FullMemorizationState.Playing) {
                 _state.value = FullMemorizationState.WithFile(hasRecording = true)
