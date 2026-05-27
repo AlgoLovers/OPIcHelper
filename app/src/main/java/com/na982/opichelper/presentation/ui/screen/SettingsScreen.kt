@@ -142,7 +142,7 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                UserLevel.values().forEach { level ->
+                UserLevel.entries.forEach { level ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

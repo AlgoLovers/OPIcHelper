@@ -224,7 +224,7 @@ class PlaybackViewModel @Inject constructor(
 
     fun cleanupAllTtsSync() {
         try {
-            ttsPlaybackController.forceStopTts()
+            ttsPlaybackController.stopWithoutClearingHighlight()
             ttsPlaybackController.clearHighlight()
             playMergedFileUseCase.stop()
         } catch (e: Exception) {
