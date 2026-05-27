@@ -2,7 +2,6 @@ package com.na982.opichelper.data.audio
 
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import java.util.*
 
 class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
@@ -18,16 +17,4 @@ class SamsungTtsPlayer(context: Context) : BaseTtsPlayer(
     }
 
     override fun getPitch(): Float = 1.0f
-
-    fun destroy() {
-        release()
-    }
-
-    override fun release() {
-        try {
-            super.release()
-        } catch (e: Exception) {
-            Log.e(logTag, "Samsung TTS 플레이어 해제 중 오류", e)
-        }
-    }
 }

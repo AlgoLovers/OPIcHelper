@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
 import javax.inject.Inject
@@ -32,31 +33,29 @@ class SettingsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             userPreferencesRepository.userLevel.collect { userLevel ->
-                _uiState.value = _uiState.value.copy(currentUserLevel = userLevel.name)
+                _uiState.update { it.copy(currentUserLevel = userLevel.name) }
             }
         }
 
         viewModelScope.launch {
             userPreferencesRepository.repeatListeningCount.collect { count ->
-                _uiState.value = _uiState.value.copy(repeatListeningCount = count)
+                _uiState.update { it.copy(repeatListeningCount = count) }
             }
         }
 
         viewModelScope.launch {
             userPreferencesRepository.answerPlayCount.collect { count ->
-                _uiState.value = _uiState.value.copy(answerPlayCount = count)
+                _uiState.update { it.copy(answerPlayCount = count) }
             }
         }
 
         viewModelScope.launch {
             userPreferencesRepository.englishTtsRate.collect { rate ->
-                _uiState.value = _uiState.value.copy(englishTtsRate = rate)
+                _uiState.update { it.copy(englishTtsRate = rate) }
             }
         }
 
-        _uiState.value = _uiState.value.copy(
-            currentKoreanTtsService = ttsOrchestrator.getCurrentKoreanTtsServiceName()
-        )
+        _uiState.update { it.copy(currentKoreanTtsService = ttsOrchestrator.getCurrentKoreanTtsServiceName()) }
     }
 
     fun setUserLevel(level: UserLevel) {

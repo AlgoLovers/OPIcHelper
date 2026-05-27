@@ -112,5 +112,7 @@ class EnglishWritingTestRepositoryImpl(
         progressPersistenceService.saveNavigationState(
             ProgressPersistenceService.NavigationState(category, scriptIndex, 0)
         )
+
+        emit(MemorizeTestEvent.Completed)
     }
 }
