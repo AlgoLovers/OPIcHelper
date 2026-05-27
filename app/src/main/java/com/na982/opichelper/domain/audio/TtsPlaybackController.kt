@@ -35,13 +35,10 @@ class TtsPlaybackController @Inject constructor(
     private val _isPaused = MutableStateFlow(false)
     val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
 
-    val questionHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.questionHighlightIndex
-    val answerHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.answerHighlightIndex
-    val answerKoHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.answerKoHighlightIndex
-    val recordingHighlightIndex: StateFlow<Int?> get() = highlightStateHolder.recordingHighlightIndex
-    val currentQuestionSentence: StateFlow<String?> get() = highlightStateHolder.currentQuestionSentence
-    val currentAnswerSentence: StateFlow<String?> get() = highlightStateHolder.currentAnswerSentence
-    val currentAnswerKoSentence: StateFlow<String?> get() = highlightStateHolder.currentAnswerKoSentence
+    val questionHighlight: StateFlow<HighlightInfo> get() = highlightStateHolder.questionHighlight
+    val answerHighlight: StateFlow<HighlightInfo> get() = highlightStateHolder.answerHighlight
+    val answerKoHighlight: StateFlow<HighlightInfo> get() = highlightStateHolder.answerKoHighlight
+    val recordingHighlight: StateFlow<HighlightInfo> get() = highlightStateHolder.recordingHighlight
 
     private fun stopAndReset(clearHighlight: Boolean = true) {
         currentPlayJob?.cancel()

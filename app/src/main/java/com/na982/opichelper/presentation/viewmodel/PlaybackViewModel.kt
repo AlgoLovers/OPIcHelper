@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import com.na982.opichelper.domain.audio.HighlightInfo
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
@@ -31,10 +32,10 @@ data class PlaybackState(
     val isPlaying: Boolean = false,
     val isQuestionPlaying: Boolean = false,
     val isAnswerPlaying: Boolean = false,
-    val questionHighlightIndex: Int? = null,
-    val answerHighlightIndex: Int? = null,
-    val answerKoHighlightIndex: Int? = null,
-    val recordingHighlightIndex: Int? = null,
+    val questionHighlight: HighlightInfo = HighlightInfo(),
+    val answerHighlight: HighlightInfo = HighlightInfo(),
+    val answerKoHighlight: HighlightInfo = HighlightInfo(),
+    val recordingHighlight: HighlightInfo = HighlightInfo(),
 
     val isAnswerCardFlipped: Boolean = false,
 
@@ -81,10 +82,10 @@ class PlaybackViewModel @Inject constructor(
                 ttsPlaybackController.isPlaying,
                 ttsPlaybackController.isQuestionPlaying,
                 ttsPlaybackController.isAnswerPlaying,
-                ttsPlaybackController.questionHighlightIndex,
-                ttsPlaybackController.answerHighlightIndex,
-                ttsPlaybackController.answerKoHighlightIndex,
-                ttsPlaybackController.recordingHighlightIndex
+                ttsPlaybackController.questionHighlight,
+                ttsPlaybackController.answerHighlight,
+                ttsPlaybackController.answerKoHighlight,
+                ttsPlaybackController.recordingHighlight
             ) { values ->
                 val playing = values[0] as Boolean
                 if (playing) lastPlayingTimestamp = System.currentTimeMillis()
@@ -92,10 +93,10 @@ class PlaybackViewModel @Inject constructor(
                     isPlaying = playing,
                     isQuestionPlaying = values[1] as Boolean,
                     isAnswerPlaying = values[2] as Boolean,
-                    questionHighlightIndex = values[3] as Int?,
-                    answerHighlightIndex = values[4] as Int?,
-                    answerKoHighlightIndex = values[5] as Int?,
-                    recordingHighlightIndex = values[6] as Int?
+                    questionHighlight = values[3] as HighlightInfo,
+                    answerHighlight = values[4] as HighlightInfo,
+                    answerKoHighlight = values[5] as HighlightInfo,
+                    recordingHighlight = values[6] as HighlightInfo
                 )
             }.collect { }
         }
@@ -116,9 +117,9 @@ class PlaybackViewModel @Inject constructor(
 
         viewModelScope.launch {
             combine(
-                ttsPlaybackController.currentQuestionSentence,
-                ttsPlaybackController.currentAnswerSentence,
-                ttsPlaybackController.currentAnswerKoSentence,
+                ttsPlaybackController.questionHighlight,
+                ttsPlaybackController.answerHighlight,
+                ttsPlaybackController.answerKoHighlight,
                 ttsPlaybackController.isPlaying,
                 ttsPlaybackController.isPaused,
                 _fullMemorizationSentenceEn,
@@ -126,9 +127,9 @@ class PlaybackViewModel @Inject constructor(
                 coordinator.isRunning,
                 playMergedFileUseCase.isPlaying
             ) { values ->
-                val questionSentence = values[0] as String?
-                val answerSentence = values[1] as String?
-                val answerKoSentence = values[2] as String?
+                val questionSentence = (values[0] as HighlightInfo).sentence
+                val answerSentence = (values[1] as HighlightInfo).sentence
+                val answerKoSentence = (values[2] as HighlightInfo).sentence
                 val isPlaying = values[3] as Boolean
                 val isPaused = values[4] as Boolean
                 val fmSentenceEn = values[5] as String?

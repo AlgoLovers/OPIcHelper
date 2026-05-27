@@ -337,7 +337,7 @@ fun MainScreen(
                         currentQuestionKo = qaItem.questionKo,
                         highlightIndex = when {
                             (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying) -> fullMemorizationState.highlightIndex
-                            else -> playbackState.questionHighlightIndex
+                            else -> playbackState.questionHighlight.index
                         },
                         currentIndex = currentIndex,
                         totalCount = totalCount,
@@ -414,10 +414,10 @@ fun MainScreen(
                             highlightIndex = when {
                                 (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying) || (coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING) -> fullMemorizationState.highlightIndex
                                 playbackState.isEnglishWritingTestMergedFilePlaying -> playbackState.englishWritingTestMergedFileHighlightIndex
-                                else -> playbackState.answerHighlightIndex
+                                else -> playbackState.answerHighlight.index
                             },
-                            answerKoHighlightIndex = playbackState.answerKoHighlightIndex,
-                            recordingHighlightIndex = playbackState.recordingHighlightIndex,
+                            answerKoHighlightIndex = playbackState.answerKoHighlight.index,
+                            recordingHighlightIndex = playbackState.recordingHighlight.index,
                             resumeHighlightIndex = if (!repeatListeningState.isPlaying) repeatListeningState.resumeSentenceIndex else null,
                             isFlipped = when {
                                 coordinatorMode.group == ModeGroup.ENGLISH_WRITING -> englishWritingTestState.isCardFlipped

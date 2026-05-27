@@ -76,7 +76,7 @@ classDiagram
     class TtsPlaybackController {
         -ttsOrchestrator: TtsOrchestrator?
         -isPlaying: StateFlow~Boolean~
-        -questionHighlightIndex: StateFlow~Int?~
+        -questionHighlight: StateFlow~HighlightInfo~
         +playQuestion(question)
         +playAnswer(answer)
         +stopCurrentAndPrepare()

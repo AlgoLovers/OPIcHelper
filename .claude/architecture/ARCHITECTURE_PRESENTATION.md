@@ -177,12 +177,12 @@ sequenceDiagram
 ```
 QuestionCard.highlightIndex:
   ├── 통암기 모드 + 재생 중 → fullMemorizationHighlightIndex
-  └── 그 외 → playbackState.questionHighlightIndex
+  └── 그 외 → playbackState.questionHighlight.index
 
 AnswerCard.highlightIndex:
   ├── 통암기 모드 + 재생 중 OR 녹음재생 중 → fullMemorizationHighlightIndex
   ├── 영작테스트 병합파일 재생 중 → englishWritingTestMergedFileHighlightIndex
-  └── 그 외 → playbackState.answerHighlightIndex
+  └── 그 외 → playbackState.answerHighlight.index
 
 isFullMemorizationMode 판별:
   MainScreen: selectedLevel == FULL_MEMORIZATION (사용자 선택 기준)

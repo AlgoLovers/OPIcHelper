@@ -6,55 +6,42 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class HighlightInfo(val index: Int? = null, val sentence: String? = null)
+
 @Singleton
 class HighlightStateHolder @Inject constructor() {
-    private val _questionHighlightIndex = MutableStateFlow<Int?>(null)
-    val questionHighlightIndex: StateFlow<Int?> = _questionHighlightIndex.asStateFlow()
+    private val _questionHighlight = MutableStateFlow(HighlightInfo())
+    val questionHighlight: StateFlow<HighlightInfo> = _questionHighlight.asStateFlow()
 
-    private val _answerHighlightIndex = MutableStateFlow<Int?>(null)
-    val answerHighlightIndex: StateFlow<Int?> = _answerHighlightIndex.asStateFlow()
+    private val _answerHighlight = MutableStateFlow(HighlightInfo())
+    val answerHighlight: StateFlow<HighlightInfo> = _answerHighlight.asStateFlow()
 
-    private val _answerKoHighlightIndex = MutableStateFlow<Int?>(null)
-    val answerKoHighlightIndex: StateFlow<Int?> = _answerKoHighlightIndex.asStateFlow()
+    private val _answerKoHighlight = MutableStateFlow(HighlightInfo())
+    val answerKoHighlight: StateFlow<HighlightInfo> = _answerKoHighlight.asStateFlow()
 
-    private val _recordingHighlightIndex = MutableStateFlow<Int?>(null)
-    val recordingHighlightIndex: StateFlow<Int?> = _recordingHighlightIndex.asStateFlow()
-
-    private val _currentQuestionSentence = MutableStateFlow<String?>(null)
-    val currentQuestionSentence: StateFlow<String?> = _currentQuestionSentence.asStateFlow()
-
-    private val _currentAnswerSentence = MutableStateFlow<String?>(null)
-    val currentAnswerSentence: StateFlow<String?> = _currentAnswerSentence.asStateFlow()
-
-    private val _currentAnswerKoSentence = MutableStateFlow<String?>(null)
-    val currentAnswerKoSentence: StateFlow<String?> = _currentAnswerKoSentence.asStateFlow()
+    private val _recordingHighlight = MutableStateFlow(HighlightInfo())
+    val recordingHighlight: StateFlow<HighlightInfo> = _recordingHighlight.asStateFlow()
 
     fun setQuestionHighlight(index: Int?, sentence: String? = null) {
-        _questionHighlightIndex.value = index
-        _currentQuestionSentence.value = sentence
+        _questionHighlight.value = HighlightInfo(index, sentence)
     }
 
     fun setAnswerHighlight(index: Int?, sentence: String? = null) {
-        _answerHighlightIndex.value = index
-        _currentAnswerSentence.value = sentence
+        _answerHighlight.value = HighlightInfo(index, sentence)
     }
 
     fun setAnswerKoHighlight(index: Int?, sentence: String? = null) {
-        _answerKoHighlightIndex.value = index
-        _currentAnswerKoSentence.value = sentence
+        _answerKoHighlight.value = HighlightInfo(index, sentence)
     }
 
     fun setRecordingHighlight(index: Int?) {
-        _recordingHighlightIndex.value = index
+        _recordingHighlight.value = HighlightInfo(index)
     }
 
     fun clearHighlight() {
-        _questionHighlightIndex.value = null
-        _answerHighlightIndex.value = null
-        _answerKoHighlightIndex.value = null
-        _recordingHighlightIndex.value = null
-        _currentQuestionSentence.value = null
-        _currentAnswerSentence.value = null
-        _currentAnswerKoSentence.value = null
+        _questionHighlight.value = HighlightInfo()
+        _answerHighlight.value = HighlightInfo()
+        _answerKoHighlight.value = HighlightInfo()
+        _recordingHighlight.value = HighlightInfo()
     }
 }

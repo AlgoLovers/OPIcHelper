@@ -65,10 +65,10 @@ data class PlaybackState(
     val isPlaying: Boolean = false,
     val isQuestionPlaying: Boolean = false,
     val isAnswerPlaying: Boolean = false,
-    val questionHighlightIndex: Int? = null,
-    val answerHighlightIndex: Int? = null,
-    val answerKoHighlightIndex: Int? = null,
-    val recordingHighlightIndex: Int? = null,
+    val questionHighlight: HighlightInfo = HighlightInfo(),
+    val answerHighlight: HighlightInfo = HighlightInfo(),
+    val answerKoHighlight: HighlightInfo = HighlightInfo(),
+    val recordingHighlight: HighlightInfo = HighlightInfo(),
     val isAnswerCardFlipped: Boolean = false,
     val hasProgress: Boolean = false
 )
@@ -84,7 +84,7 @@ QaBrowserViewModel:
 
 PlaybackViewModel:
   블록3: TtsPlaybackController (7-way combine) → isPlaying, isQuestionPlaying, isAnswerPlaying,
-         questionHighlightIndex, answerHighlightIndex, answerKoHighlightIndex, recordingHighlightIndex
+         questionHighlight, answerHighlight, answerKoHighlight, recordingHighlight
   블록4: PlayMergedFileUseCase (3-way combine) → hasEnglishWritingTestMergedFile, isEnglishWritingTestMergedFilePlaying, englishWritingTestMergedFileHighlightIndex
 
 MemorizationViewModel.fullMemorizationHighlightIndex ──→ MainScreen에서 직접 collect
@@ -152,14 +152,14 @@ SettingsViewModel.uiState ──→ SettingsScreen에서 직접 collect
 // QuestionCard — 모드별 하이라이트 소스 분기
 highlightIndex = when {
     (isFullMemorizationMode && isFullMemorizationPlaying) -> fullMemorizationHighlightIndex
-    else -> playbackState.questionHighlightIndex
+    else -> playbackState.questionHighlight.index
 }
 
 // AnswerCard — 3소스 분기
 highlightIndex = when {
     (isFullMemorizationMode && isFullMemorizationPlaying) || isFullMemorizationRecordingPlaying -> fullMemorizationHighlightIndex
     isEnglishWritingTestMergedFilePlaying -> englishWritingTestMergedFileHighlightIndex
-    else -> playbackState.answerHighlightIndex
+    else -> playbackState.answerHighlight.index
 }
 
 // isFullMemorizationMode는 selectedLevel에서 파생:

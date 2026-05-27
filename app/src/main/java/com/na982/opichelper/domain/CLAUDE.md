@@ -31,7 +31,7 @@ domain/
 |------|------|------|
 | `TtsPlayer.kt` | TTS 엔진 인터페이스 | speak(TtsSpeakResult 반환), stop, pause, resume, isPlaying, isAvailable, getServiceName, release |
 | `TtsSpeakResult.kt` | TTS 재생 결과 sealed class | Success(durationMs), Error(message), Timeout, Unavailable |
-| `HighlightStateHolder.kt` | **@Singleton** 하이라이트 상태 관리 | 7개 StateFlow (4개 highlightIndex + 3개 sentence). TtsPlaybackController에서 분리 추출 |
+| `HighlightStateHolder.kt` | **@Singleton** 하이라이트 상태 관리 | HighlightInfo(index, sentence) data class. 4개 StateFlow<HighlightInfo>. TtsPlaybackController에서 분리 추출 |
 | `AudioPlayer.kt` | 오디오 파일 재생 인터페이스 | Data 계층에서 구현. java.io.File 사용 |
 | `AudioRecorder.kt` | 녹음 인터페이스 | Data 계층에서 구현. java.io.File 사용 |
 | `RecordingAudioPlayer.kt` | 녹음 재생 전용 인터페이스 | Data 계층에서 구현 |
@@ -47,10 +47,10 @@ playAnswer()         → 동일 패턴
 playMergedAudio()    → 질문 TTS → 500ms 딜레이 → 답변 TTS 순차 재생
 stopAndReset(clearHighlight) → Job 취소(1차) + orchestrator.stop(안전망) + 상태 리셋
 stopTts()            → stopAndReset(clearHighlight = true)
-forceStopTts()       → stopAndReset(clearHighlight = false)
-setAnswerHighlightIndex(idx)    → HighlightStateHolder에 위임
-setAnswerKoHighlightIndex(idx)  → HighlightStateHolder에 위임
-setRecordingHighlightIndex(idx) → HighlightStateHolder에 위임
+forceStopTts()       → stopAndReset(clearHighlight = false) (현재 이름: stopWithoutClearingHighlight)
+setAnswerHighlightIndex(idx)    → HighlightStateHolder에 위임 (HighlightInfo)
+setAnswerKoHighlightIndex(idx)  → HighlightStateHolder에 위임 (HighlightInfo)
+setRecordingHighlightIndex(idx) → HighlightStateHolder에 위임 (HighlightInfo)
 clearHighlight()     → HighlightStateHolder.clearHighlight()
 pauseTts() / resumeTts() → TTS 일시정지/재개
 cleanupTts()         → stopTts + releaseAllPlayers
