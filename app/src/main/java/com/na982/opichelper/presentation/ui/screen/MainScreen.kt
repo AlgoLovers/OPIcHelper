@@ -18,8 +18,8 @@ import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
-import com.na982.opichelper.presentation.viewmodel.CurrentMode
-import com.na982.opichelper.presentation.viewmodel.ModeGroup
+import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.usecase.ModeGroup
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*

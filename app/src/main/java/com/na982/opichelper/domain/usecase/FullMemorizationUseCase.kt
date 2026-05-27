@@ -136,9 +136,6 @@ class FullMemorizationUseCase @Inject constructor(
                     }
                 }
             }
-            if (_state.value is FullMemorizationState.Playing) {
-                _state.value = FullMemorizationState.WithFile(hasRecording = true)
-            }
         } catch (e: Exception) {
             Log.e("FullMemorizationUseCase", "녹음 재생 실패", e)
             _state.value = FullMemorizationState.WithFile(hasRecording = true)

@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
+import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.FullMemorizationState
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
@@ -171,11 +172,6 @@ class FullMemorizationViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        viewModelScope.launch {
-            try {
-                fullMemorizationUseCase.cancelPlayback()
-            } catch (_: Exception) { }
-        }
         fullMemorizationUseCase.close()
     }
 

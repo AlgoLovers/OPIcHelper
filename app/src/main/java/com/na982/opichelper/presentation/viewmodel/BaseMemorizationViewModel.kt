@@ -3,6 +3,7 @@ package com.na982.opichelper.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.TtsPlaybackController
+import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import kotlinx.coroutines.Job

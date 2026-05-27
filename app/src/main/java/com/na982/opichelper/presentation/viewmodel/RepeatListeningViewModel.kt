@@ -6,6 +6,7 @@ import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker

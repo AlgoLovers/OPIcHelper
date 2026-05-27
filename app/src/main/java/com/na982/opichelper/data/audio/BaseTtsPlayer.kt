@@ -117,6 +117,7 @@ abstract class BaseTtsPlayer(
                 if (result == TextToSpeech.ERROR) {
                     Log.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
                     _isPlaying.set(false)
+                    tts?.setOnUtteranceProgressListener(null)
                     return@withLock TtsSpeakResult.Error("speak() 반환 ERROR")
                 }
 
@@ -138,6 +139,8 @@ abstract class BaseTtsPlayer(
                 } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                     Log.e(logTag, "$serviceName 재생 완료 타임아웃")
                     _isPlaying.set(false)
+                    tts?.setOnUtteranceProgressListener(null)
+                    tts?.stop()
                     TtsSpeakResult.Timeout
                 }
             } catch (e: CancellationException) {
