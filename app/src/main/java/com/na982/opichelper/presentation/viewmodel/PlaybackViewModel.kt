@@ -338,7 +338,7 @@ class PlaybackViewModel @Inject constructor(
         when (lastPlayedType) {
             LastPlayedType.QUESTION -> _repeatQuestionCallback?.invoke()
             LastPlayedType.ANSWER -> _repeatAnswerCallback?.invoke()
-            else -> {}
+            LastPlayedType.NONE -> {}
         }
     }
 

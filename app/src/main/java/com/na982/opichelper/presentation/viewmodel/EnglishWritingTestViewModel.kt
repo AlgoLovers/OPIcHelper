@@ -48,6 +48,8 @@ class EnglishWritingTestViewModel @Inject constructor(
             ttsCtrl.stopTts()
             ttsCtrl.clearHighlight()
             startEnglishWritingTest()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("EnglishWritingTestVM", "영작 테스트 시작 실패", e)
             emitEvent("영작 테스트를 시작할 수 없습니다")
@@ -80,6 +82,8 @@ class EnglishWritingTestViewModel @Inject constructor(
                     category = currentItem.category,
                     scriptIndex = scriptIndex
                 )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("EnglishWritingTestVM", "영작 테스트 실행 중 오류", e)
                 emitEvent("영작 테스트 실행 중 오류가 발생했습니다")

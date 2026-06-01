@@ -33,9 +33,6 @@ fun AppNavigation(
             sentenceEn = pipState.currentSentenceEn,
             sentenceKo = pipState.currentSentenceKo,
             hasCompleted = pipState.hasCompleted,
-            hasNextItem = pipState.hasNextItem,
-            onRepeat = { playbackViewModel.repeatPlayback() },
-            onNext = { playbackViewModel.playNextItem() },
             modifier = Modifier.fillMaxSize()
         )
     } else {

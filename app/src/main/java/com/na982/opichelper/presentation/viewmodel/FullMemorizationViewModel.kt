@@ -94,6 +94,8 @@ class FullMemorizationViewModel @Inject constructor(
                 category = category,
                 scriptIndex = scriptIndex
             )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("FullMemorizationVM", "통암기 모드 시작 실패", e)
             emitEvent("통암기를 시작할 수 없습니다")

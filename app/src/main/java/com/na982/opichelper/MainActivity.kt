@@ -69,6 +69,8 @@ class MainActivity : ComponentActivity() {
             when (intent.action) {
                 ACTION_PIP_PLAY_PAUSE -> playbackViewModel?.togglePlayPause()
                 ACTION_PIP_STOP -> playbackViewModel?.stopPlayback()
+                ACTION_PIP_REPEAT -> playbackViewModel?.repeatPlayback()
+                ACTION_PIP_NEXT -> playbackViewModel?.playNextItem()
             }
         }
     }
@@ -291,6 +293,8 @@ class MainActivity : ComponentActivity() {
             val filter = IntentFilter().apply {
                 addAction(ACTION_PIP_PLAY_PAUSE)
                 addAction(ACTION_PIP_STOP)
+                addAction(ACTION_PIP_REPEAT)
+                addAction(ACTION_PIP_NEXT)
             }
             registerReceiver(pipActionReceiver, filter, RECEIVER_NOT_EXPORTED)
         }
@@ -312,7 +316,7 @@ class MainActivity : ComponentActivity() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     updatePipAutoEnter(state.isPlaying)
                     if (isInPictureInPictureMode) {
-                        updatePipActions(state.isPlaying, state.isPaused, state.isPausable)
+                        updatePipActions(state.isPlaying, state.isPaused, state.isPausable, state.hasCompleted, state.hasNextItem)
                     }
                 }
             }
@@ -330,7 +334,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Suppress("NewApi")
-    private fun updatePipActions(isPlaying: Boolean, isPaused: Boolean, isPausable: Boolean) {
+    private fun updatePipActions(isPlaying: Boolean, isPaused: Boolean, isPausable: Boolean, hasCompleted: Boolean, hasNextItem: Boolean) {
         if (!isInPictureInPictureMode) return
 
         val params = android.app.PictureInPictureParams.Builder()
@@ -342,7 +346,29 @@ class MainActivity : ComponentActivity() {
 
         val actions = ArrayList<android.app.RemoteAction>()
 
-        if (isPausable) {
+        if (hasCompleted) {
+            val repeatIcon = Icon.createWithResource(this, R.drawable.ic_replay)
+            val repeatIntent = PendingIntent.getBroadcast(
+                this, 2,
+                Intent(ACTION_PIP_REPEAT),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            actions.add(
+                android.app.RemoteAction(repeatIcon, "반복 재생", "반복 재생", repeatIntent)
+            )
+
+            if (hasNextItem) {
+                val nextIcon = Icon.createWithResource(this, R.drawable.ic_skip_next)
+                val nextIntent = PendingIntent.getBroadcast(
+                    this, 3,
+                    Intent(ACTION_PIP_NEXT),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+                actions.add(
+                    android.app.RemoteAction(nextIcon, "다음", "다음", nextIntent)
+                )
+            }
+        } else if (isPausable) {
             val showPause = isPlaying && !isPaused
             val playPauseIcon = Icon.createWithResource(
                 this,
@@ -382,5 +408,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val ACTION_PIP_PLAY_PAUSE = "com.na982.opichelper.PIP_PLAY_PAUSE"
         const val ACTION_PIP_STOP = "com.na982.opichelper.PIP_STOP"
+        const val ACTION_PIP_REPEAT = "com.na982.opichelper.PIP_REPEAT"
+        const val ACTION_PIP_NEXT = "com.na982.opichelper.PIP_NEXT"
     }
 }
