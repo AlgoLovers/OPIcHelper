@@ -1,6 +1,6 @@
 package com.na982.opichelper.domain.audio
 
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -12,7 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger
 class TtsOrchestratorImpl(
     private val googleTtsPlayer: TtsPlayer,
     private val samsungTtsPlayer: TtsPlayer,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val logger: AppLogger
 ) : TtsOrchestrator {
     private val activeSpeakCount = AtomicInteger(0)
     private val _isSpeaking = MutableStateFlow(false)
@@ -65,16 +66,16 @@ class TtsOrchestratorImpl(
                     currentKoreanTtsIndex.set(i)
                     return result
                 }
-                Log.w("TtsOrchestrator", "한글 TTS 실패: ${player.getServiceName()}, 다음 서비스 시도")
+                logger.w("TtsOrchestrator", "한글 TTS 실패: ${player.getServiceName()}, 다음 서비스 시도")
                 currentKoreanTtsIndex.set(i + 1)
             } else {
-                Log.w("TtsOrchestrator", "한글 TTS 서비스 사용 불가: ${player.getServiceName()}, 다음 서비스 시도")
+                logger.w("TtsOrchestrator", "한글 TTS 서비스 사용 불가: ${player.getServiceName()}, 다음 서비스 시도")
                 currentKoreanTtsIndex.set(i + 1)
             }
         }
         currentKoreanTtsIndex.set(0)
         return if (anyAvailable) {
-            Log.e("TtsOrchestrator", "모든 한글 TTS 서비스 실패 — 인덱스 리셋")
+            logger.e("TtsOrchestrator", "모든 한글 TTS 서비스 실패 — 인덱스 리셋")
             TtsSpeakResult.Error("모든 한글 TTS 서비스 실패")
         } else {
             TtsSpeakResult.Unavailable
@@ -87,7 +88,7 @@ class TtsOrchestratorImpl(
             _isSpeaking.value = false
             allPlayers.forEach { it.stop() }
         } catch (e: Exception) {
-            Log.e("TtsOrchestrator", "TTS 중지 실패", e)
+            logger.e("TtsOrchestrator", "TTS 중지 실패", e)
         }
     }
 
@@ -95,7 +96,7 @@ class TtsOrchestratorImpl(
         try {
             allPlayers.forEach { it.release() }
         } catch (e: Exception) {
-            Log.e("TtsOrchestrator", "TTS 플레이어 해제 실패", e)
+            logger.e("TtsOrchestrator", "TTS 플레이어 해제 실패", e)
         }
     }
 
@@ -117,11 +118,11 @@ class TtsOrchestratorImpl(
                 onHighlight(idx, sentence)
                 val result = speakInternal(sentence)
                 if (result is TtsSpeakResult.Unavailable) {
-                    Log.e("TtsOrchestrator", "speakWithHighlight 문장 $idx TTS 사용 불가 — 중단")
+                    logger.e("TtsOrchestrator", "speakWithHighlight 문장 $idx TTS 사용 불가 — 중단")
                     break
                 }
                 if (result is TtsSpeakResult.Error || result is TtsSpeakResult.Timeout) {
-                    Log.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 실패: $result")
+                    logger.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 실패: $result")
                 }
                 delay(400L)
             }

@@ -26,7 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.na982.opichelper.domain.manager.WakeLockManager
+import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
@@ -46,7 +46,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var wakeLockManager: WakeLockManager
+    lateinit var wakeLockController: WakeLockController
 
     private var isFinishing = false
     private var playbackViewModel: PlaybackViewModel? = null
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        wakeLockManager.acquireWakeLock()
+        wakeLockController.acquire()
 
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -234,8 +234,8 @@ class MainActivity : ComponentActivity() {
         if (isFinishing) {
             isFinishing = false
         }
-        if (!wakeLockManager.isWakeLockHeld()) {
-            wakeLockManager.acquireWakeLock()
+        if (!wakeLockController.isHeld()) {
+            wakeLockController.acquire()
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isInPictureInPictureMode) {
             playbackViewModel?.onForegroundReturn()
@@ -279,7 +279,7 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 qaViewModel?.cleanupOnAppExit()
             }
-            wakeLockManager.releaseWakeLock()
+            wakeLockController.release()
         } catch (e: Exception) {
             Log.e("MainActivity", "리소스 정리 중 오류 발생", e)
         }

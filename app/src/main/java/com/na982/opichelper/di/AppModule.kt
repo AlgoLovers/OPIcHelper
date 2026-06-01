@@ -9,7 +9,8 @@ import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
 import com.na982.opichelper.data.repository.ScriptEditRepositoryImpl
 import com.na982.opichelper.domain.audio.*
-import com.na982.opichelper.domain.manager.WakeLockManager
+import com.na982.opichelper.domain.manager.AppLogger
+import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataLoader
 import com.na982.opichelper.domain.repository.QaDataManager
@@ -28,6 +29,8 @@ import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.repository.ScriptEditRepository
 import com.na982.opichelper.domain.repository.TtsServiceController
 import com.na982.opichelper.domain.repository.DataSeeder
+import com.na982.opichelper.data.manager.AndroidLogger
+import com.na982.opichelper.data.manager.WakeLockControllerImpl
 import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import com.na982.opichelper.service.TtsServiceControllerImpl
@@ -89,9 +92,10 @@ object AppModule {
     fun provideTtsOrchestrator(
         @Named("google") googleTtsPlayer: TtsPlayer,
         @Named("samsung") samsungTtsPlayer: TtsPlayer,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+        appLogger: AppLogger
     ): TtsOrchestrator {
-        return TtsOrchestratorImpl(googleTtsPlayer, samsungTtsPlayer, userPreferencesRepository)
+        return TtsOrchestratorImpl(googleTtsPlayer, samsungTtsPlayer, userPreferencesRepository, appLogger)
     }
     
     @Provides
@@ -128,11 +132,18 @@ object AppModule {
         return RecordingFileRepositoryImpl(audioFileManager, audioRecorder, recordingAudioPlayer, recordingTimeManager)
     }
     
-    // WakeLock Manager
+    // WakeLock Controller
     @Provides
     @Singleton
-    fun provideWakeLockManager(@ApplicationContext context: Context): WakeLockManager {
-        return WakeLockManager(context)
+    fun provideWakeLockController(@ApplicationContext context: Context): WakeLockController {
+        return WakeLockControllerImpl(context)
+    }
+
+    // Logger
+    @Provides
+    @Singleton
+    fun provideAppLogger(): AppLogger {
+        return AndroidLogger()
     }
 
     @Provides

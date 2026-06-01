@@ -1,6 +1,6 @@
 package com.na982.opichelper.domain.audio
 
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +17,8 @@ import javax.inject.Singleton
 @Singleton
 class TtsPlaybackController @Inject constructor(
     private val ttsOrchestrator: TtsOrchestrator,
-    private val highlightStateHolder: HighlightStateHolder
+    private val highlightStateHolder: HighlightStateHolder,
+    private val logger: AppLogger
 ) : java.io.Closeable {
     companion object {
         private const val MERGED_AUDIO_DELAY_MS = 500L
@@ -65,7 +66,7 @@ class TtsPlaybackController @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
+                logger.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
                     _isQuestionPlaying.value = false
@@ -90,7 +91,7 @@ class TtsPlaybackController @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
+                logger.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
                     _isAnswerPlaying.value = false
@@ -127,7 +128,7 @@ class TtsPlaybackController @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
+                logger.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
                     _isQuestionPlaying.value = false
@@ -173,7 +174,7 @@ class TtsPlaybackController @Inject constructor(
             stopTts()
             ttsOrchestrator.releaseAllPlayers()
         } catch (e: Exception) {
-            Log.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
+            logger.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
         }
     }
 
