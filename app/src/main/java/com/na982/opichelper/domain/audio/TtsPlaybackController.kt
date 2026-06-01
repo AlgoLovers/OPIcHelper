@@ -110,9 +110,13 @@ class TtsPlaybackController @Inject constructor(
             try {
                 _isQuestionPlaying.value = true
                 updateIsPlaying()
-                ttsOrchestrator.speakWithHighlight(question) { index, sentence ->
+                val questionResult = ttsOrchestrator.speakWithHighlight(question) { index, sentence ->
                     highlightStateHolder.setQuestionHighlight(index, sentence)
                 }
+                if (questionResult is TtsSpeakResult.Unavailable || questionResult is TtsSpeakResult.Error) {
+                    return@launch
+                }
+
                 _isAnswerPlaying.value = true
                 _isQuestionPlaying.value = false
                 highlightStateHolder.setQuestionHighlight(null)

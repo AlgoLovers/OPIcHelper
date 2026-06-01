@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
@@ -64,10 +65,15 @@ class FullMemorizationUseCase @Inject constructor(
 
             val qaItem = qaDataManager.getCurrentQaItem()
             if (qaItem != null) {
-                ttsOrchestrator.speakWithHighlight(
+                val result = ttsOrchestrator.speakWithHighlight(
                     text = qaItem.questionEn,
                     onHighlight = { index, _ -> _highlightIndex.value = index }
                 )
+                if (result is TtsSpeakResult.Unavailable || result is TtsSpeakResult.Error) {
+                    _state.value = FullMemorizationState.Idle
+                    _highlightIndex.value = null
+                    return@withLock
+                }
                 _highlightIndex.value = null
                 delay(500L)
 

@@ -329,6 +329,7 @@ class PlaybackViewModel @Inject constructor(
     fun setHasNextItem(hasNext: Boolean) { _hasNextItem = hasNext }
 
     fun repeatPlayback() {
+        wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
         if (lastMemorizationGroup != null) {
             _repeatMemorizationCallback?.invoke()
@@ -342,6 +343,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun playNextItem() {
+        wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
         if (lastMemorizationGroup != null) {
             _nextAndRestartCallback?.invoke()

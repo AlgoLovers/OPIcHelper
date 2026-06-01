@@ -109,20 +109,23 @@ class TtsOrchestratorImpl(
         }
     }
 
-    override suspend fun speakWithHighlight(text: String, onHighlight: (index: Int?, sentence: String?) -> Unit) {
+    override suspend fun speakWithHighlight(text: String, onHighlight: (index: Int?, sentence: String?) -> Unit): TtsSpeakResult {
         val sentences = SentenceSplitter.split(text)
         enterSpeaking()
+        var lastResult: TtsSpeakResult = TtsSpeakResult.Success(0L)
 
         try {
             for ((idx, sentence) in sentences.withIndex()) {
                 onHighlight(idx, sentence)
                 val result = speakInternal(sentence)
+                lastResult = result
                 if (result is TtsSpeakResult.Unavailable) {
                     logger.e("TtsOrchestrator", "speakWithHighlight 문장 $idx TTS 사용 불가 — 중단")
                     break
                 }
                 if (result is TtsSpeakResult.Error || result is TtsSpeakResult.Timeout) {
                     logger.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 실패: $result")
+                    break
                 }
                 delay(400L)
             }
@@ -133,6 +136,7 @@ class TtsOrchestratorImpl(
         } finally {
             exitSpeaking()
         }
+        return lastResult
     }
 
     override suspend fun speakAndWaitForCompletion(text: String): TtsSpeakResult {
