@@ -180,7 +180,7 @@ class PlaybackViewModel @Inject constructor(
                         isPlaying = active,
                         isPaused = if (active) isPaused else false,
                         isPausable = !isMergedFilePlaying,
-                        hasCompleted = if (active) false else completed,
+                        hasCompleted = if (active) false else (completed || prev.hasCompleted),
                         hasNextItem = _hasNextItem
                     )
                 }
