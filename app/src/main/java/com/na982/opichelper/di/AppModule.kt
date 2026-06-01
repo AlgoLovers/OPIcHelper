@@ -1,11 +1,13 @@
 package com.na982.opichelper.di
 
+import android.app.Application
 import android.content.Context
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
+import com.na982.opichelper.data.repository.ScriptEditRepositoryImpl
 import com.na982.opichelper.domain.audio.*
 import com.na982.opichelper.domain.manager.WakeLockManager
 import com.na982.opichelper.domain.repository.AudioFileManager
@@ -14,12 +16,21 @@ import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
+import com.na982.opichelper.data.local.AppDatabase
+import com.na982.opichelper.data.local.AssetSeeder
+import com.na982.opichelper.data.local.QaItemDao
 import com.na982.opichelper.data.repository.LeveledQaDataLoader
+import com.na982.opichelper.data.repository.QaDataManagerImpl
+import com.na982.opichelper.data.repository.RoomQaDataLoader
 import com.na982.opichelper.data.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.RecordingFileRepository
+import com.na982.opichelper.domain.repository.ScriptEditRepository
+import com.na982.opichelper.domain.repository.TtsServiceController
+import com.na982.opichelper.domain.repository.DataSeeder
 import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
+import com.na982.opichelper.service.TtsServiceControllerImpl
 import com.na982.opichelper.data.audio.RecordingAudioPlayerImpl
 import dagger.Module
 import dagger.Provides
@@ -80,7 +91,7 @@ object AppModule {
         @Named("samsung") samsungTtsPlayer: TtsPlayer,
         userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
     ): TtsOrchestrator {
-        return TtsOrchestrator(googleTtsPlayer, samsungTtsPlayer, userPreferencesRepository)
+        return TtsOrchestratorImpl(googleTtsPlayer, samsungTtsPlayer, userPreferencesRepository)
     }
     
     @Provides
@@ -94,9 +105,10 @@ object AppModule {
     fun provideQaDataManager(
         qaDataLoader: QaDataLoader,
         userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
-        progressPersistenceService: ProgressPersistenceService
+        progressPersistenceService: ProgressPersistenceService,
+        dataSeeder: DataSeeder
     ): QaDataManager {
-        return QaDataManager(qaDataLoader, userPreferencesRepository, progressPersistenceService)
+        return QaDataManagerImpl(qaDataLoader, userPreferencesRepository, progressPersistenceService, dataSeeder)
     }
 
     @Provides
@@ -122,6 +134,12 @@ object AppModule {
     fun provideWakeLockManager(@ApplicationContext context: Context): WakeLockManager {
         return WakeLockManager(context)
     }
+
+    @Provides
+    @Singleton
+    fun provideTtsServiceController(@ApplicationContext context: Context): TtsServiceController {
+        return TtsServiceControllerImpl(context as Application)
+    }
     
     @Provides
     @Singleton
@@ -131,9 +149,35 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
+    fun provideQaDataLoader(dao: QaItemDao): QaDataLoader {
+        return RoomQaDataLoader(dao)
+    }
+
+    @Provides
+    @Singleton
+    @Named("asset")
+    fun provideAssetQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
         return LeveledQaDataLoader(context)
     }
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return androidx.room.Room.databaseBuilder(
+            context, AppDatabase::class.java, "opic_database"
+        ).fallbackToDestructiveMigration().build()
+    }
+
+    @Provides
+    fun provideQaItemDao(db: AppDatabase): QaItemDao = db.qaItemDao()
+
+    @Provides
+    @Singleton
+    fun provideDataSeeder(
+        @Named("asset") qaDataLoader: QaDataLoader,
+        dao: QaItemDao,
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): DataSeeder = AssetSeeder(qaDataLoader, dao, userPreferencesRepository)
     
     @Provides
     @Singleton
@@ -165,6 +209,17 @@ object AppModule {
             progressPersistenceService = progressPersistenceService,
             recordingTimeManager = recordingTimeManager
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideScriptEditRepository(
+        dao: com.na982.opichelper.data.local.QaItemDao,
+        recordingTimeManager: RecordingTimeManager,
+        progressPersistenceService: ProgressPersistenceService,
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): ScriptEditRepository {
+        return ScriptEditRepositoryImpl(dao, recordingTimeManager, progressPersistenceService, userPreferencesRepository)
     }
 
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
