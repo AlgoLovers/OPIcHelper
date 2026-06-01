@@ -350,7 +350,7 @@ class MainActivity : ComponentActivity() {
             val repeatIcon = Icon.createWithResource(this, R.drawable.ic_replay)
             val repeatIntent = PendingIntent.getBroadcast(
                 this, 2,
-                Intent(ACTION_PIP_REPEAT),
+                Intent(ACTION_PIP_REPEAT).setPackage(packageName),
                 PendingIntent.FLAG_IMMUTABLE
             )
             actions.add(
@@ -361,7 +361,7 @@ class MainActivity : ComponentActivity() {
                 val nextIcon = Icon.createWithResource(this, R.drawable.ic_skip_next)
                 val nextIntent = PendingIntent.getBroadcast(
                     this, 3,
-                    Intent(ACTION_PIP_NEXT),
+                    Intent(ACTION_PIP_NEXT).setPackage(packageName),
                     PendingIntent.FLAG_IMMUTABLE
                 )
                 actions.add(
@@ -376,7 +376,7 @@ class MainActivity : ComponentActivity() {
             )
             val playPauseIntent = PendingIntent.getBroadcast(
                 this, 0,
-                Intent(ACTION_PIP_PLAY_PAUSE),
+                Intent(ACTION_PIP_PLAY_PAUSE).setPackage(packageName),
                 PendingIntent.FLAG_IMMUTABLE
             )
             actions.add(
@@ -392,7 +392,7 @@ class MainActivity : ComponentActivity() {
         val stopIcon = Icon.createWithResource(this, R.drawable.ic_stop)
         val stopIntent = PendingIntent.getBroadcast(
             this, 1,
-            Intent(ACTION_PIP_STOP),
+            Intent(ACTION_PIP_STOP).setPackage(packageName),
             PendingIntent.FLAG_IMMUTABLE
         )
         actions.add(
