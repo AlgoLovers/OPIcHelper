@@ -308,9 +308,11 @@ class PlaybackViewModel @Inject constructor(
 
     fun togglePlayPause() {
         if (ttsPlaybackController.isPaused.value) {
+            wasStoppedByUser = false
             ttsPlaybackController.clearPausedState()
         } else if (_uiState.value.isPlaying || coordinator.isRunning.value) {
             wasStoppedByUser = true
+            _pipState.update { it.copy(hasCompleted = false) }
             ttsPlaybackController.stopAndMarkPaused()
         }
     }
@@ -354,6 +356,7 @@ class PlaybackViewModel @Inject constructor(
 
     fun stopPlayback() {
         wasStoppedByUser = true
+        _pipState.update { it.copy(hasCompleted = false) }
         if (coordinator.isRunning.value) {
             _stopMemorizationCallback?.invoke()
         } else {
