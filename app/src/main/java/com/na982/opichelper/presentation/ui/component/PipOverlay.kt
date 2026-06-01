@@ -69,18 +69,18 @@ fun PipOverlay(
                     onClick = onRepeat,
                     modifier = Modifier
                         .weight(1f)
-                        .height(36.dp)
+                        .height(44.dp)
                 ) {
-                    Text("반복 재생", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    Text("반복 재생", fontSize = 13.sp, fontWeight = FontWeight.Medium)
                 }
                 FilledTonalButton(
                     onClick = onNext,
                     enabled = hasNextItem,
                     modifier = Modifier
                         .weight(1f)
-                        .height(36.dp)
+                        .height(44.dp)
                 ) {
-                    Text("다음", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    Text("다음", fontSize = 13.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }

@@ -57,4 +57,7 @@ interface UserPreferencesRepository {
 
     fun isPipGuideCompleted(): Boolean
     fun setPipGuideCompleted()
+
+    fun getSeedVersion(): Int
+    fun setSeedVersion(version: Int)
 } 

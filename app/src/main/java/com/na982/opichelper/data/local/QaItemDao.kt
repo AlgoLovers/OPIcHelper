@@ -1,0 +1,50 @@
+package com.na982.opichelper.data.local
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface QaItemDao {
+    @Query("SELECT * FROM qa_items WHERE category = :category AND level = :level ORDER BY CAST(itemId AS INTEGER)")
+    fun getByCategoryAndLevel(category: String, level: String): Flow<List<QaItemEntity>>
+
+    @Query("SELECT * FROM qa_items WHERE level = :level ORDER BY category, CAST(itemId AS INTEGER)")
+    suspend fun getByCategoryAndLevelDirect(level: String): List<QaItemEntity>
+
+    @Query("SELECT * FROM qa_items WHERE id = :id")
+    suspend fun getById(id: String): QaItemEntity?
+
+    @Update
+    suspend fun update(item: QaItemEntity)
+
+    @Query("""
+        UPDATE qa_items SET
+        questionEn = questionEnOriginal, questionKo = questionKoOriginal,
+        answerEn = answerEnOriginal, answerKo = answerKoOriginal,
+        isModified = 0, updatedAt = 0
+        WHERE id = :id
+    """)
+    suspend fun restoreOriginal(id: String)
+
+    @Query("""
+        UPDATE qa_items SET
+        questionEn = questionEnOriginal, questionKo = questionKoOriginal,
+        answerEn = answerEnOriginal, answerKo = answerKoOriginal,
+        isModified = 0, updatedAt = 0
+        WHERE isModified = 1
+    """)
+    suspend fun restoreAllOriginal()
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(items: List<QaItemEntity>)
+
+    @Query("SELECT COUNT(*) FROM qa_items")
+    suspend fun getCount(): Int
+
+    @Query("SELECT DISTINCT level FROM qa_items")
+    suspend fun getSeededLevels(): List<String>
+}

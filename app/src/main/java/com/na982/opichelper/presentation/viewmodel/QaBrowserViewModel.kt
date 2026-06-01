@@ -1,6 +1,7 @@
 package com.na982.opichelper.presentation.viewmodel
 
 import com.na982.opichelper.domain.entity.QaItem
+import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.entity.MemorizeLevel
@@ -202,6 +203,10 @@ class QaBrowserViewModel @Inject constructor(
     fun getCurrentAnswerKo(qaItem: QaItem?): String {
         return qaDataManager.getCurrentAnswerKo(qaItem)
     }
+
+    fun getCurrentIndex(): Int = qaDataManager.getCurrentIndex()
+
+    fun getCurrentUserLevel(): UserLevel = userPreferencesRepository.getUserLevel()
 
     suspend fun cleanupOnAppExit() {
         try {

@@ -30,6 +30,10 @@ import com.na982.opichelper.domain.manager.WakeLockManager
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
+import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
+import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
+import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
+import com.na982.opichelper.domain.usecase.ModeGroup
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -89,6 +93,9 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val pvm: PlaybackViewModel = hiltViewModel()
             val qaVm: QaBrowserViewModel = hiltViewModel()
+            val repeatListeningVm: RepeatListeningViewModel = hiltViewModel()
+            val englishWritingTestVm: EnglishWritingTestViewModel = hiltViewModel()
+            val fullMemorizationVm: FullMemorizationViewModel = hiltViewModel()
             this@MainActivity.playbackViewModel = pvm
             this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
@@ -106,6 +113,29 @@ class MainActivity : ComponentActivity() {
                     val qaItem = qaVm.nextQaItemSync()
                     if (qaItem != null) {
                         pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+                    }
+                }
+            }
+            pvm.setRepeatMemorizationCallback {
+                val group = pvm.lastMemorizationGroup ?: return@setRepeatMemorizationCallback
+                when (group) {
+                    ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
+                    ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
+                    ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
+                    else -> {}
+                }
+            }
+            pvm.setNextAndRestartCallback {
+                lifecycleScope.launch {
+                    val qaItem = qaVm.nextQaItemSync()
+                    if (qaItem != null) {
+                        val group = pvm.lastMemorizationGroup ?: return@launch
+                        when (group) {
+                            ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
+                            ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
+                            ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
+                            else -> {}
+                        }
                     }
                 }
             }

@@ -36,6 +36,18 @@ import com.na982.opichelper.presentation.ui.component.OnboardingDialog
 import com.na982.opichelper.presentation.ui.component.PipPermissionDialog
 import com.na982.opichelper.presentation.ui.component.SearchDialog
 import com.na982.opichelper.presentation.ui.component.openPipSettings
+import com.na982.opichelper.presentation.ui.component.EditScriptBottomSheet
+import com.na982.opichelper.presentation.viewmodel.EditScriptViewModel
+import com.na982.opichelper.domain.entity.UserLevel
+import com.na982.opichelper.domain.entity.QaItem
+
+data class EditScriptState(
+    val qaItem: QaItem,
+    val isQuestion: Boolean,
+    val level: UserLevel,
+    val scriptIndex: Int,
+    val entityId: String
+)
 
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -63,6 +75,7 @@ fun MainScreen(
     val showOnboarding = remember { mutableStateOf(!qaViewModel.isOnboardingCompleted()) }
     val showPipGuide = remember { mutableStateOf(!qaViewModel.isPipGuideCompleted()) }
     val showSearch = remember { mutableStateOf(false) }
+    val editScriptState = remember { mutableStateOf<EditScriptState?>(null) }
     val context = LocalContext.current
     val isFullMemorizationPlaying by remember {
         derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING }
@@ -217,6 +230,18 @@ fun MainScreen(
                 )
             }
 
+            // 스크립트 편집 BottomSheet
+            editScriptState.value?.let { editState ->
+                EditScriptBottomSheet(
+                    qaItem = editState.qaItem,
+                    isQuestion = editState.isQuestion,
+                    level = editState.level,
+                    scriptIndex = editState.scriptIndex,
+                    entityId = editState.entityId,
+                    onDismiss = { editScriptState.value = null }
+                )
+            }
+
             // 이어서 듣기 프롬프트 (최초 1회만)
             var hasShownResumePrompt by remember { mutableStateOf(false) }
             LaunchedEffect(qaState.completedCount) {
@@ -332,7 +357,7 @@ fun MainScreen(
                         }
                     }
                 }
-                qaItem != null -> {
+                else -> {
                     QuestionCard(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
@@ -345,6 +370,15 @@ fun MainScreen(
                         completedCount = qaState.completedCount,
                         isFlipped = false,
                         currentCategory = category ?: "",
+                        onEdit = {
+                            editScriptState.value = EditScriptState(
+                                qaItem = qaItem,
+                                isQuestion = true,
+                                level = qaViewModel.getCurrentUserLevel(),
+                                scriptIndex = qaViewModel.getCurrentIndex(),
+                                entityId = "${qaItem.category}_${qaItem.id}_${qaViewModel.getCurrentUserLevel().name}"
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -426,6 +460,15 @@ fun MainScreen(
                                 else -> playbackState.isAnswerCardFlipped
                             },
                             isRepeatListeningCardFlipped = repeatListeningState.isCardFlipped,
+                            onEdit = {
+                                editScriptState.value = EditScriptState(
+                                    qaItem = qaItem,
+                                    isQuestion = false,
+                                    level = qaViewModel.getCurrentUserLevel(),
+                                    scriptIndex = qaViewModel.getCurrentIndex(),
+                                    entityId = "${qaItem.category}_${qaItem.id}_${qaViewModel.getCurrentUserLevel().name}"
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
                     } else {
