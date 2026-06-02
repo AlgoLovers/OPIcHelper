@@ -41,11 +41,11 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 의존성은 항상 외부(Data) → 내부(Domain) 방향. Domain은 Data를 직접 참조하지 않음.
 
 ### ViewModel 구조
-- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 3개 (QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker)
-- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기. 의존성 3개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator)
-- `RepeatListeningViewModel`: 반복듣기 모드 전담. 의존성 6개 (ExecuteRepeatListeningUseCase, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator)
-- `EnglishWritingTestViewModel`: 영작테스트 모드 전담. 의존성 5개 (ExecuteEnglishWritingTestUseCase, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator)
-- `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 3개 (FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator)
+- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 5개 (QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger)
+- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기, PiP 제어. 의존성 7개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, UserPreferencesRepository, MemorizationModeCoordinator, TtsServiceController, AppLogger). PlaybackActionListener로 콜백 통합
+- `RepeatListeningViewModel`: 반복듣기 모드 전담. 의존성 7개 (RepeatListeningRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator, AppLogger)
+- `EnglishWritingTestViewModel`: 영작테스트 모드 전담. 의존성 6개 (EnglishWritingTestRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger)
+- `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 4개 (FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator, AppLogger)
 - `MemorizationModeCoordinator`: 3개 모드 상호 배제, 상태 머신, Job 관리. @Singleton
 - `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator
 
@@ -119,9 +119,9 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 - 상태 구독: ViewModel의 StateFlow를 `collectAsState()`로 구독
 
 ### 로깅
-- Tag: 클래스명 사용
-- Log.d (디버그) 제거, Log.w (경고)와 Log.e (오류)만 유지
-- **현재 위반**: Data 계층 일부 파일에 Log.d 잔존
+- `AppLogger` 인터페이스(`domain/manager/AppLogger`) 사용. `android.util.Log` 직접 호출 금지
+- 구현체: `AndroidLogger`(`data/manager/AndroidLogger`) — 유일한 `android.util.Log` 소비자
+- AppLogger 메서드: `e(tag, msg, t?)`, `w(tag, msg)`
 
 ## 코드 리뷰 체크리스트
 
@@ -142,8 +142,6 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 
 | 항목 | 상태 | 우선순위 |
 |------|------|----------|
-| Domain 계층 Android import (Log, Context, PowerManager) | 미해결 | 낮음 |
-| Data 계층 Log.d 잔존 (RecordingFileRepositoryImpl 등) | 미해결 | 낮음 |
 | WakeLock deprecated API (@Suppress("DEPRECATION") 처리) | 완화 | 낮음 |
 
 상세 개선 계획은 [ARCHITECTURE_IMPROVEMENT_PLAN.md](ARCHITECTURE_IMPROVEMENT_PLAN.md) 참조.
@@ -240,6 +238,15 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | TtsPlaybackController 하드코딩 500ms | MERGED_AUDIO_DELAY_MS 상수화 (0113) |
 | AudioRecorderImpl SimpleDateFormat 매번 생성 | 캐시 (0113) |
 | RecordingAudioPlayerImpl getDuration() 매번 생성 | 결과 캐시 (0113) |
+| ViewModel 6개 android.util.Log 직접 사용 | AppLogger 주입 전환 (0126) |
+| 미사용 메서드 4개 (playRecordingFile, getQaItemsByCategory, restoreAllOriginal, isModified) | 제거 (0126) |
+| TtsPlaybackController 구체 클래스 | 인터페이스 + TtsPlaybackControllerImpl 분리 (0127) |
+| TtsOrchestratorImpl domain/audio/ 위치 | data/audio/ 이동 (0127) |
+| PlaybackViewModel 콜백 6개 (volatile var) | PlaybackActionListener 인터페이스 통합 (0127) |
+| _stopMemorizationCallback onCleared 누수 | null 처리 추가 (0127) |
+| ExecuteRepeatListeningUseCase / ExecuteEnglishWritingTestUseCase 순수 위임 | 제거, Repository 직접 주입 (0127) |
+| Data 계층 12개 파일 + MainActivity android.util.Log | AppLogger 전환 (0128) |
+| Domain 계층 Android import (Log, Context, PowerManager) | AppLogger + WakeLockController 분리로 해결 (0119, 0126, 0128) |
 
 ## Git 커밋 규칙
 

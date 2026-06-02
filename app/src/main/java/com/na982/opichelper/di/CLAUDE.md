@@ -12,8 +12,8 @@
 |--------|--------|----------|
 | `@Named("google") TtsPlayer` | `GoogleTtsPlayer` | @Provides |
 | `@Named("samsung") TtsPlayer` | `SamsungTtsPlayer` | @Provides |
-| `TtsOrchestrator` | 직접 제공 (google + samsung TtsPlayer + UserPreferencesRepository 주입) | @Provides @Singleton |
-| `TtsPlaybackController` | `@Inject constructor` + `@Singleton` | **Hilt 자동 제공** (TtsOrchestrator + HighlightStateHolder 주입) |
+| `TtsOrchestrator` | `TtsOrchestratorImpl` (data/audio/) | @Provides @Singleton |
+| `TtsPlaybackController` | `TtsPlaybackControllerImpl` (data/audio/) | @Provides @Singleton |
 | `HighlightStateHolder` | `@Inject constructor` + `@Singleton` | **Hilt 자동 제공** (하이라이트 상태 단일 진실 공급원) |
 
 ### 오디오
