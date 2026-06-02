@@ -5,6 +5,7 @@ import android.content.Context
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.audio.TtsOrchestratorImpl
 import com.na982.opichelper.data.audio.TtsPlaybackControllerImpl
+import com.na982.opichelper.data.usecase.MemorizationModeCoordinatorImpl
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
@@ -31,6 +32,7 @@ import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.repository.ScriptEditRepository
 import com.na982.opichelper.domain.repository.TtsServiceController
 import com.na982.opichelper.domain.repository.DataSeeder
+import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.data.manager.AndroidLogger
 import com.na982.opichelper.data.manager.WakeLockControllerImpl
 import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
@@ -240,6 +242,10 @@ object AppModule {
     }
 
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
+
+    @Provides
+    @Singleton
+    fun provideMemorizationModeCoordinator(impl: MemorizationModeCoordinatorImpl): MemorizationModeCoordinator = impl
 
     @Provides
     @Singleton
