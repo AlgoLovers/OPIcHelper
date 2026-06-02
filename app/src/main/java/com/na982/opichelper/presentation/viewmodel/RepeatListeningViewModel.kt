@@ -6,7 +6,7 @@ import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.PlaybackPreferences
 import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
@@ -30,7 +30,7 @@ class RepeatListeningViewModel @Inject constructor(
     private val ttsCtrl: TtsPlaybackController,
     private val qaDataManager: QaDataManager,
     private val progress: MemorizeTestProgressTracker,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val playbackPreferences: PlaybackPreferences,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
 ) : BaseMemorizationViewModel<RepeatListeningUiState>(
@@ -103,7 +103,7 @@ class RepeatListeningViewModel @Inject constructor(
                 )
                 repeatListeningRepository.executeRepeatListening(
                     data = repeatListeningData,
-                    repeatCount = userPreferencesRepository.getRepeatListeningCount()
+                    repeatCount = playbackPreferences.getRepeatListeningCount()
                 )
             }
             coordinator.registerJob(useCaseJob)
@@ -136,7 +136,7 @@ class RepeatListeningViewModel @Inject constructor(
                 }
             }
             is MemorizeTestEvent.Completed -> {
-                if (userPreferencesRepository.isAutoAdvance()) {
+                if (playbackPreferences.isAutoAdvance()) {
                     handleAutoAdvance()
                 } else {
                     stop()

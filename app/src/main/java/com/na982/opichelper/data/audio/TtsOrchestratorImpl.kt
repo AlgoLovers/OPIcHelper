@@ -5,7 +5,7 @@ import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlayer
 import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.domain.manager.AppLogger
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.TtsPreferences
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class TtsOrchestratorImpl(
     private val googleTtsPlayer: TtsPlayer,
     private val samsungTtsPlayer: TtsPlayer,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val ttsPreferences: TtsPreferences,
     private val logger: AppLogger
 ) : TtsOrchestrator {
     private val activeSpeakCount = AtomicInteger(0)
@@ -54,7 +54,7 @@ class TtsOrchestratorImpl(
     }
 
     private suspend fun speakEnglish(text: String): TtsSpeakResult {
-        googleTtsPlayer.setSpeechRate(userPreferencesRepository.getEnglishTtsRate())
+        googleTtsPlayer.setSpeechRate(ttsPreferences.getEnglishTtsRate())
         return googleTtsPlayer.speak(text)
     }
 

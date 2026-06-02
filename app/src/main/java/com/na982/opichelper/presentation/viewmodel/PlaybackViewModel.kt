@@ -21,7 +21,7 @@ import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.ModeGroup
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
 import com.na982.opichelper.domain.repository.TtsServiceController
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.PlaybackPreferences
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.ViewModel
@@ -50,7 +50,7 @@ class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
     private val ttsOrchestrator: TtsOrchestrator,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val playbackPreferences: PlaybackPreferences,
     private val coordinator: MemorizationModeCoordinator,
     private val ttsServiceController: TtsServiceController,
     private val appLogger: AppLogger
@@ -238,7 +238,7 @@ class PlaybackViewModel @Inject constructor(
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
             ttsPlaybackController.stopTts()
-            val playCount = userPreferencesRepository.getAnswerPlayCount()
+            val playCount = playbackPreferences.getAnswerPlayCount()
             for (i in 1..playCount) {
                 ttsPlaybackController.playAnswer(answer)
                 withTimeoutOrNull(60_000L) {

@@ -247,6 +247,8 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | ExecuteRepeatListeningUseCase / ExecuteEnglishWritingTestUseCase 순수 위임 | 제거, Repository 직접 주입 (0127) |
 | Data 계층 12개 파일 + MainActivity android.util.Log | AppLogger 전환 (0128) |
 | Domain 계층 Android import (Log, Context, PowerManager) | AppLogger + WakeLockController 분리로 해결 (0119, 0126, 0128) |
+| UserPreferencesRepository ISP 위반 (15+ 메서드) | 6개 하위 인터페이스 분리 + 복합 인터페이스 유지 (0129) |
+| ScriptEditRepositoryImpl 미사용 의존성 | UserPreferencesRepository 파라미터 제거 (0129) |
 
 ## Git 커밋 규칙
 

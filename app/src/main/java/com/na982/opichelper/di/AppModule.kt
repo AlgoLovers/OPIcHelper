@@ -96,10 +96,10 @@ object AppModule {
     fun provideTtsOrchestrator(
         @Named("google") googleTtsPlayer: TtsPlayer,
         @Named("samsung") samsungTtsPlayer: TtsPlayer,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+        ttsPreferences: com.na982.opichelper.domain.repository.TtsPreferences,
         appLogger: AppLogger
     ): TtsOrchestrator {
-        return TtsOrchestratorImpl(googleTtsPlayer, samsungTtsPlayer, userPreferencesRepository, appLogger)
+        return TtsOrchestratorImpl(googleTtsPlayer, samsungTtsPlayer, ttsPreferences, appLogger)
     }
     
     @Provides
@@ -112,12 +112,12 @@ object AppModule {
     @Singleton
     fun provideQaDataManager(
         qaDataLoader: QaDataLoader,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+        userLevelPreferences: com.na982.opichelper.domain.repository.UserLevelPreferences,
         progressPersistenceService: ProgressPersistenceService,
         dataSeeder: DataSeeder,
         appLogger: AppLogger
     ): QaDataManager {
-        return QaDataManagerImpl(qaDataLoader, userPreferencesRepository, progressPersistenceService, dataSeeder, appLogger)
+        return QaDataManagerImpl(qaDataLoader, userLevelPreferences, progressPersistenceService, dataSeeder, appLogger)
     }
 
     @Provides
@@ -163,6 +163,42 @@ object AppModule {
     fun provideUserPreferencesRepository(@ApplicationContext context: Context): com.na982.opichelper.domain.repository.UserPreferencesRepository {
         return com.na982.opichelper.data.repository.UserPreferencesRepository(context)
     }
+
+    @Provides
+    @Singleton
+    fun provideUserLevelPreferences(
+        repo: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): com.na982.opichelper.domain.repository.UserLevelPreferences = repo
+
+    @Provides
+    @Singleton
+    fun provideTtsPreferences(
+        repo: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): com.na982.opichelper.domain.repository.TtsPreferences = repo
+
+    @Provides
+    @Singleton
+    fun providePlaybackPreferences(
+        repo: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): com.na982.opichelper.domain.repository.PlaybackPreferences = repo
+
+    @Provides
+    @Singleton
+    fun provideOnboardingPreferences(
+        repo: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): com.na982.opichelper.domain.repository.OnboardingPreferences = repo
+
+    @Provides
+    @Singleton
+    fun provideMemorizeLevelPreferences(
+        repo: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): com.na982.opichelper.domain.repository.MemorizeLevelPreferences = repo
+
+    @Provides
+    @Singleton
+    fun provideAppDataPreferences(
+        repo: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): com.na982.opichelper.domain.repository.AppDataPreferences = repo
     
     @Provides
     @Singleton
@@ -193,8 +229,8 @@ object AppModule {
     fun provideDataSeeder(
         @Named("asset") qaDataLoader: QaDataLoader,
         dao: QaItemDao,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
-    ): DataSeeder = AssetSeeder(qaDataLoader, dao, userPreferencesRepository)
+        appDataPreferences: com.na982.opichelper.domain.repository.AppDataPreferences
+    ): DataSeeder = AssetSeeder(qaDataLoader, dao, appDataPreferences)
     
     @Provides
     @Singleton
@@ -235,10 +271,9 @@ object AppModule {
     fun provideScriptEditRepository(
         dao: com.na982.opichelper.data.local.QaItemDao,
         recordingTimeManager: RecordingTimeManager,
-        progressPersistenceService: ProgressPersistenceService,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+        progressPersistenceService: ProgressPersistenceService
     ): ScriptEditRepository {
-        return ScriptEditRepositoryImpl(dao, recordingTimeManager, progressPersistenceService, userPreferencesRepository)
+        return ScriptEditRepositoryImpl(dao, recordingTimeManager, progressPersistenceService)
     }
 
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요

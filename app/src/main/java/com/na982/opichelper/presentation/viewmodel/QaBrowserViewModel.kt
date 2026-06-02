@@ -3,7 +3,10 @@ package com.na982.opichelper.presentation.viewmodel
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.QaDataManager
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.UserLevelPreferences
+import com.na982.opichelper.domain.repository.PlaybackPreferences
+import com.na982.opichelper.domain.repository.OnboardingPreferences
+import com.na982.opichelper.domain.repository.MemorizeLevelPreferences
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.usecase.SearchQaItemsUseCase
@@ -37,7 +40,10 @@ data class QaBrowserState(
 @HiltViewModel
 class QaBrowserViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val userLevelPreferences: UserLevelPreferences,
+    private val playbackPreferences: PlaybackPreferences,
+    private val onboardingPreferences: OnboardingPreferences,
+    private val memorizeLevelPreferences: MemorizeLevelPreferences,
     private val progressTracker: MemorizeTestProgressTracker,
     private val searchQaItemsUseCase: SearchQaItemsUseCase,
     private val appLogger: AppLogger
@@ -91,13 +97,13 @@ class QaBrowserViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            userPreferencesRepository.userLevel.collect { userLevel ->
+            userLevelPreferences.userLevel.collect { userLevel ->
                 _uiState.update { it.copy(currentUserLevel = userLevel.name) }
             }
         }
 
         viewModelScope.launch {
-            userPreferencesRepository.answerPlayCount.collect { count ->
+            playbackPreferences.answerPlayCount.collect { count ->
                 _uiState.update { it.copy(answerPlayCount = count) }
             }
         }
@@ -146,19 +152,19 @@ class QaBrowserViewModel @Inject constructor(
     }
 
     fun isOnboardingCompleted(): Boolean {
-        return userPreferencesRepository.isOnboardingCompleted()
+        return onboardingPreferences.isOnboardingCompleted()
     }
 
     fun setOnboardingCompleted() {
-        userPreferencesRepository.setOnboardingCompleted()
+        onboardingPreferences.setOnboardingCompleted()
     }
 
     fun isPipGuideCompleted(): Boolean {
-        return userPreferencesRepository.isPipGuideCompleted()
+        return onboardingPreferences.isPipGuideCompleted()
     }
 
     fun setPipGuideCompleted() {
-        userPreferencesRepository.setPipGuideCompleted()
+        onboardingPreferences.setPipGuideCompleted()
     }
 
     fun search(query: String): List<QaItem> {
@@ -180,7 +186,7 @@ class QaBrowserViewModel @Inject constructor(
 
     fun setSelectedMemorizeLevel(level: String) {
         _uiState.update { it.copy(selectedMemorizeLevel = level) }
-        userPreferencesRepository.setMemorizeLevel(level)
+        memorizeLevelPreferences.setMemorizeLevel(level)
         refreshCompletedCount()
     }
 
@@ -207,7 +213,7 @@ class QaBrowserViewModel @Inject constructor(
 
     fun getCurrentIndex(): Int = qaDataManager.getCurrentIndex()
 
-    fun getCurrentUserLevel(): UserLevel = userPreferencesRepository.getUserLevel()
+    fun getCurrentUserLevel(): UserLevel = userLevelPreferences.getUserLevel()
 
     suspend fun cleanupOnAppExit() {
         try {
@@ -241,7 +247,7 @@ class QaBrowserViewModel @Inject constructor(
     }
 
     private fun loadMemorizeLevel() {
-        val savedLevel = userPreferencesRepository.getMemorizeLevel()
+        val savedLevel = memorizeLevelPreferences.getMemorizeLevel()
         if (savedLevel.isNotEmpty()) {
             setSelectedMemorizeLevel(savedLevel)
         } else {

@@ -5,7 +5,7 @@ import com.na982.opichelper.domain.repository.DataSeeder
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.QaDataLoader
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.UserLevelPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class QaDataManagerImpl(
     private val qaDataLoader: QaDataLoader,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val userLevelPreferences: UserLevelPreferences,
     private val progressPersistenceService: ProgressPersistenceService,
     private val dataSeeder: DataSeeder,
     private val appLogger: AppLogger
@@ -61,7 +61,7 @@ class QaDataManagerImpl(
     private fun setupUserLevelObserver() {
         userLevelJob?.cancel()
         userLevelJob = scope.launch {
-            userPreferencesRepository.userLevel.collect { _ ->
+            userLevelPreferences.userLevel.collect { _ ->
                 loadQaItemsFromAssets()
                 restoreLastCategory()
             }
@@ -74,7 +74,7 @@ class QaDataManagerImpl(
             "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절", "롤플레이"
         )
 
-        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        val currentUserLevel = userLevelPreferences.getUserLevel()
 
         val allLeveledItems = qaDataLoader.loadQaItemsForLevel(currentUserLevel)
 
@@ -114,7 +114,7 @@ class QaDataManagerImpl(
     override fun getCurrentAnswer(qaItem: QaItem?): String {
         if (qaItem == null) return ""
 
-        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        val currentUserLevel = userLevelPreferences.getUserLevel()
         val leveledAnswer = qaItem.answers[currentUserLevel]
 
         return leveledAnswer?.answerEn ?: qaItem.answers.values.firstOrNull()?.answerEn ?: ""
@@ -123,7 +123,7 @@ class QaDataManagerImpl(
     override fun getCurrentAnswerKo(qaItem: QaItem?): String {
         if (qaItem == null) return ""
 
-        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        val currentUserLevel = userLevelPreferences.getUserLevel()
         val leveledAnswer = qaItem.answers[currentUserLevel]
 
         return leveledAnswer?.answerKo ?: qaItem.answers.values.firstOrNull()?.answerKo ?: ""

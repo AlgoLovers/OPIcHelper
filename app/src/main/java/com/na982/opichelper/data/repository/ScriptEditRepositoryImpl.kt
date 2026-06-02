@@ -8,13 +8,10 @@ import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.ScriptEditRepository
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
-
 class ScriptEditRepositoryImpl(
     private val dao: QaItemDao,
     private val recordingTimeManager: RecordingTimeManager,
-    private val progressPersistenceService: ProgressPersistenceService,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val progressPersistenceService: ProgressPersistenceService
 ) : ScriptEditRepository {
 
     override suspend fun updateQaItem(item: QaItem, level: UserLevel, scriptIndex: Int) {
