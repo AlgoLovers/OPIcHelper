@@ -2,7 +2,6 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.audio.SentenceSplitter
-import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
