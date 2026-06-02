@@ -27,6 +27,13 @@ class PlayMergedFileUseCase @Inject constructor(
     private val qaDataManager: QaDataManager,
     private val recordingTimeManager: RecordingTimeManager
 ) : java.io.Closeable {
+
+    companion object {
+        private const val CHAR_DURATION_MS = 50L
+        private const val MIN_HIGHLIGHT_DURATION_MS = 1000L
+        private const val FILE_CHECK_RETRY_COUNT = 3
+        private const val FILE_CHECK_RETRY_DELAY_MS = 500L
+    }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var playJob: Job? = null
     private var checkFileJob: Job? = null
@@ -77,7 +84,7 @@ class PlayMergedFileUseCase @Inject constructor(
             if (!_isPlaying.value) break
 
             _highlightIndex.value = i
-            val duration = (sentences[i].length * 50L).coerceAtLeast(1000L)
+            val duration = (sentences[i].length * CHAR_DURATION_MS).coerceAtLeast(MIN_HIGHLIGHT_DURATION_MS)
             kotlinx.coroutines.delay(duration)
         }
 
@@ -121,11 +128,11 @@ class PlayMergedFileUseCase @Inject constructor(
             var exists = false
             var mergedFile: File? = null
 
-            for (attempt in 1..3) {
+            for (attempt in 1..FILE_CHECK_RETRY_COUNT) {
                 exists = audioFileManager.hasEnglishWritingTestMergedFile(category, scriptIndex)
                 mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
                 if (exists && mergedFile != null && mergedFile.exists()) break
-                if (attempt < 3) kotlinx.coroutines.delay(500L)
+                if (attempt < FILE_CHECK_RETRY_COUNT) kotlinx.coroutines.delay(FILE_CHECK_RETRY_DELAY_MS)
             }
 
             _hasFile.value = exists && mergedFile != null && mergedFile.exists()

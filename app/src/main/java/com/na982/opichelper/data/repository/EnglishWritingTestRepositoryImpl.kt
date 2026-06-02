@@ -27,6 +27,11 @@ class EnglishWritingTestRepositoryImpl(
     private val appLogger: AppLogger
 ) : BaseMemorizeTestRepository(progressPersistenceService), EnglishWritingTestRepository {
 
+    companion object {
+        private const val RECORDING_CHAR_DURATION_MS = 100L
+        private const val MIN_RECORDING_DURATION_MS = 3000L
+    }
+
     override val memorizeLevel = MemorizeLevel.ENGLISH_WRITING
 
     override suspend fun executeEnglishWritingTest(
@@ -69,7 +74,7 @@ class EnglishWritingTestRepositoryImpl(
                 val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
                     savedTtsTime
                 } else {
-                    (enSentences[idx].length * 100L).coerceAtLeast(3000L)
+                    (enSentences[idx].length * RECORDING_CHAR_DURATION_MS).coerceAtLeast(MIN_RECORDING_DURATION_MS)
                 }
 
                 val recordingFile = audioRecorder.startRecording()

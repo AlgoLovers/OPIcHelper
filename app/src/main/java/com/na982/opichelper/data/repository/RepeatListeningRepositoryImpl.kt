@@ -18,6 +18,12 @@ class RepeatListeningRepositoryImpl(
     private val recordingTimeManager: RecordingTimeManager
 ) : BaseMemorizeTestRepository(progressPersistenceService), RepeatListeningRepository {
 
+    companion object {
+        private const val CARD_FLIP_DELAY_MS = 100L
+        private const val WORD_DELAY_MS = 500
+        private const val REST_TIME_MULTIPLIER = 1.2
+    }
+
     override val memorizeLevel = MemorizeLevel.REPEAT_LISTENING
 
     override suspend fun executeRepeatListening(
@@ -39,7 +45,7 @@ class RepeatListeningRepositoryImpl(
 
             // 1. 한글 문장 TTS
             emit(MemorizeTestEvent.CardFlip(true))
-            delay(100)
+            delay(CARD_FLIP_DELAY_MS)
             emit(MemorizeTestEvent.KoreanHighlight(i))
 
             val koResult = ttsOrchestrator.speakAndWaitForCompletion(koSentences[i])
@@ -50,7 +56,7 @@ class RepeatListeningRepositoryImpl(
 
             val enSentence = enSentences[i]
             val enWordCount = enSentence.split("\\s+".toRegex()).size
-            val baseDelay = enWordCount * 500
+            val baseDelay = enWordCount * WORD_DELAY_MS
             val lengthMultiplier = when {
                 enWordCount <= 5 -> 1.5f
                 enWordCount <= 10 -> 1.2f
@@ -67,7 +73,7 @@ class RepeatListeningRepositoryImpl(
                 if (!currentCoroutineContext().isActive) break@sentenceLoop
 
                 emit(MemorizeTestEvent.CardFlip(false))
-                delay(100)
+                delay(CARD_FLIP_DELAY_MS)
                 emit(MemorizeTestEvent.Highlight(i))
 
                 val enResult = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i])
@@ -81,7 +87,7 @@ class RepeatListeningRepositoryImpl(
 
                 if (!currentCoroutineContext().isActive) break@sentenceLoop
 
-                val restTime = (enDuration * 1.2).toLong()
+                val restTime = (enDuration * REST_TIME_MULTIPLIER).toLong()
                 delay(restTime)
             }
             emit(MemorizeTestEvent.Highlight(null))

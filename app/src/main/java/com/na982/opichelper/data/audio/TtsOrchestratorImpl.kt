@@ -19,6 +19,10 @@ class TtsOrchestratorImpl(
     private val ttsPreferences: TtsPreferences,
     private val logger: AppLogger
 ) : TtsOrchestrator {
+
+    companion object {
+        private const val INTER_SENTENCE_DELAY_MS = 400L
+    }
     private val activeSpeakCount = AtomicInteger(0)
     private val _isSpeaking = MutableStateFlow(false)
     override val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
@@ -131,7 +135,7 @@ class TtsOrchestratorImpl(
                     logger.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 실패: $result")
                     break
                 }
-                delay(400L)
+                delay(INTER_SENTENCE_DELAY_MS)
             }
             onHighlight(null, null)
         } catch (e: CancellationException) {

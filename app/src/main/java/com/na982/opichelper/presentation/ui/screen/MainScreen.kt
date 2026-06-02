@@ -325,7 +325,7 @@ fun MainScreen(
                         )
                     ) {
                         Text(
-                            text = qaState.error!!,
+                            text = qaState.error ?: "",
                             modifier = Modifier.padding(16.dp),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )

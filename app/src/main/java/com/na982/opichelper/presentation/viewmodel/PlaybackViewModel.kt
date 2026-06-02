@@ -56,6 +56,11 @@ class PlaybackViewModel @Inject constructor(
     private val appLogger: AppLogger
 ) : ViewModel() {
 
+    companion object {
+        private const val ANSWER_PLAY_TIMEOUT_MS = 60_000L
+        private const val PIP_RECENTLY_PLAYED_THRESHOLD_MS = 30_000L
+    }
+
     private val _uiState = MutableStateFlow(PlaybackState())
     val uiState: StateFlow<PlaybackState> = _uiState.asStateFlow()
 
@@ -241,7 +246,7 @@ class PlaybackViewModel @Inject constructor(
             val playCount = playbackPreferences.getAnswerPlayCount()
             for (i in 1..playCount) {
                 ttsPlaybackController.playAnswer(answer)
-                withTimeoutOrNull(60_000L) {
+                withTimeoutOrNull(ANSWER_PLAY_TIMEOUT_MS) {
                     ttsPlaybackController.isAnswerPlaying.first { !it }
                 } ?: run {
                     appLogger.w("PlaybackViewModel", "답변 재생 완료 대기 타임아웃")
@@ -351,7 +356,7 @@ class PlaybackViewModel @Inject constructor(
         val isCoordinatorRunning = coordinator.isRunning.value
         val isMergedPlaying = playMergedFileUseCase.isPlaying.value
         val isTtsSpeaking = ttsPlaybackController.isPlaying.value || ttsOrchestrator.isSpeaking.value
-        val recentlyPlayed = System.currentTimeMillis() - lastPlayingTimestamp < 30_000L
+        val recentlyPlayed = System.currentTimeMillis() - lastPlayingTimestamp < PIP_RECENTLY_PLAYED_THRESHOLD_MS
         return isPlaying || isCoordinatorRunning || isMergedPlaying || isTtsSpeaking || recentlyPlayed
     }
 

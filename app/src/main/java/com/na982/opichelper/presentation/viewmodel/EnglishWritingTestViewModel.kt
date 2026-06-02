@@ -2,7 +2,6 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
-import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
@@ -25,7 +24,7 @@ data class EnglishWritingTestUiState(
 class EnglishWritingTestViewModel @Inject constructor(
     private val englishWritingTestRepository: EnglishWritingTestRepository,
     private val ttsCtrl: TtsPlaybackController,
-    private val qaDataManager: QaDataManager,
+    qaDataManager: QaDataManager,
     private val progress: MemorizeTestProgressTracker,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
@@ -33,7 +32,8 @@ class EnglishWritingTestViewModel @Inject constructor(
     coordinator = coordinator,
     ttsPlaybackController = ttsCtrl,
     progressTracker = progress,
-    appLogger = appLogger
+    appLogger = appLogger,
+    qaDataManager = qaDataManager
 ) {
 
     override val _uiState = MutableStateFlow(EnglishWritingTestUiState())
@@ -130,15 +130,5 @@ class EnglishWritingTestViewModel @Inject constructor(
             }
             else -> {}
         }
-    }
-
-    private fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
-        val currentItem = qaDataManager.currentQaItem.value ?: return null
-        val text = if (isKorean) {
-            qaDataManager.getCurrentAnswerKo(currentItem)
-        } else {
-            qaDataManager.getCurrentAnswer(currentItem)
-        }
-        return SentenceSplitter.split(text).getOrNull(index)
     }
 }

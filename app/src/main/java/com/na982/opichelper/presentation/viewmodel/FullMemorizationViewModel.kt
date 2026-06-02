@@ -1,7 +1,6 @@
 package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.CurrentMode
@@ -26,14 +25,15 @@ data class FullMemorizationUiState(
 @HiltViewModel
 class FullMemorizationViewModel @Inject constructor(
     private val fullMemorizationUseCase: FullMemorizationUseCase,
-    private val qaDataManager: QaDataManager,
+    qaDataManager: QaDataManager,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
 ) : BaseMemorizationViewModel<FullMemorizationUiState>(
     coordinator = coordinator,
     ttsPlaybackController = null,
     progressTracker = null,
-    appLogger = appLogger
+    appLogger = appLogger,
+    qaDataManager = qaDataManager
 ) {
 
     override val _uiState = MutableStateFlow(FullMemorizationUiState())
@@ -181,15 +181,5 @@ class FullMemorizationViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         fullMemorizationUseCase.close()
-    }
-
-    private fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
-        val currentItem = qaDataManager.currentQaItem.value ?: return null
-        val text = if (isKorean) {
-            qaDataManager.getCurrentAnswerKo(currentItem)
-        } else {
-            qaDataManager.getCurrentAnswer(currentItem)
-        }
-        return SentenceSplitter.split(text).getOrNull(index)
     }
 }

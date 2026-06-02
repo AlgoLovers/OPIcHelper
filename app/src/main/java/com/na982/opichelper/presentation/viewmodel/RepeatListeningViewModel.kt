@@ -28,7 +28,7 @@ data class RepeatListeningUiState(
 class RepeatListeningViewModel @Inject constructor(
     private val repeatListeningRepository: RepeatListeningRepository,
     private val ttsCtrl: TtsPlaybackController,
-    private val qaDataManager: QaDataManager,
+    qaDataManager: QaDataManager,
     private val progress: MemorizeTestProgressTracker,
     private val playbackPreferences: PlaybackPreferences,
     coordinator: MemorizationModeCoordinator,
@@ -37,7 +37,8 @@ class RepeatListeningViewModel @Inject constructor(
     coordinator = coordinator,
     ttsPlaybackController = ttsCtrl,
     progressTracker = progress,
-    appLogger = appLogger
+    appLogger = appLogger,
+    qaDataManager = qaDataManager
 ) {
 
     val modeCoordinator: MemorizationModeCoordinator get() = coordinator
@@ -161,15 +162,5 @@ class RepeatListeningViewModel @Inject constructor(
                 stop()
             }
         }
-    }
-
-    private fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
-        val currentItem = qaDataManager.getCurrentQaItem() ?: return null
-        val text = if (isKorean) {
-            qaDataManager.getCurrentAnswerKo(currentItem)
-        } else {
-            qaDataManager.getCurrentAnswer(currentItem)
-        }
-        return SentenceSplitter.split(text).getOrNull(index)
     }
 }

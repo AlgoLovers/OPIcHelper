@@ -40,6 +40,12 @@ class FullMemorizationUseCase @Inject constructor(
     private val recordingTimeManager: RecordingTimeManager,
     private val logger: AppLogger
 ) : java.io.Closeable {
+
+    companion object {
+        private const val QUESTION_TO_RECORDING_DELAY_MS = 500L
+        private const val HIGHLIGHT_START_DELAY_MS = 1200L
+        private val DEFAULT_RECORDING_TIMES = List(5) { 2000L }
+    }
     private val _highlightIndex = MutableStateFlow<Int?>(null)
     val highlightIndex: StateFlow<Int?> = _highlightIndex.asStateFlow()
 
@@ -75,12 +81,13 @@ class FullMemorizationUseCase @Inject constructor(
                     return@withLock
                 }
                 _highlightIndex.value = null
-                delay(500L)
+                delay(QUESTION_TO_RECORDING_DELAY_MS)
 
-                currentRecordingPath = recordingFileRepository.createRecordingFile(category, scriptIndex)
+                val recordingPath = recordingFileRepository.createRecordingFile(category, scriptIndex)
+                currentRecordingPath = recordingPath
                 _state.value = FullMemorizationState.Recording
 
-                audioRecorder.startRecording(currentRecordingPath!!)
+                audioRecorder.startRecording(recordingPath)
             }
         } catch (e: Exception) {
             logger.e("FullMemorizationUseCase", "통암기 테스트 시작 실패", e)
@@ -118,11 +125,11 @@ class FullMemorizationUseCase @Inject constructor(
                     val times = if (recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
                         recordingTimeManager.getAllRecordingTimes(category, scriptIndex)
                     } else {
-                        listOf(2000L, 2000L, 2000L, 2000L, 2000L)
+                        DEFAULT_RECORDING_TIMES
                     }
 
                     val highlightJob = launch {
-                        delay(1200L)
+                        delay(HIGHLIGHT_START_DELAY_MS)
                         for (i in times.indices) {
                             ensureActive()
                             _highlightIndex.value = i
