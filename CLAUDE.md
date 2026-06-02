@@ -249,6 +249,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | Domain 계층 Android import (Log, Context, PowerManager) | AppLogger + WakeLockController 분리로 해결 (0119, 0126, 0128) |
 | UserPreferencesRepository ISP 위반 (15+ 메서드) | 6개 하위 인터페이스 분리 + 복합 인터페이스 유지 (0129) |
 | ScriptEditRepositoryImpl 미사용 의존성 | UserPreferencesRepository 파라미터 제거 (0129) |
+| 미사용 메서드 16개 (AudioFileManager 8, AudioPlayer 3, RecordingAudioPlayer 2, FullMemorizationUseCase 1, QaItemDao 1, LeveledQaDataLoader 1) | 인터페이스+구현체 제거 (0133) |
 
 ## Git 커밋 규칙
 
