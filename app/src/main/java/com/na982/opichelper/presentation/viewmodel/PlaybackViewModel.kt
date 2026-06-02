@@ -1,6 +1,6 @@
 package com.na982.opichelper.presentation.viewmodel
 
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -52,7 +52,8 @@ class PlaybackViewModel @Inject constructor(
     private val ttsOrchestrator: TtsOrchestrator,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val coordinator: MemorizationModeCoordinator,
-    private val ttsServiceController: TtsServiceController
+    private val ttsServiceController: TtsServiceController,
+    private val appLogger: AppLogger
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlaybackState())
@@ -251,7 +252,7 @@ class PlaybackViewModel @Inject constructor(
                 withTimeoutOrNull(60_000L) {
                     ttsPlaybackController.isAnswerPlaying.first { !it }
                 } ?: run {
-                    Log.w("PlaybackViewModel", "답변 재생 완료 대기 타임아웃")
+                    appLogger.w("PlaybackViewModel", "답변 재생 완료 대기 타임아웃")
                     ttsPlaybackController.stopTts()
                 }
             }
@@ -272,7 +273,7 @@ class PlaybackViewModel @Inject constructor(
             ttsPlaybackController.clearHighlight()
             playMergedFileUseCase.stop()
         } catch (e: Exception) {
-            Log.e("PlaybackViewModel", "TTS 정리 중 오류", e)
+            appLogger.e("PlaybackViewModel", "TTS 정리 중 오류", e)
         }
     }
 

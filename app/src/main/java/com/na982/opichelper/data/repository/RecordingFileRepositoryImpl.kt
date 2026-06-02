@@ -85,15 +85,6 @@ class RecordingFileRepositoryImpl(
         }
     }
 
-    override suspend fun playRecordingFile(
-        category: String,
-        scriptIndex: Int,
-        onPlayingStateChange: (Boolean) -> Unit,
-        onHighlight: (Int?) -> Unit
-    ) {
-        playRecordingInternal(category, scriptIndex, onPlayingStateChange)
-    }
-
     override suspend fun playRecordingFileSimple(
         category: String,
         scriptIndex: Int,

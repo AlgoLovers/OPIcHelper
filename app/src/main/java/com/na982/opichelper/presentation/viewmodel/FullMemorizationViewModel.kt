@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.coroutines.coroutineContext
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import javax.inject.Inject
 
 data class FullMemorizationUiState(
@@ -27,11 +27,13 @@ data class FullMemorizationUiState(
 class FullMemorizationViewModel @Inject constructor(
     private val fullMemorizationUseCase: FullMemorizationUseCase,
     private val qaDataManager: QaDataManager,
-    coordinator: MemorizationModeCoordinator
+    coordinator: MemorizationModeCoordinator,
+    appLogger: AppLogger
 ) : BaseMemorizationViewModel<FullMemorizationUiState>(
     coordinator = coordinator,
     ttsPlaybackController = null,
-    progressTracker = null
+    progressTracker = null,
+    appLogger = appLogger
 ) {
 
     override val _uiState = MutableStateFlow(FullMemorizationUiState())
@@ -97,7 +99,7 @@ class FullMemorizationViewModel @Inject constructor(
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e("FullMemorizationVM", "통암기 모드 시작 실패", e)
+            appLogger.e("FullMemorizationVM", "통암기 모드 시작 실패", e)
             emitEvent("통암기를 시작할 수 없습니다")
             coordinator.releaseMode()
         }
@@ -109,7 +111,7 @@ class FullMemorizationViewModel @Inject constructor(
                 fullMemorizationUseCase.stopRecording()
                 refreshRecordingStatus()
             } catch (e: Exception) {
-                Log.e("FullMemorizationVM", "통암기 녹음 종료 실패", e)
+                appLogger.e("FullMemorizationVM", "통암기 녹음 종료 실패", e)
                 emitEvent("녹음을 종료할 수 없습니다")
             }
         }
@@ -123,7 +125,7 @@ class FullMemorizationViewModel @Inject constructor(
                     fullMemorizationUseCase.playRecordingWithHighlight()
                 }
             } catch (e: Exception) {
-                Log.e("FullMemorizationVM", "통암기 녹음 재생 실패", e)
+                appLogger.e("FullMemorizationVM", "통암기 녹음 재생 실패", e)
                 emitEvent("녹음 재생에 실패했습니다")
                 coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
             }
@@ -137,7 +139,7 @@ class FullMemorizationViewModel @Inject constructor(
                 coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
                 refreshRecordingStatus()
             } catch (e: Exception) {
-                Log.e("FullMemorizationVM", "통암기 재생 중지 실패", e)
+                appLogger.e("FullMemorizationVM", "통암기 재생 중지 실패", e)
                 emitEvent("재생 중지에 실패했습니다")
                 coordinator.updateMode(CurrentMode.FULL_MEMORIZATION_WITH_FILE)
             }
@@ -150,7 +152,7 @@ class FullMemorizationViewModel @Inject constructor(
                 val hasRecording = fullMemorizationUseCase.hasRecording()
                 _uiState.update { it.copy(hasRecordingFile = hasRecording) }
             } catch (e: Exception) {
-                Log.e("FullMemorizationVM", "녹음 파일 상태 확인 실패", e)
+                appLogger.e("FullMemorizationVM", "녹음 파일 상태 확인 실패", e)
             }
         }
     }
@@ -161,7 +163,7 @@ class FullMemorizationViewModel @Inject constructor(
                 fullMemorizationUseCase.clearRecording()
                 refreshRecordingStatus()
             } catch (e: Exception) {
-                Log.e("FullMemorizationVM", "녹음 파일 삭제 실패", e)
+                appLogger.e("FullMemorizationVM", "녹음 파일 삭제 실패", e)
             }
         }
     }
@@ -171,7 +173,7 @@ class FullMemorizationViewModel @Inject constructor(
             try {
                 fullMemorizationUseCase.cancelPlayback()
             } catch (e: Exception) {
-                Log.e("FullMemorizationVM", "cancelPlayback 실패", e)
+                appLogger.e("FullMemorizationVM", "cancelPlayback 실패", e)
             }
         }
     }

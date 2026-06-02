@@ -15,7 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import javax.inject.Inject
 
 data class RepeatListeningUiState(
@@ -31,11 +31,13 @@ class RepeatListeningViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
     private val progress: MemorizeTestProgressTracker,
     private val userPreferencesRepository: UserPreferencesRepository,
-    coordinator: MemorizationModeCoordinator
+    coordinator: MemorizationModeCoordinator,
+    appLogger: AppLogger
 ) : BaseMemorizationViewModel<RepeatListeningUiState>(
     coordinator = coordinator,
     ttsPlaybackController = ttsCtrl,
-    progressTracker = progress
+    progressTracker = progress,
+    appLogger = appLogger
 ) {
 
     val modeCoordinator: MemorizationModeCoordinator get() = coordinator
@@ -58,7 +60,7 @@ class RepeatListeningViewModel @Inject constructor(
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
+            appLogger.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
             emitEvent("반복듣기를 시작할 수 없습니다")
             stop()
         }

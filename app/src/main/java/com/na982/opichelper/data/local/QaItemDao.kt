@@ -30,15 +30,6 @@ interface QaItemDao {
     """)
     suspend fun restoreOriginal(id: String)
 
-    @Query("""
-        UPDATE qa_items SET
-        questionEn = questionEnOriginal, questionKo = questionKoOriginal,
-        answerEn = answerEnOriginal, answerKo = answerKoOriginal,
-        isModified = 0, updatedAt = 0
-        WHERE isModified = 1
-    """)
-    suspend fun restoreAllOriginal()
-
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(items: List<QaItemEntity>)
 

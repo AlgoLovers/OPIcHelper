@@ -14,7 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import javax.inject.Inject
 
 data class EnglishWritingTestUiState(
@@ -27,11 +27,13 @@ class EnglishWritingTestViewModel @Inject constructor(
     private val ttsCtrl: TtsPlaybackController,
     private val qaDataManager: QaDataManager,
     private val progress: MemorizeTestProgressTracker,
-    coordinator: MemorizationModeCoordinator
+    coordinator: MemorizationModeCoordinator,
+    appLogger: AppLogger
 ) : BaseMemorizationViewModel<EnglishWritingTestUiState>(
     coordinator = coordinator,
     ttsPlaybackController = ttsCtrl,
-    progressTracker = progress
+    progressTracker = progress,
+    appLogger = appLogger
 ) {
 
     override val _uiState = MutableStateFlow(EnglishWritingTestUiState())
@@ -51,7 +53,7 @@ class EnglishWritingTestViewModel @Inject constructor(
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e("EnglishWritingTestVM", "영작 테스트 시작 실패", e)
+            appLogger.e("EnglishWritingTestVM", "영작 테스트 시작 실패", e)
             emitEvent("영작 테스트를 시작할 수 없습니다")
             stop()
         }
@@ -60,7 +62,7 @@ class EnglishWritingTestViewModel @Inject constructor(
     private suspend fun startEnglishWritingTest() {
         val currentItem = qaDataManager.currentQaItem.value
         if (currentItem == null) {
-            Log.e("EnglishWritingTestVM", "현재 QA 아이템이 없음")
+            appLogger.e("EnglishWritingTestVM", "현재 QA 아이템이 없음")
             emitEvent("질문 데이터를 불러올 수 없습니다")
             stop()
             return
@@ -85,7 +87,7 @@ class EnglishWritingTestViewModel @Inject constructor(
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e("EnglishWritingTestVM", "영작 테스트 실행 중 오류", e)
+                appLogger.e("EnglishWritingTestVM", "영작 테스트 실행 중 오류", e)
                 emitEvent("영작 테스트 실행 중 오류가 발생했습니다")
                 stop()
             }

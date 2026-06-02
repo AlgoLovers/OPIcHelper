@@ -14,12 +14,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 
 abstract class BaseMemorizationViewModel<T>(
     protected val coordinator: MemorizationModeCoordinator,
     private val ttsPlaybackController: TtsPlaybackController?,
-    private val progressTracker: MemorizeTestProgressTracker?
+    private val progressTracker: MemorizeTestProgressTracker?,
+    protected val appLogger: AppLogger
 ) : ViewModel() {
 
     private var modeJob: Job? = null
@@ -57,7 +58,7 @@ abstract class BaseMemorizationViewModel<T>(
             try {
                 progressTracker?.persistChangedProgress()
             } catch (e: Exception) {
-                Log.e("BaseMemorizationVM", "진행상황 저장 실패", e)
+                appLogger.e("BaseMemorizationVM", "진행상황 저장 실패", e)
             }
         }
     }
@@ -73,7 +74,7 @@ abstract class BaseMemorizationViewModel<T>(
             try {
                 progressTracker?.persistChangedProgress()
             } catch (e: Exception) {
-                Log.e("BaseMemorizationVM", "레벨 변경 시 진행상황 저장 실패", e)
+                appLogger.e("BaseMemorizationVM", "레벨 변경 시 진행상황 저장 실패", e)
             }
         }
     }

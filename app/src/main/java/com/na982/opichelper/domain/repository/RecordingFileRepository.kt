@@ -38,21 +38,7 @@ interface RecordingFileRepository {
      * @return 삭제 성공하면 true
      */
     suspend fun deleteRecordingFile(category: String, scriptIndex: Int): Boolean
-    
-    /**
-     * 녹음 파일 재생 (하이라이트 포함)
-     * @param category 카테고리
-     * @param scriptIndex 스크립트 인덱스
-     * @param onPlayingStateChange 재생 상태 변경 콜백
-     * @param onHighlight 하이라이트 변경 콜백
-     */
-    suspend fun playRecordingFile(
-        category: String,
-        scriptIndex: Int,
-        onPlayingStateChange: (Boolean) -> Unit,
-        onHighlight: (Int?) -> Unit
-    )
-    
+
     /**
      * 녹음 파일 재생 (하이라이트 없음)
      * @param category 카테고리
