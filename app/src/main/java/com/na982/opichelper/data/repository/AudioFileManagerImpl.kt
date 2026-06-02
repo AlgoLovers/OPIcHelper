@@ -15,22 +15,17 @@ import android.media.MediaCodec
 import android.os.Build
 import java.nio.ByteBuffer
 
-/**
- * AudioFileManager 구현체
- * 오디오 파일 관리 및 병합 기능을 담당
- */
 class AudioFileManagerImpl(
     private val context: Context,
     private val appLogger: AppLogger
 ) : AudioFileManager {
-    
+
     override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
         return withContext(Dispatchers.IO) {
             if (files.isEmpty()) {
                 return@withContext null
             }
 
-            // 출력 디렉토리 생성 (앱 내부 저장소 사용)
             val outputDir = File(context.filesDir, "merged")
             if (!outputDir.exists()) {
                 outputDir.mkdirs()
@@ -38,13 +33,11 @@ class AudioFileManagerImpl(
 
             val output = File(outputDir, "english_writing_${scriptId}_merged.m4a")
 
-            // 단일 파일인 경우 그대로 복사
             if (files.size == 1) {
                 files[0].copyTo(output, overwrite = true)
                 return@withContext output
             }
 
-            // 여러 파일인 경우 MediaCodec을 우선적으로 사용한 병합
             var mergeSuccess = false
 
             try {
@@ -66,7 +59,6 @@ class AudioFileManagerImpl(
                 }
             }
 
-            // 병합 성공 시에만 원본 파일 삭제
             if (mergeSuccess) {
                 files.forEach { file ->
                     if (file.exists()) {
@@ -81,124 +73,12 @@ class AudioFileManagerImpl(
         }
     }
 
-    override suspend fun saveRecording(recordedFile: String) {
-        withContext(Dispatchers.IO) {
-            try {
-                val sourceFile = File(recordedFile)
-                if (!sourceFile.exists()) {
-                    appLogger.e("AudioFileManager", "녹음 파일이 존재하지 않음: $recordedFile")
-                    return@withContext
-                }
-
-                val recordingsDir = File(context.filesDir, "recordings")
-                if (!recordingsDir.exists()) {
-                    recordingsDir.mkdirs()
-                }
-
-                val fileName = "recording_${System.currentTimeMillis()}.m4a"
-                val destinationFile = File(recordingsDir, fileName)
-
-                sourceFile.copyTo(destinationFile, overwrite = true)
-
-                // 원본 파일 삭제
-                sourceFile.delete()
-            } catch (e: Exception) {
-                appLogger.e("AudioFileManager", "녹음 파일 저장 실패", e)
-            }
-        }
-    }
-
-    override fun getLatestMergedAudioFile(): File? {
-        val mergedDir = File(context.filesDir, "merged")
-        if (!mergedDir.exists()) return null
-        
-        val mergedFiles = mergedDir.listFiles { file ->
-            file.name.startsWith("english_writing_") && file.name.endsWith("_merged.m4a")
-        }
-        
-        return mergedFiles?.maxByOrNull { it.lastModified() }
-    }
-    
-    override fun deleteAudioFile(file: File) {
-        if (file.exists()) {
-            file.delete()
-        }
-    }
-    
-    override suspend fun cleanupOldRecordings(scriptId: String, keepLatestCount: Int) {
-        withContext(Dispatchers.IO) {
-            val recordingsDir = File(context.filesDir, "recordings")
-            if (!recordingsDir.exists()) return@withContext
-            
-            val scriptFiles = recordingsDir.listFiles { file ->
-                file.name.startsWith("${scriptId}_") && file.name.endsWith(".m4a")
-            }?.sortedByDescending { it.lastModified() }
-            
-            scriptFiles?.drop(keepLatestCount)?.forEach { file ->
-                file.delete()
-            }
-        }
-    }
-    
-    override suspend fun cleanupAllOldRecordings(keepLatestCount: Int) {
-        withContext(Dispatchers.IO) {
-            val recordingsDir = File(context.filesDir, "recordings")
-            if (!recordingsDir.exists()) return@withContext
-            
-            val allFiles = recordingsDir.listFiles { file ->
-                file.name.endsWith(".m4a")
-            }
-            
-            // 스크립트별로 그룹화
-            val filesByScript = allFiles?.groupBy { file ->
-                file.name.substringBeforeLast("_").substringBeforeLast("_")
-            }
-            
-            filesByScript?.forEach { (_, files) ->
-                val sortedFiles = files.sortedByDescending { it.lastModified() }
-                sortedFiles.drop(keepLatestCount).forEach { file ->
-                    file.delete()
-                }
-            }
-        }
-    }
-    
     override fun getRecordingFilePath(fileName: String): String {
         val recordingsDir = File(context.filesDir, "recordings")
         if (!recordingsDir.exists()) {
             recordingsDir.mkdirs()
         }
         return File(recordingsDir, fileName).absolutePath
-    }
-
-    override suspend fun hasRecordingFile(scriptId: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            val file = File(getRecordingFilePath("${scriptId}_recording.m4a"))
-            file.exists()
-        }
-    }
-
-    override suspend fun hasRecordingFileByPath(filePath: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            val file = File(filePath)
-            file.exists()
-        }
-    }
-
-    override suspend fun deleteRecordingFileByPath(filePath: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                val file = File(filePath)
-                if (file.exists()) {
-                    file.delete()
-                } else {
-                    false
-                }
-            } catch (e: Exception) {
-                appLogger.e("AudioFileManager", "녹음 파일 삭제 실패: $filePath", e)
-                false
-            }
-        }
     }
 
     private fun mergeWithMediaCodec(files: List<File>, output: File) {
@@ -261,22 +141,20 @@ class AudioFileManagerImpl(
         }
     }
 
-    // ===== 영작테스트 관련 메서드들 =====
-    
     override suspend fun saveRecordingFile(recordingFile: File, fileName: String): File {
         return withContext(Dispatchers.IO) {
             val outputDir = File(context.filesDir, "recordings")
             if (!outputDir.exists()) {
                 outputDir.mkdirs()
             }
-            
+
             val outputFile = File(outputDir, "${fileName}.m4a")
             recordingFile.copyTo(outputFile, overwrite = true)
 
             outputFile
         }
     }
-    
+
     override suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File {
         return withContext(Dispatchers.IO) {
             val outputDir = File(context.filesDir, "merged")
@@ -306,8 +184,6 @@ class AudioFileManagerImpl(
         }
     }
 
-
-
     override suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean {
         return withContext(Dispatchers.IO) {
             val mergedDir = File(context.filesDir, "merged")
@@ -324,7 +200,7 @@ class AudioFileManagerImpl(
             files?.isNotEmpty() == true
         }
     }
-    
+
     override suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File? {
         return withContext(Dispatchers.IO) {
             val mergedDir = File(context.filesDir, "merged")
@@ -375,4 +251,4 @@ class AudioFileManagerImpl(
             files?.maxByOrNull { it.lastModified() }
         }
     }
-} 
+}

@@ -78,10 +78,4 @@ class LeveledQaDataLoader(
         val answer_en: String,
         val answer_ko: String
     )
-
-    suspend fun loadAllLevelData(): Map<UserLevel, List<QaItem>> = withContext(Dispatchers.IO) {
-        UserLevel.values().associateWith { level ->
-            loadQaItemsForLevel(level)
-        }
-    }
 }

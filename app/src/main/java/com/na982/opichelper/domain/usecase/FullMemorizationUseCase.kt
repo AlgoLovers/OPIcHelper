@@ -150,32 +150,6 @@ class FullMemorizationUseCase @Inject constructor(
         }
     }
 
-    suspend fun playRecordingSimple() {
-        val qaItem = mutex.withLock {
-            val item = qaDataManager.getCurrentQaItem() ?: return
-            val category = item.category
-            val scriptIndex = qaDataManager.getCurrentIndex()
-            if (!recordingFileRepository.hasRecordingFile(category, scriptIndex)) return
-            _state.value = FullMemorizationState.Playing
-            category to scriptIndex
-        } ?: return
-
-        try {
-            recordingFileRepository.playRecordingFileSimple(
-                category = qaItem.first,
-                scriptIndex = qaItem.second,
-                onPlayingStateChange = { playing ->
-                    if (!playing) {
-                        _state.value = FullMemorizationState.WithFile(hasRecording = true)
-                    }
-                }
-            )
-        } catch (e: Exception) {
-            logger.e("FullMemorizationUseCase", "녹음 재생 실패", e)
-            _state.value = FullMemorizationState.WithFile(hasRecording = true)
-        }
-    }
-
     suspend fun hasRecording() = mutex.withLock {
         val qaItem = qaDataManager.getCurrentQaItem()
         if (qaItem != null) {

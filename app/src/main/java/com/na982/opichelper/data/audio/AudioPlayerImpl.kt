@@ -54,34 +54,6 @@ class AudioPlayerImpl(private val appLogger: AppLogger) : AudioPlayer {
         player = null
     }
 
-    override fun release() {
-        synchronized(lock) {
-            try {
-                stop()
-            } catch (e: Exception) {
-                appLogger.e("AudioPlayerImpl", "완전한 리소스 해제 중 오류", e)
-            }
-        }
-    }
-
-    override fun stopAudio() {
-        synchronized(lock) { stop() }
-    }
-    
-    override fun getDuration(filePath: String): Int {
-        val mediaPlayer = MediaPlayer()
-        return try {
-            mediaPlayer.setDataSource(filePath)
-            mediaPlayer.prepare()
-            mediaPlayer.duration
-        } catch (e: Exception) {
-            appLogger.e("AudioPlayerImpl", "getDuration 실패: $filePath", e)
-            0
-        } finally {
-            mediaPlayer.release()
-        }
-    }
-    
     override fun playAudio(filePath: String) {
         val file = File(filePath)
         if (file.exists()) {
@@ -90,4 +62,4 @@ class AudioPlayerImpl(private val appLogger: AppLogger) : AudioPlayer {
             appLogger.e("AudioPlayerImpl", "파일이 존재하지 않음: $filePath")
         }
     }
-} 
+}
