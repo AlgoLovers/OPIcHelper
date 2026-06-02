@@ -250,6 +250,9 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | UserPreferencesRepository ISP 위반 (15+ 메서드) | 6개 하위 인터페이스 분리 + 복합 인터페이스 유지 (0129) |
 | ScriptEditRepositoryImpl 미사용 의존성 | UserPreferencesRepository 파라미터 제거 (0129) |
 | 미사용 메서드 16개 (AudioFileManager 8, AudioPlayer 3, RecordingAudioPlayer 2, FullMemorizationUseCase 1, QaItemDao 1, LeveledQaDataLoader 1) | 인터페이스+구현체 제거 (0133) |
+| !! 강제 언랩 3곳 | 안전한 패턴 교체 (0135) |
+| 매직넘버 20+ | companion object 상수화 (0135) |
+| getSentenceFromAnswer() 3곳 중복 | BaseMemorizationViewModel로 이동 (0135) |
 
 ## Git 커밋 규칙
 
