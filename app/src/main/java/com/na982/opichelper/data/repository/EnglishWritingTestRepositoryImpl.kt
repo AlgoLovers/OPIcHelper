@@ -30,6 +30,7 @@ class EnglishWritingTestRepositoryImpl(
     companion object {
         private const val RECORDING_CHAR_DURATION_MS = 100L
         private const val MIN_RECORDING_DURATION_MS = 3000L
+        private const val CARD_FLIP_DELAY_MS = 100L
     }
 
     override val memorizeLevel = MemorizeLevel.ENGLISH_WRITING
@@ -58,7 +59,7 @@ class EnglishWritingTestRepositoryImpl(
 
                 // 1. 한글 문장 TTS
                 emit(MemorizeTestEvent.CardFlip(true))
-                delay(100)
+                delay(CARD_FLIP_DELAY_MS)
                 emit(MemorizeTestEvent.KoreanHighlight(idx))
 
                 val koResult = ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx])

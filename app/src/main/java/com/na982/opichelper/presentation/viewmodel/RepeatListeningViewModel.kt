@@ -27,16 +27,16 @@ data class RepeatListeningUiState(
 @HiltViewModel
 class RepeatListeningViewModel @Inject constructor(
     private val repeatListeningRepository: RepeatListeningRepository,
-    private val ttsCtrl: TtsPlaybackController,
+    private val ttsPlaybackController: TtsPlaybackController,
     qaDataManager: QaDataManager,
-    private val progress: MemorizeTestProgressTracker,
+    private val progressTracker: MemorizeTestProgressTracker,
     private val playbackPreferences: PlaybackPreferences,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
 ) : BaseMemorizationViewModel<RepeatListeningUiState>(
     coordinator = coordinator,
-    ttsPlaybackController = ttsCtrl,
-    progressTracker = progress,
+    ttsPlaybackController = ttsPlaybackController,
+    progressTracker = progressTracker,
     appLogger = appLogger,
     qaDataManager = qaDataManager
 ) {
@@ -55,8 +55,8 @@ class RepeatListeningViewModel @Inject constructor(
     override suspend fun startMode() {
         try {
             _uiState.update { it.copy(isPlaying = true, resumeSentenceIndex = null) }
-            ttsCtrl.stopTts()
-            ttsCtrl.clearHighlight()
+            ttsPlaybackController.stopTts()
+            ttsPlaybackController.clearHighlight()
             startRepeatListening()
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
@@ -121,19 +121,19 @@ class RepeatListeningViewModel @Inject constructor(
             is MemorizeTestEvent.Highlight -> {
                 if (event.index != null) {
                     val sentence = getSentenceFromAnswer(event.index, isKorean = false)
-                    ttsCtrl.setAnswerHighlightIndex(event.index, sentence)
+                    ttsPlaybackController.setAnswerHighlightIndex(event.index, sentence)
                 } else {
-                    ttsCtrl.clearHighlight()
+                    ttsPlaybackController.clearHighlight()
                 }
             }
             is MemorizeTestEvent.KoreanHighlight -> {
                 if (event.index != null) {
                     val koSentence = getSentenceFromAnswer(event.index, isKorean = true)
                     val enSentence = getSentenceFromAnswer(event.index, isKorean = false)
-                    ttsCtrl.setAnswerKoHighlightIndex(event.index, koSentence)
-                    ttsCtrl.setAnswerHighlightIndex(event.index, enSentence)
+                    ttsPlaybackController.setAnswerKoHighlightIndex(event.index, koSentence)
+                    ttsPlaybackController.setAnswerHighlightIndex(event.index, enSentence)
                 } else {
-                    ttsCtrl.clearHighlight()
+                    ttsPlaybackController.clearHighlight()
                 }
             }
             is MemorizeTestEvent.Completed -> {
@@ -155,8 +155,8 @@ class RepeatListeningViewModel @Inject constructor(
                 qaDataManager.nextQaItem()
                 _uiState.update { it.copy(isCardFlipped = false) }
                 coordinator.updateMode(CurrentMode.REPEAT_LISTENING)
-                ttsCtrl.stopTts()
-                ttsCtrl.clearHighlight()
+                ttsPlaybackController.stopTts()
+                ttsPlaybackController.clearHighlight()
                 startRepeatListening()
             } else {
                 stop()

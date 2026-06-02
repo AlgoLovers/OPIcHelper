@@ -54,16 +54,7 @@ abstract class BaseMemorizationViewModel<T>(
         modeJob = null
         onStop()
         coordinator.releaseMode()
-
-        viewModelScope.launch {
-            ttsPlaybackController?.stopTts()
-            ttsPlaybackController?.clearHighlight()
-            try {
-                progressTracker?.persistChangedProgress()
-            } catch (e: Exception) {
-                appLogger.e("BaseMemorizationVM", "진행상황 저장 실패", e)
-            }
-        }
+        cleanupAndPersist()
     }
 
     fun onLevelChanged() {
@@ -71,13 +62,17 @@ abstract class BaseMemorizationViewModel<T>(
         modeJob = null
         coordinator.releaseMode()
         _uiState.value = resetUiState()
+        cleanupAndPersist()
+    }
+
+    private fun cleanupAndPersist() {
         viewModelScope.launch {
             ttsPlaybackController?.stopTts()
             ttsPlaybackController?.clearHighlight()
             try {
                 progressTracker?.persistChangedProgress()
             } catch (e: Exception) {
-                appLogger.e("BaseMemorizationVM", "레벨 변경 시 진행상황 저장 실패", e)
+                appLogger.e("BaseMemorizationVM", "진행상황 저장 실패", e)
             }
         }
     }

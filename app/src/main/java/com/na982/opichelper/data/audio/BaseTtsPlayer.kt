@@ -24,6 +24,8 @@ abstract class BaseTtsPlayer(
         private const val IS_SPEAKING_POLL_INTERVAL_MS = 50L
         private const val IS_SPEAKING_MAX_POLLS = 40
         private const val ENGINE_SETTLE_DELAY_MS = 150L
+        private const val SPEAK_START_TIMEOUT_MS = 2000L
+        private const val SPEAK_COMPLETION_TIMEOUT_MS = 30000L
     }
 
     @Volatile
@@ -127,7 +129,7 @@ abstract class BaseTtsPlayer(
                     return@withLock TtsSpeakResult.Error("speak() 반환 ERROR")
                 }
 
-                val startDeadline = System.currentTimeMillis() + 2000
+                val startDeadline = System.currentTimeMillis() + SPEAK_START_TIMEOUT_MS
                 while (!started && System.currentTimeMillis() < startDeadline) {
                     kotlinx.coroutines.delay(50)
                 }
@@ -139,7 +141,7 @@ abstract class BaseTtsPlayer(
                 }
 
                 try {
-                    kotlinx.coroutines.withTimeout(30000L) {
+                    kotlinx.coroutines.withTimeout(SPEAK_COMPLETION_TIMEOUT_MS) {
                         completionDeferred.await()
                     }
                 } catch (e: kotlinx.coroutines.TimeoutCancellationException) {

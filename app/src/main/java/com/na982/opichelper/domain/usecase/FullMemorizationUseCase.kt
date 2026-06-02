@@ -38,7 +38,7 @@ class FullMemorizationUseCase @Inject constructor(
     private val audioRecorder: AudioRecorder,
     private val qaDataManager: QaDataManager,
     private val recordingTimeManager: RecordingTimeManager,
-    private val logger: AppLogger
+    private val appLogger: AppLogger
 ) : java.io.Closeable {
 
     companion object {
@@ -90,7 +90,7 @@ class FullMemorizationUseCase @Inject constructor(
                 audioRecorder.startRecording(recordingPath)
             }
         } catch (e: Exception) {
-            logger.e("FullMemorizationUseCase", "통암기 테스트 시작 실패", e)
+            appLogger.e("FullMemorizationUseCase", "통암기 테스트 시작 실패", e)
             _state.value = FullMemorizationState.Idle
             _highlightIndex.value = null
         }
@@ -103,7 +103,7 @@ class FullMemorizationUseCase @Inject constructor(
                 _state.value = FullMemorizationState.WithFile(hasRecording = true)
             }
         } catch (e: Exception) {
-            logger.e("FullMemorizationUseCase", "녹음 종료 실패", e)
+            appLogger.e("FullMemorizationUseCase", "녹음 종료 실패", e)
             _state.value = FullMemorizationState.Idle
         }
     }
@@ -151,7 +151,7 @@ class FullMemorizationUseCase @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.e("FullMemorizationUseCase", "녹음 재생 실패", e)
+            appLogger.e("FullMemorizationUseCase", "녹음 재생 실패", e)
             _state.value = FullMemorizationState.WithFile(hasRecording = true)
             _highlightIndex.value = null
         }

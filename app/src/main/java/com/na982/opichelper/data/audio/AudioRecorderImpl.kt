@@ -14,6 +14,12 @@ import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.manager.AppLogger
 
 class AudioRecorderImpl(private val context: Context, private val appLogger: AppLogger) : AudioRecorder {
+
+    companion object {
+        private const val AUDIO_ENCODING_BIT_RATE = 128000
+        private const val AUDIO_SAMPLING_RATE = 44100
+    }
+
     private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
 
     @Volatile private var recorder: MediaRecorder? = null
@@ -47,8 +53,8 @@ class AudioRecorderImpl(private val context: Context, private val appLogger: App
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setAudioEncodingBitRate(128000)
-                setAudioSamplingRate(44100)
+                setAudioEncodingBitRate(AUDIO_ENCODING_BIT_RATE)
+                setAudioSamplingRate(AUDIO_SAMPLING_RATE)
                 setOutputFile(outputFile.absolutePath)
                 prepare()
                 start()

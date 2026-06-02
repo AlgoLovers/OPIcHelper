@@ -23,15 +23,15 @@ data class EnglishWritingTestUiState(
 @HiltViewModel
 class EnglishWritingTestViewModel @Inject constructor(
     private val englishWritingTestRepository: EnglishWritingTestRepository,
-    private val ttsCtrl: TtsPlaybackController,
+    private val ttsPlaybackController: TtsPlaybackController,
     qaDataManager: QaDataManager,
-    private val progress: MemorizeTestProgressTracker,
+    private val progressTracker: MemorizeTestProgressTracker,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
 ) : BaseMemorizationViewModel<EnglishWritingTestUiState>(
     coordinator = coordinator,
-    ttsPlaybackController = ttsCtrl,
-    progressTracker = progress,
+    ttsPlaybackController = ttsPlaybackController,
+    progressTracker = progressTracker,
     appLogger = appLogger,
     qaDataManager = qaDataManager
 ) {
@@ -47,8 +47,8 @@ class EnglishWritingTestViewModel @Inject constructor(
 
     override suspend fun startMode() {
         try {
-            ttsCtrl.stopTts()
-            ttsCtrl.clearHighlight()
+            ttsPlaybackController.stopTts()
+            ttsPlaybackController.clearHighlight()
             startEnglishWritingTest()
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
@@ -106,17 +106,17 @@ class EnglishWritingTestViewModel @Inject constructor(
                 if (event.index != null) {
                     val koSentence = getSentenceFromAnswer(event.index, isKorean = true)
                     val enSentence = getSentenceFromAnswer(event.index, isKorean = false)
-                    ttsCtrl.setAnswerKoHighlightIndex(event.index, koSentence)
-                    ttsCtrl.setAnswerHighlightIndex(event.index, enSentence)
+                    ttsPlaybackController.setAnswerKoHighlightIndex(event.index, koSentence)
+                    ttsPlaybackController.setAnswerHighlightIndex(event.index, enSentence)
                 } else {
-                    ttsCtrl.clearHighlight()
+                    ttsPlaybackController.clearHighlight()
                 }
             }
             is MemorizeTestEvent.RecordingHighlight -> {
                 if (event.index != null) {
-                    ttsCtrl.setRecordingHighlightIndex(event.index)
+                    ttsPlaybackController.setRecordingHighlightIndex(event.index)
                 } else {
-                    ttsCtrl.clearHighlight()
+                    ttsPlaybackController.clearHighlight()
                 }
             }
             is MemorizeTestEvent.RecordingStateChange -> {

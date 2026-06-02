@@ -23,7 +23,7 @@ import javax.inject.Singleton
 class TtsPlaybackControllerImpl @Inject constructor(
     private val ttsOrchestrator: TtsOrchestrator,
     private val highlightStateHolder: HighlightStateHolder,
-    private val logger: AppLogger
+    private val appLogger: AppLogger
 ) : TtsPlaybackController, java.io.Closeable {
     companion object {
         private const val MERGED_AUDIO_DELAY_MS = 500L
@@ -71,7 +71,7 @@ class TtsPlaybackControllerImpl @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
+                appLogger.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
                     _isQuestionPlaying.value = false
@@ -96,7 +96,7 @@ class TtsPlaybackControllerImpl @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
+                appLogger.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
                     _isAnswerPlaying.value = false
@@ -137,7 +137,7 @@ class TtsPlaybackControllerImpl @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
+                appLogger.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
                     _isQuestionPlaying.value = false
@@ -183,7 +183,7 @@ class TtsPlaybackControllerImpl @Inject constructor(
             stopTts()
             ttsOrchestrator.releaseAllPlayers()
         } catch (e: Exception) {
-            logger.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
+            appLogger.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
         }
     }
 

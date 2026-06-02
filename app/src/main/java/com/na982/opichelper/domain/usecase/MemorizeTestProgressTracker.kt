@@ -19,7 +19,7 @@ import javax.inject.Singleton
 @Singleton
 class MemorizeTestProgressTracker @Inject constructor(
     private val progressPersistenceService: ProgressPersistenceService,
-    private val logger: AppLogger
+    private val appLogger: AppLogger
 ) {
     private val mutex = Mutex()
 
@@ -56,7 +56,7 @@ class MemorizeTestProgressTracker @Inject constructor(
                 _hasProgress.value = scriptProgressMap.isNotEmpty()
             }
         } catch (e: Exception) {
-            logger.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
+            appLogger.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
             mutex.withLock {
                 _progressMap.value = emptyMap()
                 _hasProgress.value = false
@@ -141,7 +141,7 @@ class MemorizeTestProgressTracker @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
+            appLogger.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
         }
     }
     
@@ -160,7 +160,7 @@ class MemorizeTestProgressTracker @Inject constructor(
 
             progressPersistenceService.clearCategoryProgress(category, scriptIndex, memorizeLevel)
         } catch (e: Exception) {
-            logger.e("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제 실패", e)
+            appLogger.e("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제 실패", e)
         }
     }
     
@@ -175,7 +175,7 @@ class MemorizeTestProgressTracker @Inject constructor(
                 _hasProgress.value = false
             }
         } catch (e: Exception) {
-            logger.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)
+            appLogger.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)
         }
     }
 } 

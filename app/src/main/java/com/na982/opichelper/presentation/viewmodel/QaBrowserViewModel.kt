@@ -1,5 +1,6 @@
 package com.na982.opichelper.presentation.viewmodel
 
+import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.QaDataManager
@@ -221,7 +222,7 @@ class QaBrowserViewModel @Inject constructor(
             val currentItem = qaDataManager.getCurrentQaItem()
             if (currentItem != null) {
                 val answerText = getCurrentAnswer(currentItem)
-                val totalSentences = answerText.split(".").size
+                val totalSentences = SentenceSplitter.split(answerText).size
                 val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)
                 val currentSentenceIndex = currentProgress?.currentSentenceIndex ?: 0
 

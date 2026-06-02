@@ -154,7 +154,7 @@ class MainActivity : ComponentActivity() {
             })
 
             LaunchedEffect(Unit) {
-                qaVm.uiState.collect { state ->
+                qaVm.uiState.collect { _ ->
                     pvm.setHasNextItem(qaVm.hasNextQaItem())
                 }
             }
@@ -192,7 +192,7 @@ class MainActivity : ComponentActivity() {
     private fun setPipParams() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(5, 3))
+                .setAspectRatio(PIP_ASPECT_RATIO)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 params.setAutoEnterEnabled(false)
             }
@@ -204,7 +204,7 @@ class MainActivity : ComponentActivity() {
     private fun enterPipMode() {
         try {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(5, 3))
+                .setAspectRatio(PIP_ASPECT_RATIO)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 params.setAutoEnterEnabled(true)
             }
@@ -338,7 +338,7 @@ class MainActivity : ComponentActivity() {
     private fun updatePipAutoEnter(isPlaying: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(5, 3))
+                .setAspectRatio(PIP_ASPECT_RATIO)
                 .setAutoEnterEnabled(isPlaying)
             setPictureInPictureParams(params.build())
         }
@@ -349,7 +349,7 @@ class MainActivity : ComponentActivity() {
         if (!isInPictureInPictureMode) return
 
         val params = android.app.PictureInPictureParams.Builder()
-            .setAspectRatio(android.util.Rational(5, 3))
+            .setAspectRatio(PIP_ASPECT_RATIO)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             params.setAutoEnterEnabled(isPlaying)
@@ -421,5 +421,6 @@ class MainActivity : ComponentActivity() {
         const val ACTION_PIP_STOP = "com.na982.opichelper.PIP_STOP"
         const val ACTION_PIP_REPEAT = "com.na982.opichelper.PIP_REPEAT"
         const val ACTION_PIP_NEXT = "com.na982.opichelper.PIP_NEXT"
+        private val PIP_ASPECT_RATIO = android.util.Rational(5, 3)
     }
 }
