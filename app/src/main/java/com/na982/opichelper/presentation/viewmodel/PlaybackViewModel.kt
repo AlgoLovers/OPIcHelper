@@ -77,15 +77,7 @@ class PlaybackViewModel @Inject constructor(
     @Volatile
     private var _hasNextItem: Boolean = false
     @Volatile
-    private var _repeatQuestionCallback: (() -> Unit)? = null
-    @Volatile
-    private var _repeatAnswerCallback: (() -> Unit)? = null
-    @Volatile
-    private var _nextCallback: (() -> Unit)? = null
-    @Volatile
-    private var _repeatMemorizationCallback: (() -> Unit)? = null
-    @Volatile
-    private var _nextAndRestartCallback: (() -> Unit)? = null
+    private var _actionListener: PlaybackActionListener? = null
     @Volatile
     internal var lastMemorizationGroup: ModeGroup? = null
 
@@ -279,11 +271,7 @@ class PlaybackViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        _repeatQuestionCallback = null
-        _repeatAnswerCallback = null
-        _nextCallback = null
-        _repeatMemorizationCallback = null
-        _nextAndRestartCallback = null
+        _actionListener = null
         ttsPlaybackController.cleanupTts()
         playMergedFileUseCase.stop()
         playMergedFileUseCase.release()
@@ -318,29 +306,22 @@ class PlaybackViewModel @Inject constructor(
         }
     }
 
-    private var _stopMemorizationCallback: (() -> Unit)? = null
-
-    fun setStopMemorizationCallback(callback: () -> Unit) {
-        _stopMemorizationCallback = callback
+    fun setActionListener(listener: PlaybackActionListener) {
+        _actionListener = listener
     }
 
-    fun setRepeatQuestionCallback(callback: () -> Unit) { _repeatQuestionCallback = callback }
-    fun setRepeatAnswerCallback(callback: () -> Unit) { _repeatAnswerCallback = callback }
-    fun setNextCallback(callback: () -> Unit) { _nextCallback = callback }
-    fun setRepeatMemorizationCallback(callback: () -> Unit) { _repeatMemorizationCallback = callback }
-    fun setNextAndRestartCallback(callback: () -> Unit) { _nextAndRestartCallback = callback }
     fun setHasNextItem(hasNext: Boolean) { _hasNextItem = hasNext }
 
     fun repeatPlayback() {
         wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
         if (lastMemorizationGroup != null) {
-            _repeatMemorizationCallback?.invoke()
+            _actionListener?.onRepeatMemorization()
             return
         }
         when (lastPlayedType) {
-            LastPlayedType.QUESTION -> _repeatQuestionCallback?.invoke()
-            LastPlayedType.ANSWER -> _repeatAnswerCallback?.invoke()
+            LastPlayedType.QUESTION -> _actionListener?.onRepeatQuestion()
+            LastPlayedType.ANSWER -> _actionListener?.onRepeatAnswer()
             LastPlayedType.NONE -> {}
         }
     }
@@ -349,17 +330,17 @@ class PlaybackViewModel @Inject constructor(
         wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
         if (lastMemorizationGroup != null) {
-            _nextAndRestartCallback?.invoke()
+            _actionListener?.onNextAndRestart()
             return
         }
-        _nextCallback?.invoke()
+        _actionListener?.onNext()
     }
 
     fun stopPlayback() {
         wasStoppedByUser = true
         _pipState.update { it.copy(hasCompleted = false) }
         if (coordinator.isRunning.value) {
-            _stopMemorizationCallback?.invoke()
+            _actionListener?.onStopMemorization()
         } else {
             ttsPlaybackController.stopTts()
         }

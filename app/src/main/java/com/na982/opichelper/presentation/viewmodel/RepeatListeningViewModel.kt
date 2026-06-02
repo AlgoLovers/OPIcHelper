@@ -5,9 +5,9 @@ import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.usecase.CurrentMode
-import com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.entity.RepeatListeningData
@@ -26,7 +26,7 @@ data class RepeatListeningUiState(
 
 @HiltViewModel
 class RepeatListeningViewModel @Inject constructor(
-    private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
+    private val repeatListeningRepository: RepeatListeningRepository,
     private val ttsCtrl: TtsPlaybackController,
     private val qaDataManager: QaDataManager,
     private val progress: MemorizeTestProgressTracker,
@@ -73,7 +73,7 @@ class RepeatListeningViewModel @Inject constructor(
                 val answerText = qaDataManager.getCurrentAnswer(currentItem)
                 val totalCount = SentenceSplitter.split(answerText).size
                 if (totalCount > 0) {
-                    val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
+                    val resumeIndex = repeatListeningRepository.getResumeIndex(
                         currentItem.category, qaDataManager.getCurrentIndex(), totalCount
                     )
                     _uiState.update { it.copy(resumeSentenceIndex = resumeIndex) }
@@ -90,7 +90,7 @@ class RepeatListeningViewModel @Inject constructor(
         val currentItem = qaDataManager.getCurrentQaItem()
         if (currentItem != null) {
             val eventJob = viewModelScope.launch {
-                executeRepeatListeningUseCase.events.collect { event ->
+                repeatListeningRepository.events.collect { event ->
                     handleEvent(event)
                 }
             }
@@ -101,7 +101,7 @@ class RepeatListeningViewModel @Inject constructor(
                     koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
                     englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
                 )
-                executeRepeatListeningUseCase.execute(
+                repeatListeningRepository.executeRepeatListening(
                     data = repeatListeningData,
                     repeatCount = userPreferencesRepository.getRepeatListeningCount()
                 )

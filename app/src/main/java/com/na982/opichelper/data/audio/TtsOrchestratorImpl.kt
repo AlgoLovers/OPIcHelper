@@ -1,5 +1,9 @@
-package com.na982.opichelper.domain.audio
+package com.na982.opichelper.data.audio
 
+import com.na982.opichelper.domain.audio.SentenceSplitter
+import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsPlayer
+import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.domain.manager.AppLogger
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.CancellationException

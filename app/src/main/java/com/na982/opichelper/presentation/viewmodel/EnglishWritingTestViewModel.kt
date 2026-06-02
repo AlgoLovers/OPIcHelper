@@ -5,9 +5,9 @@ import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.CurrentMode
-import com.na982.opichelper.domain.usecase.ExecuteEnglishWritingTestUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +23,7 @@ data class EnglishWritingTestUiState(
 
 @HiltViewModel
 class EnglishWritingTestViewModel @Inject constructor(
-    private val executeEnglishWritingTestUseCase: ExecuteEnglishWritingTestUseCase,
+    private val englishWritingTestRepository: EnglishWritingTestRepository,
     private val ttsCtrl: TtsPlaybackController,
     private val qaDataManager: QaDataManager,
     private val progress: MemorizeTestProgressTracker,
@@ -71,14 +71,14 @@ class EnglishWritingTestViewModel @Inject constructor(
         val scriptIndex = qaDataManager.getCurrentIndex()
 
         val eventJob = viewModelScope.launch {
-            executeEnglishWritingTestUseCase.events.collect { event ->
+            englishWritingTestRepository.events.collect { event ->
                 handleEvent(event)
             }
         }
 
         val useCaseJob = viewModelScope.launch {
             try {
-                executeEnglishWritingTestUseCase.execute(
+                englishWritingTestRepository.executeEnglishWritingTest(
                     answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
                     answerEn = qaDataManager.getCurrentAnswer(currentItem),
                     category = currentItem.category,

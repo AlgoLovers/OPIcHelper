@@ -29,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
+import com.na982.opichelper.presentation.viewmodel.PlaybackActionListener
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
@@ -102,45 +103,52 @@ class MainActivity : ComponentActivity() {
             this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
 
-            pvm.setRepeatQuestionCallback {
-                val qaItem = qaVm.uiState.value.currentQaItem
-                if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
-            }
-            pvm.setRepeatAnswerCallback {
-                val qaItem = qaVm.uiState.value.currentQaItem
-                if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
-            }
-            pvm.setNextCallback {
-                lifecycleScope.launch {
-                    val qaItem = qaVm.nextQaItemSync()
-                    if (qaItem != null) {
-                        pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
-                    }
+            pvm.setActionListener(object : PlaybackActionListener {
+                override fun onRepeatQuestion() {
+                    val qaItem = qaVm.uiState.value.currentQaItem
+                    if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
                 }
-            }
-            pvm.setRepeatMemorizationCallback {
-                val group = pvm.lastMemorizationGroup ?: return@setRepeatMemorizationCallback
-                when (group) {
-                    ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
-                    ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
-                    ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
-                    else -> {}
+                override fun onRepeatAnswer() {
+                    val qaItem = qaVm.uiState.value.currentQaItem
+                    if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
                 }
-            }
-            pvm.setNextAndRestartCallback {
-                lifecycleScope.launch {
-                    val qaItem = qaVm.nextQaItemSync()
-                    if (qaItem != null) {
-                        val group = pvm.lastMemorizationGroup ?: return@launch
-                        when (group) {
-                            ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
-                            ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
-                            ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
-                            else -> {}
+                override fun onNext() {
+                    lifecycleScope.launch {
+                        val qaItem = qaVm.nextQaItemSync()
+                        if (qaItem != null) {
+                            pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
                         }
                     }
                 }
-            }
+                override fun onRepeatMemorization() {
+                    val group = pvm.lastMemorizationGroup ?: return
+                    when (group) {
+                        ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
+                        ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
+                        ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
+                        else -> {}
+                    }
+                }
+                override fun onNextAndRestart() {
+                    lifecycleScope.launch {
+                        val qaItem = qaVm.nextQaItemSync()
+                        if (qaItem != null) {
+                            val group = pvm.lastMemorizationGroup ?: return@launch
+                            when (group) {
+                                ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
+                                ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
+                                ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
+                                else -> {}
+                            }
+                        }
+                    }
+                }
+                override fun onStopMemorization() {
+                    repeatListeningVm.stop()
+                    englishWritingTestVm.stop()
+                    fullMemorizationVm.stop()
+                }
+            })
 
             LaunchedEffect(Unit) {
                 qaVm.uiState.collect { state ->

@@ -3,6 +3,8 @@ package com.na982.opichelper.di
 import android.app.Application
 import android.content.Context
 import com.na982.opichelper.data.audio.*
+import com.na982.opichelper.data.audio.TtsOrchestratorImpl
+import com.na982.opichelper.data.audio.TtsPlaybackControllerImpl
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
@@ -234,4 +236,8 @@ object AppModule {
     }
 
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
+
+    @Provides
+    @Singleton
+    fun provideTtsPlaybackController(impl: TtsPlaybackControllerImpl): TtsPlaybackController = impl
 } 
