@@ -2,14 +2,15 @@ package com.na982.opichelper.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import com.google.gson.Gson
 import com.na982.opichelper.domain.entity.AppExitState
 import com.na982.opichelper.domain.entity.CategoryProgress
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 
 class ProgressPersistenceServiceImpl(
-    private val context: Context
+    private val context: Context,
+    private val appLogger: AppLogger
 ) : ProgressPersistenceService {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
@@ -43,7 +44,7 @@ class ProgressPersistenceServiceImpl(
             val json = gson.toJson(appExitState)
             prefs.edit().putString(KEY_APP_EXIT_STATE, json).apply()
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "앱 종료 상태 저장 실패", e)
+            appLogger.e("ProgressPersistenceService", "앱 종료 상태 저장 실패", e)
         }
     }
 
@@ -52,7 +53,7 @@ class ProgressPersistenceServiceImpl(
             val json = prefs.getString(KEY_APP_EXIT_STATE, null)
             if (json != null) gson.fromJson(json, AppExitState::class.java) else null
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "앱 종료 상태 로드 실패", e)
+            appLogger.e("ProgressPersistenceService", "앱 종료 상태 로드 실패", e)
             null
         }
     }
@@ -66,7 +67,7 @@ class ProgressPersistenceServiceImpl(
                 apply()
             }
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "네비게이션 상태 저장 실패", e)
+            appLogger.e("ProgressPersistenceService", "네비게이션 상태 저장 실패", e)
         }
     }
 
@@ -78,7 +79,7 @@ class ProgressPersistenceServiceImpl(
                 sentenceIndex = prefs.getInt(KEY_NAV_SENTENCE_INDEX, 0)
             )
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "네비게이션 상태 로드 실패", e)
+            appLogger.e("ProgressPersistenceService", "네비게이션 상태 로드 실패", e)
             ProgressPersistenceService.NavigationState(null, -1, 0)
         }
     }
@@ -89,7 +90,7 @@ class ProgressPersistenceServiceImpl(
             val json = gson.toJson(progress)
             prefs.edit().putString(key, json).apply()
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "카테고리 진행 상황 저장 실패", e)
+            appLogger.e("ProgressPersistenceService", "카테고리 진행 상황 저장 실패", e)
         }
     }
 
@@ -99,7 +100,7 @@ class ProgressPersistenceServiceImpl(
             val json = prefs.getString(key, null)
             if (json != null) gson.fromJson(json, CategoryProgress::class.java) else null
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "카테고리 진행 상황 로드 실패", e)
+            appLogger.e("ProgressPersistenceService", "카테고리 진행 상황 로드 실패", e)
             null
         }
     }
@@ -118,7 +119,7 @@ class ProgressPersistenceServiceImpl(
             }
             progressMap
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "모든 진행 상황 로드 실패", e)
+            appLogger.e("ProgressPersistenceService", "모든 진행 상황 로드 실패", e)
             emptyMap()
         }
     }
@@ -128,7 +129,7 @@ class ProgressPersistenceServiceImpl(
             val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}_${memorizeLevel}"
             prefs.edit().remove(key).apply()
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "진행 상황 삭제 실패", e)
+            appLogger.e("ProgressPersistenceService", "진행 상황 삭제 실패", e)
         }
     }
 
@@ -142,7 +143,7 @@ class ProgressPersistenceServiceImpl(
             }
             editor.apply()
         } catch (e: Exception) {
-            Log.e("ProgressPersistenceService", "모든 진행 상황 삭제 실패", e)
+            appLogger.e("ProgressPersistenceService", "모든 진행 상황 삭제 실패", e)
         }
     }
 }

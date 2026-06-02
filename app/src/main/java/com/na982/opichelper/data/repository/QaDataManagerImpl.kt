@@ -9,7 +9,7 @@ import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,7 +22,8 @@ class QaDataManagerImpl(
     private val qaDataLoader: QaDataLoader,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val progressPersistenceService: ProgressPersistenceService,
-    private val dataSeeder: DataSeeder
+    private val dataSeeder: DataSeeder,
+    private val appLogger: AppLogger
 ) : QaDataManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var userLevelJob: Job? = null
@@ -136,7 +137,7 @@ class QaDataManagerImpl(
         if (itemsByCategory.containsKey(category)) {
             navigateTo(category, 0)
         } else {
-            Log.e("QaDataManager", "존재하지 않는 카테고리: $category")
+            appLogger.e("QaDataManager", "존재하지 않는 카테고리: $category")
         }
     }
 
@@ -181,9 +182,9 @@ class QaDataManagerImpl(
             } else {
                 _currentQaItem.value = null
                 if (items.isEmpty()) {
-                    Log.w("QaDataManager", "카테고리에 항목이 없음: $category")
+                    appLogger.w("QaDataManager", "카테고리에 항목이 없음: $category")
                 } else {
-                    Log.w("QaDataManager", "인덱스가 범위를 벗어남: $currentIndex >= ${items.size}")
+                    appLogger.w("QaDataManager", "인덱스가 범위를 벗어남: $currentIndex >= ${items.size}")
                 }
             }
         } else {

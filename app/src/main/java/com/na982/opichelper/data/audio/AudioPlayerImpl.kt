@@ -3,9 +3,9 @@ package com.na982.opichelper.data.audio
 import android.media.MediaPlayer
 import java.io.File
 import com.na982.opichelper.domain.audio.AudioPlayer
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 
-class AudioPlayerImpl : AudioPlayer {
+class AudioPlayerImpl(private val appLogger: AppLogger) : AudioPlayer {
     @Volatile private var player: MediaPlayer? = null
     private val lock = Any()
 
@@ -26,14 +26,14 @@ class AudioPlayerImpl : AudioPlayer {
                 }
 
                 setOnErrorListener { _, what, extra ->
-                    Log.e("AudioPlayerImpl", "재생 오류: what=$what, extra=$extra")
+                    appLogger.e("AudioPlayerImpl", "재생 오류: what=$what, extra=$extra")
                     stop()
                     onCompletion()
                     true
                 }
 
             } catch (e: Exception) {
-                Log.e("AudioPlayerImpl", "재생 중 오류 발생", e)
+                appLogger.e("AudioPlayerImpl", "재생 중 오류 발생", e)
                 stop()
                 onCompletion()
             }
@@ -49,7 +49,7 @@ class AudioPlayerImpl : AudioPlayer {
                 mediaPlayer.release()
             }
         } catch (e: Exception) {
-            Log.e("AudioPlayerImpl", "stop 중 오류 발생", e)
+            appLogger.e("AudioPlayerImpl", "stop 중 오류 발생", e)
         }
         player = null
     }
@@ -59,7 +59,7 @@ class AudioPlayerImpl : AudioPlayer {
             try {
                 stop()
             } catch (e: Exception) {
-                Log.e("AudioPlayerImpl", "완전한 리소스 해제 중 오류", e)
+                appLogger.e("AudioPlayerImpl", "완전한 리소스 해제 중 오류", e)
             }
         }
     }
@@ -75,7 +75,7 @@ class AudioPlayerImpl : AudioPlayer {
             mediaPlayer.prepare()
             mediaPlayer.duration
         } catch (e: Exception) {
-            Log.e("AudioPlayerImpl", "getDuration 실패: $filePath", e)
+            appLogger.e("AudioPlayerImpl", "getDuration 실패: $filePath", e)
             0
         } finally {
             mediaPlayer.release()
@@ -87,7 +87,7 @@ class AudioPlayerImpl : AudioPlayer {
         if (file.exists()) {
             play(file) { }
         } else {
-            Log.e("AudioPlayerImpl", "파일이 존재하지 않음: $filePath")
+            appLogger.e("AudioPlayerImpl", "파일이 존재하지 않음: $filePath")
         }
     }
 } 

@@ -11,7 +11,7 @@ import android.content.res.Configuration
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,6 +48,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var wakeLockController: WakeLockController
+
+    @Inject
+    lateinit var appLogger: AppLogger
 
     private var isFinishing = false
     private var playbackViewModel: PlaybackViewModel? = null
@@ -207,10 +210,10 @@ class MainActivity : ComponentActivity() {
             }
             val entered = enterPictureInPictureMode(params.build())
             if (!entered) {
-                Log.w("MainActivity", "PiP 진입 실패")
+                appLogger.w("MainActivity", "PiP 진입 실패")
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "enterPipMode 예외", e)
+            appLogger.e("MainActivity", "enterPipMode 예외", e)
         }
     }
 
@@ -276,7 +279,7 @@ class MainActivity : ComponentActivity() {
                     finish()
                 }
             } catch (e: Exception) {
-                Log.e("MainActivity", "백버튼 처리 중 오류", e)
+                appLogger.e("MainActivity", "백버튼 처리 중 오류", e)
                 super.onBackPressed()
             }
         } ?: run {
@@ -291,7 +294,7 @@ class MainActivity : ComponentActivity() {
             }
             wakeLockController.release()
         } catch (e: Exception) {
-            Log.e("MainActivity", "리소스 정리 중 오류 발생", e)
+            appLogger.e("MainActivity", "리소스 정리 중 오류 발생", e)
         }
     }
 

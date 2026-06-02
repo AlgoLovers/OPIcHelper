@@ -2,11 +2,12 @@ package com.na982.opichelper.data.manager
 
 import android.content.Context
 import android.os.PowerManager
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import com.na982.opichelper.domain.manager.WakeLockController
 
 class WakeLockControllerImpl(
-    context: Context
+    context: Context,
+    private val appLogger: AppLogger
 ) : WakeLockController {
     private val appContext = context.applicationContext
     private var wakeLock: PowerManager.WakeLock? = null
@@ -31,7 +32,7 @@ class WakeLockControllerImpl(
                 acquire(WAKELOCK_TIMEOUT_MS)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "WakeLock 획득 실패", e)
+            appLogger.e(TAG, "WakeLock 획득 실패", e)
         }
     }
 
@@ -44,7 +45,7 @@ class WakeLockControllerImpl(
             }
             wakeLock = null
         } catch (e: Exception) {
-            Log.e(TAG, "WakeLock 해제 실패", e)
+            appLogger.e(TAG, "WakeLock 해제 실패", e)
             wakeLock = null
         }
     }

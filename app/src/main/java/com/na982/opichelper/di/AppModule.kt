@@ -52,41 +52,41 @@ object AppModule {
     // Data Layer Implementations
     @Provides
     @Singleton
-    fun provideAudioRecorder(@ApplicationContext context: Context): AudioRecorder {
-        return AudioRecorderImpl(context)
+    fun provideAudioRecorder(@ApplicationContext context: Context, appLogger: AppLogger): AudioRecorder {
+        return AudioRecorderImpl(context, appLogger)
     }
     
     @Provides
     @Singleton
-    fun provideAudioPlayer(): AudioPlayer {
-        return AudioPlayerImpl()
+    fun provideAudioPlayer(appLogger: AppLogger): AudioPlayer {
+        return AudioPlayerImpl(appLogger)
     }
     
     @Provides
     @Singleton
-    fun provideRecordingAudioPlayer(): RecordingAudioPlayer {
-        return RecordingAudioPlayerImpl()
+    fun provideRecordingAudioPlayer(appLogger: AppLogger): RecordingAudioPlayer {
+        return RecordingAudioPlayerImpl(appLogger)
     }
     
     @Provides
     @Singleton
-    fun provideAudioFileManager(@ApplicationContext context: Context): AudioFileManager {
-        return AudioFileManagerImpl(context)
+    fun provideAudioFileManager(@ApplicationContext context: Context, appLogger: AppLogger): AudioFileManager {
+        return AudioFileManagerImpl(context, appLogger)
     }
     
     // TTS Players
     @Provides
     @Singleton
     @Named("google")
-    fun provideGoogleTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
-        return GoogleTtsPlayer(context)
+    fun provideGoogleTtsPlayer(@ApplicationContext context: Context, appLogger: AppLogger): TtsPlayer {
+        return GoogleTtsPlayer(context, appLogger)
     }
     
     @Provides
     @Singleton
     @Named("samsung")
-    fun provideSamsungTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
-        return SamsungTtsPlayer(context)
+    fun provideSamsungTtsPlayer(@ApplicationContext context: Context, appLogger: AppLogger): TtsPlayer {
+        return SamsungTtsPlayer(context, appLogger)
     }
     
     @Provides
@@ -102,8 +102,8 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideProgressPersistenceService(@ApplicationContext context: Context): ProgressPersistenceService {
-        return com.na982.opichelper.data.repository.ProgressPersistenceServiceImpl(context)
+    fun provideProgressPersistenceService(@ApplicationContext context: Context, appLogger: AppLogger): ProgressPersistenceService {
+        return com.na982.opichelper.data.repository.ProgressPersistenceServiceImpl(context, appLogger)
     }
     
     @Provides
@@ -112,15 +112,16 @@ object AppModule {
         qaDataLoader: QaDataLoader,
         userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
         progressPersistenceService: ProgressPersistenceService,
-        dataSeeder: DataSeeder
+        dataSeeder: DataSeeder,
+        appLogger: AppLogger
     ): QaDataManager {
-        return QaDataManagerImpl(qaDataLoader, userPreferencesRepository, progressPersistenceService, dataSeeder)
+        return QaDataManagerImpl(qaDataLoader, userPreferencesRepository, progressPersistenceService, dataSeeder, appLogger)
     }
 
     @Provides
     @Singleton
-    fun provideRecordingTimeManager(@ApplicationContext context: Context): RecordingTimeManager {
-        return RecordingTimeManagerImpl(context)
+    fun provideRecordingTimeManager(@ApplicationContext context: Context, appLogger: AppLogger): RecordingTimeManager {
+        return RecordingTimeManagerImpl(context, appLogger)
     }
     
     @Provides
@@ -129,16 +130,17 @@ object AppModule {
         audioFileManager: AudioFileManager,
         audioRecorder: AudioRecorder,
         recordingAudioPlayer: RecordingAudioPlayer,
-        recordingTimeManager: RecordingTimeManager
+        recordingTimeManager: RecordingTimeManager,
+        appLogger: AppLogger
     ): RecordingFileRepository {
-        return RecordingFileRepositoryImpl(audioFileManager, audioRecorder, recordingAudioPlayer, recordingTimeManager)
+        return RecordingFileRepositoryImpl(audioFileManager, audioRecorder, recordingAudioPlayer, recordingTimeManager, appLogger)
     }
     
     // WakeLock Controller
     @Provides
     @Singleton
-    fun provideWakeLockController(@ApplicationContext context: Context): WakeLockController {
-        return WakeLockControllerImpl(context)
+    fun provideWakeLockController(@ApplicationContext context: Context, appLogger: AppLogger): WakeLockController {
+        return WakeLockControllerImpl(context, appLogger)
     }
 
     // Logger
@@ -169,8 +171,8 @@ object AppModule {
     @Provides
     @Singleton
     @Named("asset")
-    fun provideAssetQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
-        return LeveledQaDataLoader(context)
+    fun provideAssetQaDataLoader(@ApplicationContext context: Context, appLogger: AppLogger): QaDataLoader {
+        return LeveledQaDataLoader(context, appLogger)
     }
 
     @Provides
@@ -199,14 +201,16 @@ object AppModule {
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
         recordingTimeManager: RecordingTimeManager,
-        progressPersistenceService: ProgressPersistenceService
+        progressPersistenceService: ProgressPersistenceService,
+        appLogger: AppLogger
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
             ttsOrchestrator = ttsOrchestrator,
             audioRecorder = audioRecorder,
             audioFileManager = audioFileManager,
             recordingTimeManager = recordingTimeManager,
-            progressPersistenceService = progressPersistenceService
+            progressPersistenceService = progressPersistenceService,
+            appLogger = appLogger
         )
     }
 

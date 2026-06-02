@@ -1,7 +1,7 @@
 package com.na982.opichelper.data.repository
 
 import android.content.Context
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.entity.QaItem
@@ -11,7 +11,10 @@ import com.na982.opichelper.domain.repository.QaDataLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class LeveledQaDataLoader(private val context: Context) : QaDataLoader {
+class LeveledQaDataLoader(
+    private val context: Context,
+    private val appLogger: AppLogger
+) : QaDataLoader {
 
     private val gson = Gson()
 
@@ -51,14 +54,14 @@ class LeveledQaDataLoader(private val context: Context) : QaDataLoader {
 
                         allQaItems.addAll(items)
                     } catch (e: Exception) {
-                        Log.e("LeveledQaDataLoader", "JSON 파싱 실패: $fileName", e)
+                        appLogger.e("LeveledQaDataLoader", "JSON 파싱 실패: $fileName", e)
                     }
                 }
             }
 
             allQaItems
         } catch (e: Exception) {
-            Log.e("LeveledQaDataLoader", "레벨 데이터 로딩 실패", e)
+            appLogger.e("LeveledQaDataLoader", "레벨 데이터 로딩 실패", e)
             emptyList()
         }
     }
