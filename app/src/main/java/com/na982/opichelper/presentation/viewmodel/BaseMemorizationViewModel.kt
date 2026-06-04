@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.na982.opichelper.domain.manager.AppLogger
 
@@ -61,7 +62,7 @@ abstract class BaseMemorizationViewModel<T>(
         modeJob?.cancel()
         modeJob = null
         coordinator.releaseMode()
-        _uiState.value = resetUiState()
+        _uiState.update { resetUiState() }
         cleanupAndPersist()
     }
 
