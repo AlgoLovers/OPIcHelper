@@ -292,6 +292,19 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | UserPreferencesRepository .value = 경쟁 상태 | .update {} 패턴 전환 (0144) |
 | MemorizationModeCoordinatorImpl .value = 경쟁 상태 | .update {} 패턴 전환 (0144) |
 | data/CLAUDE.md EnglishWritingTestRepositoryImpl 위반 주석 | 실제 위반 아님, 제거 (0144) |
+| BaseMemorizationViewModel.modeJob @Volatile 누락 | @Volatile 추가 (0145) |
+| PlayMergedFileUseCase playJob/checkFileJob @Volatile 누락 | @Volatile 추가 (0145) |
+| QaDataManagerImpl userLevelJob @Volatile 누락 | @Volatile 추가 (0145) |
+| WakeLockControllerImpl wakeLock @Volatile 누락 | @Volatile 추가 (0145) |
+| TtsOrchestratorImpl.stop() AtomicInteger invariant 위반 | activeSpeakCount.set(0) 제거, 자연 감소 허용 (0145) |
+| TtsPlaybackControllerImpl .value = 경쟁 상태 (20건) | .update {} 패턴 전환 (0145) |
+| TtsOrchestratorImpl .value = 경쟁 상태 (3건) | .update {} 패턴 전환 (0145) |
+| HighlightStateHolder .value = 경쟁 상태 (8건) | .update {} 패턴 전환 (0145) |
+| MemorizeTestProgressTracker .value = 경쟁 상태 (11건) | .update {} 패턴 전환 (0145) |
+| MainActivity _permissionDenied .value = | .update {} 패턴 전환 (0145) |
+| EditScriptViewModel QaDataManager 전체 의존 | QaDataLifecycle로 축소 (0145) |
+| SettingsViewModel UserPreferencesRepository 전체 의존 | UserLevelPreferences + TtsPreferences + PlaybackPreferences (0145) |
+| CurrentMode.group else catch-all | exhaustive when 전환 (0145) |
 
 ## Git 커밋 규칙
 

@@ -8,6 +8,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import com.na982.opichelper.domain.manager.AppLogger
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -52,14 +53,14 @@ class MemorizeTestProgressTracker @Inject constructor(
             }
 
             mutex.withLock {
-                _progressMap.value = scriptProgressMap
-                _hasProgress.value = scriptProgressMap.isNotEmpty()
+                _progressMap.update { scriptProgressMap }
+                _hasProgress.update { scriptProgressMap.isNotEmpty() }
             }
         } catch (e: Exception) {
             appLogger.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
             mutex.withLock {
-                _progressMap.value = emptyMap()
-                _hasProgress.value = false
+                _progressMap.update { emptyMap() }
+                _hasProgress.update { false }
             }
         }
     }
@@ -104,11 +105,11 @@ class MemorizeTestProgressTracker @Inject constructor(
                 needsSave = true
             )
 
-            _progressMap.value = currentMap
-            _hasProgress.value = currentMap.isNotEmpty()
+            _progressMap.update { currentMap }
+            _hasProgress.update { currentMap.isNotEmpty() }
         }
     }
-    
+
     /**
      * 앱 종료 시 변경된 진행 상황만 저장
      */
@@ -137,7 +138,7 @@ class MemorizeTestProgressTracker @Inject constructor(
                         val key = scriptProgress.getKey()
                         currentMap[key] = scriptProgress.toPersistable()
                     }
-                    _progressMap.value = currentMap
+                    _progressMap.update { currentMap }
                 }
             }
         } catch (e: Exception) {
@@ -154,8 +155,8 @@ class MemorizeTestProgressTracker @Inject constructor(
             mutex.withLock {
                 val currentMap = _progressMap.value.toMutableMap()
                 currentMap.remove(key)
-                _progressMap.value = currentMap
-                _hasProgress.value = currentMap.isNotEmpty()
+                _progressMap.update { currentMap }
+                _hasProgress.update { currentMap.isNotEmpty() }
             }
 
             progressPersistenceService.clearCategoryProgress(category, scriptIndex, memorizeLevel)
@@ -171,8 +172,8 @@ class MemorizeTestProgressTracker @Inject constructor(
         try {
             progressPersistenceService.clearAllProgress()
             mutex.withLock {
-                _progressMap.value = emptyMap()
-                _hasProgress.value = false
+                _progressMap.update { emptyMap() }
+                _hasProgress.update { false }
             }
         } catch (e: Exception) {
             appLogger.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)

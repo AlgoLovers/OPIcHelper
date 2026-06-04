@@ -27,6 +27,7 @@ abstract class BaseMemorizationViewModel<T>(
     protected val qaContentReader: QaContentReader
 ) : ViewModel() {
 
+    @Volatile
     protected var modeJob: Job? = null
 
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 5)

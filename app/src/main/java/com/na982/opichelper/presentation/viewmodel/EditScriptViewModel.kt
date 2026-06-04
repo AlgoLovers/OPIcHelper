@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaDataLifecycle
 import com.na982.opichelper.domain.repository.ScriptEditRepository
 import com.na982.opichelper.domain.usecase.SentencePair
 import com.na982.opichelper.domain.usecase.ValidateScriptEditUseCase
@@ -22,7 +22,7 @@ import javax.inject.Inject
 class EditScriptViewModel @Inject constructor(
     private val scriptEditRepository: ScriptEditRepository,
     private val validateScriptEditUseCase: ValidateScriptEditUseCase,
-    private val qaDataManager: QaDataManager
+    private val qaDataManager: QaDataLifecycle
 ) : ViewModel() {
 
     private val _sentencePairs = MutableStateFlow<List<SentencePair>>(emptyList())

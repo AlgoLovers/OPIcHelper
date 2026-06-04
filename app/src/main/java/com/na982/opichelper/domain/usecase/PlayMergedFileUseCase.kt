@@ -36,7 +36,9 @@ class PlayMergedFileUseCase @Inject constructor(
         private const val FILE_CHECK_RETRY_DELAY_MS = 500L
     }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    @Volatile
     private var playJob: Job? = null
+    @Volatile
     private var checkFileJob: Job? = null
 
     private val _isPlaying = MutableStateFlow(false)

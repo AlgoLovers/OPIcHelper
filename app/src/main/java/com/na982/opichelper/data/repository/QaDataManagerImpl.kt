@@ -31,6 +31,7 @@ class QaDataManagerImpl(
         private const val MIN_SEARCH_QUERY_LENGTH = 2
     }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    @Volatile
     private var userLevelJob: Job? = null
 
     private val itemsByCategory: MutableMap<String, List<QaItem>> = ConcurrentHashMap()

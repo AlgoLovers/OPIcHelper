@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.util.concurrent.atomic.AtomicInteger
 
 class TtsOrchestratorImpl(
@@ -37,13 +38,13 @@ class TtsOrchestratorImpl(
 
     private fun enterSpeaking() {
         if (activeSpeakCount.incrementAndGet() == 1) {
-            _isSpeaking.value = true
+            _isSpeaking.update { true }
         }
     }
 
     private fun exitSpeaking() {
         if (activeSpeakCount.decrementAndGet() == 0) {
-            _isSpeaking.value = false
+            _isSpeaking.update { false }
         }
     }
 
@@ -96,8 +97,6 @@ class TtsOrchestratorImpl(
 
     override fun stop() {
         try {
-            activeSpeakCount.set(0)
-            _isSpeaking.value = false
             allPlayers.forEach { it.stop() }
         } catch (e: Exception) {
             logger.e("TtsOrchestrator", "TTS 중지 실패", e)

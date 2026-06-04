@@ -21,12 +21,12 @@ presentation/
 |------|------|--------|
 | `QaBrowserViewModel.kt` | QA 데이터 탐색 | QaDataManager, UserLevelPreferences, PlaybackPreferences, MemorizeLevelPreferences, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger |
 | `PlaybackViewModel.kt` | TTS 재생, 병합 파일, PiP 제어 | TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, PlaybackPreferences, MemorizationModeCoordinator, TtsServiceController, AppLogger |
-| `RepeatListeningViewModel.kt` | 반복듣기 모드 | RepeatListeningRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator, AppLogger |
-| `EnglishWritingTestViewModel.kt` | 영작테스트 모드 | EnglishWritingTestRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger |
-| `FullMemorizationViewModel.kt` | 통암기 모드 | FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator, AppLogger |
-| `SettingsViewModel.kt` | 설정 화면 | UserPreferencesRepository, TtsOrchestrator |
+| `RepeatListeningViewModel.kt` | 반복듣기 모드 | RepeatListeningRepository, TtsPlaybackController, QaContentReader, QaNavigator, MemorizeTestProgressTracker, PlaybackPreferences, MemorizationModeCoordinator, AppLogger |
+| `EnglishWritingTestViewModel.kt` | 영작테스트 모드 | EnglishWritingTestRepository, TtsPlaybackController, QaContentReader, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger |
+| `FullMemorizationViewModel.kt` | 통암기 모드 | FullMemorizationUseCase, QaContentReader, MemorizationModeCoordinator, AppLogger |
+| `SettingsViewModel.kt` | 설정 화면 | UserLevelPreferences, TtsPreferences, PlaybackPreferences, TtsOrchestrator |
 | `OnboardingViewModel.kt` | 온보딩/PiP 가이드 상태 | OnboardingPreferences |
-| `BaseMemorizationViewModel.kt` | 암기 모드 공통 베이스 | MemorizationModeCoordinator, TtsPlaybackController?, MemorizeTestProgressTracker?, AppLogger |
+| `BaseMemorizationViewModel.kt` | 암기 모드 공통 베이스 | MemorizationModeCoordinator, TtsPlaybackController?, MemorizeTestProgressTracker?, AppLogger, QaContentReader |
 | `PlaybackActionListener.kt` | PiP/재생 액션 인터페이스 | onRepeatQuestion, onRepeatAnswer, onNext, onRepeatMemorization, onNextAndRestart, onStopMemorization |
 
 ### CurrentMode 전체 목록
