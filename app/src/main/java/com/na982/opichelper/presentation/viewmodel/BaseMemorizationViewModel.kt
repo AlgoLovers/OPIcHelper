@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
@@ -24,7 +24,7 @@ abstract class BaseMemorizationViewModel<T>(
     private val ttsPlaybackController: TtsPlaybackController?,
     private val progressTracker: MemorizeTestProgressTracker?,
     protected val appLogger: AppLogger,
-    protected val qaDataManager: QaDataManager
+    protected val qaContentReader: QaContentReader
 ) : ViewModel() {
 
     protected var modeJob: Job? = null
@@ -85,11 +85,11 @@ abstract class BaseMemorizationViewModel<T>(
     }
 
     protected fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
-        val currentItem = qaDataManager.currentQaItem.value ?: return null
+        val currentItem = qaContentReader.getCurrentQaItem() ?: return null
         val text = if (isKorean) {
-            qaDataManager.getCurrentAnswerKo(currentItem)
+            qaContentReader.getCurrentAnswerKo(currentItem)
         } else {
-            qaDataManager.getCurrentAnswer(currentItem)
+            qaContentReader.getCurrentAnswer(currentItem)
         }
         return SentenceSplitter.split(text).getOrNull(index)
     }

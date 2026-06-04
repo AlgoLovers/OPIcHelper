@@ -3,7 +3,7 @@ package com.na982.opichelper.presentation.viewmodel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.TtsPlaybackController
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.CurrentMode
@@ -24,7 +24,7 @@ data class EnglishWritingTestUiState(
 class EnglishWritingTestViewModel @Inject constructor(
     private val englishWritingTestRepository: EnglishWritingTestRepository,
     private val ttsPlaybackController: TtsPlaybackController,
-    qaDataManager: QaDataManager,
+    qaContentReader: QaContentReader,
     private val progressTracker: MemorizeTestProgressTracker,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
@@ -33,7 +33,7 @@ class EnglishWritingTestViewModel @Inject constructor(
     ttsPlaybackController = ttsPlaybackController,
     progressTracker = progressTracker,
     appLogger = appLogger,
-    qaDataManager = qaDataManager
+    qaContentReader = qaContentReader
 ) {
 
     override val _uiState = MutableStateFlow(EnglishWritingTestUiState())
@@ -60,7 +60,7 @@ class EnglishWritingTestViewModel @Inject constructor(
     }
 
     private suspend fun startEnglishWritingTest() {
-        val currentItem = qaDataManager.currentQaItem.value
+        val currentItem = qaContentReader.getCurrentQaItem()
         if (currentItem == null) {
             appLogger.e("EnglishWritingTestVM", "현재 QA 아이템이 없음")
             emitEvent("질문 데이터를 불러올 수 없습니다")
@@ -68,7 +68,7 @@ class EnglishWritingTestViewModel @Inject constructor(
             return
         }
 
-        val scriptIndex = qaDataManager.getCurrentIndex()
+        val scriptIndex = qaContentReader.getCurrentIndex()
 
         val eventJob = viewModelScope.launch {
             englishWritingTestRepository.events.collect { event ->
@@ -79,8 +79,8 @@ class EnglishWritingTestViewModel @Inject constructor(
         val useCaseJob = viewModelScope.launch {
             try {
                 englishWritingTestRepository.executeEnglishWritingTest(
-                    answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
-                    answerEn = qaDataManager.getCurrentAnswer(currentItem),
+                    answerKo = qaContentReader.getCurrentAnswerKo(currentItem),
+                    answerEn = qaContentReader.getCurrentAnswer(currentItem),
                     category = currentItem.category,
                     scriptIndex = scriptIndex
                 )

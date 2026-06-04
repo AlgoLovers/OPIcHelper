@@ -155,14 +155,9 @@ class RecordingFileRepositoryImpl(
 
     private fun findRecordingFilePath(category: String, scriptIndex: Int): String? {
         val recordingsDir = getRecordingsDirectory()
-        val files = recordingsDir.listFiles() ?: return null
-
-        for (file in files) {
-            if (file.name.startsWith("${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_") && file.name.endsWith(".m4a")) {
-                return file.absolutePath
-            }
-        }
-        return null
+        val prefix = "${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_"
+        return recordingsDir.listFiles { file -> file.name.startsWith(prefix) && file.name.endsWith(".m4a") }
+            ?.maxByOrNull { it.lastModified() }?.absolutePath
     }
 
     private fun getRecordingsDirectory(): File {

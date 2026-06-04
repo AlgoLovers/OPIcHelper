@@ -274,6 +274,24 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | BaseMemorizationViewModel modeJob private | protected 변경 (0139) |
 | SplashActivity delay(2000L) 매직넘버 | SPLASH_DELAY_MS 상수화 (0139) |
 | MutableStateFlow .value = 경쟁 상태 (4개 파일) | .update {} 패턴으로 전환 (0140) |
+| BaseMemorizationViewModel _uiState.value = → .update {} | 일관성 통일 (0141) |
+| PlaybackViewModel dead code 3개 + PlaybackState 미사용 필드 | 삭제 (0142) |
+| QaBrowserViewModel onboarding SRP 위반 | OnboardingViewModel 추출 (0142) |
+| TtsPlaybackControllerImpl stopAndMarkPaused spurious emission | 개별 필드 리셋 (0143) |
+| AudioFileManagerImpl MediaMuxer stop() 누락 | muxer.stop() 추가 (0143) |
+| AudioFileManagerImpl 무효 M4A raw byte 폴백 | 폴백 제거 (0143) |
+| PlaybackViewModel.onCleared PlayMergedFileUseCase scope 누수 | release() → close() 변경 (0143) |
+| FullMemorizationViewModel startMode() 코루틴 누적 | Job(modeJob) 자식 관리 (0143) |
+| BaseMemorizationViewModel modeJob private | protected 변경 (0143) |
+| SplashActivity delay(2000L) 매직넘버 | SPLASH_DELAY_MS 상수화 (0143) |
+| MutableStateFlow .value = 경쟁 상태 (6개 파일 추가) | .update {} 패턴 전환 (0144) |
+| FullMemorizationUseCase DEFAULT_RECORDING_TIMES 하드코딩 | 실제 문장 수로 동적 계산 (0144) |
+| RecordingFileRepositoryImpl 비결정적 파일 선택 | maxByOrNull { lastModified() } (0144) |
+| BaseMemorizationViewModel QaDataManager 전체 의존 | QaContentReader + QaNavigator 분리 (0144) |
+| MainActivity onBackPressed() deprecated | OnBackPressedDispatcher 전환 (0144) |
+| UserPreferencesRepository .value = 경쟁 상태 | .update {} 패턴 전환 (0144) |
+| MemorizationModeCoordinatorImpl .value = 경쟁 상태 | .update {} 패턴 전환 (0144) |
+| data/CLAUDE.md EnglishWritingTestRepositoryImpl 위반 주석 | 실제 위반 아님, 제거 (0144) |
 
 ## Git 커밋 규칙
 

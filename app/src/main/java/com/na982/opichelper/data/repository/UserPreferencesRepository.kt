@@ -6,6 +6,7 @@ import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.UserPreferencesRepository as DomainUserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 class UserPreferencesRepository(private val context: Context) : DomainUserPreferencesRepository {
 
@@ -25,26 +26,28 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
 
     init {
         val savedLevel = prefs.getString(KEY_USER_LEVEL, UserLevel.IH.name)
-        _userLevel.value = try {
-            UserLevel.valueOf(savedLevel ?: UserLevel.IH.name)
-        } catch (e: IllegalArgumentException) {
-            UserLevel.IH
+        _userLevel.update {
+            try {
+                UserLevel.valueOf(savedLevel ?: UserLevel.IH.name)
+            } catch (e: IllegalArgumentException) {
+                UserLevel.IH
+            }
         }
 
-        _englishTtsRate.value = prefs.getFloat(KEY_ENGLISH_TTS_RATE, 0.8f)
-        _repeatListeningCount.value = prefs.getInt(KEY_REPEAT_LISTENING_COUNT, 5)
-        _answerPlayCount.value = prefs.getInt(KEY_ANSWER_PLAY_COUNT, 1)
+        _englishTtsRate.update { prefs.getFloat(KEY_ENGLISH_TTS_RATE, 0.8f) }
+        _repeatListeningCount.update { prefs.getInt(KEY_REPEAT_LISTENING_COUNT, 5) }
+        _answerPlayCount.update { prefs.getInt(KEY_ANSWER_PLAY_COUNT, 1) }
     }
 
     override fun setUserLevel(level: UserLevel) {
-        _userLevel.value = level
+        _userLevel.update { level }
         prefs.edit().putString(KEY_USER_LEVEL, level.name).apply()
     }
 
     override fun getUserLevel(): UserLevel = _userLevel.value
 
     override fun setEnglishTtsRate(rate: Float) {
-        _englishTtsRate.value = rate
+        _englishTtsRate.update { rate }
         prefs.edit().putFloat(KEY_ENGLISH_TTS_RATE, rate).apply()
     }
 
@@ -61,14 +64,14 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
     override fun getRepeatListeningCount(): Int = _repeatListeningCount.value
 
     override fun setRepeatListeningCount(count: Int) {
-        _repeatListeningCount.value = count
+        _repeatListeningCount.update { count }
         prefs.edit().putInt(KEY_REPEAT_LISTENING_COUNT, count).apply()
     }
 
     override fun getAnswerPlayCount(): Int = _answerPlayCount.value
 
     override fun setAnswerPlayCount(count: Int) {
-        _answerPlayCount.value = count
+        _answerPlayCount.update { count }
         prefs.edit().putInt(KEY_ANSWER_PLAY_COUNT, count).apply()
     }
 

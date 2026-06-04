@@ -4,7 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
+import com.na982.opichelper.domain.repository.QaNavigator
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import com.na982.opichelper.domain.repository.PlaybackPreferences
 import com.na982.opichelper.domain.usecase.CurrentMode
@@ -28,7 +29,8 @@ data class RepeatListeningUiState(
 class RepeatListeningViewModel @Inject constructor(
     private val repeatListeningRepository: RepeatListeningRepository,
     private val ttsPlaybackController: TtsPlaybackController,
-    qaDataManager: QaDataManager,
+    qaContentReader: QaContentReader,
+    private val qaNavigator: QaNavigator,
     private val progressTracker: MemorizeTestProgressTracker,
     private val playbackPreferences: PlaybackPreferences,
     coordinator: MemorizationModeCoordinator,
@@ -38,7 +40,7 @@ class RepeatListeningViewModel @Inject constructor(
     ttsPlaybackController = ttsPlaybackController,
     progressTracker = progressTracker,
     appLogger = appLogger,
-    qaDataManager = qaDataManager
+    qaContentReader = qaContentReader
 ) {
 
     val modeCoordinator: MemorizationModeCoordinator get() = coordinator
@@ -69,13 +71,13 @@ class RepeatListeningViewModel @Inject constructor(
 
     fun refreshResumeIndex() {
         viewModelScope.launch {
-            val currentItem = qaDataManager.getCurrentQaItem()
+            val currentItem = qaContentReader.getCurrentQaItem()
             if (currentItem != null && !_uiState.value.isPlaying) {
-                val answerText = qaDataManager.getCurrentAnswer(currentItem)
+                val answerText = qaContentReader.getCurrentAnswer(currentItem)
                 val totalCount = SentenceSplitter.split(answerText).size
                 if (totalCount > 0) {
                     val resumeIndex = repeatListeningRepository.getResumeIndex(
-                        currentItem.category, qaDataManager.getCurrentIndex(), totalCount
+                        currentItem.category, qaContentReader.getCurrentIndex(), totalCount
                     )
                     _uiState.update { it.copy(resumeSentenceIndex = resumeIndex) }
                 } else {
@@ -88,7 +90,7 @@ class RepeatListeningViewModel @Inject constructor(
     }
 
     private suspend fun startRepeatListening() {
-        val currentItem = qaDataManager.getCurrentQaItem()
+        val currentItem = qaContentReader.getCurrentQaItem()
         if (currentItem != null) {
             val eventJob = viewModelScope.launch {
                 repeatListeningRepository.events.collect { event ->
@@ -98,9 +100,9 @@ class RepeatListeningViewModel @Inject constructor(
             val useCaseJob = viewModelScope.launch {
                 val repeatListeningData = RepeatListeningData(
                     category = currentItem.category,
-                    scriptIndex = qaDataManager.getCurrentIndex(),
-                    koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
-                    englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
+                    scriptIndex = qaContentReader.getCurrentIndex(),
+                    koreanAnswer = qaContentReader.getCurrentAnswerKo(currentItem),
+                    englishAnswer = qaContentReader.getCurrentAnswer(currentItem)
                 )
                 repeatListeningRepository.executeRepeatListening(
                     data = repeatListeningData,
@@ -150,9 +152,9 @@ class RepeatListeningViewModel @Inject constructor(
     private fun handleAutoAdvance() {
         viewModelScope.launch {
             coordinator.cancelEventJob()
-            val hasMore = qaDataManager.hasNextQaItem()
+            val hasMore = qaNavigator.hasNextQaItem()
             if (hasMore) {
-                qaDataManager.nextQaItem()
+                qaNavigator.nextQaItem()
                 _uiState.update { it.copy(isCardFlipped = false) }
                 coordinator.updateMode(CurrentMode.REPEAT_LISTENING)
                 ttsPlaybackController.stopTts()

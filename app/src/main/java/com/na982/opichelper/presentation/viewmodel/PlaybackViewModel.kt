@@ -354,8 +354,8 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun setFullMemorizationSentence(en: String?, ko: String?) {
-        _fullMemorizationSentenceEn.value = en
-        _fullMemorizationSentenceKo.value = ko
+        _fullMemorizationSentenceEn.update { en }
+        _fullMemorizationSentenceKo.update { ko }
     }
 
     private fun updateNotificationSentence(sentenceEn: String?, sentenceKo: String?) {

@@ -1,6 +1,7 @@
 package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.repository.RecordingFileRepository
+import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.domain.audio.AudioRecorder
@@ -45,7 +46,7 @@ class FullMemorizationUseCase @Inject constructor(
     companion object {
         private const val QUESTION_TO_RECORDING_DELAY_MS = 500L
         private const val HIGHLIGHT_START_DELAY_MS = 1200L
-        private val DEFAULT_RECORDING_TIMES = List(5) { 2000L }
+        private const val DEFAULT_SENTENCE_DURATION_MS = 2000L
     }
     private val _highlightIndex = MutableStateFlow<Int?>(null)
     val highlightIndex: StateFlow<Int?> = _highlightIndex.asStateFlow()
@@ -126,7 +127,9 @@ class FullMemorizationUseCase @Inject constructor(
                     val times = if (recordingTimeManager.hasRecordingTimes(category, scriptIndex)) {
                         recordingTimeManager.getAllRecordingTimes(category, scriptIndex)
                     } else {
-                        DEFAULT_RECORDING_TIMES
+                        val answerText = qaContentReader.getCurrentAnswer(qaItem)
+                        val sentenceCount = SentenceSplitter.split(answerText).size
+                        List(sentenceCount) { DEFAULT_SENTENCE_DURATION_MS }
                     }
 
                     val highlightJob = launch {

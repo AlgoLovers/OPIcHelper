@@ -12,6 +12,7 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import com.na982.opichelper.domain.manager.AppLogger
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -94,6 +95,33 @@ class MainActivity : ComponentActivity() {
 
         registerPipActionReceiver()
         setPipParams()
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                navController?.let { controller ->
+                    try {
+                        if (controller.previousBackStackEntry != null) {
+                            isEnabled = false
+                            onBackPressedDispatcher.onBackPressed()
+                            isEnabled = true
+                        } else {
+                            playbackViewModel?.cleanupAllTtsSync()
+                            cleanupAllResources()
+                            finish()
+                        }
+                    } catch (e: Exception) {
+                        appLogger.e("MainActivity", "백버튼 처리 중 오류", e)
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                        isEnabled = true
+                    }
+                } ?: run {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
 
         setContent {
             val navController = rememberNavController()
@@ -265,26 +293,6 @@ class MainActivity : ComponentActivity() {
         playbackViewModel?.cleanupAllTtsSync()
         unregisterPipActionReceiver()
         cleanupAllResources()
-    }
-
-    @Suppress("DEPRECATION")
-    override fun onBackPressed() {
-        navController?.let { controller ->
-            try {
-                if (controller.previousBackStackEntry != null) {
-                    super.onBackPressed()
-                } else {
-                    playbackViewModel?.cleanupAllTtsSync()
-                    cleanupAllResources()
-                    finish()
-                }
-            } catch (e: Exception) {
-                appLogger.e("MainActivity", "백버튼 처리 중 오류", e)
-                super.onBackPressed()
-            }
-        } ?: run {
-            super.onBackPressed()
-        }
     }
 
     private fun cleanupAllResources() {

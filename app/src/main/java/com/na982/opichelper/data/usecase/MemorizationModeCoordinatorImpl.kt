@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.update
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,7 +36,7 @@ class MemorizationModeCoordinatorImpl @Inject constructor() : MemorizationModeCo
     override fun requestMode(mode: CurrentMode): Boolean = synchronized(_lock) {
         val result = _currentMode.compareAndSet(CurrentMode.NONE, mode)
         if (result) {
-            _isRunning.value = true
+            _isRunning.update { true }
             _owner.set(mode.group)
         }
         return result
@@ -43,13 +44,13 @@ class MemorizationModeCoordinatorImpl @Inject constructor() : MemorizationModeCo
 
     override fun updateMode(mode: CurrentMode) = synchronized(_lock) {
         if (_isRunning.value && _currentMode.value.group == mode.group && _owner.get() == mode.group) {
-            _currentMode.value = mode
+            _currentMode.update { mode }
         }
     }
 
     override fun releaseMode() = synchronized(_lock) {
-        _currentMode.value = CurrentMode.NONE
-        _isRunning.value = false
+        _currentMode.update { CurrentMode.NONE }
+        _isRunning.update { false }
         _owner.set(ModeGroup.NONE)
         activeJob?.cancel()
         activeJob = null

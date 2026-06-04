@@ -53,7 +53,7 @@ data/
 | `RecordingFileRepositoryImpl.kt` | 녹음 파일 CRUD, 재생 | 파일 생성 시 카테고리/인덱스 기반 경로. currentRecordingPath/currentPlayingPath 동기화 미비 |
 | `RecordingTimeManagerImpl.kt` | 문장별 녹음 시간 저장/조회 (recording_times) | Gson으로 Long 리스트 직렬화 |
 | `RepeatListeningRepositoryImpl.kt` | 반복듣기: 한국어 TTS → 영어 TTS N회 반복 | SharedFlow\<MemorizeTestEvent\>로 이벤트 발행. ProgressPersistenceService로 진행상황 영속화 |
-| `EnglishWritingTestRepositoryImpl.kt` | 영작테스트: 한국어 TTS → 녹음 반복 | SharedFlow\<MemorizeTestEvent\>로 이벤트 발행. **아키텍처 위반**: QaDataManager(구현체) 직접 import. 병합은 AudioFileManager에 위임 |
+| `EnglishWritingTestRepositoryImpl.kt` | 영작테스트: 한국어 TTS → 녹음 반복 | SharedFlow\<MemorizeTestEvent\>로 이벤트 발행. 병합은 AudioFileManager에 위임 |
 | `AudioFileManagerImpl.kt` | 오디오 파일 병합/저장/삭제 | mergeAndSaveAudioFiles()는 폴백 전략 3단계 (mergeWithMediaCodec → mergeWithHeaderAnalysis → 파일 연결). mergeAudioFiles()는 폴백 없이 MediaCodec만 사용 |
 
 ## SharedPreferences 키 맵
@@ -66,6 +66,5 @@ data/
 
 ## 아키텍처 규칙
 - Domain 인터페이스와 entity만 import. Domain 구현체(UseCase, QaDataManager, Manager)를 직접 import하지 않음
-- **현재 위반**: EnglishWritingTestRepositoryImpl이 QaDataManager(구현체) 직접 참조
 - 모든 싱글톤 바인딩은 `di/AppModule.kt`에서 처리
 - Android Context가 필요한 클래스는 AppModule의 `@Provides`에서 생성하거나 `@Inject constructor`로 주입

@@ -1,7 +1,7 @@
 package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.FullMemorizationState
@@ -26,7 +26,7 @@ data class FullMemorizationUiState(
 @HiltViewModel
 class FullMemorizationViewModel @Inject constructor(
     private val fullMemorizationUseCase: FullMemorizationUseCase,
-    qaDataManager: QaDataManager,
+    qaContentReader: QaContentReader,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
 ) : BaseMemorizationViewModel<FullMemorizationUiState>(
@@ -34,7 +34,7 @@ class FullMemorizationViewModel @Inject constructor(
     ttsPlaybackController = null,
     progressTracker = null,
     appLogger = appLogger,
-    qaDataManager = qaDataManager
+    qaContentReader = qaContentReader
 ) {
 
     override val _uiState = MutableStateFlow(FullMemorizationUiState())
@@ -45,8 +45,8 @@ class FullMemorizationViewModel @Inject constructor(
         try {
             refreshRecordingStatus()
 
-            val category = qaDataManager.getCurrentCategory() ?: ""
-            val scriptIndex = qaDataManager.getCurrentIndex()
+            val category = qaContentReader.getCurrentCategory() ?: ""
+            val scriptIndex = qaContentReader.getCurrentIndex()
 
             val modeContext = coroutineContext
             val collectJob = Job(modeJob)
