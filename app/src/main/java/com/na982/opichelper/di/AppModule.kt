@@ -122,6 +122,22 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideQaContentReader(manager: QaDataManager): com.na982.opichelper.domain.repository.QaContentReader = manager
+
+    @Provides
+    @Singleton
+    fun provideQaNavigator(manager: QaDataManager): com.na982.opichelper.domain.repository.QaNavigator = manager
+
+    @Provides
+    @Singleton
+    fun provideQaSearch(manager: QaDataManager): com.na982.opichelper.domain.repository.QaSearch = manager
+
+    @Provides
+    @Singleton
+    fun provideQaDataLifecycle(manager: QaDataManager): com.na982.opichelper.domain.repository.QaDataLifecycle = manager
+
+    @Provides
+    @Singleton
     fun provideRecordingTimeManager(@ApplicationContext context: Context, appLogger: AppLogger): RecordingTimeManager {
         return RecordingTimeManagerImpl(context, appLogger)
     }
@@ -284,5 +300,13 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideMemorizationStateObserver(coordinator: MemorizationModeCoordinator): com.na982.opichelper.domain.usecase.MemorizationStateObserver = coordinator
+
+    @Provides
+    @Singleton
     fun provideTtsPlaybackController(impl: TtsPlaybackControllerImpl): TtsPlaybackController = impl
+
+    @Provides
+    @Singleton
+    fun provideTtsHighlightController(controller: TtsPlaybackController): TtsHighlightController = controller
 } 

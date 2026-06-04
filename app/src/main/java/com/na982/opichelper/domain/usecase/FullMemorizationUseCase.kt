@@ -4,7 +4,7 @@ import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.domain.audio.AudioRecorder
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +36,7 @@ class FullMemorizationUseCase @Inject constructor(
     private val recordingFileRepository: RecordingFileRepository,
     private val ttsOrchestrator: TtsOrchestrator,
     private val audioRecorder: AudioRecorder,
-    private val qaDataManager: QaDataManager,
+    private val qaContentReader: QaContentReader,
     private val recordingTimeManager: RecordingTimeManager,
     private val appLogger: AppLogger
 ) : java.io.Closeable {
@@ -69,7 +69,7 @@ class FullMemorizationUseCase @Inject constructor(
         try {
             _state.value = FullMemorizationState.QuestionPlaying
 
-            val qaItem = qaDataManager.getCurrentQaItem()
+            val qaItem = qaContentReader.getCurrentQaItem()
             if (qaItem != null) {
                 val result = ttsOrchestrator.speakWithHighlight(
                     text = qaItem.questionEn,
@@ -110,9 +110,9 @@ class FullMemorizationUseCase @Inject constructor(
 
     suspend fun playRecordingWithHighlight() = mutex.withLock {
         try {
-            val qaItem = qaDataManager.getCurrentQaItem() ?: return@withLock
+            val qaItem = qaContentReader.getCurrentQaItem() ?: return@withLock
             val category = qaItem.category
-            val scriptIndex = qaDataManager.getCurrentIndex()
+            val scriptIndex = qaContentReader.getCurrentIndex()
 
             if (!recordingFileRepository.hasRecordingFile(category, scriptIndex)) return@withLock
 
@@ -158,18 +158,18 @@ class FullMemorizationUseCase @Inject constructor(
     }
 
     suspend fun hasRecording() = mutex.withLock {
-        val qaItem = qaDataManager.getCurrentQaItem()
+        val qaItem = qaContentReader.getCurrentQaItem()
         if (qaItem != null) {
-            recordingFileRepository.hasRecordingFile(qaItem.category, qaDataManager.getCurrentIndex())
+            recordingFileRepository.hasRecordingFile(qaItem.category, qaContentReader.getCurrentIndex())
         } else {
             false
         }
     }
 
     suspend fun clearRecording() = mutex.withLock {
-        val qaItem = qaDataManager.getCurrentQaItem()
+        val qaItem = qaContentReader.getCurrentQaItem()
         if (qaItem != null) {
-            recordingFileRepository.deleteRecordingFile(qaItem.category, qaDataManager.getCurrentIndex())
+            recordingFileRepository.deleteRecordingFile(qaItem.category, qaContentReader.getCurrentIndex())
         }
     }
 

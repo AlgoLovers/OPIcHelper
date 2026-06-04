@@ -3,7 +3,7 @@ package com.na982.opichelper.domain.usecase
 import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.repository.AudioFileManager
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ import javax.inject.Singleton
 class PlayMergedFileUseCase @Inject constructor(
     private val audioPlayer: AudioPlayer,
     private val audioFileManager: AudioFileManager,
-    private val qaDataManager: QaDataManager,
+    private val qaContentReader: QaContentReader,
     private val recordingTimeManager: RecordingTimeManager
 ) : java.io.Closeable {
 
@@ -51,9 +51,9 @@ class PlayMergedFileUseCase @Inject constructor(
         playJob?.cancel()
         playJob = scope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem() ?: return@launch
+                val currentItem = qaContentReader.getCurrentQaItem() ?: return@launch
                 val category = currentItem.category
-                val scriptIndex = qaDataManager.getCurrentIndex()
+                val scriptIndex = qaContentReader.getCurrentIndex()
                 val mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
 
                 if (mergedFile == null || !mergedFile.exists()) return@launch
@@ -76,7 +76,7 @@ class PlayMergedFileUseCase @Inject constructor(
         _isPlaying.value = true
         audioPlayer.playAudio(mergedFile.absolutePath)
 
-        val answerText = qaDataManager.getCurrentAnswer(qaDataManager.getCurrentQaItem() ?: return)
+        val answerText = qaContentReader.getCurrentAnswer(qaContentReader.getCurrentQaItem() ?: return)
         val sentences = SentenceSplitter.split(answerText)
 
         for (i in sentences.indices) {
@@ -121,9 +121,9 @@ class PlayMergedFileUseCase @Inject constructor(
     fun checkFile() {
         checkFileJob?.cancel()
         checkFileJob = scope.launch {
-            val currentItem = qaDataManager.getCurrentQaItem() ?: return@launch
+            val currentItem = qaContentReader.getCurrentQaItem() ?: return@launch
             val category = currentItem.category
-            val scriptIndex = qaDataManager.getCurrentIndex()
+            val scriptIndex = qaContentReader.getCurrentIndex()
 
             var exists = false
             var mergedFile: File? = null

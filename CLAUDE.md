@@ -253,6 +253,14 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | !! 강제 언랩 3곳 | 안전한 패턴 교체 (0135) |
 | 매직넘버 20+ | companion object 상수화 (0135) |
 | getSentenceFromAnswer() 3곳 중복 | BaseMemorizationViewModel로 이동 (0135) |
+| 매직넘버 15+ (Unicode 범위, TTS 속도, 단어수 임계값, 버퍼 크기, 검색어 길이) | companion object 상수화 (0136) |
+| 파일명 접두어 3개 파일 분산 ("통암기_", "영작테스트_", "english_writing_") | FULL_MEMORIZATION_PREFIX, ENGLISH_WRITING_PREFIX 등 상수화 (0136) |
+| BaseTtsPlayer deprecated onError @Suppress 누락 | @Suppress("DEPRECATION") 추가 (0136) |
+| TtsPlaybackController ISP 위반 (21멤버) | TtsHighlightController 하위 인터페이스 분리 + 복합 인터페이스 유지 (0137) |
+| QaDataManager ISP 위반 (17멤버) | QaContentReader, QaNavigator, QaSearch, QaDataLifecycle 하위 인터페이스 분리 + 복합 인터페이스 유지 (0137) |
+| MemorizationModeCoordinator ISP 위반 (12멤버) | MemorizationStateObserver 하위 인터페이스 분리 + 복합 인터페이스 유지 (0137) |
+| FullMemorizationUseCase/PlayMergedFileUseCase QaDataManager 전체 의존 | QaContentReader로 축소 (0137) |
+| SearchQaItemsUseCase QaDataManager 전체 의존 | QaSearch로 축소 (0137) |
 
 ## Git 커밋 규칙
 
