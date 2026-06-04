@@ -272,8 +272,7 @@ class PlaybackViewModel @Inject constructor(
         super.onCleared()
         _actionListener = null
         ttsPlaybackController.cleanupTts()
-        playMergedFileUseCase.stop()
-        playMergedFileUseCase.release()
+        playMergedFileUseCase.close()
     }
 
     fun onBackgroundMove() {

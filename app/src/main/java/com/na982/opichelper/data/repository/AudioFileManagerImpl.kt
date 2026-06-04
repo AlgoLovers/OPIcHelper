@@ -2,8 +2,6 @@ package com.na982.opichelper.data.repository
 
 import com.na982.opichelper.domain.repository.AudioFileManager
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import com.na982.opichelper.domain.manager.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -51,19 +49,7 @@ class AudioFileManagerImpl(
                 mergeWithMediaCodec(files, output)
                 mergeSuccess = output.exists() && output.length() > 0
             } catch (e: Exception) {
-                appLogger.e("AudioFileManager", "MediaCodec 병합 실패, 파일 연결 방식 사용", e)
-                try {
-                    FileOutputStream(output).use { out ->
-                        files.forEach { file ->
-                            FileInputStream(file).use { input ->
-                                input.copyTo(out)
-                            }
-                        }
-                    }
-                    mergeSuccess = output.exists() && output.length() > 0
-                } catch (e2: Exception) {
-                    appLogger.e("AudioFileManager", "파일 연결 병합도 실패", e2)
-                }
+                appLogger.e("AudioFileManager", "MediaCodec 병합 실패", e)
             }
 
             if (mergeSuccess) {
@@ -144,6 +130,7 @@ class AudioFileManagerImpl(
                 }
             }
         } finally {
+            try { muxer.stop() } catch (_: Exception) {}
             muxer.release()
         }
     }
@@ -177,14 +164,7 @@ class AudioFileManagerImpl(
                 try {
                     mergeWithMediaCodec(files, outputFile)
                 } catch (e: Exception) {
-                    appLogger.e("AudioFileManager", "MediaCodec 병합 실패, 파일 연결 방식 사용", e)
-                    FileOutputStream(outputFile).use { out ->
-                        files.forEach { file ->
-                            FileInputStream(file).use { input ->
-                                input.copyTo(out)
-                            }
-                        }
-                    }
+                    appLogger.e("AudioFileManager", "MediaCodec 병합 실패", e)
                 }
             }
             outputFile

@@ -168,9 +168,10 @@ class TtsPlaybackControllerImpl @Inject constructor(
         currentPlayJob?.cancel()
         currentPlayJob = null
         ttsOrchestrator.stop()
+        _isQuestionPlaying.value = false
+        _isAnswerPlaying.value = false
         _isPaused.value = true
-        resetPlayState()
-        _isPaused.value = true
+        updateIsPlaying()
     }
 
     override fun clearPausedState() {

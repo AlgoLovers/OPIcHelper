@@ -266,6 +266,13 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | PlaybackViewModel checkEnglishWritingTestMergedFile public | private 변경 (0138) |
 | PlaybackState.isAnswerCardFlipped 미사용 필드 | 삭제 (0138) |
 | QaBrowserViewModel onboarding SRP 위반 | OnboardingViewModel 추출 (0138) |
+| TtsPlaybackControllerImpl stopAndMarkPaused spurious emission | resetPlayState() 대신 개별 필드 리셋 (0139) |
+| AudioFileManagerImpl MediaMuxer stop() 누락 | muxer.stop() 추가 (0139) |
+| AudioFileManagerImpl 무효 M4A raw byte 폴백 | 폴백 제거 (0139) |
+| PlaybackViewModel.onCleared PlayMergedFileUseCase scope 누수 | release() → close() 변경 (0139) |
+| FullMemorizationViewModel startMode() 코루틴 누적 | Job(modeJob)로 자식 코루틴 관리 (0139) |
+| BaseMemorizationViewModel modeJob private | protected 변경 (0139) |
+| SplashActivity delay(2000L) 매직넘버 | SPLASH_DELAY_MS 상수화 (0139) |
 
 ## Git 커밋 규칙
 

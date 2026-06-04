@@ -8,6 +8,7 @@ import com.na982.opichelper.domain.usecase.FullMemorizationState
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,8 +49,9 @@ class FullMemorizationViewModel @Inject constructor(
             val scriptIndex = qaDataManager.getCurrentIndex()
 
             val modeContext = coroutineContext
+            val collectJob = Job(modeJob)
 
-            viewModelScope.launch(modeContext) {
+            viewModelScope.launch(modeContext + collectJob) {
                 fullMemorizationUseCase.highlightIndex.collect { index ->
                     val sentenceEn = index?.let { getSentenceFromAnswer(it, isKorean = false) }
                     val sentenceKo = index?.let { getSentenceFromAnswer(it, isKorean = true) }
@@ -61,7 +63,7 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             }
 
-            viewModelScope.launch(modeContext) {
+            viewModelScope.launch(modeContext + collectJob) {
                 fullMemorizationUseCase.state.collect { fsState ->
                     when (fsState) {
                         is FullMemorizationState.Idle -> {
@@ -84,7 +86,7 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             }
 
-            viewModelScope.launch(modeContext) {
+            viewModelScope.launch(modeContext + collectJob) {
                 coordinator.events.collect { event ->
                     if (event is CoordinatorEvent.RecordingStateChanged) {
                         refreshRecordingStatus()
