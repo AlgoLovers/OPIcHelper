@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -67,32 +68,32 @@ class FullMemorizationUseCase @Inject constructor(
         scriptIndex: Int
     ) = mutex.withLock {
         try {
-            _state.value = FullMemorizationState.QuestionPlaying
+            _state.update { FullMemorizationState.QuestionPlaying }
 
             val qaItem = qaContentReader.getCurrentQaItem()
             if (qaItem != null) {
                 val result = ttsOrchestrator.speakWithHighlight(
                     text = qaItem.questionEn,
-                    onHighlight = { index, _ -> _highlightIndex.value = index }
+                    onHighlight = { index, _ -> _highlightIndex.update { index } }
                 )
                 if (result is TtsSpeakResult.Unavailable || result is TtsSpeakResult.Error) {
-                    _state.value = FullMemorizationState.Idle
-                    _highlightIndex.value = null
+                    _state.update { FullMemorizationState.Idle }
+                    _highlightIndex.update { null }
                     return@withLock
                 }
-                _highlightIndex.value = null
+                _highlightIndex.update { null }
                 delay(QUESTION_TO_RECORDING_DELAY_MS)
 
                 val recordingPath = recordingFileRepository.createRecordingFile(category, scriptIndex)
                 currentRecordingPath = recordingPath
-                _state.value = FullMemorizationState.Recording
+                _state.update { FullMemorizationState.Recording }
 
                 audioRecorder.startRecording(recordingPath)
             }
         } catch (e: Exception) {
             appLogger.e("FullMemorizationUseCase", "통암기 테스트 시작 실패", e)
-            _state.value = FullMemorizationState.Idle
-            _highlightIndex.value = null
+            _state.update { FullMemorizationState.Idle }
+            _highlightIndex.update { null }
         }
     }
 
@@ -100,11 +101,11 @@ class FullMemorizationUseCase @Inject constructor(
         try {
             if (_state.value is FullMemorizationState.Recording && currentRecordingPath != null) {
                 audioRecorder.stopRecording()
-                _state.value = FullMemorizationState.WithFile(hasRecording = true)
+                _state.update { FullMemorizationState.WithFile(hasRecording = true) }
             }
         } catch (e: Exception) {
             appLogger.e("FullMemorizationUseCase", "녹음 종료 실패", e)
-            _state.value = FullMemorizationState.Idle
+            _state.update { FullMemorizationState.Idle }
         }
     }
 
@@ -116,7 +117,7 @@ class FullMemorizationUseCase @Inject constructor(
 
             if (!recordingFileRepository.hasRecordingFile(category, scriptIndex)) return@withLock
 
-            _state.value = FullMemorizationState.Playing
+            _state.update { FullMemorizationState.Playing }
 
             val filePath = recordingFileRepository.getRecordingFilePath(category, scriptIndex)
             if (filePath != null) {
@@ -132,28 +133,28 @@ class FullMemorizationUseCase @Inject constructor(
                         delay(HIGHLIGHT_START_DELAY_MS)
                         for (i in times.indices) {
                             ensureActive()
-                            _highlightIndex.value = i
+                            _highlightIndex.update { i }
                             delay(times[i])
                         }
-                        _highlightIndex.value = null
+                        _highlightIndex.update { null }
                     }
 
                     try {
                         recordingFileRepository.playRecordingFileSimple(category, scriptIndex) { playing ->
                             if (!playing) {
-                                _state.value = FullMemorizationState.WithFile(hasRecording = true)
+                                _state.update { FullMemorizationState.WithFile(hasRecording = true) }
                             }
                         }
                     } finally {
                         highlightJob.cancel()
-                        _highlightIndex.value = null
+                        _highlightIndex.update { null }
                     }
                 }
             }
         } catch (e: Exception) {
             appLogger.e("FullMemorizationUseCase", "녹음 재생 실패", e)
-            _state.value = FullMemorizationState.WithFile(hasRecording = true)
-            _highlightIndex.value = null
+            _state.update { FullMemorizationState.WithFile(hasRecording = true) }
+            _highlightIndex.update { null }
         }
     }
 
@@ -176,15 +177,15 @@ class FullMemorizationUseCase @Inject constructor(
     suspend fun cancelPlayback() = mutex.withLock {
         playbackJob?.cancel()
         playbackJob = null
-        _state.value = FullMemorizationState.WithFile(hasRecording = true)
-        _highlightIndex.value = null
+        _state.update { FullMemorizationState.WithFile(hasRecording = true) }
+        _highlightIndex.update { null }
     }
 
     override fun close() {
         playbackJob?.cancel()
         playbackJob = null
-        _state.value = FullMemorizationState.Idle
-        _highlightIndex.value = null
+        _state.update { FullMemorizationState.Idle }
+        _highlightIndex.update { null }
         scope.cancel()
     }
 }

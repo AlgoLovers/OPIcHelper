@@ -14,6 +14,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
@@ -64,8 +65,8 @@ class PlayMergedFileUseCase @Inject constructor(
                     playWithExactHighlight(mergedFile, category, scriptIndex)
                 }
             } catch (e: Exception) {
-                _isPlaying.value = false
-                _highlightIndex.value = null
+                _isPlaying.update { false }
+                _highlightIndex.update { null }
             } finally {
                 playJob = null
             }
@@ -73,7 +74,7 @@ class PlayMergedFileUseCase @Inject constructor(
     }
 
     private suspend fun playWithDefaultHighlight(mergedFile: File) {
-        _isPlaying.value = true
+        _isPlaying.update { true }
         audioPlayer.playAudio(mergedFile.absolutePath)
 
         val answerText = qaContentReader.getCurrentAnswer(qaContentReader.getCurrentQaItem() ?: return)
@@ -83,17 +84,17 @@ class PlayMergedFileUseCase @Inject constructor(
             if (!currentCoroutineContext().isActive) break
             if (!_isPlaying.value) break
 
-            _highlightIndex.value = i
+            _highlightIndex.update { i }
             val duration = (sentences[i].length * CHAR_DURATION_MS).coerceAtLeast(MIN_HIGHLIGHT_DURATION_MS)
             kotlinx.coroutines.delay(duration)
         }
 
-        _isPlaying.value = false
-        _highlightIndex.value = null
+        _isPlaying.update { false }
+        _highlightIndex.update { null }
     }
 
     private suspend fun playWithExactHighlight(mergedFile: File, category: String, scriptIndex: Int) {
-        _isPlaying.value = true
+        _isPlaying.update { true }
         audioPlayer.playAudio(mergedFile.absolutePath)
 
         val recordingTimes = recordingTimeManager.getAllRecordingTimes(category, scriptIndex)
@@ -102,19 +103,19 @@ class PlayMergedFileUseCase @Inject constructor(
             if (!currentCoroutineContext().isActive) break
             if (!_isPlaying.value) break
 
-            _highlightIndex.value = i
+            _highlightIndex.update { i }
             kotlinx.coroutines.delay(recordingTimes[i])
         }
 
-        _isPlaying.value = false
-        _highlightIndex.value = null
+        _isPlaying.update { false }
+        _highlightIndex.update { null }
     }
 
     fun stop() {
         playJob?.cancel()
         playJob = null
-        _isPlaying.value = false
-        _highlightIndex.value = null
+        _isPlaying.update { false }
+        _highlightIndex.update { null }
         audioPlayer.stop()
     }
 
@@ -135,7 +136,7 @@ class PlayMergedFileUseCase @Inject constructor(
                 if (attempt < FILE_CHECK_RETRY_COUNT) kotlinx.coroutines.delay(FILE_CHECK_RETRY_DELAY_MS)
             }
 
-            _hasFile.value = exists && mergedFile != null && mergedFile.exists()
+            _hasFile.update { exists && mergedFile != null && mergedFile.exists() }
         }
     }
 
@@ -144,8 +145,8 @@ class PlayMergedFileUseCase @Inject constructor(
         playJob = null
         checkFileJob?.cancel()
         checkFileJob = null
-        _isPlaying.value = false
-        _highlightIndex.value = null
+        _isPlaying.update { false }
+        _highlightIndex.update { null }
         audioPlayer.stop()
     }
 

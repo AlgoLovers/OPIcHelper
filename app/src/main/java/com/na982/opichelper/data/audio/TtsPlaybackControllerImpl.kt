@@ -15,6 +15,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -154,7 +155,7 @@ class TtsPlaybackControllerImpl @Inject constructor(
     override fun stopTts() = stopAndReset(clearHighlight = true)
 
     private fun updateIsPlaying() {
-        _isPlaying.value = _isQuestionPlaying.value || _isAnswerPlaying.value
+        _isPlaying.update { _isQuestionPlaying.value || _isAnswerPlaying.value }
     }
 
     private fun resetPlayState() {

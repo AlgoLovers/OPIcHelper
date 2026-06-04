@@ -9,6 +9,7 @@ import com.na982.opichelper.domain.repository.UserLevelPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import com.na982.opichelper.domain.manager.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -95,7 +96,7 @@ class QaDataManagerImpl(
             itemIndexByCategory[category] = 0
         }
 
-        _categories.value = sortedCategories
+        _categories.update { sortedCategories }
     }
 
     override fun getCurrentIndex(): Int {
@@ -182,9 +183,9 @@ class QaDataManagerImpl(
             val currentIndex = itemIndexByCategory[category] ?: 0
 
             if (items.isNotEmpty() && currentIndex < items.size) {
-                _currentQaItem.value = items[currentIndex]
+                _currentQaItem.update { items[currentIndex] }
             } else {
-                _currentQaItem.value = null
+                _currentQaItem.update { null }
                 if (items.isEmpty()) {
                     appLogger.w("QaDataManager", "카테고리에 항목이 없음: $category")
                 } else {
@@ -192,7 +193,7 @@ class QaDataManagerImpl(
                 }
             }
         } else {
-            _currentQaItem.value = null
+            _currentQaItem.update { null }
         }
     }
 
@@ -200,7 +201,7 @@ class QaDataManagerImpl(
         val navState = progressPersistenceService.loadNavigationState()
         val lastCategory = navState.category
         if (lastCategory != null && itemsByCategory.containsKey(lastCategory)) {
-            _currentCategory.value = lastCategory
+            _currentCategory.update { lastCategory }
             itemIndexByCategory[lastCategory] = navState.scriptIndex
             updateCurrentQaItem()
         } else {
@@ -212,7 +213,7 @@ class QaDataManagerImpl(
     }
 
     private suspend fun navigateTo(category: String, index: Int) {
-        _currentCategory.value = category
+        _currentCategory.update { category }
         itemIndexByCategory[category] = index
         updateCurrentQaItem()
         progressPersistenceService.saveNavigationState(
@@ -221,7 +222,7 @@ class QaDataManagerImpl(
     }
 
     override fun clearError() {
-        _error.value = null
+        _error.update { null }
     }
 
     override fun searchItems(query: String): List<QaItem> {

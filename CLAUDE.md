@@ -273,6 +273,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | FullMemorizationViewModel startMode() 코루틴 누적 | Job(modeJob)로 자식 코루틴 관리 (0139) |
 | BaseMemorizationViewModel modeJob private | protected 변경 (0139) |
 | SplashActivity delay(2000L) 매직넘버 | SPLASH_DELAY_MS 상수화 (0139) |
+| MutableStateFlow .value = 경쟁 상태 (4개 파일) | .update {} 패턴으로 전환 (0140) |
 
 ## Git 커밋 규칙
 
