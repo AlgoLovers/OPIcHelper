@@ -6,7 +6,6 @@ import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.UserLevelPreferences
 import com.na982.opichelper.domain.repository.PlaybackPreferences
-import com.na982.opichelper.domain.repository.OnboardingPreferences
 import com.na982.opichelper.domain.repository.MemorizeLevelPreferences
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
@@ -43,7 +42,6 @@ class QaBrowserViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
     private val userLevelPreferences: UserLevelPreferences,
     private val playbackPreferences: PlaybackPreferences,
-    private val onboardingPreferences: OnboardingPreferences,
     private val memorizeLevelPreferences: MemorizeLevelPreferences,
     private val progressTracker: MemorizeTestProgressTracker,
     private val searchQaItemsUseCase: SearchQaItemsUseCase,
@@ -150,22 +148,6 @@ class QaBrowserViewModel @Inject constructor(
 
     fun clearError() {
         qaDataManager.clearError()
-    }
-
-    fun isOnboardingCompleted(): Boolean {
-        return onboardingPreferences.isOnboardingCompleted()
-    }
-
-    fun setOnboardingCompleted() {
-        onboardingPreferences.setOnboardingCompleted()
-    }
-
-    fun isPipGuideCompleted(): Boolean {
-        return onboardingPreferences.isPipGuideCompleted()
-    }
-
-    fun setPipGuideCompleted() {
-        onboardingPreferences.setPipGuideCompleted()
     }
 
     fun search(query: String): List<QaItem> {

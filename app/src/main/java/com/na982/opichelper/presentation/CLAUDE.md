@@ -19,12 +19,13 @@ presentation/
 
 | 파일 | 역할 | 의존성 |
 |------|------|--------|
-| `QaBrowserViewModel.kt` | QA 데이터 탐색 | QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger |
-| `PlaybackViewModel.kt` | TTS 재생, 병합 파일, PiP 제어 | TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, UserPreferencesRepository, MemorizationModeCoordinator, TtsServiceController, AppLogger |
+| `QaBrowserViewModel.kt` | QA 데이터 탐색 | QaDataManager, UserLevelPreferences, PlaybackPreferences, MemorizeLevelPreferences, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger |
+| `PlaybackViewModel.kt` | TTS 재생, 병합 파일, PiP 제어 | TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, PlaybackPreferences, MemorizationModeCoordinator, TtsServiceController, AppLogger |
 | `RepeatListeningViewModel.kt` | 반복듣기 모드 | RepeatListeningRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator, AppLogger |
 | `EnglishWritingTestViewModel.kt` | 영작테스트 모드 | EnglishWritingTestRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger |
 | `FullMemorizationViewModel.kt` | 통암기 모드 | FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator, AppLogger |
 | `SettingsViewModel.kt` | 설정 화면 | UserPreferencesRepository, TtsOrchestrator |
+| `OnboardingViewModel.kt` | 온보딩/PiP 가이드 상태 | OnboardingPreferences |
 | `BaseMemorizationViewModel.kt` | 암기 모드 공통 베이스 | MemorizationModeCoordinator, TtsPlaybackController?, MemorizeTestProgressTracker?, AppLogger |
 | `PlaybackActionListener.kt` | PiP/재생 액션 인터페이스 | onRepeatQuestion, onRepeatAnswer, onNext, onRepeatMemorization, onNextAndRestart, onStopMemorization |
 
@@ -49,7 +50,8 @@ FULL_MEMORIZATION
 ```
 QaBrowserViewModel:
   QaDataManager (5-way combine) → currentQaItem, currentCategory, categories, isLoading, error
-  UserPreferencesRepository → currentUserLevel, answerPlayCount
+  UserLevelPreferences → currentUserLevel
+  PlaybackPreferences → answerPlayCount
 
 PlaybackViewModel:
   TtsPlaybackController (7-way combine) → isPlaying, isQuestionPlaying, isAnswerPlaying, highlights

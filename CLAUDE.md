@@ -41,13 +41,14 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 의존성은 항상 외부(Data) → 내부(Domain) 방향. Domain은 Data를 직접 참조하지 않음.
 
 ### ViewModel 구조
-- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 5개 (QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger)
-- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기, PiP 제어. 의존성 7개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, UserPreferencesRepository, MemorizationModeCoordinator, TtsServiceController, AppLogger). PlaybackActionListener로 콜백 통합
+- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 7개 (QaDataManager, UserLevelPreferences, PlaybackPreferences, MemorizeLevelPreferences, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger)
+- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기, PiP 제어. 의존성 7개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, PlaybackPreferences, MemorizationModeCoordinator, TtsServiceController, AppLogger). PlaybackActionListener로 콜백 통합
 - `RepeatListeningViewModel`: 반복듣기 모드 전담. 의존성 7개 (RepeatListeningRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator, AppLogger)
 - `EnglishWritingTestViewModel`: 영작테스트 모드 전담. 의존성 6개 (EnglishWritingTestRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger)
 - `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 4개 (FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator, AppLogger)
 - `MemorizationModeCoordinator`: 3개 모드 상호 배제, 상태 머신, Job 관리. @Singleton
 - `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator
+- `OnboardingViewModel`: 온보딩/PiP 가이드 상태. OnboardingPreferences
 
 ### TTS 재생 흐름 (핵심 경로)
 ```
@@ -261,6 +262,10 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | MemorizationModeCoordinator ISP 위반 (12멤버) | MemorizationStateObserver 하위 인터페이스 분리 + 복합 인터페이스 유지 (0137) |
 | FullMemorizationUseCase/PlayMergedFileUseCase QaDataManager 전체 의존 | QaContentReader로 축소 (0137) |
 | SearchQaItemsUseCase QaDataManager 전체 의존 | QaSearch로 축소 (0137) |
+| PlaybackViewModel dead code 3개 (setAnswerCardFlipped, isCoordinatorRunning, isMergedFilePlaying) | 삭제 (0138) |
+| PlaybackViewModel checkEnglishWritingTestMergedFile public | private 변경 (0138) |
+| PlaybackState.isAnswerCardFlipped 미사용 필드 | 삭제 (0138) |
+| QaBrowserViewModel onboarding SRP 위반 | OnboardingViewModel 추출 (0138) |
 
 ## Git 커밋 규칙
 

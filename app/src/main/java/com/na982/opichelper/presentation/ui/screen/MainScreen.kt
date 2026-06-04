@@ -17,6 +17,7 @@ import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
+import com.na982.opichelper.presentation.viewmodel.OnboardingViewModel
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.ModeGroup
@@ -58,6 +59,7 @@ fun MainScreen(
     repeatListeningViewModel: RepeatListeningViewModel = hiltViewModel(),
     englishWritingTestViewModel: EnglishWritingTestViewModel = hiltViewModel(),
     fullMemorizationViewModel: FullMemorizationViewModel = hiltViewModel(),
+    onboardingViewModel: OnboardingViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
     onNavigateToSettings: () -> Unit = {},
     permissionDenied: StateFlow<Boolean> = remember { MutableStateFlow(false) }
@@ -72,8 +74,8 @@ fun MainScreen(
     val fullMemorizationState by fullMemorizationViewModel.uiState.collectAsState()
 
     val selectedLevel = qaState.selectedMemorizeLevel
-    val showOnboarding = remember { mutableStateOf(!qaViewModel.isOnboardingCompleted()) }
-    val showPipGuide = remember { mutableStateOf(!qaViewModel.isPipGuideCompleted()) }
+    val showOnboarding = remember { mutableStateOf(!onboardingViewModel.isOnboardingCompleted()) }
+    val showPipGuide = remember { mutableStateOf(!onboardingViewModel.isPipGuideCompleted()) }
     val showSearch = remember { mutableStateOf(false) }
     val editScriptState = remember { mutableStateOf<EditScriptState?>(null) }
     val context = LocalContext.current
@@ -188,7 +190,7 @@ fun MainScreen(
             if (showOnboarding.value) {
                 OnboardingDialog(
                     onStartClick = {
-                        qaViewModel.setOnboardingCompleted()
+                        onboardingViewModel.setOnboardingCompleted()
                         showOnboarding.value = false
                     }
                 )
@@ -198,11 +200,11 @@ fun MainScreen(
             if (!showOnboarding.value && showPipGuide.value) {
                 PipPermissionDialog(
                     onDismiss = {
-                        qaViewModel.setPipGuideCompleted()
+                        onboardingViewModel.setPipGuideCompleted()
                         showPipGuide.value = false
                     },
                     onOpenSettings = {
-                        qaViewModel.setPipGuideCompleted()
+                        onboardingViewModel.setPipGuideCompleted()
                         showPipGuide.value = false
                         openPipSettings(context)
                     }
@@ -450,7 +452,7 @@ fun MainScreen(
                                 coordinatorMode.group == ModeGroup.ENGLISH_WRITING -> englishWritingTestState.isCardFlipped
                                 playbackState.isEnglishWritingTestMergedFilePlaying -> false
                                 repeatListeningState.isCardFlipped -> repeatListeningState.isCardFlipped
-                                else -> playbackState.isAnswerCardFlipped
+                                else -> false
                             },
                             isRepeatListeningCardFlipped = repeatListeningState.isCardFlipped,
                             onEdit = {

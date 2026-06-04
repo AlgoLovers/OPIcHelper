@@ -40,8 +40,6 @@ data class PlaybackState(
     val answerKoHighlight: HighlightInfo = HighlightInfo(),
     val recordingHighlight: HighlightInfo = HighlightInfo(),
 
-    val isAnswerCardFlipped: Boolean = false,
-
     val hasProgress: Boolean = false
 )
 
@@ -209,10 +207,6 @@ class PlaybackViewModel @Inject constructor(
         }
     }
 
-    fun setAnswerCardFlipped(isFlipped: Boolean) {
-        _uiState.update { it.copy(isAnswerCardFlipped = isFlipped) }
-    }
-
     fun playEnglishWritingTestMergedFile() {
         playMergedFileUseCase.play()
     }
@@ -221,7 +215,7 @@ class PlaybackViewModel @Inject constructor(
         playMergedFileUseCase.stop()
     }
 
-    fun checkEnglishWritingTestMergedFile() {
+    private fun checkEnglishWritingTestMergedFile() {
         playMergedFileUseCase.checkFile()
     }
 
@@ -359,10 +353,6 @@ class PlaybackViewModel @Inject constructor(
         val recentlyPlayed = System.currentTimeMillis() - lastPlayingTimestamp < PIP_RECENTLY_PLAYED_THRESHOLD_MS
         return isPlaying || isCoordinatorRunning || isMergedPlaying || isTtsSpeaking || recentlyPlayed
     }
-
-    fun isCoordinatorRunning(): Boolean = coordinator.isRunning.value
-
-    fun isMergedFilePlaying(): Boolean = playMergedFileUseCase.isPlaying.value
 
     fun setFullMemorizationSentence(en: String?, ko: String?) {
         _fullMemorizationSentenceEn.value = en
