@@ -37,6 +37,7 @@ import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
 import com.na982.opichelper.domain.usecase.ModeGroup
+import com.na982.opichelper.domain.usecase.ProgressCleanupUseCase
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -54,6 +55,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var appLogger: AppLogger
+
+    @Inject
+    lateinit var progressCleanupUseCase: ProgressCleanupUseCase
 
     private var isFinishing = false
     private var playbackViewModel: PlaybackViewModel? = null
@@ -295,7 +299,7 @@ class MainActivity : ComponentActivity() {
     private fun cleanupAllResources() {
         try {
             lifecycleScope.launch {
-                qaViewModel?.cleanupOnAppExit()
+                progressCleanupUseCase.cleanupOnExit()
             }
             wakeLockController.release()
         } catch (e: Exception) {

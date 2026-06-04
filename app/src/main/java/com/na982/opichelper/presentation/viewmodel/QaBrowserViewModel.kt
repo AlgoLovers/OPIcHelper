@@ -1,6 +1,5 @@
 package com.na982.opichelper.presentation.viewmodel
 
-import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.QaDataManager
@@ -9,6 +8,7 @@ import com.na982.opichelper.domain.repository.PlaybackPreferences
 import com.na982.opichelper.domain.repository.MemorizeLevelPreferences
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+import com.na982.opichelper.domain.usecase.ProgressCleanupUseCase
 import com.na982.opichelper.domain.usecase.SearchQaItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,6 +45,7 @@ class QaBrowserViewModel @Inject constructor(
     private val memorizeLevelPreferences: MemorizeLevelPreferences,
     private val progressTracker: MemorizeTestProgressTracker,
     private val searchQaItemsUseCase: SearchQaItemsUseCase,
+    private val progressCleanupUseCase: ProgressCleanupUseCase,
     private val appLogger: AppLogger
 ) : ViewModel() {
 
@@ -67,7 +68,7 @@ class QaBrowserViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 qaDataManager.init()
-                progressTracker.restoreAllProgress()
+                progressCleanupUseCase.restoreProgress()
             } catch (e: Exception) {
                 appLogger.e("QaBrowserViewModel", "데이터 초기화 실패", e)
                 emitEvent("데이터를 불러올 수 없습니다")
@@ -197,37 +198,6 @@ class QaBrowserViewModel @Inject constructor(
     fun getCurrentIndex(): Int = qaDataManager.getCurrentIndex()
 
     fun getCurrentUserLevel(): UserLevel = userLevelPreferences.getUserLevel()
-
-    suspend fun cleanupOnAppExit() {
-        try {
-            val selectedMemorizeLevel = _uiState.value.selectedMemorizeLevel
-            val currentItem = qaDataManager.getCurrentQaItem()
-            if (currentItem != null) {
-                val answerText = getCurrentAnswer(currentItem)
-                val totalSentences = SentenceSplitter.split(answerText).size
-                val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)
-                val currentSentenceIndex = currentProgress?.currentSentenceIndex ?: 0
-
-                progressTracker.updateProgress(
-                    category = currentItem.category,
-                    scriptIndex = qaDataManager.getCurrentIndex(),
-                    memorizeLevel = selectedMemorizeLevel,
-                    currentSentenceIndex = currentSentenceIndex,
-                    totalSentences = totalSentences,
-                    isMemorizeTestRunning = false
-                )
-            }
-
-        } catch (e: Exception) {
-            appLogger.e("QaBrowserViewModel", "앱 종료 시 리소스 정리 중 오류", e)
-        }
-
-        try {
-            progressTracker.persistChangedProgress()
-        } catch (e: Exception) {
-            appLogger.e("QaBrowserViewModel", "진행상황 저장 실패", e)
-        }
-    }
 
     private fun loadMemorizeLevel() {
         val savedLevel = memorizeLevelPreferences.getMemorizeLevel()
