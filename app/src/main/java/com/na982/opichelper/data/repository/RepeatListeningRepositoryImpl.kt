@@ -22,6 +22,13 @@ class RepeatListeningRepositoryImpl(
         private const val CARD_FLIP_DELAY_MS = 100L
         private const val WORD_DELAY_MS = 500
         private const val REST_TIME_MULTIPLIER = 1.2
+        private const val SHORT_WORD_THRESHOLD = 5
+        private const val MEDIUM_WORD_THRESHOLD = 10
+        private const val LONG_WORD_THRESHOLD = 15
+        private const val SHORT_WORD_MULTIPLIER = 1.5f
+        private const val MEDIUM_WORD_MULTIPLIER = 1.2f
+        private const val LONG_WORD_MULTIPLIER = 1.0f
+        private const val VERY_LONG_WORD_MULTIPLIER = 0.8f
     }
 
     override val memorizeLevel = MemorizeLevel.REPEAT_LISTENING
@@ -58,10 +65,10 @@ class RepeatListeningRepositoryImpl(
             val enWordCount = enSentence.split("\\s+".toRegex()).size
             val baseDelay = enWordCount * WORD_DELAY_MS
             val lengthMultiplier = when {
-                enWordCount <= 5 -> 1.5f
-                enWordCount <= 10 -> 1.2f
-                enWordCount <= 15 -> 1.0f
-                else -> 0.8f
+                enWordCount <= SHORT_WORD_THRESHOLD -> SHORT_WORD_MULTIPLIER
+                enWordCount <= MEDIUM_WORD_THRESHOLD -> MEDIUM_WORD_MULTIPLIER
+                enWordCount <= LONG_WORD_THRESHOLD -> LONG_WORD_MULTIPLIER
+                else -> VERY_LONG_WORD_MULTIPLIER
             }
             val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
             delay(adaptiveDelay)

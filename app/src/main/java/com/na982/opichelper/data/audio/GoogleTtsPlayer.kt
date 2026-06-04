@@ -12,8 +12,13 @@ class GoogleTtsPlayer(context: Context, appLogger: AppLogger) : BaseTtsPlayer(
     logTag = "GoogleTtsPlayer",
     appLogger = appLogger
 ) {
+    companion object {
+        private const val DEFAULT_SPEECH_RATE_TIRAMISU = 0.8f
+        private const val DEFAULT_SPEECH_RATE_LEGACY = 0.7f
+    }
+
     override fun getSpeechRate(): Float = userSpeechRate ?: when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> 0.8f
-        else -> 0.7f
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> DEFAULT_SPEECH_RATE_TIRAMISU
+        else -> DEFAULT_SPEECH_RATE_LEGACY
     }
 }

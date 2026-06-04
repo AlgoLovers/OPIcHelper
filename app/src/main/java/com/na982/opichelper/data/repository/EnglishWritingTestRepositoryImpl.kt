@@ -31,6 +31,8 @@ class EnglishWritingTestRepositoryImpl(
         private const val RECORDING_CHAR_DURATION_MS = 100L
         private const val MIN_RECORDING_DURATION_MS = 3000L
         private const val CARD_FLIP_DELAY_MS = 100L
+        private const val ENGLISH_WRITING_PREFIX = "영작테스트"
+        private const val ENGLISH_WRITING_FILE_PREFIX = "english_writing"
     }
 
     override val memorizeLevel = MemorizeLevel.ENGLISH_WRITING
@@ -89,7 +91,7 @@ class EnglishWritingTestRepositoryImpl(
 
                 recordingTimeManager.saveRecordingTime(category, scriptIndex, idx, actualRecordingTime)
 
-                val savedFile = audioFileManager.saveRecordingFile(recordingFile, "english_writing_${category}_${scriptIndex}_${idx}")
+                val savedFile = audioFileManager.saveRecordingFile(recordingFile, "${ENGLISH_WRITING_FILE_PREFIX}_${category}_${scriptIndex}_${idx}")
                 recordingFiles.add(savedFile)
 
                 emit(MemorizeTestEvent.RecordingStateChange(false))
@@ -111,7 +113,7 @@ class EnglishWritingTestRepositoryImpl(
         if (recordingFiles.isNotEmpty()) {
             val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
             val timestamp = dateFormat.format(Date())
-            val mergedFileName = "영작테스트_${category}_${scriptIndex}_${timestamp}"
+            val mergedFileName = "${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_${timestamp}"
 
             try {
                 audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)

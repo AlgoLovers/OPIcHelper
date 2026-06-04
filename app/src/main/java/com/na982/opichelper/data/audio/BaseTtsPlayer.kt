@@ -26,6 +26,8 @@ abstract class BaseTtsPlayer(
         private const val ENGINE_SETTLE_DELAY_MS = 150L
         private const val SPEAK_START_TIMEOUT_MS = 2000L
         private const val SPEAK_COMPLETION_TIMEOUT_MS = 30000L
+        private const val DEFAULT_SPEECH_RATE = 0.8f
+        private const val DEFAULT_PITCH = 1.0f
     }
 
     @Volatile
@@ -108,6 +110,7 @@ abstract class BaseTtsPlayer(
                         val duration = System.currentTimeMillis() - startTime
                         safeComplete(TtsSpeakResult.Success(duration))
                     }
+                    @Suppress("DEPRECATION")
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         appLogger.e(logTag, "$serviceName 재생 오류")
@@ -131,7 +134,7 @@ abstract class BaseTtsPlayer(
 
                 val startDeadline = System.currentTimeMillis() + SPEAK_START_TIMEOUT_MS
                 while (!started && System.currentTimeMillis() < startDeadline) {
-                    kotlinx.coroutines.delay(50)
+                    kotlinx.coroutines.delay(IS_SPEAKING_POLL_INTERVAL_MS)
                 }
                 if (!started) {
                     appLogger.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
@@ -186,6 +189,6 @@ abstract class BaseTtsPlayer(
         _isPlaying.set(false)
     }
 
-    protected open fun getSpeechRate(): Float = userSpeechRate ?: 0.8f
-    protected open fun getPitch(): Float = 1.0f
+    protected open fun getSpeechRate(): Float = userSpeechRate ?: DEFAULT_SPEECH_RATE
+    protected open fun getPitch(): Float = DEFAULT_PITCH
 }

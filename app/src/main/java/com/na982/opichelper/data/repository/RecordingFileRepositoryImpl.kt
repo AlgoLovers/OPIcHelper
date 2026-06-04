@@ -20,6 +20,10 @@ class RecordingFileRepositoryImpl(
     private val appLogger: AppLogger
 ) : RecordingFileRepository {
 
+    companion object {
+        private const val FULL_MEMORIZATION_PREFIX = "통암기"
+    }
+
     private val mutex = Mutex()
     @Volatile
     private var currentRecordingPath: String? = null
@@ -54,7 +58,7 @@ class RecordingFileRepositoryImpl(
     override suspend fun createRecordingFile(category: String, scriptIndex: Int): String {
         return mutex.withLock {
             val timestamp = System.currentTimeMillis()
-            val recordingFileName = "통암기_${category}_${scriptIndex}_${timestamp}.m4a"
+            val recordingFileName = "${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_${timestamp}.m4a"
             val path = audioFileManager.getRecordingFilePath(recordingFileName)
             currentRecordingPath = path
             path
@@ -154,7 +158,7 @@ class RecordingFileRepositoryImpl(
         val files = recordingsDir.listFiles() ?: return null
 
         for (file in files) {
-            if (file.name.startsWith("통암기_${category}_${scriptIndex}_") && file.name.endsWith(".m4a")) {
+            if (file.name.startsWith("${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_") && file.name.endsWith(".m4a")) {
                 return file.absolutePath
             }
         }

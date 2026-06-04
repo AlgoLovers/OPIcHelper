@@ -20,6 +20,13 @@ class AudioFileManagerImpl(
     private val appLogger: AppLogger
 ) : AudioFileManager {
 
+    companion object {
+        private const val MERGE_BUFFER_SIZE = 1024 * 1024
+        private const val ENGLISH_WRITING_FILE_PREFIX = "english_writing"
+        private const val ENGLISH_WRITING_PREFIX = "영작테스트"
+        private const val FULL_MEMORIZATION_PREFIX = "통암기"
+    }
+
     override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
         return withContext(Dispatchers.IO) {
             if (files.isEmpty()) {
@@ -31,7 +38,7 @@ class AudioFileManagerImpl(
                 outputDir.mkdirs()
             }
 
-            val output = File(outputDir, "english_writing_${scriptId}_merged.m4a")
+            val output = File(outputDir, "${ENGLISH_WRITING_FILE_PREFIX}_${scriptId}_merged.m4a")
 
             if (files.size == 1) {
                 files[0].copyTo(output, overwrite = true)
@@ -87,7 +94,7 @@ class AudioFileManagerImpl(
         var totalDuration = 0L
 
         try {
-            val buffer = ByteBuffer.allocate(1024 * 1024)
+            val buffer = ByteBuffer.allocate(MERGE_BUFFER_SIZE)
             val bufferInfo = android.media.MediaCodec.BufferInfo()
 
             files.forEachIndexed { _, file ->
@@ -191,7 +198,7 @@ class AudioFileManagerImpl(
                 return@withContext false
             }
 
-            val pattern = Regex("영작테스트_${category}_${scriptIndex}_.*")
+            val pattern = Regex("${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_.*")
 
             val files = mergedDir.listFiles { file ->
                 file.name.matches(pattern)
@@ -208,7 +215,7 @@ class AudioFileManagerImpl(
                 return@withContext null
             }
 
-            val pattern = Regex("영작테스트_${category}_${scriptIndex}_.*")
+            val pattern = Regex("${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_.*")
 
             val files = mergedDir.listFiles { file ->
                 file.name.matches(pattern)
@@ -225,7 +232,7 @@ class AudioFileManagerImpl(
                 return@withContext false
             }
 
-            val pattern = Regex("통암기_${category}_${scriptIndex}_.*")
+            val pattern = Regex("${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_.*")
 
             val files = recordingsDir.listFiles { file ->
                 file.name.matches(pattern)
@@ -242,7 +249,7 @@ class AudioFileManagerImpl(
                 return@withContext null
             }
 
-            val pattern = Regex("통암기_${category}_${scriptIndex}_.*")
+            val pattern = Regex("${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_.*")
 
             val files = recordingsDir.listFiles { file ->
                 file.name.matches(pattern)

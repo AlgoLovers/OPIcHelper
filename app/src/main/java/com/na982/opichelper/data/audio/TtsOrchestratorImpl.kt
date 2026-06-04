@@ -22,6 +22,10 @@ class TtsOrchestratorImpl(
 
     companion object {
         private const val INTER_SENTENCE_DELAY_MS = 400L
+        private const val KOREAN_UNICODE_SYLLABLE_START = 0xAC00
+        private const val KOREAN_UNICODE_SYLLABLE_END = 0xD7AF
+        private const val KOREAN_UNICODE_JAMO_START = 0x3131
+        private const val KOREAN_UNICODE_JAMO_END = 0x318E
     }
     private val activeSpeakCount = AtomicInteger(0)
     private val _isSpeaking = MutableStateFlow(false)
@@ -44,7 +48,7 @@ class TtsOrchestratorImpl(
     }
 
     private suspend fun speakInternal(text: String): TtsSpeakResult {
-        val isKorean = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
+        val isKorean = text.any { it.code in KOREAN_UNICODE_SYLLABLE_START..KOREAN_UNICODE_SYLLABLE_END || it.code in KOREAN_UNICODE_JAMO_START..KOREAN_UNICODE_JAMO_END }
         return if (isKorean) speakKorean(text) else speakEnglish(text)
     }
 

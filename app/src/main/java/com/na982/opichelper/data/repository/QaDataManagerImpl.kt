@@ -25,6 +25,10 @@ class QaDataManagerImpl(
     private val dataSeeder: DataSeeder,
     private val appLogger: AppLogger
 ) : QaDataManager {
+
+    companion object {
+        private const val MIN_SEARCH_QUERY_LENGTH = 2
+    }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var userLevelJob: Job? = null
 
@@ -221,7 +225,7 @@ class QaDataManagerImpl(
     }
 
     override fun searchItems(query: String): List<QaItem> {
-        if (query.length < 2) return emptyList()
+        if (query.length < MIN_SEARCH_QUERY_LENGTH) return emptyList()
         val lowerQuery = query.lowercase()
         return itemsByCategory.values.flatten().filter { item ->
             item.questionEn.lowercase().contains(lowerQuery) ||
