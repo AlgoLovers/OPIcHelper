@@ -41,8 +41,8 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 의존성은 항상 외부(Data) → 내부(Domain) 방향. Domain은 Data를 직접 참조하지 않음.
 
 ### ViewModel 구조
-- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 7개 (QaDataManager, UserLevelPreferences, PlaybackPreferences, MemorizeLevelPreferences, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger)
-- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기, PiP 제어. 의존성 7개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, PlaybackPreferences, MemorizationModeCoordinator, TtsServiceController, AppLogger). PlaybackActionListener로 콜백 통합
+- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨. 의존성 8개 (QaDataManager, UserLevelPreferences, PlaybackPreferences, MemorizeLevelPreferences, MemorizeTestProgressTracker, SearchQaItemsUseCase, ProgressCleanupUseCase, AppLogger)
+- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 코디네이터 이벤트. 의존성 6개 (TtsPlaybackController, PlayMergedFileUseCase, MemorizationModeCoordinator, PlaybackPreferences, PipStateAggregator, AppLogger). PiP 상태는 PipStateAggregator에 위임
 - `RepeatListeningViewModel`: 반복듣기 모드 전담. 의존성 7개 (RepeatListeningRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator, AppLogger)
 - `EnglishWritingTestViewModel`: 영작테스트 모드 전담. 의존성 6개 (EnglishWritingTestRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger)
 - `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 4개 (FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator, AppLogger)
@@ -305,6 +305,9 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | EditScriptViewModel QaDataManager 전체 의존 | QaDataLifecycle로 축소 (0145) |
 | SettingsViewModel UserPreferencesRepository 전체 의존 | UserLevelPreferences + TtsPreferences + PlaybackPreferences (0145) |
 | CurrentMode.group else catch-all | exhaustive when 전환 (0145) |
+| OCP duplicated when dispatch 4곳 | MemorizationController 중앙화 (0146) |
+| QaBrowserViewModel cleanupOnAppExit SRP 위반 | ProgressCleanupUseCase 추출 (0147) |
+| PlaybackViewModel SRP 위반 (7 deps, 5 responsibilities) | PipStateAggregator 추출, 6 deps 3 responsibilities (0148) |
 
 ## Git 커밋 규칙
 
