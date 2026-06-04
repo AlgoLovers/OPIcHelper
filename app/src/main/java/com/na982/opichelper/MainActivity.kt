@@ -31,6 +31,7 @@ import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.PlaybackActionListener
+import com.na982.opichelper.presentation.viewmodel.MemorizationController
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
@@ -131,6 +132,13 @@ class MainActivity : ComponentActivity() {
             val repeatListeningVm: RepeatListeningViewModel = hiltViewModel()
             val englishWritingTestVm: EnglishWritingTestViewModel = hiltViewModel()
             val fullMemorizationVm: FullMemorizationViewModel = hiltViewModel()
+            val memorizationController = MemorizationController(
+                mapOf(
+                    ModeGroup.REPEAT_LISTENING to repeatListeningVm,
+                    ModeGroup.ENGLISH_WRITING to englishWritingTestVm,
+                    ModeGroup.FULL_MEMORIZATION to fullMemorizationVm
+                )
+            )
             this@MainActivity.playbackViewModel = pvm
             this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
@@ -154,31 +162,19 @@ class MainActivity : ComponentActivity() {
                 }
                 override fun onRepeatMemorization() {
                     val group = pvm.lastMemorizationGroup ?: return
-                    when (group) {
-                        ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
-                        ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
-                        ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
-                        else -> {}
-                    }
+                    memorizationController.startForGroup(group)
                 }
                 override fun onNextAndRestart() {
                     lifecycleScope.launch {
                         val qaItem = qaVm.nextQaItemSync()
                         if (qaItem != null) {
                             val group = pvm.lastMemorizationGroup ?: return@launch
-                            when (group) {
-                                ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
-                                ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
-                                ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
-                                else -> {}
-                            }
+                            memorizationController.startForGroup(group)
                         }
                     }
                 }
                 override fun onStopMemorization() {
-                    repeatListeningVm.stop()
-                    englishWritingTestVm.stop()
-                    fullMemorizationVm.stop()
+                    memorizationController.stopAll()
                 }
             })
 

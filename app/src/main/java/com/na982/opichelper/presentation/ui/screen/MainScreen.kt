@@ -18,6 +18,7 @@ import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
 import com.na982.opichelper.presentation.viewmodel.OnboardingViewModel
+import com.na982.opichelper.presentation.viewmodel.MemorizationController
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.ModeGroup
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.na982.opichelper.domain.entity.MemorizeLevel
+import com.na982.opichelper.domain.entity.toModeGroup
 import com.na982.opichelper.ui.theme.*
 import androidx.compose.foundation.isSystemInDarkTheme
 import kotlinx.coroutines.flow.StateFlow
@@ -89,11 +91,21 @@ fun MainScreen(
         derivedStateOf { coordinatorMode == CurrentMode.FULL_MEMORIZATION_QUESTION_PLAYING }
     }
 
+    val memorizationController = remember(
+        repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel
+    ) {
+        MemorizationController(
+            mapOf(
+                ModeGroup.REPEAT_LISTENING to repeatListeningViewModel,
+                ModeGroup.ENGLISH_WRITING to englishWritingTestViewModel,
+                ModeGroup.FULL_MEMORIZATION to fullMemorizationViewModel
+            )
+        )
+    }
+
     // 레벨 변경 시 모든 모드 정지
     LaunchedEffect(selectedLevel) {
-        repeatListeningViewModel.onLevelChanged()
-        englishWritingTestViewModel.onLevelChanged()
-        fullMemorizationViewModel.onLevelChanged()
+        memorizationController.onLevelChangedAll()
     }
 
     // QA 아이템 변경 시 반복듣기 이어서 듣기 위치 갱신
@@ -384,7 +396,7 @@ fun MainScreen(
                         QuestionPlayButton(
                             isPlaying = playbackState.isQuestionPlaying,
                             onPlayClick = {
-                                stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
+                                stopCurrentMemorization(coordinator, memorizationController)
                                 playbackViewModel.playQuestion(qaItem.questionEn)
                             },
                             onStopClick = { playbackViewModel.stopTts() },
@@ -406,10 +418,10 @@ fun MainScreen(
                                         playbackViewModel.stopTts()
                                     }
                                     if (repeatListeningState.isPlaying || coordinatorRunning) {
-                                        stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
+                                        stopCurrentMemorization(coordinator, memorizationController)
                                     } else {
                                         onMemorizeTestButtonClick(
-                                            selectedLevel, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel
+                                            selectedLevel, memorizationController
                                         )
                                     }
                                 },
@@ -484,7 +496,7 @@ fun MainScreen(
                             isPlaying = playbackState.isAnswerPlaying,
                             repeatCount = qaState.answerPlayCount,
                             onPlayClick = {
-                                stopCurrentMemorization(coordinator, repeatListeningViewModel, englishWritingTestViewModel, fullMemorizationViewModel)
+                                stopCurrentMemorization(coordinator, memorizationController)
                                 qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
                             },
                             onStopClick = { playbackViewModel.stopTts() },
@@ -529,27 +541,15 @@ fun MainScreen(
 
 private fun onMemorizeTestButtonClick(
     selectedLevel: String,
-    repeatListeningViewModel: RepeatListeningViewModel,
-    englishWritingTestViewModel: EnglishWritingTestViewModel,
-    fullMemorizationViewModel: FullMemorizationViewModel
+    memorizationController: MemorizationController
 ) {
-    when (MemorizeLevel.fromDisplayName(selectedLevel)) {
-        MemorizeLevel.REPEAT_LISTENING -> repeatListeningViewModel.start()
-        MemorizeLevel.ENGLISH_WRITING -> englishWritingTestViewModel.start()
-        MemorizeLevel.FULL_MEMORIZATION -> fullMemorizationViewModel.start()
-    }
+    val level = MemorizeLevel.fromDisplayName(selectedLevel)
+    memorizationController.startForGroup(level.toModeGroup())
 }
 
 private fun stopCurrentMemorization(
     coordinator: MemorizationModeCoordinator,
-    repeatListeningViewModel: RepeatListeningViewModel,
-    englishWritingTestViewModel: EnglishWritingTestViewModel,
-    fullMemorizationViewModel: FullMemorizationViewModel
+    memorizationController: MemorizationController
 ) {
-    when (coordinator.currentMode.value.group) {
-        ModeGroup.REPEAT_LISTENING -> repeatListeningViewModel.stop()
-        ModeGroup.ENGLISH_WRITING -> englishWritingTestViewModel.stop()
-        ModeGroup.FULL_MEMORIZATION -> fullMemorizationViewModel.stop()
-        ModeGroup.NONE -> {}
-    }
+    memorizationController.stopForGroup(coordinator.currentMode.value.group)
 }
