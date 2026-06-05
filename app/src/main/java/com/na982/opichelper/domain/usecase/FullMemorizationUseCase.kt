@@ -99,10 +99,12 @@ class FullMemorizationUseCase @Inject constructor(
         try {
             if (_state.value is FullMemorizationState.Recording && currentRecordingPath != null) {
                 audioRecorder.stopRecording()
+                currentRecordingPath = null
                 _state.update { FullMemorizationState.WithFile(hasRecording = true) }
             }
         } catch (e: Exception) {
             appLogger.e("FullMemorizationUseCase", "녹음 종료 실패", e)
+            currentRecordingPath = null
             _state.update { FullMemorizationState.Idle }
         }
     }
@@ -168,6 +170,14 @@ class FullMemorizationUseCase @Inject constructor(
     }
 
     suspend fun cancelPlayback() = mutex.withLock {
+        if (_state.value is FullMemorizationState.Recording) {
+            try {
+                audioRecorder.stopRecording()
+            } catch (e: Exception) {
+                appLogger.e("FullMemorizationUseCase", "녹음 중지 실패", e)
+            }
+            currentRecordingPath = null
+        }
         playbackJob?.cancel()
         playbackJob = null
         _state.update { FullMemorizationState.WithFile(hasRecording = true) }
@@ -175,6 +185,14 @@ class FullMemorizationUseCase @Inject constructor(
     }
 
     override fun close() {
+        if (_state.value is FullMemorizationState.Recording) {
+            try {
+                audioRecorder.stopRecording()
+            } catch (e: Exception) {
+                appLogger.e("FullMemorizationUseCase", "close 시 녹음 중지 실패", e)
+            }
+        }
+        currentRecordingPath = null
         playbackJob?.cancel()
         playbackJob = null
         _state.update { FullMemorizationState.Idle }
