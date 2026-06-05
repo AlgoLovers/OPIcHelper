@@ -108,7 +108,7 @@ class AudioFileManagerImpl(
         }
     }
 
-    override suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File {
+    override suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File? {
         return withContext(Dispatchers.IO) {
             val outputDir = File(context.filesDir, "merged")
             if (!outputDir.exists()) {
@@ -119,14 +119,16 @@ class AudioFileManagerImpl(
 
             if (files.size == 1) {
                 files[0].copyTo(outputFile, overwrite = true)
+                outputFile
             } else {
                 try {
                     mergeWithMediaCodec(files, outputFile)
+                    if (outputFile.exists() && outputFile.length() > 0) outputFile else null
                 } catch (e: Exception) {
                     appLogger.e("AudioFileManager", "MediaCodec 병합 실패", e)
+                    null
                 }
             }
-            outputFile
         }
     }
 

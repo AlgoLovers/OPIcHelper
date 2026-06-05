@@ -7,7 +7,7 @@ interface AudioFileManager {
 
     suspend fun saveRecordingFile(recordingFile: File, fileName: String): File
 
-    suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File
+    suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File?
 
     suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean
 

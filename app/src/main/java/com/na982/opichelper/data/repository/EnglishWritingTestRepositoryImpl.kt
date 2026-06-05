@@ -116,15 +116,18 @@ class EnglishWritingTestRepositoryImpl(
             val mergedFileName = "${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_${timestamp}"
 
             try {
-                audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
-                recordingFiles.forEach { file ->
-                    if (file.exists()) file.delete()
+                val mergedFile = audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
+                if (mergedFile != null) {
+                    recordingFiles.forEach { file ->
+                        if (file.exists()) file.delete()
+                    }
+                    emit(MemorizeTestEvent.MergedFileCreated)
+                } else {
+                    appLogger.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지")
                 }
             } catch (e: Exception) {
                 appLogger.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지", e)
             }
-
-            emit(MemorizeTestEvent.MergedFileCreated)
         }
 
         progressPersistenceService.saveNavigationState(
