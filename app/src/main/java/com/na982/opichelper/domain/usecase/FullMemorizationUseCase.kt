@@ -61,9 +61,6 @@ class FullMemorizationUseCase @Inject constructor(
     private var playbackJob: Job? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    fun isRecording(): Boolean = _state.value is FullMemorizationState.Recording
-    fun isPlaying(): Boolean = _state.value is FullMemorizationState.Playing
-
     suspend fun startFullMemorization(
         category: String,
         scriptIndex: Int

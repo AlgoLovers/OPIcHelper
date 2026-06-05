@@ -144,15 +144,6 @@ class RecordingFileRepositoryImpl(
         }
     }
 
-    override suspend fun stopPlayingRecording() {
-        try {
-            recordingAudioPlayer.stopRecording()
-            mutex.withLock { currentPlayingPath = null }
-        } catch (e: Exception) {
-            appLogger.e("RecordingFileRepositoryImpl", "stopPlayingRecording 실패", e)
-        }
-    }
-
     private fun findRecordingFilePath(category: String, scriptIndex: Int): String? {
         val recordingsDir = getRecordingsDirectory()
         val prefix = "${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_"

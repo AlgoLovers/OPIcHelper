@@ -6,5 +6,4 @@ interface AudioPlayer {
     fun play(file: File, onCompletion: () -> Unit)
     fun playAudio(filePath: String)
     fun stop()
-    val isPlaying: Boolean
 }

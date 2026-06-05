@@ -159,17 +159,6 @@ class FullMemorizationViewModel @Inject constructor(
         }
     }
 
-    fun deleteRecording() {
-        viewModelScope.launch {
-            try {
-                fullMemorizationUseCase.clearRecording()
-                refreshRecordingStatus()
-            } catch (e: Exception) {
-                appLogger.e("FullMemorizationVM", "녹음 파일 삭제 실패", e)
-            }
-        }
-    }
-
     override fun onStop() {
         viewModelScope.launch {
             try {

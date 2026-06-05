@@ -30,7 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
-import com.na982.opichelper.presentation.viewmodel.PlaybackActionListener
+import com.na982.opichelper.domain.audio.PlaybackActionListener
 import com.na982.opichelper.presentation.viewmodel.MemorizationController
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
@@ -40,7 +40,6 @@ import com.na982.opichelper.domain.usecase.ModeGroup
 import com.na982.opichelper.domain.usecase.ProgressCleanupUseCase
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -59,7 +58,6 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var progressCleanupUseCase: ProgressCleanupUseCase
 
-    private var isFinishing = false
     private var playbackViewModel: PlaybackViewModel? = null
     private var qaViewModel: QaBrowserViewModel? = null
     private var navController: NavHostController? = null
@@ -273,9 +271,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (isFinishing) {
-            isFinishing = false
-        }
         if (!wakeLockController.isHeld()) {
             wakeLockController.acquire()
         }
@@ -284,13 +279,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        isFinishing = true
         playbackViewModel?.cleanupAllTtsSync()
         unregisterPipActionReceiver()
         cleanupAllResources()

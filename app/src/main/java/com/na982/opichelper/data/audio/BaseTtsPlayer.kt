@@ -175,8 +175,6 @@ abstract class BaseTtsPlayer(
         }
     }
 
-    override fun isPlaying(): Boolean = _isPlaying.get()
-
     override fun release() {
         try {
             tts?.stop()

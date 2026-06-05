@@ -9,9 +9,6 @@ class AudioPlayerImpl(private val appLogger: AppLogger) : AudioPlayer {
     @Volatile private var player: MediaPlayer? = null
     private val lock = Any()
 
-    override val isPlaying: Boolean
-        get() = synchronized(lock) { player?.isPlaying == true }
-
     override fun play(file: File, onCompletion: () -> Unit) = synchronized(lock) {
         stop()
         player = MediaPlayer().apply {

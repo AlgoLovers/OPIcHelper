@@ -9,9 +9,6 @@ class RecordingAudioPlayerImpl(private val appLogger: AppLogger) : RecordingAudi
     @Volatile private var player: MediaPlayer? = null
     private val lock = Any()
 
-    override val isPlaying: Boolean
-        get() = synchronized(lock) { player?.isPlaying == true }
-
     override fun playRecording(filePath: String, onCompletion: () -> Unit) = synchronized(lock) {
         stopRecordingInternal()
 

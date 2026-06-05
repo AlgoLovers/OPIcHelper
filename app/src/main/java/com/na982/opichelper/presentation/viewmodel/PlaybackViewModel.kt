@@ -15,6 +15,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import com.na982.opichelper.domain.audio.HighlightInfo
 import com.na982.opichelper.domain.audio.PipState
 import com.na982.opichelper.domain.audio.PipStateAggregator
+import com.na982.opichelper.domain.audio.PlaybackActionListener
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator

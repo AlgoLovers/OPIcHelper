@@ -51,8 +51,4 @@ interface RecordingFileRepository {
         onPlayingStateChange: (Boolean) -> Unit
     )
     
-    /**
-     * 현재 재생 중인 녹음 파일 중지
-     */
-    suspend fun stopPlayingRecording()
 } 

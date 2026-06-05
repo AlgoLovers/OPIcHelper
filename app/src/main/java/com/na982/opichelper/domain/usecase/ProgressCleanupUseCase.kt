@@ -4,6 +4,8 @@ import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.manager.AppLogger
 import com.na982.opichelper.domain.repository.MemorizeLevelPreferences
 import com.na982.opichelper.domain.repository.QaContentReader
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ProgressCleanupUseCase @Inject constructor(
@@ -12,7 +14,7 @@ class ProgressCleanupUseCase @Inject constructor(
     private val progressTracker: MemorizeTestProgressTracker,
     private val appLogger: AppLogger
 ) {
-    suspend fun cleanupOnExit() {
+    suspend fun cleanupOnExit() = withContext(NonCancellable) {
         try {
             val selectedMemorizeLevel = memorizeLevelPreferences.getMemorizeLevel()
             val currentItem = qaContentReader.getCurrentQaItem()
@@ -45,6 +47,10 @@ class ProgressCleanupUseCase @Inject constructor(
     }
 
     suspend fun restoreProgress() {
-        progressTracker.restoreAllProgress()
+        try {
+            progressTracker.restoreAllProgress()
+        } catch (e: Exception) {
+            appLogger.e("ProgressCleanupUseCase", "진행상황 복원 실패", e)
+        }
     }
 }

@@ -14,7 +14,6 @@ interface TtsPlaybackController : TtsHighlightController {
 
     fun playQuestion(question: String)
     fun playAnswer(answer: String)
-    fun playMergedAudio(question: String, answer: String)
     fun stopTts()
     fun stopAndMarkPaused()
     fun clearPausedState()

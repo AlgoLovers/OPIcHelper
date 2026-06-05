@@ -5,10 +5,10 @@ import com.na982.opichelper.domain.repository.TtsServiceController
 import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.ModeGroup
-import com.na982.opichelper.presentation.viewmodel.PlaybackActionListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -204,6 +204,7 @@ class PipStateAggregator @Inject constructor(
 
     fun release() {
         _actionListener = null
+        scope.cancel()
     }
 
     private fun updateNotificationSentence(sentenceEn: String?, sentenceKo: String?) {

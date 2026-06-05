@@ -109,49 +109,6 @@ class TtsPlaybackControllerImpl @Inject constructor(
         }
     }
 
-    override fun playMergedAudio(question: String, answer: String) {
-        stopAndReset(clearHighlight = false)
-        currentPlayJob = coroutineScope.launch {
-            val myJob = this.coroutineContext[Job]
-            try {
-                _isQuestionPlaying.update { true }
-                updateIsPlaying()
-                val questionResult = ttsOrchestrator.speakWithHighlight(question) { index, sentence ->
-                    highlightStateHolder.setQuestionHighlight(index, sentence)
-                }
-                if (questionResult is TtsSpeakResult.Unavailable || questionResult is TtsSpeakResult.Error) {
-                    return@launch
-                }
-
-                _isAnswerPlaying.update { true }
-                _isQuestionPlaying.update { false }
-                highlightStateHolder.setQuestionHighlight(null)
-
-                kotlinx.coroutines.delay(MERGED_AUDIO_DELAY_MS)
-
-                updateIsPlaying()
-                ttsOrchestrator.speakWithHighlight(answer) { index, sentence ->
-                    highlightStateHolder.setAnswerHighlight(index, sentence)
-                }
-                _isAnswerPlaying.update { false }
-                highlightStateHolder.setAnswerHighlight(null)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                appLogger.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
-            } finally {
-                if (currentPlayJob == myJob) {
-                    _isQuestionPlaying.update { false }
-                    _isAnswerPlaying.update { false }
-                    _isPaused.update { false }
-                    updateIsPlaying()
-                    highlightStateHolder.setQuestionHighlight(null)
-                    highlightStateHolder.setAnswerHighlight(null)
-                }
-            }
-        }
-    }
-
     override fun stopTts() = stopAndReset(clearHighlight = true)
 
     private fun updateIsPlaying() {
@@ -195,10 +152,6 @@ class TtsPlaybackControllerImpl @Inject constructor(
     }
 
     override fun stopWithoutClearingHighlight() = stopAndReset(clearHighlight = false)
-
-    override fun setQuestionHighlightIndex(index: Int) {
-        highlightStateHolder.setQuestionHighlight(index)
-    }
 
     override fun setAnswerHighlightIndex(index: Int, sentence: String?) {
         highlightStateHolder.setAnswerHighlight(index, sentence)
