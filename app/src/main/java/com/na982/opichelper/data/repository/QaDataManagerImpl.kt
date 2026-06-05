@@ -96,6 +96,9 @@ class QaDataManagerImpl(
             if (index >= 0) index else Int.MAX_VALUE
         }
 
+        itemsByCategory.clear()
+        itemIndexByCategory.clear()
+
         for (category in sortedCategories) {
             val categoryItems = allLeveledItems.filter { it.category == category }
             itemsByCategory[category] = categoryItems
