@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.na982.opichelper.domain.manager.AppLogger
 import com.google.gson.Gson
-import com.na982.opichelper.domain.entity.AppExitState
 import com.na982.opichelper.domain.entity.CategoryProgress
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 
@@ -22,40 +21,6 @@ class ProgressPersistenceServiceImpl(
         private const val KEY_NAV_CATEGORY = "last_category"
         private const val KEY_NAV_SCRIPT_INDEX = "last_script_index"
         private const val KEY_NAV_SENTENCE_INDEX = "last_sentence_index"
-    }
-
-    override suspend fun saveAppExitState(
-        category: String,
-        scriptIndex: Int,
-        memorizeLevel: String,
-        currentSentenceIndex: Int,
-        totalSentences: Int,
-        isMemorizeTestRunning: Boolean
-    ) {
-        try {
-            val appExitState = AppExitState(
-                category = category,
-                scriptIndex = scriptIndex,
-                memorizeLevel = memorizeLevel,
-                currentSentenceIndex = currentSentenceIndex,
-                totalSentences = totalSentences,
-                isMemorizeTestRunning = isMemorizeTestRunning
-            )
-            val json = gson.toJson(appExitState)
-            prefs.edit().putString(KEY_APP_EXIT_STATE, json).apply()
-        } catch (e: Exception) {
-            appLogger.e("ProgressPersistenceService", "앱 종료 상태 저장 실패", e)
-        }
-    }
-
-    override suspend fun loadAppExitState(): AppExitState? {
-        return try {
-            val json = prefs.getString(KEY_APP_EXIT_STATE, null)
-            if (json != null) gson.fromJson(json, AppExitState::class.java) else null
-        } catch (e: Exception) {
-            appLogger.e("ProgressPersistenceService", "앱 종료 상태 로드 실패", e)
-            null
-        }
     }
 
     override suspend fun saveNavigationState(state: ProgressPersistenceService.NavigationState) {

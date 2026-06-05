@@ -73,15 +73,6 @@ class MemorizationModeCoordinatorImpl @Inject constructor() : MemorizationModeCo
         eventJob = null
     }
 
-    override fun cancelJobs() = synchronized(_lock) {
-        activeJob?.cancel()
-        activeJob = null
-        eventJob?.cancel()
-        eventJob = null
-    }
-
-    override fun isActive(): Boolean = _isRunning.value
-
     override suspend fun emitEvent(event: CoordinatorEvent) {
         _events.emit(event)
     }

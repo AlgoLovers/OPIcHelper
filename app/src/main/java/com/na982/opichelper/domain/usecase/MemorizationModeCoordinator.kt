@@ -3,7 +3,10 @@ package com.na982.opichelper.domain.usecase
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
-interface MemorizationModeCoordinator : MemorizationStateObserver {
+interface MemorizationModeCoordinator {
+    val currentMode: StateFlow<CurrentMode>
+    val isRunning: StateFlow<Boolean>
+    val events: SharedFlow<CoordinatorEvent>
 
     fun requestMode(mode: CurrentMode): Boolean
     fun updateMode(mode: CurrentMode)
@@ -11,8 +14,6 @@ interface MemorizationModeCoordinator : MemorizationStateObserver {
     fun registerJob(job: kotlinx.coroutines.Job)
     fun registerEventJob(job: kotlinx.coroutines.Job)
     fun cancelEventJob()
-    fun cancelJobs()
-    fun isActive(): Boolean
     suspend fun emitEvent(event: CoordinatorEvent)
 }
 

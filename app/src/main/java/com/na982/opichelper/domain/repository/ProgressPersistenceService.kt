@@ -1,21 +1,10 @@
 package com.na982.opichelper.domain.repository
 
-import com.na982.opichelper.domain.entity.AppExitState
 import com.na982.opichelper.domain.entity.CategoryProgress
 
 interface ProgressPersistenceService {
     data class NavigationState(val category: String?, val scriptIndex: Int = -1, val sentenceIndex: Int = 0)
 
-    suspend fun saveAppExitState(
-        category: String,
-        scriptIndex: Int,
-        memorizeLevel: String,
-        currentSentenceIndex: Int,
-        totalSentences: Int,
-        isMemorizeTestRunning: Boolean
-    )
-
-    suspend fun loadAppExitState(): AppExitState?
     suspend fun saveNavigationState(state: NavigationState)
     suspend fun loadNavigationState(): NavigationState
     suspend fun saveCategoryProgress(progress: CategoryProgress)

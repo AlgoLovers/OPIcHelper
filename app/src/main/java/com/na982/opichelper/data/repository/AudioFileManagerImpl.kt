@@ -25,47 +25,6 @@ class AudioFileManagerImpl(
         private const val FULL_MEMORIZATION_PREFIX = "통암기"
     }
 
-    override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
-        return withContext(Dispatchers.IO) {
-            if (files.isEmpty()) {
-                return@withContext null
-            }
-
-            val outputDir = File(context.filesDir, "merged")
-            if (!outputDir.exists()) {
-                outputDir.mkdirs()
-            }
-
-            val output = File(outputDir, "${ENGLISH_WRITING_FILE_PREFIX}_${scriptId}_merged.m4a")
-
-            if (files.size == 1) {
-                files[0].copyTo(output, overwrite = true)
-                return@withContext output
-            }
-
-            var mergeSuccess = false
-
-            try {
-                mergeWithMediaCodec(files, output)
-                mergeSuccess = output.exists() && output.length() > 0
-            } catch (e: Exception) {
-                appLogger.e("AudioFileManager", "MediaCodec 병합 실패", e)
-            }
-
-            if (mergeSuccess) {
-                files.forEach { file ->
-                    if (file.exists()) {
-                        file.delete()
-                    }
-                }
-            } else {
-                appLogger.e("AudioFileManager", "병합 실패로 원본 파일 유지")
-            }
-
-            output
-        }
-    }
-
     override fun getRecordingFilePath(fileName: String): String {
         val recordingsDir = File(context.filesDir, "recordings")
         if (!recordingsDir.exists()) {
@@ -222,20 +181,4 @@ class AudioFileManagerImpl(
         }
     }
 
-    override suspend fun getFullMemorizationRecording(category: String, scriptIndex: Int): File? {
-        return withContext(Dispatchers.IO) {
-            val recordingsDir = File(context.filesDir, "recordings")
-            if (!recordingsDir.exists()) {
-                return@withContext null
-            }
-
-            val pattern = Regex("${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_.*")
-
-            val files = recordingsDir.listFiles { file ->
-                file.name.matches(pattern)
-            }
-
-            files?.maxByOrNull { it.lastModified() }
-        }
-    }
 }

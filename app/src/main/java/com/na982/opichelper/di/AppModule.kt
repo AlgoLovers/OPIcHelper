@@ -300,13 +300,5 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMemorizationStateObserver(coordinator: MemorizationModeCoordinator): com.na982.opichelper.domain.usecase.MemorizationStateObserver = coordinator
-
-    @Provides
-    @Singleton
     fun provideTtsPlaybackController(impl: TtsPlaybackControllerImpl): TtsPlaybackController = impl
-
-    @Provides
-    @Singleton
-    fun provideTtsHighlightController(controller: TtsPlaybackController): TtsHighlightController = controller
 } 

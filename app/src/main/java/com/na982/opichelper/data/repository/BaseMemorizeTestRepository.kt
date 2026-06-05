@@ -4,7 +4,6 @@ import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
-import com.na982.opichelper.domain.repository.TestProgressData
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -41,31 +40,5 @@ abstract class BaseMemorizeTestRepository(
 
     open suspend fun getResumeIndex(category: String, scriptIndex: Int, totalCount: Int): Int {
         return resolveStartIndex(category, scriptIndex, totalCount)
-    }
-
-    suspend fun getCurrentProgress(category: String, scriptIndex: Int, totalSentences: Int = 0): TestProgressData? {
-        val navState = progressPersistenceService.loadNavigationState()
-        return if (navState.category == category && navState.scriptIndex == scriptIndex) {
-            TestProgressData(
-                category = category,
-                scriptIndex = scriptIndex,
-                memorizeLevel = memorizeLevel.displayName,
-                currentSentenceIndex = navState.sentenceIndex,
-                totalSentences = totalSentences,
-                isMemorizeTestRunning = false
-            )
-        } else null
-    }
-
-    suspend fun updateProgress(progressData: TestProgressData) {
-        progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(progressData.category, progressData.scriptIndex, progressData.currentSentenceIndex)
-        )
-    }
-
-    suspend fun clearProgress(category: String, scriptIndex: Int) {
-        progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, scriptIndex, 0)
-        )
     }
 }

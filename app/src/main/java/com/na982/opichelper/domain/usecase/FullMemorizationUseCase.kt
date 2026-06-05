@@ -167,13 +167,6 @@ class FullMemorizationUseCase @Inject constructor(
         }
     }
 
-    suspend fun clearRecording() = mutex.withLock {
-        val qaItem = qaContentReader.getCurrentQaItem()
-        if (qaItem != null) {
-            recordingFileRepository.deleteRecordingFile(qaItem.category, qaContentReader.getCurrentIndex())
-        }
-    }
-
     suspend fun cancelPlayback() = mutex.withLock {
         playbackJob?.cancel()
         playbackJob = null
