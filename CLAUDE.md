@@ -308,6 +308,18 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | OCP duplicated when dispatch 4곳 | MemorizationController 중앙화 (0146) |
 | QaBrowserViewModel cleanupOnAppExit SRP 위반 | ProgressCleanupUseCase 추출 (0147) |
 | PlaybackViewModel SRP 위반 (7 deps, 5 responsibilities) | PipStateAggregator 추출, 6 deps 3 responsibilities (0148) |
+| PlaybackActionListener domain→presentation import 위반 | domain/audio/ 이동 (0149) |
+| PipStateAggregator CoroutineScope 누수 | release()에 scope.cancel() 추가 (0149) |
+| ProgressCleanupUseCase 취소 시 미저장 | withContext(NonCancellable) 추가 (0149) |
+| TtsPlayer.isPlaying() 미사용 | 인터페이스+구현체 제거 (0149) |
+| RecordingAudioPlayer.isPlaying 미사용 | 인터페이스+구현체 제거 (0149) |
+| AudioPlayer.isPlaying 미사용 | 인터페이스+구현체 제거 (0149) |
+| RecordingFileRepository.stopPlayingRecording() 미사용 | 인터페이스+구현체 제거 (0149) |
+| TtsPlaybackController playMergedAudio/setQuestionHighlightIndex 미사용 | 인터페이스+구현체 제거 (0149) |
+| FullMemorizationUseCase isRecording/isPlaying 미사용 | 제거 (0149) |
+| FullMemorizationViewModel deleteRecording 미사용 | 제거 (0149) |
+| MemorizeTestProgressTracker hasScriptProgress/clearScriptProgress 미사용 | 제거 (0149) |
+| MainActivity isFinishing 미사용, 빈 onStop, 미사용 import | 제거 (0149) |
 
 ## Git 커밋 규칙
 
