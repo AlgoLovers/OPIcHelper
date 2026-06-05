@@ -1,4 +1,4 @@
-package com.na982.opichelper.domain.usecase
+package com.na982.opichelper.domain.entity
 
 enum class ModeGroup { NONE, REPEAT_LISTENING, ENGLISH_WRITING, FULL_MEMORIZATION }
 

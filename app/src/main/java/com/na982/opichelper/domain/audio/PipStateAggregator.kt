@@ -2,9 +2,9 @@ package com.na982.opichelper.domain.audio
 
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
 import com.na982.opichelper.domain.repository.TtsServiceController
-import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
-import com.na982.opichelper.domain.usecase.ModeGroup
+import com.na982.opichelper.domain.entity.ModeGroup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

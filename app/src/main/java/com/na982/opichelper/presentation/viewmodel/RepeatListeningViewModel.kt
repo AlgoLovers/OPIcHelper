@@ -8,7 +8,7 @@ import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.repository.QaNavigator
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import com.na982.opichelper.domain.repository.PlaybackPreferences
-import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.entity.RepeatListeningData

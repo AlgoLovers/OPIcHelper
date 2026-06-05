@@ -3,7 +3,7 @@ package com.na982.opichelper.presentation.viewmodel
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
-import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.FullMemorizationState
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator

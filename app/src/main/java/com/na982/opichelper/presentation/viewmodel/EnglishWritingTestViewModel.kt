@@ -6,7 +6,7 @@ import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
-import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import dagger.hilt.android.lifecycle.HiltViewModel

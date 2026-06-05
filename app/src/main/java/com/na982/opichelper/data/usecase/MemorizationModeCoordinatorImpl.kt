@@ -1,9 +1,9 @@
 package com.na982.opichelper.data.usecase
 
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
-import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
-import com.na982.opichelper.domain.usecase.ModeGroup
+import com.na982.opichelper.domain.entity.ModeGroup
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow

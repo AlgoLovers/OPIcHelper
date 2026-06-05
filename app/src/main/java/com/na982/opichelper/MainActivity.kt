@@ -36,7 +36,7 @@ import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
-import com.na982.opichelper.domain.usecase.ModeGroup
+import com.na982.opichelper.domain.entity.ModeGroup
 import com.na982.opichelper.domain.usecase.ProgressCleanupUseCase
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint

@@ -1,5 +1,6 @@
 package com.na982.opichelper.domain.usecase
 
+import com.na982.opichelper.domain.entity.CurrentMode
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 

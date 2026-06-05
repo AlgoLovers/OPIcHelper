@@ -1,6 +1,6 @@
 package com.na982.opichelper.presentation.viewmodel
 
-import com.na982.opichelper.domain.usecase.ModeGroup
+import com.na982.opichelper.domain.entity.ModeGroup
 
 class MemorizationController(
     private val viewModels: Map<ModeGroup, BaseMemorizationViewModel<*>>
