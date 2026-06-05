@@ -19,6 +19,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 
 class QaDataManagerImpl(
     private val qaDataLoader: QaDataLoader,
@@ -35,8 +36,8 @@ class QaDataManagerImpl(
     @Volatile
     private var userLevelJob: Job? = null
 
-    private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
-    private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
+    private val itemsByCategory: MutableMap<String, List<QaItem>> = ConcurrentHashMap()
+    private val itemIndexByCategory: MutableMap<String, Int> = ConcurrentHashMap()
     private val mutex = Mutex()
 
     private val _currentQaItem = MutableStateFlow<QaItem?>(null)
@@ -70,8 +71,10 @@ class QaDataManagerImpl(
         userLevelJob?.cancel()
         userLevelJob = scope.launch {
             userLevelPreferences.userLevel.collect { _ ->
-                loadQaItemsFromAssets()
-                restoreLastCategory()
+                mutex.withLock {
+                    loadQaItemsFromAssets()
+                    restoreLastCategory()
+                }
             }
         }
     }
@@ -210,7 +213,7 @@ class QaDataManagerImpl(
         } else {
             val firstCategory = _categories.value.firstOrNull()
             if (firstCategory != null) {
-                selectCategory(firstCategory)
+                navigateTo(firstCategory, 0)
             }
         }
     }
