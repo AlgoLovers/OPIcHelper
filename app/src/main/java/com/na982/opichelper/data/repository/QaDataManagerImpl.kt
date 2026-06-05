@@ -17,7 +17,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class QaDataManagerImpl(
     private val qaDataLoader: QaDataLoader,
@@ -34,8 +35,9 @@ class QaDataManagerImpl(
     @Volatile
     private var userLevelJob: Job? = null
 
-    private val itemsByCategory: MutableMap<String, List<QaItem>> = ConcurrentHashMap()
-    private val itemIndexByCategory: MutableMap<String, Int> = ConcurrentHashMap()
+    private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
+    private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
+    private val mutex = Mutex()
 
     private val _currentQaItem = MutableStateFlow<QaItem?>(null)
     override val currentQaItem: StateFlow<QaItem?> = _currentQaItem.asStateFlow()
@@ -52,14 +54,14 @@ class QaDataManagerImpl(
     private val _error = MutableStateFlow<String?>(null)
     override val error: StateFlow<String?> = _error.asStateFlow()
 
-    override suspend fun init() {
+    override suspend fun init() = mutex.withLock {
         dataSeeder.seedIfNeeded()
         loadQaItemsFromAssets()
         restoreLastCategory()
         setupUserLevelObserver()
     }
 
-    override suspend fun reload() {
+    override suspend fun reload() = mutex.withLock {
         loadQaItemsFromAssets()
         updateCurrentQaItem()
     }
@@ -139,7 +141,7 @@ class QaDataManagerImpl(
         return itemsByCategory[category] ?: emptyList()
     }
 
-    override suspend fun selectCategory(category: String) {
+    override suspend fun selectCategory(category: String) = mutex.withLock {
         if (itemsByCategory.containsKey(category)) {
             navigateTo(category, 0)
         } else {
@@ -154,7 +156,7 @@ class QaDataManagerImpl(
         return currentIndex < items.size - 1
     }
 
-    override suspend fun nextQaItem() {
+    override suspend fun nextQaItem() = mutex.withLock {
         val category = _currentCategory.value
         if (category != null) {
             val items = itemsByCategory[category] ?: emptyList()
@@ -166,7 +168,7 @@ class QaDataManagerImpl(
         }
     }
 
-    override suspend fun previousQaItem() {
+    override suspend fun previousQaItem() = mutex.withLock {
         val category = _currentCategory.value
         if (category != null) {
             val currentIndex = itemIndexByCategory[category] ?: 0
@@ -239,8 +241,8 @@ class QaDataManagerImpl(
         }
     }
 
-    override suspend fun navigateToIndex(index: Int) {
-        val category = _currentCategory.value ?: return
+    override suspend fun navigateToIndex(index: Int) = mutex.withLock {
+        val category = _currentCategory.value ?: return@withLock
         val items = itemsByCategory[category] ?: emptyList()
         if (index in 0 until items.size) {
             navigateTo(category, index)
