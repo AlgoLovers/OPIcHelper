@@ -45,7 +45,7 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 - `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 코디네이터 이벤트. 의존성 6개 (TtsPlaybackController, PlayMergedFileUseCase, MemorizationModeCoordinator, PlaybackPreferences, PipStateAggregator, AppLogger). PiP 상태는 PipStateAggregator에 위임
 - `RepeatListeningViewModel`: 반복듣기 모드 전담. 의존성 7개 (RepeatListeningRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator, AppLogger)
 - `EnglishWritingTestViewModel`: 영작테스트 모드 전담. 의존성 6개 (EnglishWritingTestRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger)
-- `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 4개 (FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator, AppLogger)
+- `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 4개 (FullMemorizationUseCase, QaContentReader, MemorizationModeCoordinator, AppLogger)
 - `MemorizationModeCoordinator`: 3개 모드 상호 배제, 상태 머신, Job 관리. @Singleton
 - `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator
 - `OnboardingViewModel`: 온보딩/PiP 가이드 상태. OnboardingPreferences
@@ -320,6 +320,17 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | FullMemorizationViewModel deleteRecording 미사용 | 제거 (0149) |
 | MemorizeTestProgressTracker hasScriptProgress/clearScriptProgress 미사용 | 제거 (0149) |
 | MainActivity isFinishing 미사용, 빈 onStop, 미사용 import | 제거 (0149) |
+| FullMemorizationUseCase.clearRecording() 미사용 | 제거 (0151) |
+| MemorizationModeCoordinator.cancelJobs()/isActive() 미사용 | 제거 (0151) |
+| MemorizationStateObserver 인터페이스 미사용 | 제거, 속성을 MemorizationModeCoordinator에 직접 선언 (0151) |
+| TtsHighlightController DI 바인딩 미사용 | 제거 (0151) |
+| AudioFileManager.mergeAndSaveAudioFiles()/getFullMemorizationRecording() 미사용 | 제거 (0151) |
+| ProgressPersistenceService.saveAppExitState()/loadAppExitState() 미사용 | 제거 (0151) |
+| AppExitState 데이터 클래스 미사용 | 제거 (0151) |
+| RepeatListeningRepository/EnglishWritingTestRepository getCurrentProgress/updateProgress/clearProgress 미사용 | 제거 (0151) |
+| TestProgressData 데이터 클래스 미사용 | 제거 (0151) |
+| QaDataManagerImpl ConcurrentHashMap 경쟁 상태 | Mutex로 직렬화 (0152) |
+| CategoryProgress/AppExitState/TestProgressData 중복 | ScriptProgress로 통합 (0153) |
 
 ## Git 커밋 규칙
 
