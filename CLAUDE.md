@@ -334,6 +334,10 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | QaDataManagerImpl observer 경쟁 상태 | setupUserLevelObserver에 mutex.withLock 추가 (0155) |
 | AudioFileManager 병합 실패 시 소스 파일 삭제 | mergeAudioFiles 반환 타입 File→File?, null 체크 후 삭제 (0156) |
 | CurrentMode/ModeGroup entity→usecase DIP 위반 | domain/entity/로 이동 (0157) |
+| FullMemorizationUseCase 녹음 리소스 누수 | close()/cancelPlayback()에 stopRecording 추가 (0159) |
+| QaDataManagerImpl 레벨 변경 시 stale data | loadQaItemsFromAssets()에서 맵 clear 후 로드 (0160) |
+| PipStateAggregator.lastMemorizationGroup 캡슐화 | internal var → private var + 공개 읽기 전용 (0161) |
+| isFullMemorizationRecordingPlaying 오해 유발 이름 | isFullMemorizationPlaying으로 변경 (0161) |
 
 ## Git 커밋 규칙
 
