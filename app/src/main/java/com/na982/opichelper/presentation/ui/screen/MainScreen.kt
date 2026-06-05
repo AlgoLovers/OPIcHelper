@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.activity.compose.BackHandler
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
@@ -134,8 +133,6 @@ fun MainScreen(
         darkTheme = isDarkTheme,
         memorizeLevel = selectedLevel
     ) {
-        BackHandler(enabled = false) {}
-
         val qaItem = qaState.currentQaItem
         val category = qaState.currentCategory
         val itemsInCategory = remember(category) {
@@ -513,7 +510,7 @@ fun MainScreen(
                                 hasEnglishWritingTestMergedFile = playbackState.hasEnglishWritingTestMergedFile,
                                 isEnglishWritingTestMergedFilePlaying = playbackState.isEnglishWritingTestMergedFilePlaying,
                                 hasFullMemorizationRecording = fullMemorizationState.hasRecordingFile,
-                                isFullMemorizationRecordingPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING,
+                                isFullMemorizationPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING,
                                 modifier = Modifier.weight(1f)
                             )
                         }

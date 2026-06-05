@@ -22,7 +22,7 @@ import javax.inject.Inject
 class EditScriptViewModel @Inject constructor(
     private val scriptEditRepository: ScriptEditRepository,
     private val validateScriptEditUseCase: ValidateScriptEditUseCase,
-    private val qaDataManager: QaDataLifecycle
+    private val qaDataLifecycle: QaDataLifecycle
 ) : ViewModel() {
 
     private val _sentencePairs = MutableStateFlow<List<SentencePair>>(emptyList())
@@ -88,7 +88,7 @@ class EditScriptViewModel @Inject constructor(
         }
         viewModelScope.launch {
             scriptEditRepository.updateQaItem(updatedItem, level, scriptIndex)
-            qaDataManager.reload()
+            qaDataLifecycle.reload()
             _isModified.update { true }
         }
     }

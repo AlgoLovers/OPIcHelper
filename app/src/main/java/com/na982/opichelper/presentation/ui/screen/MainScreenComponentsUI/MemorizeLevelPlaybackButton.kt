@@ -15,7 +15,7 @@ fun MemorizeLevelPlaybackButton(
     hasEnglishWritingTestMergedFile: Boolean,
     isEnglishWritingTestMergedFilePlaying: Boolean,
     hasFullMemorizationRecording: Boolean,
-    isFullMemorizationRecordingPlaying: Boolean,
+    isFullMemorizationPlaying: Boolean,
     modifier: Modifier = Modifier
 ) {
     when (MemorizeLevel.fromDisplayName(selectedLevel)) {
@@ -37,7 +37,7 @@ fun MemorizeLevelPlaybackButton(
         MemorizeLevel.FULL_MEMORIZATION -> {
             if (hasFullMemorizationRecording) {
                 PlayStopToggleButton(
-                    isActive = isFullMemorizationRecordingPlaying,
+                    isActive = isFullMemorizationPlaying,
                     onActivate = onPlayFullMemorization,
                     onDeactivate = onStopFullMemorization,
                     activeLabel = "재생 중...",

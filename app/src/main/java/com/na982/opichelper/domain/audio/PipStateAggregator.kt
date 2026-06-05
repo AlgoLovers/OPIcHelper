@@ -48,7 +48,8 @@ class PipStateAggregator @Inject constructor(
     private var _actionListener: PlaybackActionListener? = null
 
     @Volatile
-    internal var lastMemorizationGroup: ModeGroup? = null
+    private var _lastMemorizationGroup: ModeGroup? = null
+    val lastMemorizationGroup: ModeGroup? get() = _lastMemorizationGroup
 
     enum class LastPlayedType { QUESTION, ANSWER, NONE }
     @Volatile
@@ -87,7 +88,7 @@ class PipStateAggregator @Inject constructor(
                 val active = isPlaying || isMemorizationRunning || isMergedFilePlaying
                 if (active) lastPlayingTimestamp = System.currentTimeMillis()
                 if (isMemorizationRunning && currentMode != CurrentMode.NONE) {
-                    lastMemorizationGroup = currentMode.group
+                    _lastMemorizationGroup = currentMode.group
                 }
                 _pipState.update { prev ->
                     val wasPlaying = prev.isPlaying
@@ -136,7 +137,7 @@ class PipStateAggregator @Inject constructor(
     fun repeatPlayback() {
         wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
-        if (lastMemorizationGroup != null) {
+        if (_lastMemorizationGroup != null) {
             _actionListener?.onRepeatMemorization()
             return
         }
@@ -150,7 +151,7 @@ class PipStateAggregator @Inject constructor(
     fun playNextItem() {
         wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
-        if (lastMemorizationGroup != null) {
+        if (_lastMemorizationGroup != null) {
             _actionListener?.onNextAndRestart()
             return
         }
@@ -183,13 +184,13 @@ class PipStateAggregator @Inject constructor(
     fun markQuestionPlayed() {
         wasStoppedByUser = false
         lastPlayedType = LastPlayedType.QUESTION
-        lastMemorizationGroup = null
+        _lastMemorizationGroup = null
     }
 
     fun markAnswerPlayed() {
         wasStoppedByUser = false
         lastPlayedType = LastPlayedType.ANSWER
-        lastMemorizationGroup = null
+        _lastMemorizationGroup = null
     }
 
     fun onBackgroundMove() {
