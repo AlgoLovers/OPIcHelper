@@ -331,6 +331,9 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | TestProgressData 데이터 클래스 미사용 | 제거 (0151) |
 | QaDataManagerImpl ConcurrentHashMap 경쟁 상태 | Mutex로 직렬화 (0152) |
 | CategoryProgress/AppExitState/TestProgressData 중복 | ScriptProgress로 통합 (0153) |
+| QaDataManagerImpl observer 경쟁 상태 | setupUserLevelObserver에 mutex.withLock 추가 (0155) |
+| AudioFileManager 병합 실패 시 소스 파일 삭제 | mergeAudioFiles 반환 타입 File→File?, null 체크 후 삭제 (0156) |
+| CurrentMode/ModeGroup entity→usecase DIP 위반 | domain/entity/로 이동 (0157) |
 
 ## Git 커밋 규칙
 
