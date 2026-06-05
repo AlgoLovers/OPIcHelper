@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.na982.opichelper.domain.manager.AppLogger
 import com.google.gson.Gson
-import com.na982.opichelper.domain.entity.CategoryProgress
+import com.na982.opichelper.domain.entity.ScriptProgress
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 
 class ProgressPersistenceServiceImpl(
@@ -49,7 +49,7 @@ class ProgressPersistenceServiceImpl(
         }
     }
 
-    override suspend fun saveCategoryProgress(progress: CategoryProgress) {
+    override suspend fun saveCategoryProgress(progress: ScriptProgress) {
         try {
             val key = KEY_CATEGORY_PROGRESS_PREFIX + progress.getKey()
             val json = gson.toJson(progress)
@@ -59,25 +59,25 @@ class ProgressPersistenceServiceImpl(
         }
     }
 
-    override suspend fun loadCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String): CategoryProgress? {
+    override suspend fun loadCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String): ScriptProgress? {
         return try {
             val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}_${memorizeLevel}"
             val json = prefs.getString(key, null)
-            if (json != null) gson.fromJson(json, CategoryProgress::class.java) else null
+            if (json != null) gson.fromJson(json, ScriptProgress::class.java) else null
         } catch (e: Exception) {
             appLogger.e("ProgressPersistenceService", "카테고리 진행 상황 로드 실패", e)
             null
         }
     }
 
-    override suspend fun loadAllCategoryProgress(): Map<String, CategoryProgress> {
+    override suspend fun loadAllCategoryProgress(): Map<String, ScriptProgress> {
         return try {
-            val progressMap = mutableMapOf<String, CategoryProgress>()
+            val progressMap = mutableMapOf<String, ScriptProgress>()
             prefs.all.forEach { (key, value) ->
                 if (key.startsWith(KEY_CATEGORY_PROGRESS_PREFIX)) {
                     try {
                         val json = value as String
-                        val progress = gson.fromJson(json, CategoryProgress::class.java)
+                        val progress = gson.fromJson(json, ScriptProgress::class.java)
                         progressMap[progress.getKey()] = progress
                     } catch (_: Exception) {}
                 }

@@ -2,7 +2,6 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.entity.ScriptProgress
-import com.na982.opichelper.domain.entity.CategoryProgress
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,17 +38,8 @@ class MemorizeTestProgressTracker @Inject constructor(
         try {
             val allProgress = progressPersistenceService.loadAllCategoryProgress()
 
-            val scriptProgressMap = allProgress.mapValues { (_, categoryProgress) ->
-                ScriptProgress(
-                    category = categoryProgress.category,
-                    scriptIndex = categoryProgress.scriptIndex,
-                    memorizeLevel = categoryProgress.memorizeLevel,
-                    currentSentenceIndex = categoryProgress.currentSentenceIndex,
-                    totalSentences = categoryProgress.totalSentences,
-                    isMemorizeTestRunning = categoryProgress.isMemorizeTestRunning,
-                    timestamp = categoryProgress.timestamp,
-                    needsSave = false
-                )
+            val scriptProgressMap = allProgress.mapValues { (_, progress) ->
+                progress.copy(needsSave = false)
             }
 
             mutex.withLock {
@@ -113,17 +103,7 @@ class MemorizeTestProgressTracker @Inject constructor(
 
                 if (changedProgress.isNotEmpty()) {
                     changedProgress.forEach { scriptProgress: ScriptProgress ->
-                        val categoryProgress = CategoryProgress(
-                            category = scriptProgress.category,
-                            scriptIndex = scriptProgress.scriptIndex,
-                            memorizeLevel = scriptProgress.memorizeLevel,
-                            currentSentenceIndex = scriptProgress.currentSentenceIndex,
-                            totalSentences = scriptProgress.totalSentences,
-                            isMemorizeTestRunning = scriptProgress.isMemorizeTestRunning,
-                            timestamp = scriptProgress.timestamp
-                        )
-
-                        progressPersistenceService.saveCategoryProgress(categoryProgress)
+                        progressPersistenceService.saveCategoryProgress(scriptProgress)
                     }
 
                     val currentMap = _progressMap.value.toMutableMap()
