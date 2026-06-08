@@ -157,27 +157,13 @@ fun MainScreen(
 
             // 에러 이벤트 Snackbar 수집
             LaunchedEffect(Unit) {
-                playbackViewModel.events.collect { message ->
-                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-                }
-            }
-            LaunchedEffect(Unit) {
-                repeatListeningViewModel.events.collect { message ->
-                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-                }
-            }
-            LaunchedEffect(Unit) {
-                englishWritingTestViewModel.events.collect { message ->
-                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-                }
-            }
-            LaunchedEffect(Unit) {
-                fullMemorizationViewModel.events.collect { message ->
-                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-                }
-            }
-            LaunchedEffect(Unit) {
-                qaViewModel.events.collect { message ->
+                kotlinx.coroutines.flow.merge(
+                    playbackViewModel.events,
+                    repeatListeningViewModel.events,
+                    englishWritingTestViewModel.events,
+                    fullMemorizationViewModel.events,
+                    qaViewModel.events
+                ).collect { message ->
                     snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
                 }
             }
