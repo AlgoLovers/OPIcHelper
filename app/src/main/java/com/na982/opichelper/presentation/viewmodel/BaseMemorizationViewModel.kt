@@ -46,6 +46,8 @@ abstract class BaseMemorizationViewModel<T>(
 
     protected open fun onStop() {}
 
+    open fun requestExtraRepetitions() {}
+
     fun start() {
         if (!coordinator.requestMode(initialMode())) return
         modeJob = viewModelScope.launch { startMode() }

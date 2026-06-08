@@ -30,6 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
+import com.na982.opichelper.domain.audio.PipState
 import com.na982.opichelper.domain.audio.PlaybackActionListener
 import com.na982.opichelper.presentation.viewmodel.MemorizationController
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
@@ -80,6 +81,7 @@ class MainActivity : ComponentActivity() {
                 ACTION_PIP_STOP -> playbackViewModel?.stopPlayback()
                 ACTION_PIP_REPEAT -> playbackViewModel?.repeatPlayback()
                 ACTION_PIP_NEXT -> playbackViewModel?.playNextItem()
+                ACTION_PIP_REPEAT_SENTENCE -> playbackViewModel?.repeatCurrentSentence()
             }
         }
     }
@@ -177,6 +179,9 @@ class MainActivity : ComponentActivity() {
                 }
                 override fun onStopMemorization() {
                     memorizationController.stopAll()
+                }
+                override fun onRepeatCurrentSentence() {
+                    memorizationController.getViewModelForGroup(ModeGroup.REPEAT_LISTENING)?.requestExtraRepetitions()
                 }
             })
 
@@ -305,6 +310,7 @@ class MainActivity : ComponentActivity() {
                 addAction(ACTION_PIP_STOP)
                 addAction(ACTION_PIP_REPEAT)
                 addAction(ACTION_PIP_NEXT)
+                addAction(ACTION_PIP_REPEAT_SENTENCE)
             }
             registerReceiver(pipActionReceiver, filter, RECEIVER_NOT_EXPORTED)
         }
@@ -326,7 +332,7 @@ class MainActivity : ComponentActivity() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     updatePipAutoEnter(state.isPlaying)
                     if (isInPictureInPictureMode) {
-                        updatePipActions(state.isPlaying, state.isPaused, state.isPausable, state.hasCompleted, state.hasNextItem)
+                        updatePipActions(state)
                     }
                 }
             }
@@ -344,19 +350,19 @@ class MainActivity : ComponentActivity() {
     }
 
     @Suppress("NewApi")
-    private fun updatePipActions(isPlaying: Boolean, isPaused: Boolean, isPausable: Boolean, hasCompleted: Boolean, hasNextItem: Boolean) {
+    private fun updatePipActions(state: PipState) {
         if (!isInPictureInPictureMode) return
 
         val params = android.app.PictureInPictureParams.Builder()
             .setAspectRatio(PIP_ASPECT_RATIO)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            params.setAutoEnterEnabled(isPlaying)
+            params.setAutoEnterEnabled(state.isPlaying)
         }
 
         val actions = ArrayList<android.app.RemoteAction>()
 
-        if (hasCompleted) {
+        if (state.hasCompleted) {
             val repeatIcon = Icon.createWithResource(this, R.drawable.ic_replay)
             val repeatIntent = PendingIntent.getBroadcast(
                 this, 2,
@@ -367,7 +373,7 @@ class MainActivity : ComponentActivity() {
                 android.app.RemoteAction(repeatIcon, "반복 재생", "반복 재생", repeatIntent)
             )
 
-            if (hasNextItem) {
+            if (state.hasNextItem) {
                 val nextIcon = Icon.createWithResource(this, R.drawable.ic_skip_next)
                 val nextIntent = PendingIntent.getBroadcast(
                     this, 3,
@@ -378,8 +384,8 @@ class MainActivity : ComponentActivity() {
                     android.app.RemoteAction(nextIcon, "다음", "다음", nextIntent)
                 )
             }
-        } else if (isPausable) {
-            val showPause = isPlaying && !isPaused
+        } else if (state.isPausable) {
+            val showPause = state.isPlaying && !state.isPaused
             val playPauseIcon = Icon.createWithResource(
                 this,
                 if (showPause) R.drawable.ic_pause else R.drawable.ic_play
@@ -397,6 +403,18 @@ class MainActivity : ComponentActivity() {
                     playPauseIntent
                 )
             )
+
+            if (state.isRepeatListeningMode && state.isPlaying) {
+                val repeatOneIcon = Icon.createWithResource(this, R.drawable.ic_repeat_one)
+                val repeatOneIntent = PendingIntent.getBroadcast(
+                    this, 4,
+                    Intent(ACTION_PIP_REPEAT_SENTENCE).setPackage(packageName),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+                actions.add(
+                    android.app.RemoteAction(repeatOneIcon, "문장 반복", "현재 문장 반복", repeatOneIntent)
+                )
+            }
         }
 
         val stopIcon = Icon.createWithResource(this, R.drawable.ic_stop)
@@ -420,6 +438,7 @@ class MainActivity : ComponentActivity() {
         const val ACTION_PIP_STOP = "com.na982.opichelper.PIP_STOP"
         const val ACTION_PIP_REPEAT = "com.na982.opichelper.PIP_REPEAT"
         const val ACTION_PIP_NEXT = "com.na982.opichelper.PIP_NEXT"
+        const val ACTION_PIP_REPEAT_SENTENCE = "com.na982.opichelper.PIP_REPEAT_SENTENCE"
         private val PIP_ASPECT_RATIO = android.util.Rational(5, 3)
     }
 }

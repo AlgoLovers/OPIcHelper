@@ -204,6 +204,7 @@ class PlaybackViewModel @Inject constructor(
     fun repeatPlayback() = pipStateAggregator.repeatPlayback()
     fun playNextItem() = pipStateAggregator.playNextItem()
     fun stopPlayback() = pipStateAggregator.stopPlayback()
+    fun repeatCurrentSentence() = pipStateAggregator.repeatCurrentSentence()
     fun shouldEnterPip(): Boolean = pipStateAggregator.shouldEnterPip()
     fun setFullMemorizationSentence(en: String?, ko: String?) = pipStateAggregator.setFullMemorizationSentence(en, ko)
     val lastMemorizationGroup get() = pipStateAggregator.lastMemorizationGroup

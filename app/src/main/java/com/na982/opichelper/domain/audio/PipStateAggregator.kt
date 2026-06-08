@@ -1,6 +1,7 @@
 package com.na982.opichelper.domain.audio
 
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
+import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import com.na982.opichelper.domain.repository.TtsServiceController
 import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
@@ -21,7 +22,8 @@ class PipStateAggregator @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val coordinator: MemorizationModeCoordinator,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
-    private val ttsServiceController: TtsServiceController
+    private val ttsServiceController: TtsServiceController,
+    private val repeatListeningRepository: RepeatListeningRepository
 ) {
     companion object {
         private const val PIP_RECENTLY_PLAYED_THRESHOLD_MS = 30_000L
@@ -71,7 +73,8 @@ class PipStateAggregator @Inject constructor(
                 _fullMemorizationSentenceKo,
                 coordinator.isRunning,
                 coordinator.currentMode,
-                playMergedFileUseCase.isPlaying
+                playMergedFileUseCase.isPlaying,
+                repeatListeningRepository.repeatProgress
             ) { values ->
                 val questionSentence = (values[0] as HighlightInfo).sentence
                 val answerSentence = (values[1] as HighlightInfo).sentence
@@ -83,6 +86,7 @@ class PipStateAggregator @Inject constructor(
                 val isMemorizationRunning = values[7] as Boolean
                 val currentMode = values[8] as CurrentMode
                 val isMergedFilePlaying = values[9] as Boolean
+                val repeatProgress = values[10] as RepeatListeningProgress?
                 val sentenceEn = fmSentenceEn ?: answerSentence ?: questionSentence
                 val sentenceKo = fmSentenceKo ?: answerKoSentence
                 val active = isPlaying || isMemorizationRunning || isMergedFilePlaying
@@ -90,6 +94,7 @@ class PipStateAggregator @Inject constructor(
                 if (isMemorizationRunning && currentMode != CurrentMode.NONE) {
                     _lastMemorizationGroup = currentMode.group
                 }
+                val isRepeatListeningMode = currentMode == CurrentMode.REPEAT_LISTENING && isMemorizationRunning
                 _pipState.update { prev ->
                     val wasPlaying = prev.isPlaying
                     val completed = wasPlaying && !active && !wasStoppedByUser
@@ -101,7 +106,12 @@ class PipStateAggregator @Inject constructor(
                         isPaused = if (active) isPaused else false,
                         isPausable = !isMergedFilePlaying,
                         hasCompleted = if (active) false else (completed || prev.hasCompleted),
-                        hasNextItem = _hasNextItem
+                        hasNextItem = _hasNextItem,
+                        sentenceIndex = repeatProgress?.sentenceIndex ?: 0,
+                        totalSentences = repeatProgress?.totalSentences ?: 0,
+                        currentRepetition = repeatProgress?.currentRepetition ?: 0,
+                        totalRepetitions = repeatProgress?.totalRepetitions ?: 0,
+                        isRepeatListeningMode = isRepeatListeningMode
                     )
                 }
                 updateNotificationSentence(sentenceEn, sentenceKo)
@@ -137,13 +147,14 @@ class PipStateAggregator @Inject constructor(
     fun repeatPlayback() {
         wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
+        val listener = _actionListener
         if (_lastMemorizationGroup != null) {
-            _actionListener?.onRepeatMemorization()
+            listener?.onRepeatMemorization()
             return
         }
         when (lastPlayedType) {
-            LastPlayedType.QUESTION -> _actionListener?.onRepeatQuestion()
-            LastPlayedType.ANSWER -> _actionListener?.onRepeatAnswer()
+            LastPlayedType.QUESTION -> listener?.onRepeatQuestion()
+            LastPlayedType.ANSWER -> listener?.onRepeatAnswer()
             LastPlayedType.NONE -> {}
         }
     }
@@ -151,21 +162,28 @@ class PipStateAggregator @Inject constructor(
     fun playNextItem() {
         wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
+        val listener = _actionListener
         if (_lastMemorizationGroup != null) {
-            _actionListener?.onNextAndRestart()
+            listener?.onNextAndRestart()
             return
         }
-        _actionListener?.onNext()
+        listener?.onNext()
     }
 
     fun stopPlayback() {
         wasStoppedByUser = true
         _pipState.update { it.copy(hasCompleted = false) }
+        val listener = _actionListener
         if (coordinator.isRunning.value) {
-            _actionListener?.onStopMemorization()
+            listener?.onStopMemorization()
         } else {
             ttsPlaybackController.stopTts()
         }
+    }
+
+    fun repeatCurrentSentence() {
+        val listener = _actionListener
+        listener?.onRepeatCurrentSentence()
     }
 
     fun shouldEnterPip(): Boolean {

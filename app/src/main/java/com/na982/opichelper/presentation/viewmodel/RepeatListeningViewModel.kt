@@ -165,4 +165,8 @@ class RepeatListeningViewModel @Inject constructor(
             }
         }
     }
+
+    override fun requestExtraRepetitions() {
+        repeatListeningRepository.requestExtraRepetitions(1)
+    }
 }

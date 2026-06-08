@@ -8,5 +8,10 @@ data class PipState(
     val isPaused: Boolean = false,
     val isPausable: Boolean = true,
     val hasCompleted: Boolean = false,
-    val hasNextItem: Boolean = false
+    val hasNextItem: Boolean = false,
+    val sentenceIndex: Int = 0,
+    val totalSentences: Int = 0,
+    val currentRepetition: Int = 0,
+    val totalRepetitions: Int = 0,
+    val isRepeatListeningMode: Boolean = false
 )

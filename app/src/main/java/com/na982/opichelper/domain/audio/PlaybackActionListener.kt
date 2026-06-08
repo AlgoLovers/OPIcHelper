@@ -7,4 +7,5 @@ interface PlaybackActionListener {
     fun onRepeatMemorization()
     fun onNextAndRestart()
     fun onStopMemorization()
+    fun onRepeatCurrentSentence()
 }
