@@ -19,7 +19,6 @@ interface MemorizationModeCoordinator {
 }
 
 sealed class CoordinatorEvent {
-    object LevelChanged : CoordinatorEvent()
     object EnglishWritingCompleted : CoordinatorEvent()
     object EnglishWritingStopped : CoordinatorEvent()
     object RecordingStateChanged : CoordinatorEvent()

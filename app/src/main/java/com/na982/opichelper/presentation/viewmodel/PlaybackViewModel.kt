@@ -122,7 +122,6 @@ class PlaybackViewModel @Inject constructor(
                         checkEnglishWritingTestMergedFile()
                     }
                     is CoordinatorEvent.RecordingStateChanged -> {}
-                    is CoordinatorEvent.LevelChanged -> {}
                 }
             }
         }

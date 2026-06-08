@@ -148,7 +148,7 @@ class FullMemorizationViewModel @Inject constructor(
         }
     }
 
-    fun refreshRecordingStatus() {
+    private fun refreshRecordingStatus() {
         viewModelScope.launch {
             try {
                 val hasRecording = fullMemorizationUseCase.hasRecording()
