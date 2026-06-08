@@ -53,15 +53,6 @@ class TtsOrchestratorImpl(
         return if (isKorean) speakKorean(text) else speakEnglish(text)
     }
 
-    override suspend fun speak(text: String): TtsSpeakResult {
-        enterSpeaking()
-        return try {
-            speakInternal(text)
-        } finally {
-            exitSpeaking()
-        }
-    }
-
     private suspend fun speakEnglish(text: String): TtsSpeakResult {
         googleTtsPlayer.setSpeechRate(ttsPreferences.getEnglishTtsRate())
         return googleTtsPlayer.speak(text)

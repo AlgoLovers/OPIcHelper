@@ -34,7 +34,6 @@ abstract class BaseTtsPlayer(
     protected var tts: TextToSpeech? = null
     @Volatile
     protected var isInitialized = false
-    private val _isPlaying = AtomicBoolean(false)
     @Volatile
     protected var userSpeechRate: Float? = null
 
@@ -103,10 +102,8 @@ abstract class BaseTtsPlayer(
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {
                         started = true
-                        _isPlaying.set(true)
                     }
                     override fun onDone(utteranceId: String?) {
-                        _isPlaying.set(false)
                         val duration = System.currentTimeMillis() - startTime
                         safeComplete(TtsSpeakResult.Success(duration))
                     }
@@ -114,12 +111,10 @@ abstract class BaseTtsPlayer(
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         appLogger.e(logTag, "$serviceName 재생 오류")
-                        _isPlaying.set(false)
                         safeComplete(TtsSpeakResult.Error("재생 오류"))
                     }
                     override fun onError(utteranceId: String?, errorCode: Int) {
                         appLogger.e(logTag, "$serviceName 재생 오류: $errorCode")
-                        _isPlaying.set(false)
                         safeComplete(TtsSpeakResult.Error("오류 코드: $errorCode"))
                     }
                 })
@@ -127,7 +122,6 @@ abstract class BaseTtsPlayer(
                 val result = tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
                 if (result == TextToSpeech.ERROR) {
                     appLogger.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
-                    _isPlaying.set(false)
                     tts?.setOnUtteranceProgressListener(null)
                     return@withLock TtsSpeakResult.Error("speak() 반환 ERROR")
                 }
@@ -138,7 +132,6 @@ abstract class BaseTtsPlayer(
                 }
                 if (!started) {
                     appLogger.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
-                    _isPlaying.set(false)
                     tts?.setOnUtteranceProgressListener(null)
                     return@withLock TtsSpeakResult.Error("재생 시작 타임아웃")
                 }
@@ -149,18 +142,15 @@ abstract class BaseTtsPlayer(
                     }
                 } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                     appLogger.e(logTag, "$serviceName 재생 완료 타임아웃")
-                    _isPlaying.set(false)
                     tts?.setOnUtteranceProgressListener(null)
                     tts?.stop()
                     TtsSpeakResult.Timeout
                 }
             } catch (e: CancellationException) {
-                _isPlaying.set(false)
                 tts?.stop()
                 throw e
             } catch (e: Exception) {
                 appLogger.e(logTag, "$serviceName 오류", e)
-                _isPlaying.set(false)
                 TtsSpeakResult.Error(e.message ?: "알 수 없는 오류")
             }
         }
@@ -169,7 +159,6 @@ abstract class BaseTtsPlayer(
     override fun stop() {
         try {
             tts?.stop()
-            _isPlaying.set(false)
         } catch (e: Exception) {
             appLogger.e(logTag, "$serviceName 중지 실패", e)
         }
@@ -184,7 +173,6 @@ abstract class BaseTtsPlayer(
         }
         tts = null
         isInitialized = false
-        _isPlaying.set(false)
     }
 
     protected open fun getSpeechRate(): Float = userSpeechRate ?: DEFAULT_SPEECH_RATE
