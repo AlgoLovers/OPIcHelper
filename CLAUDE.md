@@ -384,6 +384,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | AndroidLogger/TtsServiceControllerImpl 이중 DI 등록 | @Inject constructor 제거 (0179) |
 | QaItemEntityMappers 독립 Gson 인스턴스 | QaItemEntityMapper 클래스 + Gson 주입 (0180) |
 | RepeatListening/EnglishWritingTest Repository 한글 TTS+하이라이트 중복 | BaseMemorizeTestRepository.playKoreanWithHighlight() 추출 (0180) |
+| MainScreen 5개 중복 Snackbar LaunchedEffect | merge + 단일 collect로 통합 (0182) |
 
 ## Git 커밋 규칙
 
