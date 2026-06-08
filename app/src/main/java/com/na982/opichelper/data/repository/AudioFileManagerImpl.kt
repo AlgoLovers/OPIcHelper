@@ -26,11 +26,14 @@ class AudioFileManagerImpl(
     }
 
     override fun getRecordingFilePath(fileName: String): String {
-        val recordingsDir = File(context.filesDir, "recordings")
-        if (!recordingsDir.exists()) {
-            recordingsDir.mkdirs()
-        }
+        val recordingsDir = getRecordingsDirectory()
         return File(recordingsDir, fileName).absolutePath
+    }
+
+    override fun getRecordingsDirectory(): File {
+        val dir = File(context.filesDir, "recordings")
+        if (!dir.exists()) dir.mkdirs()
+        return dir
     }
 
     private fun mergeWithMediaCodec(files: List<File>, output: File) {
@@ -134,36 +137,23 @@ class AudioFileManagerImpl(
 
     override suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean {
         return withContext(Dispatchers.IO) {
-            val mergedDir = File(context.filesDir, "merged")
-            if (!mergedDir.exists()) {
-                return@withContext false
-            }
-
-            val pattern = Regex("${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_.*")
-
-            val files = mergedDir.listFiles { file ->
-                file.name.matches(pattern)
-            }
-
-            files?.isNotEmpty() == true
+            findEnglishWritingTestMergedFile(category, scriptIndex) != null
         }
     }
 
     override suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File? {
         return withContext(Dispatchers.IO) {
-            val mergedDir = File(context.filesDir, "merged")
-            if (!mergedDir.exists()) {
-                return@withContext null
-            }
-
-            val pattern = Regex("${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_.*")
-
-            val files = mergedDir.listFiles { file ->
-                file.name.matches(pattern)
-            }
-
-            files?.maxByOrNull { it.lastModified() }
+            findEnglishWritingTestMergedFile(category, scriptIndex)
         }
+    }
+
+    private fun findEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File? {
+        val mergedDir = File(context.filesDir, "merged")
+        if (!mergedDir.exists()) return null
+
+        val prefix = "${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_"
+        return mergedDir.listFiles { file -> file.name.startsWith(prefix) }
+            ?.maxByOrNull { it.lastModified() }
     }
 
     override suspend fun hasFullMemorizationRecording(category: String, scriptIndex: Int): Boolean {
@@ -173,11 +163,8 @@ class AudioFileManagerImpl(
                 return@withContext false
             }
 
-            val pattern = Regex("${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_.*")
-
-            val files = recordingsDir.listFiles { file ->
-                file.name.matches(pattern)
-            }
+            val prefix = "${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_"
+            val files = recordingsDir.listFiles { file -> file.name.startsWith(prefix) }
 
             files?.isNotEmpty() == true
         }

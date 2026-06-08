@@ -129,14 +129,7 @@ class RepeatListeningViewModel @Inject constructor(
                 }
             }
             is MemorizeTestEvent.KoreanHighlight -> {
-                if (event.index != null) {
-                    val koSentence = getSentenceFromAnswer(event.index, isKorean = true)
-                    val enSentence = getSentenceFromAnswer(event.index, isKorean = false)
-                    ttsPlaybackController.setAnswerKoHighlightIndex(event.index, koSentence)
-                    ttsPlaybackController.setAnswerHighlightIndex(event.index, enSentence)
-                } else {
-                    ttsPlaybackController.clearHighlight()
-                }
+                handleKoreanHighlight(event)
             }
             is MemorizeTestEvent.Completed -> {
                 if (playbackPreferences.isAutoAdvance()) {

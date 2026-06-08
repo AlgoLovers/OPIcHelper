@@ -2,6 +2,7 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaContentReader
@@ -95,5 +96,16 @@ abstract class BaseMemorizationViewModel<T>(
             qaContentReader.getCurrentAnswer(currentItem)
         }
         return SentenceSplitter.split(text).getOrNull(index)
+    }
+
+    protected fun handleKoreanHighlight(event: MemorizeTestEvent.KoreanHighlight) {
+        if (event.index != null) {
+            val koSentence = getSentenceFromAnswer(event.index, isKorean = true)
+            val enSentence = getSentenceFromAnswer(event.index, isKorean = false)
+            ttsPlaybackController?.setAnswerKoHighlightIndex(event.index, koSentence)
+            ttsPlaybackController?.setAnswerHighlightIndex(event.index, enSentence)
+        } else {
+            ttsPlaybackController?.clearHighlight()
+        }
     }
 }

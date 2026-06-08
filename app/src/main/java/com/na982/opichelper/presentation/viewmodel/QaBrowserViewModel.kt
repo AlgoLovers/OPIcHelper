@@ -9,7 +9,7 @@ import com.na982.opichelper.domain.repository.MemorizeLevelPreferences
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.usecase.ProgressCleanupUseCase
-import com.na982.opichelper.domain.usecase.SearchQaItemsUseCase
+import com.na982.opichelper.domain.repository.QaSearch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +44,7 @@ class QaBrowserViewModel @Inject constructor(
     private val playbackPreferences: PlaybackPreferences,
     private val memorizeLevelPreferences: MemorizeLevelPreferences,
     private val progressTracker: MemorizeTestProgressTracker,
-    private val searchQaItemsUseCase: SearchQaItemsUseCase,
+    private val qaSearch: QaSearch,
     private val progressCleanupUseCase: ProgressCleanupUseCase,
     private val appLogger: AppLogger
 ) : ViewModel() {
@@ -152,7 +152,7 @@ class QaBrowserViewModel @Inject constructor(
     }
 
     fun search(query: String): List<QaItem> {
-        return searchQaItemsUseCase.search(query)
+        return qaSearch.searchItems(query)
     }
 
     suspend fun navigateToItem(item: QaItem) {

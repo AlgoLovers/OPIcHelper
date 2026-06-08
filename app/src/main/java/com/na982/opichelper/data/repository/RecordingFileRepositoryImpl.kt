@@ -152,7 +152,6 @@ class RecordingFileRepositoryImpl(
     }
 
     private fun getRecordingsDirectory(): File {
-        val dummyPath = audioFileManager.getRecordingFilePath("dummy.m4a")
-        return File(dummyPath).parentFile ?: File(dummyPath)
+        return audioFileManager.getRecordingsDirectory()
     }
 }

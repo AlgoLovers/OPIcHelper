@@ -128,17 +128,18 @@ class PlayMergedFileUseCase @Inject constructor(
             val category = currentItem.category
             val scriptIndex = qaContentReader.getCurrentIndex()
 
-            var exists = false
-            var mergedFile: File? = null
+            var found = false
 
             for (attempt in 1..FILE_CHECK_RETRY_COUNT) {
-                exists = audioFileManager.hasEnglishWritingTestMergedFile(category, scriptIndex)
-                mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
-                if (exists && mergedFile != null && mergedFile.exists()) break
+                val mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
+                if (mergedFile != null && mergedFile.exists()) {
+                    found = true
+                    break
+                }
                 if (attempt < FILE_CHECK_RETRY_COUNT) kotlinx.coroutines.delay(FILE_CHECK_RETRY_DELAY_MS)
             }
 
-            _hasFile.update { exists && mergedFile != null && mergedFile.exists() }
+            _hasFile.update { found }
         }
     }
 

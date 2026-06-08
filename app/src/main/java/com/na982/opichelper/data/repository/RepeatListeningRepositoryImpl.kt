@@ -25,6 +25,7 @@ class RepeatListeningRepositoryImpl(
 ) : BaseMemorizeTestRepository(progressPersistenceService), RepeatListeningRepository {
 
     companion object {
+        private val WHITESPACE_REGEX = "\\s+".toRegex()
         private const val CARD_FLIP_DELAY_MS = 100L
         private const val WORD_DELAY_MS = 500
         private const val REST_TIME_MULTIPLIER = 1.2
@@ -82,7 +83,7 @@ class RepeatListeningRepositoryImpl(
             }
 
             val enSentence = enSentences[i]
-            val enWordCount = enSentence.split("\\s+".toRegex()).size
+            val enWordCount = enSentence.split(WHITESPACE_REGEX).size
             val baseDelay = enWordCount * WORD_DELAY_MS
             val lengthMultiplier = when {
                 enWordCount <= SHORT_WORD_THRESHOLD -> SHORT_WORD_MULTIPLIER

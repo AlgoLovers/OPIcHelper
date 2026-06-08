@@ -2,6 +2,7 @@ package com.na982.opichelper.di
 
 import android.app.Application
 import android.content.Context
+import com.google.gson.Gson
 import com.na982.opichelper.data.audio.*
 import com.na982.opichelper.data.audio.TtsOrchestratorImpl
 import com.na982.opichelper.data.audio.TtsPlaybackControllerImpl
@@ -104,8 +105,8 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideProgressPersistenceService(@ApplicationContext context: Context, appLogger: AppLogger): ProgressPersistenceService {
-        return com.na982.opichelper.data.repository.ProgressPersistenceServiceImpl(context, appLogger)
+    fun provideProgressPersistenceService(@ApplicationContext context: Context, appLogger: AppLogger, gson: Gson): ProgressPersistenceService {
+        return com.na982.opichelper.data.repository.ProgressPersistenceServiceImpl(context, appLogger, gson)
     }
     
     @Provides
@@ -138,8 +139,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRecordingTimeManager(@ApplicationContext context: Context, appLogger: AppLogger): RecordingTimeManager {
-        return RecordingTimeManagerImpl(context, appLogger)
+    fun provideRecordingTimeManager(@ApplicationContext context: Context, appLogger: AppLogger, gson: Gson): RecordingTimeManager {
+        return RecordingTimeManagerImpl(context, appLogger, gson)
     }
     
     @Provides
@@ -166,6 +167,12 @@ object AppModule {
     @Singleton
     fun provideAppLogger(): AppLogger {
         return AndroidLogger()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return Gson()
     }
 
     @Provides
@@ -225,8 +232,8 @@ object AppModule {
     @Provides
     @Singleton
     @Named("asset")
-    fun provideAssetQaDataLoader(@ApplicationContext context: Context, appLogger: AppLogger): QaDataLoader {
-        return LeveledQaDataLoader(context, appLogger)
+    fun provideAssetQaDataLoader(@ApplicationContext context: Context, appLogger: AppLogger, gson: Gson): QaDataLoader {
+        return LeveledQaDataLoader(context, appLogger, gson)
     }
 
     @Provides

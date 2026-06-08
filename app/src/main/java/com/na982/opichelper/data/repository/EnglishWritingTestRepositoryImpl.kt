@@ -33,6 +33,7 @@ class EnglishWritingTestRepositoryImpl(
         private const val CARD_FLIP_DELAY_MS = 100L
         private const val ENGLISH_WRITING_PREFIX = "영작테스트"
         private const val ENGLISH_WRITING_FILE_PREFIX = "english_writing"
+        private val DATE_FORMAT = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
     }
 
     override val memorizeLevel = MemorizeLevel.ENGLISH_WRITING
@@ -111,8 +112,7 @@ class EnglishWritingTestRepositoryImpl(
 
         // 3. 녹음 파일 병합
         if (recordingFiles.isNotEmpty()) {
-            val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-            val timestamp = dateFormat.format(Date())
+            val timestamp = DATE_FORMAT.format(Date())
             val mergedFileName = "${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_${timestamp}"
 
             try {

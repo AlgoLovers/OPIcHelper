@@ -103,14 +103,7 @@ class EnglishWritingTestViewModel @Inject constructor(
                 _uiState.update { it.copy(isCardFlipped = event.isKorean) }
             }
             is MemorizeTestEvent.KoreanHighlight -> {
-                if (event.index != null) {
-                    val koSentence = getSentenceFromAnswer(event.index, isKorean = true)
-                    val enSentence = getSentenceFromAnswer(event.index, isKorean = false)
-                    ttsPlaybackController.setAnswerKoHighlightIndex(event.index, koSentence)
-                    ttsPlaybackController.setAnswerHighlightIndex(event.index, enSentence)
-                } else {
-                    ttsPlaybackController.clearHighlight()
-                }
+                handleKoreanHighlight(event)
             }
             is MemorizeTestEvent.RecordingHighlight -> {
                 if (event.index != null) {

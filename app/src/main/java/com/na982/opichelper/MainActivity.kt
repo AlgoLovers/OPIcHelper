@@ -17,6 +17,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -147,47 +149,61 @@ class MainActivity : ComponentActivity() {
             this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
 
-            pvm.setActionListener(object : PlaybackActionListener {
-                override fun onRepeatQuestion() {
-                    val qaItem = qaVm.uiState.value.currentQaItem
-                    if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
-                }
-                override fun onRepeatAnswer() {
-                    val qaItem = qaVm.uiState.value.currentQaItem
-                    if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
-                }
-                override fun onNext() {
-                    lifecycleScope.launch {
-                        val qaItem = qaVm.nextQaItemSync()
-                        if (qaItem != null) {
-                            pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+            val actionListener = remember {
+                object : PlaybackActionListener {
+                    override fun onRepeatQuestion() {
+                        val qaItem = qaVm.uiState.value.currentQaItem
+                        if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
+                    }
+                    override fun onRepeatAnswer() {
+                        val qaItem = qaVm.uiState.value.currentQaItem
+                        if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+                    }
+                    override fun onNext() {
+                        lifecycleScope.launch {
+                            val qaItem = qaVm.nextQaItemSync()
+                            if (qaItem != null) {
+                                pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+                            }
                         }
                     }
-                }
-                override fun onRepeatMemorization() {
-                    val group = pvm.lastMemorizationGroup ?: return
-                    memorizationController.startForGroup(group)
-                }
-                override fun onNextAndRestart() {
-                    lifecycleScope.launch {
-                        val qaItem = qaVm.nextQaItemSync()
-                        if (qaItem != null) {
-                            val group = pvm.lastMemorizationGroup ?: return@launch
-                            memorizationController.startForGroup(group)
+                    override fun onRepeatMemorization() {
+                        val group = pvm.lastMemorizationGroup ?: return
+                        memorizationController.startForGroup(group)
+                    }
+                    override fun onNextAndRestart() {
+                        lifecycleScope.launch {
+                            val qaItem = qaVm.nextQaItemSync()
+                            if (qaItem != null) {
+                                val group = pvm.lastMemorizationGroup ?: return@launch
+                                memorizationController.startForGroup(group)
+                            }
                         }
                     }
+                    override fun onStopMemorization() {
+                        memorizationController.stopAll()
+                    }
+                    override fun onRepeatCurrentSentence() {
+                        memorizationController.getViewModelForGroup(ModeGroup.REPEAT_LISTENING)?.requestExtraRepetitions()
+                    }
                 }
-                override fun onStopMemorization() {
-                    memorizationController.stopAll()
-                }
-                override fun onRepeatCurrentSentence() {
-                    memorizationController.getViewModelForGroup(ModeGroup.REPEAT_LISTENING)?.requestExtraRepetitions()
-                }
-            })
+            }
+            SideEffect { pvm.setActionListener(actionListener) }
 
             LaunchedEffect(Unit) {
                 qaVm.uiState.collect { _ ->
                     pvm.setHasNextItem(qaVm.hasNextQaItem())
+                }
+            }
+
+            LaunchedEffect(pvm) {
+                pvm.pipState.collect { state ->
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        updatePipAutoEnter(state.isPlaying)
+                        if (isInPictureInPictureMode) {
+                            updatePipActions(state)
+                        }
+                    }
                 }
             }
 
@@ -207,8 +223,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        observePipState()
     }
 
     override fun onUserLeaveHint() {
@@ -320,23 +334,6 @@ class MainActivity : ComponentActivity() {
         try {
             unregisterReceiver(pipActionReceiver)
         } catch (_: Exception) { }
-    }
-
-    @Suppress("NewApi")
-    private fun observePipState() {
-        lifecycleScope.launch {
-            while (playbackViewModel == null) {
-                kotlinx.coroutines.delay(50)
-            }
-            playbackViewModel?.pipState?.collect { state ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    updatePipAutoEnter(state.isPlaying)
-                    if (isInPictureInPictureMode) {
-                        updatePipActions(state)
-                    }
-                }
-            }
-        }
     }
 
     @Suppress("NewApi")

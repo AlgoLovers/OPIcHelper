@@ -9,10 +9,10 @@ import com.na982.opichelper.domain.repository.ProgressPersistenceService
 
 class ProgressPersistenceServiceImpl(
     private val context: Context,
-    private val appLogger: AppLogger
+    private val appLogger: AppLogger,
+    private val gson: Gson
 ) : ProgressPersistenceService {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    private val gson = Gson()
 
     companion object {
         private const val PREFS_NAME = "opic_prefs"

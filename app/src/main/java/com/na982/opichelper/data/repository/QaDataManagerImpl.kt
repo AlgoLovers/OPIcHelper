@@ -19,7 +19,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.concurrent.ConcurrentHashMap
 
 class QaDataManagerImpl(
     private val qaDataLoader: QaDataLoader,
@@ -36,8 +35,9 @@ class QaDataManagerImpl(
     @Volatile
     private var userLevelJob: Job? = null
 
-    private val itemsByCategory: MutableMap<String, List<QaItem>> = ConcurrentHashMap()
-    private val itemIndexByCategory: MutableMap<String, Int> = ConcurrentHashMap()
+    private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
+    private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
+    private var allItems: List<QaItem> = emptyList()
     private val mutex = Mutex()
 
     private val _currentQaItem = MutableStateFlow<QaItem?>(null)
@@ -99,11 +99,13 @@ class QaDataManagerImpl(
         itemsByCategory.clear()
         itemIndexByCategory.clear()
 
+        val grouped = allLeveledItems.groupBy { it.category }
         for (category in sortedCategories) {
-            val categoryItems = allLeveledItems.filter { it.category == category }
-            itemsByCategory[category] = categoryItems
+            itemsByCategory[category] = grouped[category].orEmpty()
             itemIndexByCategory[category] = 0
         }
+
+        allItems = allLeveledItems
 
         _categories.update { sortedCategories }
     }
@@ -237,7 +239,7 @@ class QaDataManagerImpl(
     override fun searchItems(query: String): List<QaItem> {
         if (query.length < MIN_SEARCH_QUERY_LENGTH) return emptyList()
         val lowerQuery = query.lowercase()
-        return itemsByCategory.values.flatten().filter { item ->
+        return allItems.filter { item ->
             item.questionEn.lowercase().contains(lowerQuery) ||
             item.questionKo.lowercase().contains(lowerQuery) ||
             item.answers.values.any { answer ->
