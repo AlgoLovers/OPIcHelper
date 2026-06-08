@@ -11,9 +11,5 @@ interface AudioFileManager {
 
     suspend fun mergeAudioFiles(files: List<File>, mergedFileName: String): File?
 
-    suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean
-
     suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File?
-
-    suspend fun hasFullMemorizationRecording(category: String, scriptIndex: Int): Boolean
 }

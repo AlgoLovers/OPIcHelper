@@ -8,7 +8,6 @@ interface ProgressPersistenceService {
     suspend fun saveNavigationState(state: NavigationState)
     suspend fun loadNavigationState(): NavigationState
     suspend fun saveCategoryProgress(progress: ScriptProgress)
-    suspend fun loadCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String): ScriptProgress?
     suspend fun loadAllCategoryProgress(): Map<String, ScriptProgress>
     suspend fun clearCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String)
     suspend fun clearAllProgress()

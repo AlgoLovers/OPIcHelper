@@ -135,12 +135,6 @@ class AudioFileManagerImpl(
         }
     }
 
-    override suspend fun hasEnglishWritingTestMergedFile(category: String, scriptIndex: Int): Boolean {
-        return withContext(Dispatchers.IO) {
-            findEnglishWritingTestMergedFile(category, scriptIndex) != null
-        }
-    }
-
     override suspend fun getEnglishWritingTestMergedFile(category: String, scriptIndex: Int): File? {
         return withContext(Dispatchers.IO) {
             findEnglishWritingTestMergedFile(category, scriptIndex)
@@ -154,20 +148,6 @@ class AudioFileManagerImpl(
         val prefix = "${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_"
         return mergedDir.listFiles { file -> file.name.startsWith(prefix) }
             ?.maxByOrNull { it.lastModified() }
-    }
-
-    override suspend fun hasFullMemorizationRecording(category: String, scriptIndex: Int): Boolean {
-        return withContext(Dispatchers.IO) {
-            val recordingsDir = File(context.filesDir, "recordings")
-            if (!recordingsDir.exists()) {
-                return@withContext false
-            }
-
-            val prefix = "${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_"
-            val files = recordingsDir.listFiles { file -> file.name.startsWith(prefix) }
-
-            files?.isNotEmpty() == true
-        }
     }
 
 }

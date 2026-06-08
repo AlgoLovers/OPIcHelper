@@ -32,14 +32,6 @@ interface RecordingFileRepository {
     suspend fun createRecordingFile(category: String, scriptIndex: Int): String
     
     /**
-     * 녹음 파일 삭제
-     * @param category 카테고리
-     * @param scriptIndex 스크립트 인덱스
-     * @return 삭제 성공하면 true
-     */
-    suspend fun deleteRecordingFile(category: String, scriptIndex: Int): Boolean
-
-    /**
      * 녹음 파일 재생 (하이라이트 없음)
      * @param category 카테고리
      * @param scriptIndex 스크립트 인덱스

@@ -59,17 +59,6 @@ class ProgressPersistenceServiceImpl(
         }
     }
 
-    override suspend fun loadCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String): ScriptProgress? {
-        return try {
-            val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}_${memorizeLevel}"
-            val json = prefs.getString(key, null)
-            if (json != null) gson.fromJson(json, ScriptProgress::class.java) else null
-        } catch (e: Exception) {
-            appLogger.e("ProgressPersistenceService", "카테고리 진행 상황 로드 실패", e)
-            null
-        }
-    }
-
     override suspend fun loadAllCategoryProgress(): Map<String, ScriptProgress> {
         return try {
             val progressMap = mutableMapOf<String, ScriptProgress>()

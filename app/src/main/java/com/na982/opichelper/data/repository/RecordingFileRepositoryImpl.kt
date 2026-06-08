@@ -65,31 +65,6 @@ class RecordingFileRepositoryImpl(
         }
     }
 
-    override suspend fun deleteRecordingFile(category: String, scriptIndex: Int): Boolean {
-        return mutex.withLock {
-            try {
-                val filePath = findRecordingFilePath(category, scriptIndex)
-                if (filePath != null) {
-                    val file = File(filePath)
-                    if (file.exists()) {
-                        val deleted = file.delete()
-                        if (deleted && currentRecordingPath == filePath) {
-                            currentRecordingPath = null
-                        }
-                        deleted
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
-            } catch (e: Exception) {
-                appLogger.e("RecordingFileRepositoryImpl", "deleteRecordingFile 실패", e)
-                false
-            }
-        }
-    }
-
     override suspend fun playRecordingFileSimple(
         category: String,
         scriptIndex: Int,
