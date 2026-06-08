@@ -338,6 +338,21 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | QaDataManagerImpl 레벨 변경 시 stale data | loadQaItemsFromAssets()에서 맵 clear 후 로드 (0160) |
 | PipStateAggregator.lastMemorizationGroup 캡슐화 | internal var → private var + 공개 읽기 전용 (0161) |
 | isFullMemorizationRecordingPlaying 오해 유발 이름 | isFullMemorizationPlaying으로 변경 (0161) |
+| SearchQaItemsUseCase 순수 위임 | 제거, QaBrowserViewModel→QaSearch 직접 의존 (0163) |
+| QaDataManagerImpl O(N*C) filter 루프 | groupBy O(N) 전환, allItems 캐시, search 최적화 (0163) |
+| AudioFileManagerImpl has+get 중복 메서드 | findEnglishWritingTestMergedFile() 통합 (0163) |
+| AudioFileManagerImpl Regex 오버헤드 | startsWith 교체, getRecordingsDirectory() 추출 (0163) |
+| RecordingTimeManagerImpl SharedPreferences 매번 읽기 | 메모리 캐시 도입 (0163) |
+| TtsPlaybackControllerImpl _isPlaying 수동 동기화 | combine(_isQuestionPlaying, _isAnswerPlaying) 파생 StateFlow (0163) |
+| MemorizeTestProgressTracker _hasProgress 수동 동기화 | progressMap.map {} 파생 StateFlow (0163) |
+| MainActivity PiP 상태 busy-wait | LaunchedEffect 수집, remember+SideEffect 초기화 (0163) |
+| BaseMemorizationViewModel KoreanHighlight 중복 | handleKoreanHighlight() 공통 메서드 추출 (0163) |
+| OPicHelperApplication @Inject 필드 + onTerminate | 제거 (프로덕션 미호출) (0163) |
+| Gson 매번 생성 | @Provides @Singleton 주입으로 전환 (0163) |
+| LeveledQaDataLoader TypeToken 매번 생성 | companion val 캐시 (0163) |
+| PlayMergedFileUseCase has+get 이중 호출 | findEnglishWritingTestMergedFile() 단일 호출 (0163) |
+| EnglishWritingTestViewModel SimpleDateFormat 매번 생성 | companion val 캐시 (0163) |
+| RepeatListeningViewModel Regex 매번 컴파일 | companion val 캐시 (0163) |
 
 ## Git 커밋 규칙
 
