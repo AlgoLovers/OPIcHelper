@@ -25,7 +25,6 @@ fun AnswerCard(
     recordingHighlightIndex: Int? = null,
     resumeHighlightIndex: Int? = null,
     isFlipped: Boolean = false,
-    isRepeatListeningCardFlipped: Boolean = false,
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -55,7 +54,7 @@ fun AnswerCard(
         }
         // 플립 카드 (숨김 상태에 따라 크기 조절)
         FlipCard(
-            isFlipped = isFlipped || isRepeatListeningCardFlipped,
+            isFlipped = isFlipped,
             onCardClick = {
                 // 카드 클릭 시 뒤집기만 동작, 숨기기 기능은 버튼 클릭 시에만 동작
             },

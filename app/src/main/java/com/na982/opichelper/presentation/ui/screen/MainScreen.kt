@@ -372,7 +372,6 @@ fun MainScreen(
                         currentIndex = currentIndex,
                         totalCount = totalCount,
                         completedCount = qaState.completedCount,
-                        isFlipped = false,
                         currentCategory = category ?: "",
                         onEdit = {
                             editScriptState.value = EditScriptState(
@@ -450,7 +449,7 @@ fun MainScreen(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             currentAnswerKo = qaViewModel.getCurrentAnswerKo(qaItem),
                             highlightIndex = when {
-                                (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying) || (coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING) -> fullMemorizationState.highlightIndex
+                                coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying -> fullMemorizationState.highlightIndex
                                 playbackState.isEnglishWritingTestMergedFilePlaying -> playbackState.englishWritingTestMergedFileHighlightIndex
                                 else -> playbackState.answerHighlight.index
                             },
@@ -463,7 +462,6 @@ fun MainScreen(
                                 repeatListeningState.isCardFlipped -> repeatListeningState.isCardFlipped
                                 else -> false
                             },
-                            isRepeatListeningCardFlipped = repeatListeningState.isCardFlipped,
                             onEdit = {
                                 editScriptState.value = EditScriptState(
                                     qaItem = qaItem,

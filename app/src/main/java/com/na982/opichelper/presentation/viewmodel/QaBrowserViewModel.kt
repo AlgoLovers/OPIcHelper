@@ -147,10 +147,6 @@ class QaBrowserViewModel @Inject constructor(
         viewModelScope.launch { qaDataManager.previousQaItem() }
     }
 
-    fun clearError() {
-        qaDataManager.clearError()
-    }
-
     fun search(query: String): List<QaItem> {
         return qaSearch.searchItems(query)
     }
