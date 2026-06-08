@@ -373,6 +373,7 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | AnswerCard isRepeatListeningCardFlipped 중복 파라미터 | 제거 (0174) |
 | MainScreen AnswerCard 하이라이트 중복 OR 조건 | 단순화 (0174) |
 | QaBrowserViewModel.clearError() 미사용 | 제거 (0174) |
+| AudioPlayerImpl/RecordingAudioPlayerImpl MediaPlayer 해제 로직 중복 | BaseMediaPlayer 추출 (0176) |
 
 ## Git 커밋 규칙
 
