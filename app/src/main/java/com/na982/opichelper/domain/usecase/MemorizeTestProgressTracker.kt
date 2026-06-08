@@ -117,18 +117,4 @@ class MemorizeTestProgressTracker @Inject constructor(
             appLogger.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
         }
     }
-
-    /**
-     * 모든 진행 상황 삭제
-     */
-    suspend fun clearAllProgress() {
-        try {
-            progressPersistenceService.clearAllProgress()
-            mutex.withLock {
-                _progressMap.update { emptyMap() }
-            }
-        } catch (e: Exception) {
-            appLogger.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)
-        }
-    }
 } 

@@ -16,7 +16,6 @@ class ProgressPersistenceServiceImpl(
 
     companion object {
         private const val PREFS_NAME = "opic_prefs"
-        private const val KEY_APP_EXIT_STATE = "app_exit_state"
         private const val KEY_CATEGORY_PROGRESS_PREFIX = "category_progress_"
         private const val KEY_NAV_CATEGORY = "last_category"
         private const val KEY_NAV_SCRIPT_INDEX = "last_script_index"
@@ -84,20 +83,6 @@ class ProgressPersistenceServiceImpl(
             prefs.edit().remove(key).apply()
         } catch (e: Exception) {
             appLogger.e("ProgressPersistenceService", "진행 상황 삭제 실패", e)
-        }
-    }
-
-    override suspend fun clearAllProgress() {
-        try {
-            val editor = prefs.edit()
-            prefs.all.forEach { (key, _) ->
-                if (key.startsWith(KEY_CATEGORY_PROGRESS_PREFIX) || key == KEY_APP_EXIT_STATE) {
-                    editor.remove(key)
-                }
-            }
-            editor.apply()
-        } catch (e: Exception) {
-            appLogger.e("ProgressPersistenceService", "모든 진행 상황 삭제 실패", e)
         }
     }
 }

@@ -10,5 +10,4 @@ interface ProgressPersistenceService {
     suspend fun saveCategoryProgress(progress: ScriptProgress)
     suspend fun loadAllCategoryProgress(): Map<String, ScriptProgress>
     suspend fun clearCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String)
-    suspend fun clearAllProgress()
 }
