@@ -353,6 +353,11 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | PlayMergedFileUseCase has+get 이중 호출 | findEnglishWritingTestMergedFile() 단일 호출 (0163) |
 | EnglishWritingTestViewModel SimpleDateFormat 매번 생성 | companion val 캐시 (0163) |
 | RepeatListeningViewModel Regex 매번 컴파일 | companion val 캐시 (0163) |
+| AudioFileManager.hasEnglishWritingTestMergedFile 미사용 | 제거, getEnglishWritingTestMergedFile null 체크로 대체 (0166) |
+| AudioFileManager.hasFullMemorizationRecording 미사용 | 제거 (0166) |
+| RecordingFileRepository.deleteRecordingFile 미사용 | 제거 (0166) |
+| ProgressPersistenceService.loadCategoryProgress 미사용 | 제거, loadAllCategoryProgress 사용 (0166) |
+| AudioPlayer.play(File, onCompletion) 인터페이스 미사용 | 인터페이스에서 제거, 구현체는 private 유지 (0166) |
 
 ## Git 커밋 규칙
 
