@@ -61,11 +61,7 @@ class EnglishWritingTestRepositoryImpl(
                 )
 
                 // 1. 한글 문장 TTS
-                emit(MemorizeTestEvent.CardFlip(true))
-                delay(CARD_FLIP_DELAY_MS)
-                emit(MemorizeTestEvent.KoreanHighlight(idx))
-
-                val koResult = ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx])
+                val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[idx], idx, CARD_FLIP_DELAY_MS)
                 if (koResult is TtsSpeakResult.Unavailable) break
 
                 if (!currentCoroutineContext().isActive) break

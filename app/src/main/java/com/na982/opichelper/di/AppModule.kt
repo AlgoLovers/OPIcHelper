@@ -225,8 +225,8 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQaDataLoader(dao: QaItemDao): QaDataLoader {
-        return RoomQaDataLoader(dao)
+    fun provideQaDataLoader(dao: QaItemDao, mapper: com.na982.opichelper.data.local.QaItemEntityMapper): QaDataLoader {
+        return RoomQaDataLoader(dao, mapper)
     }
 
     @Provides

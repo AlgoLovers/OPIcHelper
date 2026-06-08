@@ -72,11 +72,7 @@ class RepeatListeningRepositoryImpl(
             )
 
             // 1. 한글 문장 TTS
-            emit(MemorizeTestEvent.CardFlip(true))
-            delay(CARD_FLIP_DELAY_MS)
-            emit(MemorizeTestEvent.KoreanHighlight(i))
-
-            val koResult = ttsOrchestrator.speakAndWaitForCompletion(koSentences[i])
+            val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[i], i, CARD_FLIP_DELAY_MS)
             if (koResult is TtsSpeakResult.Unavailable) break@sentenceLoop
             if (koResult !is TtsSpeakResult.Success) {
                 continue@sentenceLoop
