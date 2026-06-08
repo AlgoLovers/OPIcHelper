@@ -358,6 +358,21 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | RecordingFileRepository.deleteRecordingFile 미사용 | 제거 (0166) |
 | ProgressPersistenceService.loadCategoryProgress 미사용 | 제거, loadAllCategoryProgress 사용 (0166) |
 | AudioPlayer.play(File, onCompletion) 인터페이스 미사용 | 인터페이스에서 제거, 구현체는 private 유지 (0166) |
+| BaseTtsPlayer _isPlaying AtomicBoolean 쓰기 전용 | 제거 (0168) |
+| TtsOrchestrator.speak() speakAndWaitForCompletion과 동일 | 인터페이스+구현체에서 제거 (0168) |
+| QaItemDao.getSeededLevels() 미사용 | 제거 (0169) |
+| AudioFileManagerImpl 미사용 상수 2개 | 제거 (0169) |
+| clearAllProgress() 미사용 체인 | 전체 제거 (0170) |
+| ProgressPersistenceServiceImpl KEY_APP_EXIT_STATE 미사용 | 제거 (0170) |
+| AssetSeeder Gson() 루프 내 3회 생성 | 싱글톤 주입 전환 (0171) |
+| AudioFileManagerImpl saveRecordingFile 중복 디렉토리 생성 | getRecordingsDirectory() 위임 (0171) |
+| MemorizeTestProgressTracker hasProgress 미사용 + CoroutineScope 누수 | 제거 (0172) |
+| PlaybackState.hasProgress 미사용 필드 | 제거 (0173) |
+| EditScriptViewModel isModified 미사용 StateFlow | 제거 (0173) |
+| QuestionCard isFlipped 항상 false | FlipCard 제거, 직접 렌더링 (0174) |
+| AnswerCard isRepeatListeningCardFlipped 중복 파라미터 | 제거 (0174) |
+| MainScreen AnswerCard 하이라이트 중복 OR 조건 | 단순화 (0174) |
+| QaBrowserViewModel.clearError() 미사용 | 제거 (0174) |
 
 ## Git 커밋 규칙
 
