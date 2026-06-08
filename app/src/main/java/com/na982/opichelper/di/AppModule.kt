@@ -252,8 +252,9 @@ object AppModule {
     fun provideDataSeeder(
         @Named("asset") qaDataLoader: QaDataLoader,
         dao: QaItemDao,
-        appDataPreferences: com.na982.opichelper.domain.repository.AppDataPreferences
-    ): DataSeeder = AssetSeeder(qaDataLoader, dao, appDataPreferences)
+        appDataPreferences: com.na982.opichelper.domain.repository.AppDataPreferences,
+        gson: Gson
+    ): DataSeeder = AssetSeeder(qaDataLoader, dao, appDataPreferences, gson)
     
     @Provides
     @Singleton

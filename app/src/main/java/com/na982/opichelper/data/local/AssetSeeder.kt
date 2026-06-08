@@ -8,7 +8,8 @@ import com.na982.opichelper.domain.repository.AppDataPreferences
 class AssetSeeder(
     private val qaDataLoader: QaDataLoader,
     private val dao: QaItemDao,
-    private val appDataPreferences: AppDataPreferences
+    private val appDataPreferences: AppDataPreferences,
+    private val gson: Gson
 ) : com.na982.opichelper.domain.repository.DataSeeder {
 
     companion object {
@@ -35,9 +36,9 @@ class AssetSeeder(
                     questionKo = item.questionKo,
                     answerEn = answer.answerEn,
                     answerKo = answer.answerKo,
-                    vocabulary = Gson().toJson(answer.vocabulary),
-                    grammar = Gson().toJson(answer.grammar),
-                    tips = Gson().toJson(answer.tips),
+                    vocabulary = gson.toJson(answer.vocabulary),
+                    grammar = gson.toJson(answer.grammar),
+                    tips = gson.toJson(answer.tips),
                     questionEnOriginal = item.questionEn,
                     questionKoOriginal = item.questionKo,
                     answerEnOriginal = answer.answerEn,

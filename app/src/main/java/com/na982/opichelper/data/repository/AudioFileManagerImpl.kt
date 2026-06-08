@@ -97,10 +97,7 @@ class AudioFileManagerImpl(
 
     override suspend fun saveRecordingFile(recordingFile: File, fileName: String): File {
         return withContext(Dispatchers.IO) {
-            val outputDir = File(context.filesDir, "recordings")
-            if (!outputDir.exists()) {
-                outputDir.mkdirs()
-            }
+            val outputDir = getRecordingsDirectory()
 
             val outputFile = File(outputDir, "${fileName}.m4a")
             recordingFile.copyTo(outputFile, overwrite = true)
