@@ -37,9 +37,7 @@ data class PlaybackState(
     val questionHighlight: HighlightInfo = HighlightInfo(),
     val answerHighlight: HighlightInfo = HighlightInfo(),
     val answerKoHighlight: HighlightInfo = HighlightInfo(),
-    val recordingHighlight: HighlightInfo = HighlightInfo(),
-
-    val hasProgress: Boolean = false
+    val recordingHighlight: HighlightInfo = HighlightInfo()
 )
 
 @HiltViewModel

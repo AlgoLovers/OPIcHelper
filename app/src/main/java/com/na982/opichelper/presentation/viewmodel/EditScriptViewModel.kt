@@ -31,11 +31,7 @@ class EditScriptViewModel @Inject constructor(
     private val _validationResult = MutableStateFlow(ValidationResult(emptyList(), true))
     val validationResult: StateFlow<ValidationResult> = _validationResult.asStateFlow()
 
-    private val _isModified = MutableStateFlow(false)
-    val isModified: StateFlow<Boolean> = _isModified.asStateFlow()
-
     fun loadSentences(qaItem: QaItem, isQuestion: Boolean, level: UserLevel) {
-        _isModified.update { false }
         val textKo = if (isQuestion) qaItem.questionKo else qaItem.answers[level]?.answerKo ?: ""
         val textEn = if (isQuestion) qaItem.questionEn else qaItem.answers[level]?.answerEn ?: ""
         val koSentences = SentenceSplitter.split(textKo)
@@ -89,14 +85,12 @@ class EditScriptViewModel @Inject constructor(
         viewModelScope.launch {
             scriptEditRepository.updateQaItem(updatedItem, level, scriptIndex)
             qaDataLifecycle.reload()
-            _isModified.update { true }
         }
     }
 
     fun restoreOriginal(id: String) {
         viewModelScope.launch {
             scriptEditRepository.restoreOriginal(id)
-            _isModified.update { true }
         }
     }
 }
