@@ -6,14 +6,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import com.na982.opichelper.domain.manager.AppLogger
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,9 +27,6 @@ class MemorizeTestProgressTracker @Inject constructor(
     private val _progressMap = MutableStateFlow<Map<String, ScriptProgress>>(emptyMap())
     val progressMap: StateFlow<Map<String, ScriptProgress>> = _progressMap.asStateFlow()
 
-    val hasProgress: StateFlow<Boolean> = _progressMap.map { it.isNotEmpty() }
-        .stateIn(CoroutineScope(SupervisorJob() + Dispatchers.Default), SharingStarted.Eagerly, false)
-    
     /**
      * 앱 시작 시 모든 진행 상황 복원
      */
