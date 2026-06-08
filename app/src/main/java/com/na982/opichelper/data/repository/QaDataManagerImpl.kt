@@ -232,10 +232,6 @@ class QaDataManagerImpl(
         )
     }
 
-    override fun clearError() {
-        _error.update { null }
-    }
-
     override fun searchItems(query: String): List<QaItem> {
         if (query.length < MIN_SEARCH_QUERY_LENGTH) return emptyList()
         val lowerQuery = query.lowercase()

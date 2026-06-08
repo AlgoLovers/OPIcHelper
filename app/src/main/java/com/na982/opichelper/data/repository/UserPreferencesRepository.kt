@@ -79,10 +79,6 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
         return prefs.getBoolean(KEY_AUTO_ADVANCE, false)
     }
 
-    override fun setAutoAdvance(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_AUTO_ADVANCE, enabled).apply()
-    }
-
     override fun isOnboardingCompleted(): Boolean {
         return prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
     }

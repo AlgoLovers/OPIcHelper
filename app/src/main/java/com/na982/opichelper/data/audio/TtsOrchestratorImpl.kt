@@ -30,7 +30,6 @@ class TtsOrchestratorImpl(
     }
     private val activeSpeakCount = AtomicInteger(0)
     private val _isSpeaking = MutableStateFlow(false)
-    override val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
 
     private val allPlayers = listOf(googleTtsPlayer, samsungTtsPlayer)
     private val koreanTtsPlayers = listOf(samsungTtsPlayer)

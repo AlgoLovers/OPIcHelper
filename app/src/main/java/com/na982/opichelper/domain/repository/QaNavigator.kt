@@ -6,5 +6,4 @@ interface QaNavigator {
     suspend fun nextQaItem()
     suspend fun previousQaItem()
     suspend fun navigateToIndex(index: Int)
-    fun clearError()
 }

@@ -12,5 +12,4 @@ interface PlaybackPreferences {
     val answerPlayCount: StateFlow<Int>
 
     fun isAutoAdvance(): Boolean
-    fun setAutoAdvance(enabled: Boolean)
 }
