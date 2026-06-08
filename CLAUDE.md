@@ -374,6 +374,16 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | MainScreen AnswerCard 하이라이트 중복 OR 조건 | 단순화 (0174) |
 | QaBrowserViewModel.clearError() 미사용 | 제거 (0174) |
 | AudioPlayerImpl/RecordingAudioPlayerImpl MediaPlayer 해제 로직 중복 | BaseMediaPlayer 추출 (0176) |
+| TtsPlaybackController.close() 미호출 + coroutineScope 누수 | PlaybackViewModel.onCleared() cleanupTts → close() 변경 (0178) |
+| PlaybackPreferences.setAutoAdvance() 미사용 | 제거 (0178) |
+| QaNavigator.clearError() 미사용 | 제거 (0178) |
+| TtsOrchestrator.isSpeaking 외부 읽기 없음 | 인터페이스에서 제거 (0178) |
+| CurrentMode 미사용 enum 4개 (QUESTION_PLAY, ANSWER_PLAY, ENGLISH_WRITING_PLAYING, ENGLISH_WRITING_WITH_FILE) | 제거 (0179) |
+| CoordinatorEvent.LevelChanged 미발행 | 제거 (0179) |
+| FullMemorizationViewModel.refreshRecordingStatus() 외부 호출 없음 | private 전환 (0179) |
+| AndroidLogger/TtsServiceControllerImpl 이중 DI 등록 | @Inject constructor 제거 (0179) |
+| QaItemEntityMappers 독립 Gson 인스턴스 | QaItemEntityMapper 클래스 + Gson 주입 (0180) |
+| RepeatListening/EnglishWritingTest Repository 한글 TTS+하이라이트 중복 | BaseMemorizeTestRepository.playKoreanWithHighlight() 추출 (0180) |
 
 ## Git 커밋 규칙
 
