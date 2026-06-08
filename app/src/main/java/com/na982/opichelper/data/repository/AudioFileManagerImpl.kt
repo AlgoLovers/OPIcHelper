@@ -20,9 +20,7 @@ class AudioFileManagerImpl(
 
     companion object {
         private const val MERGE_BUFFER_SIZE = 1024 * 1024
-        private const val ENGLISH_WRITING_FILE_PREFIX = "english_writing"
         private const val ENGLISH_WRITING_PREFIX = "영작테스트"
-        private const val FULL_MEMORIZATION_PREFIX = "통암기"
     }
 
     override fun getRecordingFilePath(fileName: String): String {

@@ -31,7 +31,4 @@ interface QaItemDao {
 
     @Query("SELECT COUNT(*) FROM qa_items")
     suspend fun getCount(): Int
-
-    @Query("SELECT DISTINCT level FROM qa_items")
-    suspend fun getSeededLevels(): List<String>
 }
