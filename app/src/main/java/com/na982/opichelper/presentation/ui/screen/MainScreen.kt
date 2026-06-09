@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
@@ -21,7 +20,6 @@ import com.na982.opichelper.presentation.viewmodel.MemorizationController
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.entity.ModeGroup
-import androidx.compose.ui.unit.sp
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.na982.opichelper.domain.entity.MemorizeLevel
@@ -32,12 +30,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import com.na982.opichelper.presentation.ui.component.OnboardingDialog
-import com.na982.opichelper.presentation.ui.component.PipPermissionDialog
-import com.na982.opichelper.presentation.ui.component.SearchDialog
-import com.na982.opichelper.presentation.ui.component.openPipSettings
-import com.na982.opichelper.presentation.ui.component.EditScriptBottomSheet
-import com.na982.opichelper.presentation.viewmodel.EditScriptViewModel
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
