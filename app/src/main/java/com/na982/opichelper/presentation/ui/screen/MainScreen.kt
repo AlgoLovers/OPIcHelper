@@ -306,76 +306,32 @@ fun MainScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (coordinatorMode.group != ModeGroup.FULL_MEMORIZATION || (!isFullMemorizationQuestionPlaying && !isFullMemorizationRecording)) {
-                        AnswerCard(
-                            currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
-                            currentAnswerKo = qaViewModel.getCurrentAnswerKo(qaItem),
-                            highlightIndex = resolveAnswerHighlightIndex(
-                                coordinatorGroup = coordinatorMode.group,
-                                isFullMemorizationPlaying = isFullMemorizationPlaying,
-                                fullMemorizationHighlightIndex = fullMemorizationState.highlightIndex,
-                                playbackState = playbackState
-                            ),
-                            answerKoHighlightIndex = playbackState.answerKoHighlight.index,
-                            recordingHighlightIndex = playbackState.recordingHighlight.index,
-                            resumeHighlightIndex = if (!repeatListeningState.isPlaying) repeatListeningState.resumeSentenceIndex else null,
-                            isFlipped = when {
-                                coordinatorMode.group == ModeGroup.ENGLISH_WRITING -> englishWritingTestState.isCardFlipped
-                                playbackState.isEnglishWritingTestMergedFilePlaying -> false
-                                repeatListeningState.isCardFlipped -> repeatListeningState.isCardFlipped
-                                else -> false
-                            },
-                            onEdit = {
-                                editScriptState.value = EditScriptState(
-                                    qaItem = qaItem,
-                                    isQuestion = false,
-                                    level = qaViewModel.getCurrentUserLevel(),
-                                    scriptIndex = qaViewModel.getCurrentIndex(),
-                                    entityId = "${qaItem.category}_${qaItem.id}_${qaViewModel.getCurrentUserLevel().name}"
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        RecordingAnimation(
-                            isRecording = isFullMemorizationRecording,
-                            onStopRecording = { fullMemorizationViewModel.stopRecording() }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val isRepeatListening = MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.REPEAT_LISTENING
-                        AnswerPlayButton(
-                            isPlaying = playbackState.isAnswerPlaying,
-                            repeatCount = qaState.answerPlayCount,
-                            onPlayClick = {
-                                memorizationController.stopCurrent(coordinator)
-                                qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
-                            },
-                            onStopClick = { playbackViewModel.stopTts() },
-                            modifier = if (isRepeatListening) Modifier.fillMaxWidth() else Modifier.weight(1f)
-                        )
-
-                        if (!isRepeatListening) {
-                            MemorizeLevelPlaybackButton(
-                                selectedLevel = selectedLevel,
-                                onPlayEnglishWritingTest = { playbackViewModel.playEnglishWritingTestMergedFile() },
-                                onStopEnglishWritingTest = { playbackViewModel.stopEnglishWritingTestMergedFile() },
-                                onPlayFullMemorization = { fullMemorizationViewModel.playRecording() },
-                                onStopFullMemorization = { fullMemorizationViewModel.stopPlaying() },
-                                hasEnglishWritingTestMergedFile = playbackState.hasEnglishWritingTestMergedFile,
-                                isEnglishWritingTestMergedFilePlaying = playbackState.isEnglishWritingTestMergedFilePlaying,
-                                hasFullMemorizationRecording = fullMemorizationState.hasRecordingFile,
-                                isFullMemorizationPlaying = coordinatorMode == CurrentMode.FULL_MEMORIZATION_PLAYING,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
+                    AnswerSection(
+                        qaItem = qaItem,
+                        coordinatorGroup = coordinatorMode.group,
+                        isFullMemorizationQuestionPlaying = isFullMemorizationQuestionPlaying,
+                        isFullMemorizationRecording = isFullMemorizationRecording,
+                        isFullMemorizationPlaying = isFullMemorizationPlaying,
+                        fullMemorizationHighlightIndex = fullMemorizationState.highlightIndex,
+                        playbackState = playbackState,
+                        repeatListeningState = repeatListeningState,
+                        englishWritingTestIsCardFlipped = englishWritingTestState.isCardFlipped,
+                        selectedLevel = selectedLevel,
+                        currentMode = coordinatorMode,
+                        coordinator = coordinator,
+                        memorizationController = memorizationController,
+                        playbackViewModel = playbackViewModel,
+                        fullMemorizationViewModel = fullMemorizationViewModel,
+                        currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
+                        currentAnswerKo = qaViewModel.getCurrentAnswerKo(qaItem),
+                        currentUserLevel = qaViewModel.getCurrentUserLevel(),
+                        currentIndex = qaViewModel.getCurrentIndex(),
+                        qaItemCategory = qaItem.category,
+                        qaItemId = qaItem.id,
+                        answerPlayCount = qaState.answerPlayCount,
+                        hasFullMemorizationRecording = fullMemorizationState.hasRecordingFile,
+                        onEditScript = { editScriptState.value = it }
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
