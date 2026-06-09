@@ -40,18 +40,6 @@ import com.na982.opichelper.presentation.ui.component.SearchDialog
 import com.na982.opichelper.presentation.ui.component.openPipSettings
 import com.na982.opichelper.presentation.ui.component.EditScriptBottomSheet
 import com.na982.opichelper.presentation.viewmodel.EditScriptViewModel
-import com.na982.opichelper.domain.entity.UserLevel
-import com.na982.opichelper.domain.entity.QaItem
-
-data class EditScriptState(
-    val qaItem: QaItem,
-    val isQuestion: Boolean,
-    val level: UserLevel,
-    val scriptIndex: Int,
-    val entityId: String
-)
-
-
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
