@@ -284,60 +284,25 @@ fun MainScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        QuestionPlayButton(
-                            isPlaying = playbackState.isQuestionPlaying,
-                            onPlayClick = {
-                                memorizationController.stopCurrent(coordinator)
-                                playbackViewModel.playQuestion(qaItem.questionEn)
-                            },
-                            onStopClick = { playbackViewModel.stopTts() },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        if (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION) {
-                            FullMemorizationRecordingButton(
-                                isQuestionPlaying = isFullMemorizationQuestionPlaying,
-                                isRecording = isFullMemorizationRecording,
-                                onStartRecording = { fullMemorizationViewModel.start() },
-                                onStopRecording = { fullMemorizationViewModel.stopRecording() },
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            Button(
-                                onClick = {
-                                    if (MemorizeLevel.fromDisplayName(selectedLevel) != MemorizeLevel.FULL_MEMORIZATION) {
-                                        playbackViewModel.stopTts()
-                                    }
-                                    if (repeatListeningState.isPlaying || coordinatorRunning) {
-                                        memorizationController.stopCurrent(coordinator)
-                                    } else {
-                                        memorizationController.startForLevel(selectedLevel)
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (repeatListeningState.isPlaying || coordinatorRunning)
-                                        MaterialTheme.colorScheme.error
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                ),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = when {
-                                        repeatListeningState.isPlaying || coordinatorRunning -> "${selectedLevel} 종료"
-                                        MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.ENGLISH_WRITING -> "부분암기 테스트"
-                                        MemorizeLevel.fromDisplayName(selectedLevel) == MemorizeLevel.FULL_MEMORIZATION -> "통암기"
-                                        else -> selectedLevel.ifEmpty { "암기 테스트" }
-                                    },
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        }
-                    }
+                    QuestionActionRow(
+                        isQuestionPlaying = playbackState.isQuestionPlaying,
+                        questionEn = qaItem.questionEn,
+                        coordinatorGroup = coordinatorMode.group,
+                        isFullMemorizationQuestionPlaying = isFullMemorizationQuestionPlaying,
+                        isFullMemorizationRecording = isFullMemorizationRecording,
+                        selectedLevel = selectedLevel,
+                        isRepeatListeningPlaying = repeatListeningState.isPlaying,
+                        isCoordinatorRunning = coordinatorRunning,
+                        coordinator = coordinator,
+                        memorizationController = memorizationController,
+                        onPlayQuestion = {
+                            memorizationController.stopCurrent(coordinator)
+                            playbackViewModel.playQuestion(qaItem.questionEn)
+                        },
+                        onStopTts = { playbackViewModel.stopTts() },
+                        onStartFullMemorization = { fullMemorizationViewModel.start() },
+                        onStopFullMemorizationRecording = { fullMemorizationViewModel.stopRecording() }
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
