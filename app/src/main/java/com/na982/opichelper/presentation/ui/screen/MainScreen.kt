@@ -141,56 +141,16 @@ fun MainScreen(
                 isOnboardingVisible = showOnboarding.value
             )
 
-            // 온보딩 다이얼로그
-            if (showOnboarding.value) {
-                OnboardingDialog(
-                    onStartClick = {
-                        onboardingViewModel.setOnboardingCompleted()
-                        showOnboarding.value = false
-                    }
-                )
-            }
-
-            // PiP 권한 안내 다이얼로그
-            if (!showOnboarding.value && showPipGuide.value) {
-                PipPermissionDialog(
-                    onDismiss = {
-                        onboardingViewModel.setPipGuideCompleted()
-                        showPipGuide.value = false
-                    },
-                    onOpenSettings = {
-                        onboardingViewModel.setPipGuideCompleted()
-                        showPipGuide.value = false
-                        openPipSettings(context)
-                    }
-                )
-            }
-
-            // 검색 다이얼로그
-            if (showSearch.value) {
-                SearchDialog(
-                    onDismiss = { showSearch.value = false },
-                    onResultClick = { item ->
-                        showSearch.value = false
-                        scope.launch {
-                            qaViewModel.navigateToItem(item)
-                        }
-                    },
-                    searchQuery = { query -> qaViewModel.search(query) }
-                )
-            }
-
-            // 스크립트 편집 BottomSheet
-            editScriptState.value?.let { editState ->
-                EditScriptBottomSheet(
-                    qaItem = editState.qaItem,
-                    isQuestion = editState.isQuestion,
-                    level = editState.level,
-                    scriptIndex = editState.scriptIndex,
-                    entityId = editState.entityId,
-                    onDismiss = { editScriptState.value = null }
-                )
-            }
+            MainScreenDialogs(
+                showOnboarding = showOnboarding,
+                showPipGuide = showPipGuide,
+                showSearch = showSearch,
+                editScriptState = editScriptState,
+                onboardingViewModel = onboardingViewModel,
+                qaViewModel = qaViewModel,
+                context = context,
+                scope = scope
+            )
 
             Column(
                 modifier = modifier
