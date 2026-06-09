@@ -304,9 +304,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMemorizationModeCoordinator(impl: MemorizationModeCoordinatorImpl): MemorizationModeCoordinator = impl
+    fun provideMemorizationModeCoordinator(): MemorizationModeCoordinator = MemorizationModeCoordinatorImpl()
 
     @Provides
     @Singleton
-    fun provideTtsPlaybackController(impl: TtsPlaybackControllerImpl): TtsPlaybackController = impl
+    fun provideTtsPlaybackController(
+        ttsOrchestrator: TtsOrchestrator,
+        highlightStateHolder: HighlightStateHolder,
+        appLogger: AppLogger
+    ): TtsPlaybackController = TtsPlaybackControllerImpl(ttsOrchestrator, highlightStateHolder, appLogger)
 } 

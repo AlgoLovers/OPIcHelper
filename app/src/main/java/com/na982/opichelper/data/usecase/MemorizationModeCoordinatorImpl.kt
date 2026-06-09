@@ -13,11 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.atomic.AtomicReference
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class MemorizationModeCoordinatorImpl @Inject constructor() : MemorizationModeCoordinator {
+class MemorizationModeCoordinatorImpl : MemorizationModeCoordinator {
     private val _currentMode = MutableStateFlow<CurrentMode>(CurrentMode.NONE)
     override val currentMode: StateFlow<CurrentMode> = _currentMode.asStateFlow()
 

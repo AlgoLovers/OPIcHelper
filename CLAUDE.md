@@ -385,6 +385,9 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | QaItemEntityMappers 독립 Gson 인스턴스 | QaItemEntityMapper 클래스 + Gson 주입 (0180) |
 | RepeatListening/EnglishWritingTest Repository 한글 TTS+하이라이트 중복 | BaseMemorizeTestRepository.playKoreanWithHighlight() 추출 (0180) |
 | MainScreen 5개 중복 Snackbar LaunchedEffect | merge + 단일 collect로 통합 (0182) |
+| MainScreen 536줄 과도한 길이 | 10단계 분해로 306줄로 축소 (0183-0192) |
+| TtsPlaybackControllerImpl/MemorizationModeCoordinatorImpl 이중 DI 등록 | @Inject constructor 제거, @Provides에서 직접 생성 (0193) |
+| domain/CLAUDE.md ScriptProgress 잘못된 분류 | entity/로 이동 (0193) |
 
 ## Git 커밋 규칙
 
