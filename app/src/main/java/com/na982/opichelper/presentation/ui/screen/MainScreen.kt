@@ -88,30 +88,16 @@ fun MainScreen(
         )
     }
 
-    // 레벨 변경 시 모든 모드 정지
-    LaunchedEffect(selectedLevel) {
-        memorizationController.onLevelChangedAll()
-    }
-
-    // QA 아이템 변경 시 반복듣기 이어서 듣기 위치 갱신
-    LaunchedEffect(qaState.currentQaItem) {
-        if (!repeatListeningState.isPlaying) {
-            repeatListeningViewModel.refreshResumeIndex()
-        }
-    }
-
-    // 반복듣기 모드 진입 시 이어서 듣기 위치 초기 갱신
-    LaunchedEffect(Unit) {
-        repeatListeningViewModel.refreshResumeIndex()
-    }
-
-    // 통암기 모드 문장 텍스트를 PlaybackViewModel로 릴레이 (PiP용)
-    LaunchedEffect(fullMemorizationState.currentSentenceEn, fullMemorizationState.currentSentenceKo) {
-        playbackViewModel.setFullMemorizationSentence(
-            fullMemorizationState.currentSentenceEn,
-            fullMemorizationState.currentSentenceKo
-        )
-    }
+    MainScreenSideEffects(
+        selectedLevel = selectedLevel,
+        currentQaItem = qaState.currentQaItem,
+        isRepeatListeningPlaying = repeatListeningState.isPlaying,
+        fullMemorizationSentenceEn = fullMemorizationState.currentSentenceEn,
+        fullMemorizationSentenceKo = fullMemorizationState.currentSentenceKo,
+        memorizationController = memorizationController,
+        repeatListeningViewModel = repeatListeningViewModel,
+        playbackViewModel = playbackViewModel
+    )
 
     val isDarkTheme = isSystemInDarkTheme()
 
