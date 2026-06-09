@@ -20,7 +20,6 @@ class AudioFileManagerImpl(
 
     companion object {
         private const val MERGE_BUFFER_SIZE = 1024 * 1024
-        private const val ENGLISH_WRITING_PREFIX = "영작테스트"
     }
 
     override fun getRecordingFilePath(fileName: String): String {
@@ -140,7 +139,7 @@ class AudioFileManagerImpl(
         val mergedDir = File(context.filesDir, "merged")
         if (!mergedDir.exists()) return null
 
-        val prefix = "${ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_"
+        val prefix = "${AudioFileManager.ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_"
         return mergedDir.listFiles { file -> file.name.startsWith(prefix) }
             ?.maxByOrNull { it.lastModified() }
     }

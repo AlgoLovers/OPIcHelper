@@ -3,6 +3,11 @@ package com.na982.opichelper.domain.repository
 import java.io.File
 
 interface AudioFileManager {
+    companion object {
+        const val ENGLISH_WRITING_PREFIX = "영작테스트"
+        const val FULL_MEMORIZATION_PREFIX = "통암기"
+    }
+
     fun getRecordingFilePath(fileName: String): String
 
     fun getRecordingsDirectory(): File
