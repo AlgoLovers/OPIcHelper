@@ -210,53 +210,16 @@ fun MainScreen(
                     .padding(vertical = 8.dp)
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        CategorySelector(
-                            selectedCategory = category ?: "",
-                            categories = qaState.categories,
-                            onCategorySelected = {
-                                playbackViewModel.stopTts()
-                                qaViewModel.selectCategory(it)
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "📚 학습할 주제를 선택하세요",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        MemorizeLevelSelector(
-                            levels = MemorizeLevel.allDisplayNames,
-                            selectedLevel = selectedLevel,
-                            onLevelSelected = { qaViewModel.setSelectedMemorizeLevel(it) }
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "🎯 학습 난이도를 선택하세요",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
+            CategoryLevelRow(
+                selectedCategory = category ?: "",
+                categories = qaState.categories,
+                selectedLevel = selectedLevel,
+                onCategorySelected = {
+                    playbackViewModel.stopTts()
+                    qaViewModel.selectCategory(it)
+                },
+                onLevelSelected = { qaViewModel.setSelectedMemorizeLevel(it) }
+            )
 
             when {
                 qaState.isLoading -> {
