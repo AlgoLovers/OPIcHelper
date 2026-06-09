@@ -25,33 +25,16 @@ class RecordingFileRepositoryImpl(
     }
 
     private val mutex = Mutex()
-    @Volatile
-    private var currentRecordingPath: String? = null
-    @Volatile
-    private var currentPlayingPath: String? = null
 
     override suspend fun hasRecordingFile(category: String, scriptIndex: Int): Boolean {
         return mutex.withLock {
-            val path = findRecordingFilePath(category, scriptIndex)
-            if (path != null) {
-                currentRecordingPath = path
-                true
-            } else {
-                false
-            }
+            findRecordingFilePath(category, scriptIndex) != null
         }
     }
 
     override suspend fun getRecordingFilePath(category: String, scriptIndex: Int): String? {
         return mutex.withLock {
-            val path = findRecordingFilePath(category, scriptIndex)
-            if (path != null) {
-                currentRecordingPath = path
-                path
-            } else {
-                currentRecordingPath = null
-                null
-            }
+            findRecordingFilePath(category, scriptIndex)
         }
     }
 
@@ -59,9 +42,7 @@ class RecordingFileRepositoryImpl(
         return mutex.withLock {
             val timestamp = System.currentTimeMillis()
             val recordingFileName = "${FULL_MEMORIZATION_PREFIX}_${category}_${scriptIndex}_${timestamp}.m4a"
-            val path = audioFileManager.getRecordingFilePath(recordingFileName)
-            currentRecordingPath = path
-            path
+            audioFileManager.getRecordingFilePath(recordingFileName)
         }
     }
 
@@ -79,11 +60,7 @@ class RecordingFileRepositoryImpl(
         onPlayingStateChange: (Boolean) -> Unit
     ) {
         val filePath = mutex.withLock {
-            val path = findRecordingFilePath(category, scriptIndex)
-            if (path != null) {
-                currentPlayingPath = path
-            }
-            path
+            findRecordingFilePath(category, scriptIndex)
         }
 
         if (filePath == null) {
@@ -98,8 +75,6 @@ class RecordingFileRepositoryImpl(
         } catch (e: Exception) {
             appLogger.e("RecordingFileRepositoryImpl", "녹음 재생 실패", e)
             onPlayingStateChange(false)
-        } finally {
-            mutex.withLock { currentPlayingPath = null }
         }
     }
 
