@@ -1,6 +1,9 @@
 package com.na982.opichelper.presentation.viewmodel
 
+import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.ModeGroup
+import com.na982.opichelper.domain.entity.toModeGroup
+import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 
 class MemorizationController(
     viewModels: Map<ModeGroup, BaseMemorizationViewModel<*>>
@@ -10,8 +13,17 @@ class MemorizationController(
         viewModels[group]?.start()
     }
 
+    fun startForLevel(selectedLevel: String) {
+        val level = MemorizeLevel.fromDisplayName(selectedLevel)
+        startForGroup(level.toModeGroup())
+    }
+
     fun stopForGroup(group: ModeGroup) {
         viewModels[group]?.stop()
+    }
+
+    fun stopCurrent(coordinator: MemorizationModeCoordinator) {
+        stopForGroup(coordinator.currentMode.value.group)
     }
 
     fun stopAll() {

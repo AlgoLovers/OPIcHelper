@@ -21,12 +21,10 @@ import com.na982.opichelper.presentation.viewmodel.MemorizationController
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.entity.ModeGroup
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.na982.opichelper.domain.entity.MemorizeLevel
-import com.na982.opichelper.domain.entity.toModeGroup
 import com.na982.opichelper.ui.theme.*
 import androidx.compose.foundation.isSystemInDarkTheme
 import kotlinx.coroutines.flow.StateFlow
@@ -366,7 +364,7 @@ fun MainScreen(
                         QuestionPlayButton(
                             isPlaying = playbackState.isQuestionPlaying,
                             onPlayClick = {
-                                stopCurrentMemorization(coordinator, memorizationController)
+                                memorizationController.stopCurrent(coordinator)
                                 playbackViewModel.playQuestion(qaItem.questionEn)
                             },
                             onStopClick = { playbackViewModel.stopTts() },
@@ -388,11 +386,9 @@ fun MainScreen(
                                         playbackViewModel.stopTts()
                                     }
                                     if (repeatListeningState.isPlaying || coordinatorRunning) {
-                                        stopCurrentMemorization(coordinator, memorizationController)
+                                        memorizationController.stopCurrent(coordinator)
                                     } else {
-                                        onMemorizeTestButtonClick(
-                                            selectedLevel, memorizationController
-                                        )
+                                        memorizationController.startForLevel(selectedLevel)
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -465,7 +461,7 @@ fun MainScreen(
                             isPlaying = playbackState.isAnswerPlaying,
                             repeatCount = qaState.answerPlayCount,
                             onPlayClick = {
-                                stopCurrentMemorization(coordinator, memorizationController)
+                                memorizationController.stopCurrent(coordinator)
                                 qaItem.let { playbackViewModel.playAnswer(qaViewModel.getCurrentAnswer(it)) }
                             },
                             onStopClick = { playbackViewModel.stopTts() },
@@ -506,19 +502,4 @@ fun MainScreen(
         }
     }
     }
-}
-
-private fun onMemorizeTestButtonClick(
-    selectedLevel: String,
-    memorizationController: MemorizationController
-) {
-    val level = MemorizeLevel.fromDisplayName(selectedLevel)
-    memorizationController.startForGroup(level.toModeGroup())
-}
-
-private fun stopCurrentMemorization(
-    coordinator: MemorizationModeCoordinator,
-    memorizationController: MemorizationController
-) {
-    memorizationController.stopForGroup(coordinator.currentMode.value.group)
 }
