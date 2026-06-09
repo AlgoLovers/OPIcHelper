@@ -141,31 +141,19 @@ fun MainScreen(
         ) { paddingValues ->
             val scope = rememberCoroutineScope()
 
-            // 에러 이벤트 Snackbar 수집
-            LaunchedEffect(Unit) {
-                kotlinx.coroutines.flow.merge(
+            MainScreenSnackbarCollector(
+                snackbarHostState = snackbarHostState,
+                eventFlows = listOf(
                     playbackViewModel.events,
                     repeatListeningViewModel.events,
                     englishWritingTestViewModel.events,
                     fullMemorizationViewModel.events,
                     qaViewModel.events
-                ).collect { message ->
-                    snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
-                }
-            }
-
-            // 권한 거부 피드백
-            val isPermissionDenied by permissionDenied.collectAsState()
-            var hasShownPermissionDenied by remember { mutableStateOf(false) }
-            LaunchedEffect(isPermissionDenied) {
-                if (isPermissionDenied && !hasShownPermissionDenied) {
-                    hasShownPermissionDenied = true
-                    snackbarHostState.showSnackbar(
-                        "녹음 권한이 필요합니다. 설정에서 권한을 허용해주세요.",
-                        duration = SnackbarDuration.Long
-                    )
-                }
-            }
+                ),
+                permissionDenied = permissionDenied,
+                completedCount = qaState.completedCount,
+                isOnboardingVisible = showOnboarding.value
+            )
 
             // 온보딩 다이얼로그
             if (showOnboarding.value) {
@@ -216,18 +204,6 @@ fun MainScreen(
                     entityId = editState.entityId,
                     onDismiss = { editScriptState.value = null }
                 )
-            }
-
-            // 이어서 듣기 프롬프트 (최초 1회만)
-            var hasShownResumePrompt by remember { mutableStateOf(false) }
-            LaunchedEffect(qaState.completedCount) {
-                if (qaState.completedCount > 0 && !showOnboarding.value && !hasShownResumePrompt) {
-                    hasShownResumePrompt = true
-                    snackbarHostState.showSnackbar(
-                        "이전 위치에서 이어서 듣기 가능",
-                        duration = SnackbarDuration.Short
-                    )
-                }
             }
 
             Column(
