@@ -337,10 +337,12 @@ fun MainScreen(
                     QuestionCard(
                         currentQuestion = qaItem.questionEn,
                         currentQuestionKo = qaItem.questionKo,
-                        highlightIndex = when {
-                            (coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying) -> fullMemorizationState.highlightIndex
-                            else -> playbackState.questionHighlight.index
-                        },
+                        highlightIndex = resolveQuestionHighlightIndex(
+                            coordinatorGroup = coordinatorMode.group,
+                            isFullMemorizationPlaying = isFullMemorizationPlaying,
+                            fullMemorizationHighlightIndex = fullMemorizationState.highlightIndex,
+                            playbackQuestionHighlightIndex = playbackState.questionHighlight.index
+                        ),
                         currentIndex = currentIndex,
                         totalCount = totalCount,
                         completedCount = qaState.completedCount,
@@ -418,11 +420,12 @@ fun MainScreen(
                         AnswerCard(
                             currentAnswer = qaViewModel.getCurrentAnswer(qaItem),
                             currentAnswerKo = qaViewModel.getCurrentAnswerKo(qaItem),
-                            highlightIndex = when {
-                                coordinatorMode.group == ModeGroup.FULL_MEMORIZATION && isFullMemorizationPlaying -> fullMemorizationState.highlightIndex
-                                playbackState.isEnglishWritingTestMergedFilePlaying -> playbackState.englishWritingTestMergedFileHighlightIndex
-                                else -> playbackState.answerHighlight.index
-                            },
+                            highlightIndex = resolveAnswerHighlightIndex(
+                                coordinatorGroup = coordinatorMode.group,
+                                isFullMemorizationPlaying = isFullMemorizationPlaying,
+                                fullMemorizationHighlightIndex = fullMemorizationState.highlightIndex,
+                                playbackState = playbackState
+                            ),
                             answerKoHighlightIndex = playbackState.answerKoHighlight.index,
                             recordingHighlightIndex = playbackState.recordingHighlight.index,
                             resumeHighlightIndex = if (!repeatListeningState.isPlaying) repeatListeningState.resumeSentenceIndex else null,
