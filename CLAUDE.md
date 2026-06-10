@@ -388,6 +388,9 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | MainScreen 536줄 과도한 길이 | 10단계 분해로 306줄로 축소 (0183-0192) |
 | TtsPlaybackControllerImpl/MemorizationModeCoordinatorImpl 이중 DI 등록 | @Inject constructor 제거, @Provides에서 직접 생성 (0193) |
 | domain/CLAUDE.md ScriptProgress 잘못된 분류 | entity/로 이동 (0193) |
+| RecordingFileRepositoryImpl 미사용 상태 필드 | currentRecordingPath/currentPlayingPath 제거 (0194) |
+| ENGLISH_WRITING_PREFIX/FULL_MEMORIZATION_PREFIX 중복 정의 | AudioFileManager companion object로 통합 (0195) |
+| CARD_FLIP_DELAY_MS 3곳 중복 정의 | BaseMemorizeTestRepository companion object로 통합 (0196) |
 
 ## Git 커밋 규칙
 
