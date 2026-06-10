@@ -1,14 +1,12 @@
 package com.na982.opichelper
 
 import android.Manifest
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import com.na982.opichelper.domain.manager.AppLogger
@@ -34,6 +32,7 @@ import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import com.na982.opichelper.domain.audio.PipState
 import com.na982.opichelper.domain.audio.PlaybackActionListener
+import com.na982.opichelper.presentation.ui.PipActionBuilder
 import com.na982.opichelper.presentation.viewmodel.MemorizationController
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
@@ -357,76 +356,8 @@ class MainActivity : ComponentActivity() {
             params.setAutoEnterEnabled(state.isPlaying)
         }
 
-        val actions = ArrayList<android.app.RemoteAction>()
-
-        if (state.hasCompleted) {
-            val repeatIcon = Icon.createWithResource(this, R.drawable.ic_replay)
-            val repeatIntent = PendingIntent.getBroadcast(
-                this, 2,
-                Intent(ACTION_PIP_REPEAT).setPackage(packageName),
-                PendingIntent.FLAG_IMMUTABLE
-            )
-            actions.add(
-                android.app.RemoteAction(repeatIcon, "반복 재생", "반복 재생", repeatIntent)
-            )
-
-            if (state.hasNextItem) {
-                val nextIcon = Icon.createWithResource(this, R.drawable.ic_skip_next)
-                val nextIntent = PendingIntent.getBroadcast(
-                    this, 3,
-                    Intent(ACTION_PIP_NEXT).setPackage(packageName),
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-                actions.add(
-                    android.app.RemoteAction(nextIcon, "다음", "다음", nextIntent)
-                )
-            }
-        } else if (state.isPausable) {
-            val showPause = state.isPlaying && !state.isPaused
-            val playPauseIcon = Icon.createWithResource(
-                this,
-                if (showPause) R.drawable.ic_pause else R.drawable.ic_play
-            )
-            val playPauseIntent = PendingIntent.getBroadcast(
-                this, 0,
-                Intent(ACTION_PIP_PLAY_PAUSE).setPackage(packageName),
-                PendingIntent.FLAG_IMMUTABLE
-            )
-            actions.add(
-                android.app.RemoteAction(
-                    playPauseIcon,
-                    if (showPause) "일시정지" else "재생",
-                    if (showPause) "일시정지" else "재생",
-                    playPauseIntent
-                )
-            )
-
-            if (state.isRepeatListeningMode && state.isPlaying) {
-                val repeatOneIcon = Icon.createWithResource(this, R.drawable.ic_repeat_one)
-                val repeatOneIntent = PendingIntent.getBroadcast(
-                    this, 4,
-                    Intent(ACTION_PIP_REPEAT_SENTENCE).setPackage(packageName),
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-                actions.add(
-                    android.app.RemoteAction(repeatOneIcon, "문장 반복", "현재 문장 반복", repeatOneIntent)
-                )
-            }
-        }
-
-        val stopIcon = Icon.createWithResource(this, R.drawable.ic_stop)
-        val stopIntent = PendingIntent.getBroadcast(
-            this, 1,
-            Intent(ACTION_PIP_STOP).setPackage(packageName),
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        actions.add(
-            android.app.RemoteAction(
-                stopIcon, "정지", "정지", stopIntent
-            )
-        )
-
-        params.setActions(actions)
+        val pipActionBuilder = PipActionBuilder(this)
+        params.setActions(pipActionBuilder.buildActions(state))
         setPictureInPictureParams(params.build())
     }
 
