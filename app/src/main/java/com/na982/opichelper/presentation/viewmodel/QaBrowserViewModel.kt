@@ -52,6 +52,9 @@ class QaBrowserViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(QaBrowserState())
     val uiState: StateFlow<QaBrowserState> = _uiState.asStateFlow()
 
+    private val _selectedMemorizeLevel = MutableStateFlow(MemorizeLevel.REPEAT_LISTENING.displayName)
+    val selectedMemorizeLevel: StateFlow<String> = _selectedMemorizeLevel.asStateFlow()
+
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 5)
     val events: SharedFlow<String> = _events.asSharedFlow()
 
@@ -111,10 +114,10 @@ class QaBrowserViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 progressTracker.progressMap,
-                qaDataManager.currentCategory
-            ) { progressMap, category ->
+                qaDataManager.currentCategory,
+                _selectedMemorizeLevel
+            ) { progressMap, category, level ->
                 if (category != null) {
-                    val level = _uiState.value.selectedMemorizeLevel
                     val items = qaDataManager.getItemsInCategory(category)
                     val completed = items.indices.count { scriptIndex ->
                         val key = "${category}_${scriptIndex}_${level}"
@@ -165,22 +168,9 @@ class QaBrowserViewModel @Inject constructor(
     }
 
     fun setSelectedMemorizeLevel(level: String) {
+        _selectedMemorizeLevel.update { level }
         _uiState.update { it.copy(selectedMemorizeLevel = level) }
         memorizeLevelPreferences.setMemorizeLevel(level)
-        refreshCompletedCount()
-    }
-
-    private fun refreshCompletedCount() {
-        val category = _uiState.value.currentCategory ?: return
-        val level = _uiState.value.selectedMemorizeLevel
-        val items = qaDataManager.getItemsInCategory(category)
-        val progressMap = progressTracker.progressMap.value
-        val completed = items.indices.count { scriptIndex ->
-            val key = "${category}_${scriptIndex}_${level}"
-            val progress = progressMap[key]
-            progress != null && !progress.isMemorizeTestRunning && progress.currentSentenceIndex >= progress.totalSentences - 1
-        }
-        _uiState.update { it.copy(completedCount = completed) }
     }
 
     fun getCurrentAnswer(qaItem: QaItem?): String {
