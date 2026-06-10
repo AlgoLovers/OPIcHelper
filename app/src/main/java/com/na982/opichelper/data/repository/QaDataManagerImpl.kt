@@ -35,8 +35,9 @@ class QaDataManagerImpl(
     @Volatile
     private var userLevelJob: Job? = null
 
-    private val itemsByCategory: MutableMap<String, List<QaItem>> = mutableMapOf()
-    private val itemIndexByCategory: MutableMap<String, Int> = mutableMapOf()
+    private val itemsByCategory = java.util.concurrent.ConcurrentHashMap<String, List<QaItem>>()
+    private val itemIndexByCategory = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    @Volatile
     private var allItems: List<QaItem> = emptyList()
     private val mutex = Mutex()
 
