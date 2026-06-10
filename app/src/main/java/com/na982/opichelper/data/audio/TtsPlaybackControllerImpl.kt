@@ -126,6 +126,10 @@ class TtsPlaybackControllerImpl(
         }
     }
 
+    override fun reset() {
+        stopTts()
+    }
+
     override fun close() {
         cleanupTts()
         coroutineScope.cancel()

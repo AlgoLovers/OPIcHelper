@@ -184,12 +184,12 @@ class FullMemorizationUseCase @Inject constructor(
         _highlightIndex.update { null }
     }
 
-    override fun close() {
+    fun reset() {
         if (_state.value is FullMemorizationState.Recording) {
             try {
                 audioRecorder.stopRecording()
             } catch (e: Exception) {
-                appLogger.e("FullMemorizationUseCase", "close 시 녹음 중지 실패", e)
+                appLogger.e("FullMemorizationUseCase", "reset 시 녹음 중지 실패", e)
             }
         }
         currentRecordingPath = null
@@ -197,6 +197,10 @@ class FullMemorizationUseCase @Inject constructor(
         playbackJob = null
         _state.update { FullMemorizationState.Idle }
         _highlightIndex.update { null }
+    }
+
+    override fun close() {
+        reset()
         scope.cancel()
     }
 }

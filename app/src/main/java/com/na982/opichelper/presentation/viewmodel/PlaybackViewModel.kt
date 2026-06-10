@@ -187,8 +187,8 @@ class PlaybackViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         pipStateAggregator.release()
-        ttsPlaybackController.close()
-        playMergedFileUseCase.close()
+        ttsPlaybackController.reset()
+        playMergedFileUseCase.reset()
     }
 
     // Delegated PiP methods

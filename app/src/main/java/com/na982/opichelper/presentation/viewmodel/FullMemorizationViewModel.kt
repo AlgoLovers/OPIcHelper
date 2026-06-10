@@ -171,6 +171,6 @@ class FullMemorizationViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        fullMemorizationUseCase.close()
+        fullMemorizationUseCase.reset()
     }
 }

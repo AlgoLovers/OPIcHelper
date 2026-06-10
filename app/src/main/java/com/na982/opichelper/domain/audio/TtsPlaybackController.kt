@@ -19,5 +19,6 @@ interface TtsPlaybackController : TtsHighlightController {
     fun clearPausedState()
     fun cleanupTts()
     fun stopWithoutClearingHighlight()
+    fun reset()
     fun close()
 }

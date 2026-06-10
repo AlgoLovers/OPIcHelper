@@ -253,9 +253,13 @@ class QaDataManagerImpl(
         }
     }
 
-    override fun release() {
+    override fun reset() {
         userLevelJob?.cancel()
         userLevelJob = null
+    }
+
+    override fun release() {
+        reset()
         scope.cancel()
     }
 }

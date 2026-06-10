@@ -206,6 +206,6 @@ class QaBrowserViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        qaDataManager.release()
+        qaDataManager.reset()
     }
 }

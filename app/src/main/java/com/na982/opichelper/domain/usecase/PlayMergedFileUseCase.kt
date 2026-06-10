@@ -143,18 +143,16 @@ class PlayMergedFileUseCase @Inject constructor(
         }
     }
 
-    fun release() {
-        playJob?.cancel()
-        playJob = null
+    fun reset() {
+        stop()
         checkFileJob?.cancel()
         checkFileJob = null
-        _isPlaying.update { false }
-        _highlightIndex.update { null }
-        audioPlayer.stop()
     }
 
     override fun close() {
-        release()
+        stop()
+        checkFileJob?.cancel()
+        checkFileJob = null
         scope.cancel()
     }
 }
