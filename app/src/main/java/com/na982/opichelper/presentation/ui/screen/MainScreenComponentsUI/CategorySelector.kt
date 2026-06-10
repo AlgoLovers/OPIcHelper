@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import com.na982.opichelper.ui.theme.*
+import com.na982.opichelper.presentation.ui.component.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,21 +42,7 @@ fun CategorySelector(
             Column(
                 modifier = Modifier.padding(20.dp)
             ) {
-                Card(
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    )
-                ) {
-                    Text(
-                        text = "📚 카테고리",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        fontSize = 14.sp
-                    )
-                }
+                SectionHeader(title = "📚 카테고리")
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
