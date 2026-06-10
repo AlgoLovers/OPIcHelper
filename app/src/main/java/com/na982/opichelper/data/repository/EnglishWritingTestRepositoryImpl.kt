@@ -45,9 +45,31 @@ class EnglishWritingTestRepositoryImpl(
         val koSentences = splitSentences(answerKo)
         val enSentences = splitSentences(answerEn)
         val count = minOf(koSentences.size, enSentences.size)
-
         val startIndex = resolveStartIndex(category, scriptIndex, count)
 
+        val recordingFiles = recordSentences(koSentences, enSentences, category, scriptIndex, startIndex, count)
+
+        emit(MemorizeTestEvent.CardFlip(false))
+        emit(MemorizeTestEvent.KoreanHighlight(null))
+        emit(MemorizeTestEvent.RecordingHighlight(null))
+
+        mergeRecordingFiles(recordingFiles, category, scriptIndex)
+
+        progressPersistenceService.saveNavigationState(
+            ProgressPersistenceService.NavigationState(category, scriptIndex, 0)
+        )
+
+        emit(MemorizeTestEvent.Completed)
+    }
+
+    private suspend fun recordSentences(
+        koSentences: List<String>,
+        enSentences: List<String>,
+        category: String,
+        scriptIndex: Int,
+        startIndex: Int,
+        count: Int
+    ): List<File> {
         val recordingFiles = mutableListOf<File>()
 
         try {
@@ -58,76 +80,85 @@ class EnglishWritingTestRepositoryImpl(
                     ProgressPersistenceService.NavigationState(category, scriptIndex, idx)
                 )
 
-                // 1. 한글 문장 TTS
                 val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[idx], idx)
                 if (koResult is TtsSpeakResult.Unavailable) break
 
                 if (!currentCoroutineContext().isActive) break
 
-                // 2. 녹음
-                emit(MemorizeTestEvent.RecordingHighlight(idx))
-                emit(MemorizeTestEvent.RecordingStateChange(true))
-
-                val savedTtsTime = recordingTimeManager.getRecordingTime(category, scriptIndex, idx)
-                val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
-                    savedTtsTime
-                } else {
-                    (enSentences[idx].length * RECORDING_CHAR_DURATION_MS).coerceAtLeast(MIN_RECORDING_DURATION_MS)
-                }
-
-                val recordingFile = audioRecorder.startRecording()
-                val startTime = System.currentTimeMillis()
-                try {
-                    delay(recordingDuration)
-                } finally {
-                    audioRecorder.stopRecording()
-                }
-                val actualRecordingTime = System.currentTimeMillis() - startTime
-
-                recordingTimeManager.saveRecordingTime(category, scriptIndex, idx, actualRecordingTime)
-
-                val savedFile = audioFileManager.saveRecordingFile(recordingFile, "${ENGLISH_WRITING_FILE_PREFIX}_${category}_${scriptIndex}_${idx}")
-                recordingFiles.add(savedFile)
+                val recordingFile = recordSentence(enSentences[idx], category, scriptIndex, idx)
+                recordingFiles.add(recordingFile)
 
                 emit(MemorizeTestEvent.RecordingStateChange(false))
                 emit(MemorizeTestEvent.RecordingHighlight(null))
                 emit(MemorizeTestEvent.KoreanHighlight(null))
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
-            recordingFiles.forEach { file ->
-                if (file.exists()) file.delete()
-            }
+            recordingFiles.forEach { file -> if (file.exists()) file.delete() }
             throw e
         }
 
-        emit(MemorizeTestEvent.CardFlip(false))
-        emit(MemorizeTestEvent.KoreanHighlight(null))
-        emit(MemorizeTestEvent.RecordingHighlight(null))
+        return recordingFiles
+    }
 
-        // 3. 녹음 파일 병합
-        if (recordingFiles.isNotEmpty()) {
-            val timestamp = DATE_FORMAT.format(Date())
-            val mergedFileName = "${AudioFileManager.ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_${timestamp}"
+    private suspend fun recordSentence(
+        enSentence: String,
+        category: String,
+        scriptIndex: Int,
+        sentenceIndex: Int
+    ): File {
+        emit(MemorizeTestEvent.RecordingHighlight(sentenceIndex))
+        emit(MemorizeTestEvent.RecordingStateChange(true))
 
-            try {
-                val mergedFile = audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
-                if (mergedFile != null) {
-                    recordingFiles.forEach { file ->
-                        if (file.exists()) file.delete()
-                    }
-                    emit(MemorizeTestEvent.MergedFileCreated)
-                } else {
-                    appLogger.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지")
-                }
-            } catch (e: Exception) {
-                appLogger.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지", e)
-            }
+        val recordingDuration = calculateRecordingDuration(enSentence, category, scriptIndex, sentenceIndex)
+
+        val recordingFile = audioRecorder.startRecording()
+        val startTime = System.currentTimeMillis()
+        try {
+            delay(recordingDuration)
+        } finally {
+            audioRecorder.stopRecording()
         }
+        val actualRecordingTime = System.currentTimeMillis() - startTime
 
-        progressPersistenceService.saveNavigationState(
-            ProgressPersistenceService.NavigationState(category, scriptIndex, 0)
+        recordingTimeManager.saveRecordingTime(category, scriptIndex, sentenceIndex, actualRecordingTime)
+
+        return audioFileManager.saveRecordingFile(
+            recordingFile,
+            "${ENGLISH_WRITING_FILE_PREFIX}_${category}_${scriptIndex}_${sentenceIndex}"
         )
+    }
 
-        emit(MemorizeTestEvent.Completed)
+    private fun calculateRecordingDuration(
+        enSentence: String,
+        category: String,
+        scriptIndex: Int,
+        sentenceIndex: Int
+    ): Long {
+        val savedTtsTime = recordingTimeManager.getRecordingTime(category, scriptIndex, sentenceIndex)
+        if (savedTtsTime != null && savedTtsTime > 0) return savedTtsTime
+        return (enSentence.length * RECORDING_CHAR_DURATION_MS).coerceAtLeast(MIN_RECORDING_DURATION_MS)
+    }
+
+    private suspend fun mergeRecordingFiles(
+        recordingFiles: List<File>,
+        category: String,
+        scriptIndex: Int
+    ) {
+        if (recordingFiles.isEmpty()) return
+
+        val timestamp = DATE_FORMAT.format(Date())
+        val mergedFileName = "${AudioFileManager.ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_${timestamp}"
+
+        try {
+            val mergedFile = audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
+            if (mergedFile != null) {
+                recordingFiles.forEach { file -> if (file.exists()) file.delete() }
+                emit(MemorizeTestEvent.MergedFileCreated)
+            } else {
+                appLogger.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지")
+            }
+        } catch (e: Exception) {
+            appLogger.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지", e)
+        }
     }
 }
