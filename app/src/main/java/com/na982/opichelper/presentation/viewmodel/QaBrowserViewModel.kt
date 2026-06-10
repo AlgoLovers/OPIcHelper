@@ -1,6 +1,7 @@
 package com.na982.opichelper.presentation.viewmodel
 
 import com.na982.opichelper.domain.entity.QaItem
+import com.na982.opichelper.domain.entity.ScriptProgress
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.UserLevelPreferences
@@ -120,7 +121,7 @@ class QaBrowserViewModel @Inject constructor(
                 if (category != null) {
                     val items = qaDataManager.getItemsInCategory(category)
                     val completed = items.indices.count { scriptIndex ->
-                        val key = "${category}_${scriptIndex}_${level}"
+                        val key = ScriptProgress.progressKey(category, scriptIndex, level)
                         val progress = progressMap[key]
                         progress != null && !progress.isMemorizeTestRunning && progress.currentSentenceIndex >= progress.totalSentences - 1
                     }

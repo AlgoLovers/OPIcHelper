@@ -10,7 +10,12 @@ data class ScriptProgress(
     val timestamp: Long = System.currentTimeMillis(),
     val needsSave: Boolean = false
 ) {
-    fun getKey(): String = "${category}_${scriptIndex}_${memorizeLevel}"
+    fun getKey(): String = progressKey(category, scriptIndex, memorizeLevel)
 
     fun toPersistable(): ScriptProgress = copy(needsSave = false)
+
+    companion object {
+        fun progressKey(category: String, scriptIndex: Int, memorizeLevel: String): String =
+            "${category}_${scriptIndex}_${memorizeLevel}"
+    }
 }
