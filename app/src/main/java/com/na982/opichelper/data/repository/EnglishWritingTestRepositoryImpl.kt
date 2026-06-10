@@ -30,7 +30,6 @@ class EnglishWritingTestRepositoryImpl(
     companion object {
         private const val RECORDING_CHAR_DURATION_MS = 100L
         private const val MIN_RECORDING_DURATION_MS = 3000L
-        private const val CARD_FLIP_DELAY_MS = 100L
         private const val ENGLISH_WRITING_FILE_PREFIX = "english_writing"
         private val DATE_FORMAT = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
     }
@@ -60,7 +59,7 @@ class EnglishWritingTestRepositoryImpl(
                 )
 
                 // 1. 한글 문장 TTS
-                val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[idx], idx, CARD_FLIP_DELAY_MS)
+                val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[idx], idx)
                 if (koResult is TtsSpeakResult.Unavailable) break
 
                 if (!currentCoroutineContext().isActive) break

@@ -26,7 +26,6 @@ class RepeatListeningRepositoryImpl(
 
     companion object {
         private val WHITESPACE_REGEX = "\\s+".toRegex()
-        private const val CARD_FLIP_DELAY_MS = 100L
         private const val WORD_DELAY_MS = 500
         private const val REST_TIME_MULTIPLIER = 1.2
         private const val SHORT_WORD_THRESHOLD = 5
@@ -72,7 +71,7 @@ class RepeatListeningRepositoryImpl(
             )
 
             // 1. 한글 문장 TTS
-            val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[i], i, CARD_FLIP_DELAY_MS)
+            val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[i], i)
             if (koResult is TtsSpeakResult.Unavailable) break@sentenceLoop
             if (koResult !is TtsSpeakResult.Success) {
                 continue@sentenceLoop
@@ -107,7 +106,7 @@ class RepeatListeningRepositoryImpl(
                 _repeatProgress.update { prev -> prev?.copy(currentRepetition = j, totalRepetitions = effectiveRepeatCount) ?: prev }
 
                 emit(MemorizeTestEvent.CardFlip(false))
-                delay(CARD_FLIP_DELAY_MS)
+                delay(BaseMemorizeTestRepository.CARD_FLIP_DELAY_MS)
                 emit(MemorizeTestEvent.Highlight(i))
 
                 val enResult = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i])

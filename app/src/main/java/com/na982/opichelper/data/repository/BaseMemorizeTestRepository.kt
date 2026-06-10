@@ -14,6 +14,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 abstract class BaseMemorizeTestRepository(
     protected val progressPersistenceService: ProgressPersistenceService
 ) {
+    companion object {
+        const val CARD_FLIP_DELAY_MS = 100L
+    }
+
     private val _events = MutableSharedFlow<MemorizeTestEvent>(
         extraBufferCapacity = 8
     )
