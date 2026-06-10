@@ -22,8 +22,8 @@ import com.na982.opichelper.domain.manager.AppLogger
 
 abstract class BaseMemorizationViewModel<T>(
     protected val coordinator: MemorizationModeCoordinator,
-    private val ttsPlaybackController: TtsPlaybackController?,
-    private val progressTracker: MemorizeTestProgressTracker?,
+    private val ttsPlaybackController: TtsPlaybackController,
+    private val progressTracker: MemorizeTestProgressTracker,
     protected val appLogger: AppLogger,
     protected val qaContentReader: QaContentReader
 ) : ViewModel() {
@@ -72,10 +72,10 @@ abstract class BaseMemorizationViewModel<T>(
 
     private fun cleanupAndPersist() {
         viewModelScope.launch {
-            ttsPlaybackController?.stopTts()
-            ttsPlaybackController?.clearHighlight()
+            ttsPlaybackController.stopTts()
+            ttsPlaybackController.clearHighlight()
             try {
-                progressTracker?.persistChangedProgress()
+                progressTracker.persistChangedProgress()
             } catch (e: Exception) {
                 appLogger.e("BaseMemorizationVM", "진행상황 저장 실패", e)
             }
@@ -102,10 +102,10 @@ abstract class BaseMemorizationViewModel<T>(
         if (event.index != null) {
             val koSentence = getSentenceFromAnswer(event.index, isKorean = true)
             val enSentence = getSentenceFromAnswer(event.index, isKorean = false)
-            ttsPlaybackController?.setAnswerKoHighlightIndex(event.index, koSentence)
-            ttsPlaybackController?.setAnswerHighlightIndex(event.index, enSentence)
+            ttsPlaybackController.setAnswerKoHighlightIndex(event.index, koSentence)
+            ttsPlaybackController.setAnswerHighlightIndex(event.index, enSentence)
         } else {
-            ttsPlaybackController?.clearHighlight()
+            ttsPlaybackController.clearHighlight()
         }
     }
 }
