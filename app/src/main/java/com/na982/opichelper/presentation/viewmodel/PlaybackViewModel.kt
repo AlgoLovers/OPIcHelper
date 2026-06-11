@@ -46,7 +46,7 @@ class PlaybackViewModel @Inject constructor(
     private val playMergedFileUseCase: PlayMergedFileUseCase,
     private val coordinator: MemorizationModeCoordinator,
     private val playbackPreferences: PlaybackPreferences,
-    private val pipStateAggregator: PipStateAggregator,
+    private val _pipStateAggregator: PipStateAggregator,
     private val appLogger: AppLogger
 ) : ViewModel() {
 
@@ -57,7 +57,7 @@ class PlaybackViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PlaybackState())
     val uiState: StateFlow<PlaybackState> = _uiState.asStateFlow()
 
-    val pipState: StateFlow<PipState> = pipStateAggregator.pipState
+    val pipState: StateFlow<PipState> = _pipStateAggregator.pipState
 
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 5)
     val events: SharedFlow<String> = _events.asSharedFlow()
@@ -140,7 +140,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun playQuestion(question: String) {
-        pipStateAggregator.markQuestionPlayed()
+        _pipStateAggregator.markQuestionPlayed()
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
             ttsPlaybackController.stopTts()
@@ -149,7 +149,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun playAnswer(answer: String) {
-        pipStateAggregator.markAnswerPlayed()
+        _pipStateAggregator.markAnswerPlayed()
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
             ttsPlaybackController.stopTts()
@@ -186,23 +186,10 @@ class PlaybackViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        pipStateAggregator.release()
+        _pipStateAggregator.release()
         ttsPlaybackController.reset()
         playMergedFileUseCase.reset()
     }
 
-    // Delegated PiP methods
-    fun onBackgroundMove() = pipStateAggregator.onBackgroundMove()
-    fun onForegroundReturn() = pipStateAggregator.onForegroundReturn()
-    fun setPipMode(isPip: Boolean) = pipStateAggregator.setPipMode(isPip)
-    fun togglePlayPause() = pipStateAggregator.togglePlayPause()
-    fun setActionListener(listener: PlaybackActionListener) = pipStateAggregator.setActionListener(listener)
-    fun setHasNextItem(hasNext: Boolean) = pipStateAggregator.setHasNextItem(hasNext)
-    fun repeatPlayback() = pipStateAggregator.repeatPlayback()
-    fun playNextItem() = pipStateAggregator.playNextItem()
-    fun stopPlayback() = pipStateAggregator.stopPlayback()
-    fun repeatCurrentSentence() = pipStateAggregator.repeatCurrentSentence()
-    fun shouldEnterPip(): Boolean = pipStateAggregator.shouldEnterPip()
-    fun setFullMemorizationSentence(en: String?, ko: String?) = pipStateAggregator.setFullMemorizationSentence(en, ko)
-    val lastMemorizationGroup get() = pipStateAggregator.lastMemorizationGroup
+    val pipStateAggregator: PipStateAggregator get() = _pipStateAggregator
 }

@@ -78,11 +78,11 @@ class MainActivity : ComponentActivity() {
     private val pipActionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                ACTION_PIP_PLAY_PAUSE -> playbackViewModel?.togglePlayPause()
-                ACTION_PIP_STOP -> playbackViewModel?.stopPlayback()
-                ACTION_PIP_REPEAT -> playbackViewModel?.repeatPlayback()
-                ACTION_PIP_NEXT -> playbackViewModel?.playNextItem()
-                ACTION_PIP_REPEAT_SENTENCE -> playbackViewModel?.repeatCurrentSentence()
+                ACTION_PIP_PLAY_PAUSE -> playbackViewModel?.pipStateAggregator?.togglePlayPause()
+                ACTION_PIP_STOP -> playbackViewModel?.pipStateAggregator?.stopPlayback()
+                ACTION_PIP_REPEAT -> playbackViewModel?.pipStateAggregator?.repeatPlayback()
+                ACTION_PIP_NEXT -> playbackViewModel?.pipStateAggregator?.playNextItem()
+                ACTION_PIP_REPEAT_SENTENCE -> playbackViewModel?.pipStateAggregator?.repeatCurrentSentence()
             }
         }
     }
@@ -167,14 +167,14 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     override fun onRepeatMemorization() {
-                        val group = pvm.lastMemorizationGroup ?: return
+                        val group = pvm.pipStateAggregator.lastMemorizationGroup ?: return
                         memorizationController.startForGroup(group)
                     }
                     override fun onNextAndRestart() {
                         lifecycleScope.launch {
                             val qaItem = qaVm.nextQaItemSync()
                             if (qaItem != null) {
-                                val group = pvm.lastMemorizationGroup ?: return@launch
+                                val group = pvm.pipStateAggregator.lastMemorizationGroup ?: return@launch
                                 memorizationController.startForGroup(group)
                             }
                         }
@@ -187,11 +187,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            SideEffect { pvm.setActionListener(actionListener) }
+            SideEffect { pvm.pipStateAggregator.setActionListener(actionListener) }
 
             LaunchedEffect(Unit) {
                 qaVm.uiState.collect { _ ->
-                    pvm.setHasNextItem(qaVm.hasNextQaItem())
+                    pvm.pipStateAggregator.setHasNextItem(qaVm.hasNextQaItem())
                 }
             }
 
@@ -227,7 +227,7 @@ class MainActivity : ComponentActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (playbackViewModel?.shouldEnterPip() == true) {
+            if (playbackViewModel?.pipStateAggregator?.shouldEnterPip() == true) {
                 enterPipMode()
             }
         }
@@ -267,23 +267,23 @@ class MainActivity : ComponentActivity() {
         newConfig: Configuration
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-        playbackViewModel?.setPipMode(isInPictureInPictureMode)
+        playbackViewModel?.pipStateAggregator?.setPipMode(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
-            playbackViewModel?.onForegroundReturn()
+            playbackViewModel?.pipStateAggregator?.onForegroundReturn()
         } else {
-            playbackViewModel?.onBackgroundMove()
+            playbackViewModel?.pipStateAggregator?.onBackgroundMove()
         }
     }
 
     override fun onPause() {
         super.onPause()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isInPictureInPictureMode) {
-            if (playbackViewModel?.shouldEnterPip() == true) {
+            if (playbackViewModel?.pipStateAggregator?.shouldEnterPip() == true) {
                 enterPipMode()
             }
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isInPictureInPictureMode) {
-            playbackViewModel?.onBackgroundMove()
+            playbackViewModel?.pipStateAggregator?.onBackgroundMove()
         }
     }
 
@@ -293,7 +293,7 @@ class MainActivity : ComponentActivity() {
             wakeLockController.acquire()
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isInPictureInPictureMode) {
-            playbackViewModel?.onForegroundReturn()
+            playbackViewModel?.pipStateAggregator?.onForegroundReturn()
         }
     }
 

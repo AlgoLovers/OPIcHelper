@@ -34,7 +34,7 @@ fun MainScreenSideEffects(
     }
 
     LaunchedEffect(fullMemorizationSentenceEn, fullMemorizationSentenceKo) {
-        playbackViewModel.setFullMemorizationSentence(
+        playbackViewModel.pipStateAggregator.setFullMemorizationSentence(
             fullMemorizationSentenceEn,
             fullMemorizationSentenceKo
         )
