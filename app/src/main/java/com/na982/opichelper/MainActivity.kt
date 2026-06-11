@@ -39,6 +39,7 @@ import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
 import com.na982.opichelper.domain.entity.ModeGroup
+import com.na982.opichelper.domain.repository.StudySessionRepository
 import com.na982.opichelper.domain.usecase.ProgressCleanupUseCase
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -59,6 +60,11 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var progressCleanupUseCase: ProgressCleanupUseCase
+
+    @Inject
+    lateinit var studySessionRepository: StudySessionRepository
+
+    private var sessionStartTimeMs: Long = 0L
 
     private var playbackViewModel: PlaybackViewModel? = null
     private var qaViewModel: QaBrowserViewModel? = null
@@ -277,6 +283,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        recordSessionDuration()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isInPictureInPictureMode) {
             if (playbackViewModel?.pipStateAggregator?.shouldEnterPip() == true) {
                 enterPipMode()
@@ -289,6 +296,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        sessionStartTimeMs = System.currentTimeMillis()
         if (!wakeLockController.isHeld()) {
             wakeLockController.acquire()
         }
@@ -306,12 +314,23 @@ class MainActivity : ComponentActivity() {
 
     private fun cleanupAllResources() {
         try {
+            recordSessionDuration()
             lifecycleScope.launch {
                 progressCleanupUseCase.cleanupOnExit()
             }
             wakeLockController.release()
         } catch (e: Exception) {
             appLogger.e("MainActivity", "리소스 정리 중 오류 발생", e)
+        }
+    }
+
+    private fun recordSessionDuration() {
+        if (sessionStartTimeMs > 0L) {
+            val durationMs = System.currentTimeMillis() - sessionStartTimeMs
+            if (durationMs > 0L) {
+                studySessionRepository.recordSession(durationMs, 0)
+            }
+            sessionStartTimeMs = 0L
         }
     }
 

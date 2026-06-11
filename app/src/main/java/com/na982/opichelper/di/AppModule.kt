@@ -29,6 +29,7 @@ import com.na982.opichelper.data.repository.QaDataManagerImpl
 import com.na982.opichelper.data.repository.RoomQaDataLoader
 import com.na982.opichelper.data.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
+import com.na982.opichelper.domain.repository.StudySessionRepository
 import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.repository.ScriptEditRepository
 import com.na982.opichelper.domain.repository.TtsServiceController
@@ -298,6 +299,12 @@ object AppModule {
         progressPersistenceService: ProgressPersistenceService
     ): ScriptEditRepository {
         return ScriptEditRepositoryImpl(dao, recordingTimeManager, progressPersistenceService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideStudySessionRepository(@ApplicationContext context: Context, appLogger: AppLogger, gson: Gson): StudySessionRepository {
+        return com.na982.opichelper.data.repository.StudySessionRepositoryImpl(context, appLogger, gson)
     }
 
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요

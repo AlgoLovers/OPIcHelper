@@ -12,12 +12,14 @@ import androidx.navigation.compose.composable
 import com.na982.opichelper.presentation.ui.component.PipOverlay
 import com.na982.opichelper.presentation.ui.screen.MainScreen
 import com.na982.opichelper.presentation.ui.screen.SettingsScreen
+import com.na982.opichelper.presentation.ui.screen.StatisticsScreen
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
 import kotlinx.coroutines.flow.StateFlow
 
 sealed class Screen(val route: String) {
     object Main : Screen("main")
     object Settings : Screen("settings")
+    object Statistics : Screen("statistics")
 }
 
 @Composable
@@ -50,12 +52,23 @@ fun AppNavigation(
                     onNavigateToSettings = {
                         navController.navigate(Screen.Settings.route)
                     },
+                    onNavigateToStatistics = {
+                        navController.navigate(Screen.Statistics.route)
+                    },
                     permissionDenied = permissionDenied
                 )
             }
 
             composable(Screen.Settings.route) {
                 SettingsScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Screen.Statistics.route) {
+                StatisticsScreen(
                     onNavigateBack = {
                         navController.popBackStack()
                     }

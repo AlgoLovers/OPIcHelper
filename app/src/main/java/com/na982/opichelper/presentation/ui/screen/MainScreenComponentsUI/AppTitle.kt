@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.sp
 fun AppTitle(
     currentLevel: String = "",
     onSettingsClick: () -> Unit = {},
+    onStatisticsClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -63,6 +65,16 @@ fun AppTitle(
                         Icon(
                             imageVector = Icons.Filled.Search,
                             contentDescription = "검색",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                    IconButton(
+                        onClick = onStatisticsClick,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = "통계",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
