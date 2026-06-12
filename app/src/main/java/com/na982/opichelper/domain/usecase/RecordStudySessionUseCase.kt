@@ -19,7 +19,7 @@ class RecordStudySessionUseCase @Inject constructor(
         if (sessionStartTimeMs > 0L) {
             val durationMs = System.currentTimeMillis() - sessionStartTimeMs
             if (durationMs > 0L) {
-                studySessionRecorder.recordSession(durationMs, 0)
+                studySessionRecorder.recordSession(durationMs)
             }
             sessionStartTimeMs = 0L
         }

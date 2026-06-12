@@ -7,5 +7,4 @@ interface StudySessionStatisticsReader {
     fun getStreak(): Int
     fun getLongestStreak(): Int
     fun getTotalStudyDurationMs(): Long
-    fun getTotalCompletedScripts(): Int
 }

@@ -41,10 +41,7 @@ class StudyStatisticsCalculator @Inject constructor(
     }
 
     private fun countCompletedScripts(progressMap: Map<String, ScriptProgress>): Int {
-        return progressMap.values.count { progress ->
-            !progress.isMemorizeTestRunning &&
-                progress.currentSentenceIndex >= progress.totalSentences - 1
-        }
+        return progressMap.values.count { it.isCompleted() }
     }
 
     private fun countTotalScripts(categories: List<String>): Int {
@@ -57,9 +54,7 @@ class StudyStatisticsCalculator @Inject constructor(
         val breakdown = mutableMapOf<String, Int>()
         MemorizeLevel.entries.forEach { level ->
             breakdown[level.displayName] = progressMap.values.count { progress ->
-                progress.memorizeLevel == level.displayName &&
-                    !progress.isMemorizeTestRunning &&
-                    progress.currentSentenceIndex >= progress.totalSentences - 1
+                progress.memorizeLevel == level.displayName && progress.isCompleted()
             }
         }
         return breakdown
@@ -75,8 +70,7 @@ class StudyStatisticsCalculator @Inject constructor(
                 MemorizeLevel.entries.count { level ->
                     val key = ScriptProgress.progressKey(category, scriptIndex, level.displayName)
                     val progress = progressMap[key]
-                    progress != null && !progress.isMemorizeTestRunning &&
-                        progress.currentSentenceIndex >= progress.totalSentences - 1
+                    progress != null && progress.isCompleted()
                 }
             }
             CategoryProgress(

@@ -24,14 +24,13 @@ class StudySessionRepositoryImpl(
         private val DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE
     }
 
-    override fun recordSession(durationMs: Long, completedCount: Int) {
+    override fun recordSession(durationMs: Long) {
         try {
             val today = LocalDate.now().format(DATE_FORMAT)
             val key = KEY_DAILY_PREFIX + today
             val existing = getDailyRecord(today)
             val updated = existing.copy(
-                studyDurationMs = existing.studyDurationMs + durationMs,
-                completedScripts = existing.completedScripts + completedCount
+                studyDurationMs = existing.studyDurationMs + durationMs
             )
             prefs.edit().putString(key, gson.toJson(updated)).apply()
             updateStreak()
@@ -78,21 +77,6 @@ class StudySessionRepositoryImpl(
                     total += record.studyDurationMs
                 } catch (e: Exception) {
                     appLogger.e("StudySessionRepo", "총 학습 시간 계산 중 오류: $key", e)
-                }
-            }
-        }
-        return total
-    }
-
-    override fun getTotalCompletedScripts(): Int {
-        var total = 0
-        for ((key, _) in prefs.all) {
-            if (key.startsWith(KEY_DAILY_PREFIX)) {
-                try {
-                    val record = gson.fromJson(prefs.getString(key, null), StudyDailyRecord::class.java)
-                    total += record.completedScripts
-                } catch (e: Exception) {
-                    appLogger.e("StudySessionRepo", "완료 스크립트 계산 중 오류: $key", e)
                 }
             }
         }
