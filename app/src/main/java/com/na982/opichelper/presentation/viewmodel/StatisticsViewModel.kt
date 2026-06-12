@@ -1,7 +1,6 @@
 package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.na982.opichelper.domain.entity.StudyStatistics
 import com.na982.opichelper.domain.usecase.StudyStatisticsCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +11,21 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
 import javax.inject.Inject
 
+data class DailyRecordUiModel(
+    val date: String,
+    val studyDurationMs: Long,
+    val completedScripts: Int
+)
+
+data class CategoryProgressUiModel(
+    val category: String,
+    val completedScripts: Int,
+    val totalScripts: Int,
+    val rate: Float
+)
+
 data class StatisticsUiState(
+    val isLoading: Boolean = true,
     val totalStudyDurationMs: Long = 0L,
     val streak: Int = 0,
     val longestStreak: Int = 0,
@@ -20,8 +33,8 @@ data class StatisticsUiState(
     val totalScripts: Int = 0,
     val completionRate: Float = 0f,
     val modeBreakdown: Map<String, Int> = emptyMap(),
-    val dailyRecords: List<com.na982.opichelper.domain.entity.StudyDailyRecord> = emptyList(),
-    val categoryProgress: List<com.na982.opichelper.domain.entity.CategoryProgress> = emptyList()
+    val dailyRecords: List<DailyRecordUiModel> = emptyList(),
+    val categoryProgress: List<CategoryProgressUiModel> = emptyList()
 )
 
 @HiltViewModel
@@ -37,10 +50,12 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun refresh() {
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             val statistics = studyStatisticsCalculator.calculate()
             _uiState.update {
                 StatisticsUiState(
+                    isLoading = false,
                     totalStudyDurationMs = statistics.totalStudyDurationMs,
                     streak = statistics.streak,
                     longestStreak = statistics.longestStreak,
@@ -48,8 +63,21 @@ class StatisticsViewModel @Inject constructor(
                     totalScripts = statistics.totalScripts,
                     completionRate = statistics.completionRate,
                     modeBreakdown = statistics.modeBreakdown,
-                    dailyRecords = statistics.dailyRecords,
-                    categoryProgress = statistics.categoryProgress
+                    dailyRecords = statistics.dailyRecords.map { record ->
+                        DailyRecordUiModel(
+                            date = record.date,
+                            studyDurationMs = record.studyDurationMs,
+                            completedScripts = record.completedScripts
+                        )
+                    },
+                    categoryProgress = statistics.categoryProgress.map { progress ->
+                        CategoryProgressUiModel(
+                            category = progress.category,
+                            completedScripts = progress.completedScripts,
+                            totalScripts = progress.totalScripts,
+                            rate = progress.rate
+                        )
+                    }
                 )
             }
         }

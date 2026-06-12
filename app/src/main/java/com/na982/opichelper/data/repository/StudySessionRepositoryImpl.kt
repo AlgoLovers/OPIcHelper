@@ -76,7 +76,9 @@ class StudySessionRepositoryImpl(
                 try {
                     val record = gson.fromJson(prefs.getString(key, null), StudyDailyRecord::class.java)
                     total += record.studyDurationMs
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    appLogger.e("StudySessionRepo", "총 학습 시간 계산 중 오류: $key", e)
+                }
             }
         }
         return total
@@ -89,7 +91,9 @@ class StudySessionRepositoryImpl(
                 try {
                     val record = gson.fromJson(prefs.getString(key, null), StudyDailyRecord::class.java)
                     total += record.completedScripts
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    appLogger.e("StudySessionRepo", "완료 스크립트 계산 중 오류: $key", e)
+                }
             }
         }
         return total

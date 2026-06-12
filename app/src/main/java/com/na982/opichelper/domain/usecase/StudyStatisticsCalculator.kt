@@ -2,18 +2,18 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.entity.CategoryProgress
 import com.na982.opichelper.domain.entity.MemorizeLevel
-import com.na982.opichelper.domain.entity.StudyDailyRecord
+import com.na982.opichelper.domain.entity.ScriptProgress
 import com.na982.opichelper.domain.entity.StudyStatistics
-import com.na982.opichelper.domain.repository.QaDataManager
-import com.na982.opichelper.domain.repository.StudySessionRepository
+import com.na982.opichelper.domain.repository.QaContentReader
+import com.na982.opichelper.domain.repository.StudySessionStatisticsReader
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class StudyStatisticsCalculator @Inject constructor(
-    private val studySessionRepository: StudySessionRepository,
+    private val studySessionStatisticsReader: StudySessionStatisticsReader,
     private val progressTracker: MemorizeTestProgressTracker,
-    private val qaDataManager: QaDataManager
+    private val qaContentReader: QaContentReader
 ) {
     companion object {
         private const val DAILY_RECORD_DAYS = 7
@@ -21,46 +21,43 @@ class StudyStatisticsCalculator @Inject constructor(
 
     fun calculate(): StudyStatistics {
         val progressMap = progressTracker.progressMap.value
-        val categories = qaDataManager.categories.value
+        val categories = qaContentReader.getCategories()
 
         val totalCompletedScripts = countCompletedScripts(progressMap)
-        val totalScripts = countTotalScripts(categories, qaDataManager)
+        val totalScripts = countTotalScripts(categories)
         val modeBreakdown = buildModeBreakdown(progressMap)
-        val categoryProgress = buildCategoryProgress(categories, progressMap, qaDataManager)
+        val categoryProgress = buildCategoryProgress(categories, progressMap)
 
         return StudyStatistics(
-            totalStudyDurationMs = studySessionRepository.getTotalStudyDurationMs(),
-            streak = studySessionRepository.getStreak(),
-            longestStreak = studySessionRepository.getLongestStreak(),
+            totalStudyDurationMs = studySessionStatisticsReader.getTotalStudyDurationMs(),
+            streak = studySessionStatisticsReader.getStreak(),
+            longestStreak = studySessionStatisticsReader.getLongestStreak(),
             totalCompletedScripts = totalCompletedScripts,
             totalScripts = totalScripts,
-            completionRate = if (totalScripts > 0) totalCompletedScripts.toFloat() / totalScripts else 0f,
             modeBreakdown = modeBreakdown,
-            dailyRecords = studySessionRepository.getDailyRecords(DAILY_RECORD_DAYS),
+            dailyRecords = studySessionStatisticsReader.getDailyRecords(DAILY_RECORD_DAYS),
             categoryProgress = categoryProgress
         )
     }
 
-    private fun countCompletedScripts(progressMap: Map<String, *>): Int {
+    private fun countCompletedScripts(progressMap: Map<String, ScriptProgress>): Int {
         return progressMap.values.count { progress ->
-            progress is com.na982.opichelper.domain.entity.ScriptProgress &&
-                !progress.isMemorizeTestRunning &&
+            !progress.isMemorizeTestRunning &&
                 progress.currentSentenceIndex >= progress.totalSentences - 1
         }
     }
 
-    private fun countTotalScripts(categories: List<String>, qaDataManager: QaDataManager): Int {
+    private fun countTotalScripts(categories: List<String>): Int {
         return categories.sumOf { category ->
-            qaDataManager.getItemsInCategory(category).size * MemorizeLevel.entries.size
+            qaContentReader.getItemsInCategory(category).size * MemorizeLevel.entries.size
         }
     }
 
-    private fun buildModeBreakdown(progressMap: Map<String, *>): Map<String, Int> {
+    private fun buildModeBreakdown(progressMap: Map<String, ScriptProgress>): Map<String, Int> {
         val breakdown = mutableMapOf<String, Int>()
         MemorizeLevel.entries.forEach { level ->
             breakdown[level.displayName] = progressMap.values.count { progress ->
-                progress is com.na982.opichelper.domain.entity.ScriptProgress &&
-                    progress.memorizeLevel == level.displayName &&
+                progress.memorizeLevel == level.displayName &&
                     !progress.isMemorizeTestRunning &&
                     progress.currentSentenceIndex >= progress.totalSentences - 1
             }
@@ -70,17 +67,14 @@ class StudyStatisticsCalculator @Inject constructor(
 
     private fun buildCategoryProgress(
         categories: List<String>,
-        progressMap: Map<String, *>,
-        qaDataManager: QaDataManager
+        progressMap: Map<String, ScriptProgress>
     ): List<CategoryProgress> {
         return categories.map { category ->
-            val items = qaDataManager.getItemsInCategory(category)
+            val items = qaContentReader.getItemsInCategory(category)
             val completed = items.indices.sumOf { scriptIndex ->
                 MemorizeLevel.entries.count { level ->
-                    val key = com.na982.opichelper.domain.entity.ScriptProgress.progressKey(
-                        category, scriptIndex, level.displayName
-                    )
-                    val progress = progressMap[key] as? com.na982.opichelper.domain.entity.ScriptProgress
+                    val key = ScriptProgress.progressKey(category, scriptIndex, level.displayName)
+                    val progress = progressMap[key]
                     progress != null && !progress.isMemorizeTestRunning &&
                         progress.currentSentenceIndex >= progress.totalSentences - 1
                 }

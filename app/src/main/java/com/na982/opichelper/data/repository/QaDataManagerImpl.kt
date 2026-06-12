@@ -150,6 +150,10 @@ class QaDataManagerImpl(
         return itemsByCategory[category] ?: emptyList()
     }
 
+    override fun getCategories(): List<String> {
+        return _categories.value
+    }
+
     override suspend fun selectCategory(category: String) = mutex.withLock {
         if (itemsByCategory.containsKey(category)) {
             navigateTo(category, 0)

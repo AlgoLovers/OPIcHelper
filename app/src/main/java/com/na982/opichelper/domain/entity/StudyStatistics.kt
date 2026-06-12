@@ -14,8 +14,9 @@ data class StudyStatistics(
     val longestStreak: Int = 0,
     val totalCompletedScripts: Int = 0,
     val totalScripts: Int = 0,
-    val completionRate: Float = 0f,
     val modeBreakdown: Map<String, Int> = emptyMap(),
     val dailyRecords: List<StudyDailyRecord> = emptyList(),
     val categoryProgress: List<CategoryProgress> = emptyList()
-)
+) {
+    val completionRate: Float get() = if (totalScripts > 0) totalCompletedScripts.toFloat() / totalScripts else 0f
+}

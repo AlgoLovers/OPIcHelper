@@ -9,4 +9,5 @@ interface QaContentReader {
     fun getCurrentAnswer(qaItem: QaItem?): String
     fun getCurrentAnswerKo(qaItem: QaItem?): String
     fun getItemsInCategory(category: String): List<QaItem>
+    fun getCategories(): List<String>
 }

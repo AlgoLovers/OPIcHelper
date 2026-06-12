@@ -2,6 +2,7 @@ package com.na982.opichelper.presentation.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,14 +13,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,13 +32,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.na982.opichelper.presentation.viewmodel.StatisticsUiState
+import com.na982.opichelper.presentation.ui.component.SectionHeader
+import com.na982.opichelper.presentation.viewmodel.CategoryProgressUiModel
+import com.na982.opichelper.presentation.viewmodel.DailyRecordUiModel
 import com.na982.opichelper.presentation.viewmodel.StatisticsViewModel
 
 @Composable
@@ -57,31 +65,42 @@ fun StatisticsScreen(
         ) {
             StatisticsHeader(onNavigateBack = onNavigateBack)
 
-            TodayStudySection(
-                totalStudyDurationMs = uiState.totalStudyDurationMs,
-                streak = uiState.streak,
-                longestStreak = uiState.longestStreak
-            )
+            if (uiState.isLoading) {
+                Spacer(modifier = Modifier.height(48.dp))
+                CircularProgressIndicator(modifier = Modifier.size(48.dp))
+            } else {
+                HeroMetricsSection(
+                    streak = uiState.streak,
+                    totalStudyDurationMs = uiState.totalStudyDurationMs,
+                    completionRate = uiState.completionRate
+                )
 
-            StatisticsSectionSpacer()
+                StatisticsSectionSpacer()
 
-            OverallProgressSection(
-                completedScripts = uiState.totalCompletedScripts,
-                totalScripts = uiState.totalScripts,
-                completionRate = uiState.completionRate
-            )
+                TodaySummarySection(
+                    dailyRecords = uiState.dailyRecords
+                )
 
-            StatisticsSectionSpacer()
+                StatisticsSectionSpacer()
 
-            ModeStatisticsSection(modeBreakdown = uiState.modeBreakdown)
+                OverallProgressSection(
+                    completedScripts = uiState.totalCompletedScripts,
+                    totalScripts = uiState.totalScripts,
+                    completionRate = uiState.completionRate
+                )
 
-            StatisticsSectionSpacer()
+                StatisticsSectionSpacer()
 
-            WeeklyChartSection(dailyRecords = uiState.dailyRecords)
+                ModeStatisticsSection(modeBreakdown = uiState.modeBreakdown)
 
-            StatisticsSectionSpacer()
+                StatisticsSectionSpacer()
 
-            CategoryProgressSection(categoryProgress = uiState.categoryProgress)
+                WeeklyChartSection(dailyRecords = uiState.dailyRecords)
+
+                StatisticsSectionSpacer()
+
+                CategoryProgressSection(categoryProgress = uiState.categoryProgress)
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -153,12 +172,76 @@ private fun StatisticsHeader(
 }
 
 @Composable
-private fun TodayStudySection(
-    totalStudyDurationMs: Long,
+private fun HeroMetricsSection(
     streak: Int,
-    longestStreak: Int,
+    totalStudyDurationMs: Long,
+    completionRate: Float,
     modifier: Modifier = Modifier
 ) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        HeroMetricCard(
+            label = "연속 학습",
+            value = "${streak}일",
+            modifier = Modifier.weight(1f)
+        )
+        HeroMetricCard(
+            label = "총 학습 시간",
+            value = formatDurationCompact(totalStudyDurationMs),
+            modifier = Modifier.weight(1f)
+        )
+        HeroMetricCard(
+            label = "완료율",
+            value = "${(completionRate * 100).toInt()}%",
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun HeroMetricCard(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodaySummarySection(
+    dailyRecords: List<DailyRecordUiModel>,
+    modifier: Modifier = Modifier
+) {
+    val today = dailyRecords.firstOrNull()
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -167,7 +250,7 @@ private fun TodayStudySection(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            com.na982.opichelper.presentation.ui.component.SectionHeader(title = "학습 기록")
+            SectionHeader(title = "오늘의 학습")
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -176,16 +259,12 @@ private fun TodayStudySection(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 StatItem(
-                    label = "총 학습 시간",
-                    value = formatDuration(totalStudyDurationMs)
+                    label = "학습 시간",
+                    value = today?.let { formatDuration(it.studyDurationMs) } ?: "0분"
                 )
                 StatItem(
-                    label = "연속 학습",
-                    value = "${streak}일"
-                )
-                StatItem(
-                    label = "최장 기록",
-                    value = "${longestStreak}일"
+                    label = "완료 스크립트",
+                    value = "${today?.completedScripts ?: 0}개"
                 )
             }
         }
@@ -235,31 +314,32 @@ private fun OverallProgressSection(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            com.na982.opichelper.presentation.ui.component.SectionHeader(
+            SectionHeader(
                 title = "전체 진행률",
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            androidx.compose.material3.CircularProgressIndicator(
-                progress = completionRate,
-                modifier = Modifier.size(120.dp),
-                strokeWidth = 10.dp,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Box(contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = completionRate,
+                    modifier = Modifier.size(120.dp),
+                    strokeWidth = 10.dp,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "${(completionRate * 100).toInt()}%",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "${(completionRate * 100).toInt()}%",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "$completedScripts / $totalScripts 스크립트 완료",
@@ -283,31 +363,9 @@ private fun ModeStatisticsSection(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            com.na982.opichelper.presentation.ui.component.SectionHeader(title = "모드별 완료")
+            SectionHeader(title = "모드별 완료")
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            modeBreakdown.forEach { (mode, count) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = mode,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${count}개",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
 
             if (modeBreakdown.isEmpty()) {
                 Text(
@@ -316,6 +374,55 @@ private fun ModeStatisticsSection(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
+            } else {
+                val total = modeBreakdown.values.sum().coerceAtLeast(1)
+                val colors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.secondary,
+                    MaterialTheme.colorScheme.tertiary
+                )
+
+                modeBreakdown.entries.forEachIndexed { index, (mode, count) ->
+                    val rate = count.toFloat() / total
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(colors[index % colors.size])
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = mode,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "${count}개",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    if (rate > 0f) {
+                        LinearProgressIndicator(
+                            progress = rate,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .padding(start = 16.dp),
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            color = colors[index % colors.size]
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
             }
         }
     }
@@ -323,7 +430,7 @@ private fun ModeStatisticsSection(
 
 @Composable
 private fun WeeklyChartSection(
-    dailyRecords: List<com.na982.opichelper.domain.entity.StudyDailyRecord>,
+    dailyRecords: List<DailyRecordUiModel>,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -334,7 +441,7 @@ private fun WeeklyChartSection(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            com.na982.opichelper.presentation.ui.component.SectionHeader(title = "최근 7일")
+            SectionHeader(title = "최근 7일")
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -360,9 +467,7 @@ private fun WeeklyChartSection(
                             4f
                         }
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = formatDurationShort(record.studyDurationMs),
                                 style = MaterialTheme.typography.labelSmall,
@@ -399,7 +504,7 @@ private fun WeeklyChartSection(
 
 @Composable
 private fun CategoryProgressSection(
-    categoryProgress: List<com.na982.opichelper.domain.entity.CategoryProgress>,
+    categoryProgress: List<CategoryProgressUiModel>,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -410,7 +515,7 @@ private fun CategoryProgressSection(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            com.na982.opichelper.presentation.ui.component.SectionHeader(title = "카테고리별 진행률")
+            SectionHeader(title = "카테고리별 진행률")
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -445,7 +550,7 @@ private fun CategoryProgressSection(
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
-                        androidx.compose.material3.LinearProgressIndicator(
+                        LinearProgressIndicator(
                             progress = progress.rate,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -472,6 +577,16 @@ private fun formatDuration(ms: Long): String {
         hours > 0 -> "${hours}시간 ${minutes}분"
         minutes > 0 -> "${minutes}분"
         else -> "${ms / 1_000}초"
+    }
+}
+
+private fun formatDurationCompact(ms: Long): String {
+    val hours = ms / 3_600_000
+    val minutes = (ms % 3_600_000) / 60_000
+    return when {
+        hours > 0 -> "${hours}h ${minutes}m"
+        minutes > 0 -> "${minutes}m"
+        else -> "0m"
     }
 }
 
