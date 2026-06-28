@@ -5,9 +5,9 @@ import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.RepeatListeningRepository
 import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.usecase.CurrentMode
-import com.na982.opichelper.domain.usecase.ExecuteRepeatListeningUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import com.na982.opichelper.domain.entity.RepeatListeningData
@@ -15,7 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import javax.inject.Inject
 
 data class RepeatListeningUiState(
@@ -26,16 +26,18 @@ data class RepeatListeningUiState(
 
 @HiltViewModel
 class RepeatListeningViewModel @Inject constructor(
-    private val executeRepeatListeningUseCase: ExecuteRepeatListeningUseCase,
+    private val repeatListeningRepository: RepeatListeningRepository,
     private val ttsCtrl: TtsPlaybackController,
     private val qaDataManager: QaDataManager,
     private val progress: MemorizeTestProgressTracker,
     private val userPreferencesRepository: UserPreferencesRepository,
-    coordinator: MemorizationModeCoordinator
+    coordinator: MemorizationModeCoordinator,
+    appLogger: AppLogger
 ) : BaseMemorizationViewModel<RepeatListeningUiState>(
     coordinator = coordinator,
     ttsPlaybackController = ttsCtrl,
-    progressTracker = progress
+    progressTracker = progress,
+    appLogger = appLogger
 ) {
 
     val modeCoordinator: MemorizationModeCoordinator get() = coordinator
@@ -55,8 +57,10 @@ class RepeatListeningViewModel @Inject constructor(
             ttsCtrl.stopTts()
             ttsCtrl.clearHighlight()
             startRepeatListening()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Log.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
+            appLogger.e("RepeatListeningVM", "반복 듣기 시작 실패", e)
             emitEvent("반복듣기를 시작할 수 없습니다")
             stop()
         }
@@ -69,7 +73,7 @@ class RepeatListeningViewModel @Inject constructor(
                 val answerText = qaDataManager.getCurrentAnswer(currentItem)
                 val totalCount = SentenceSplitter.split(answerText).size
                 if (totalCount > 0) {
-                    val resumeIndex = executeRepeatListeningUseCase.getResumeIndex(
+                    val resumeIndex = repeatListeningRepository.getResumeIndex(
                         currentItem.category, qaDataManager.getCurrentIndex(), totalCount
                     )
                     _uiState.update { it.copy(resumeSentenceIndex = resumeIndex) }
@@ -86,7 +90,7 @@ class RepeatListeningViewModel @Inject constructor(
         val currentItem = qaDataManager.getCurrentQaItem()
         if (currentItem != null) {
             val eventJob = viewModelScope.launch {
-                executeRepeatListeningUseCase.events.collect { event ->
+                repeatListeningRepository.events.collect { event ->
                     handleEvent(event)
                 }
             }
@@ -97,7 +101,7 @@ class RepeatListeningViewModel @Inject constructor(
                     koreanAnswer = qaDataManager.getCurrentAnswerKo(currentItem),
                     englishAnswer = qaDataManager.getCurrentAnswer(currentItem)
                 )
-                executeRepeatListeningUseCase.execute(
+                repeatListeningRepository.executeRepeatListening(
                     data = repeatListeningData,
                     repeatCount = userPreferencesRepository.getRepeatListeningCount()
                 )

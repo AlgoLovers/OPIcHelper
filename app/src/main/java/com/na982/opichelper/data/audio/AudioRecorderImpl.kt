@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Build
-import android.util.Log
 import androidx.core.content.ContextCompat
 import android.Manifest
 import java.io.File
@@ -12,8 +11,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import com.na982.opichelper.domain.audio.AudioRecorder
+import com.na982.opichelper.domain.manager.AppLogger
 
-class AudioRecorderImpl(private val context: Context) : AudioRecorder {
+class AudioRecorderImpl(private val context: Context, private val appLogger: AppLogger) : AudioRecorder {
     private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
 
     @Volatile private var recorder: MediaRecorder? = null
@@ -68,12 +68,12 @@ class AudioRecorderImpl(private val context: Context) : AudioRecorder {
         try {
             recorder?.stop()
         } catch (e: Exception) {
-            Log.w("AudioRecorderImpl", "MediaRecorder.stop() 실패", e)
+            appLogger.w("AudioRecorderImpl", "MediaRecorder.stop() 실패: ${e.message}")
         }
         try {
             recorder?.release()
         } catch (e: Exception) {
-            Log.w("AudioRecorderImpl", "MediaRecorder.release() 실패", e)
+            appLogger.w("AudioRecorderImpl", "MediaRecorder.release() 실패: ${e.message}")
         }
         val file = outputFile
         recorder = null

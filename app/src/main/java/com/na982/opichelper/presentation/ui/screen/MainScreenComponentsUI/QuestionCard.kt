@@ -3,6 +3,7 @@ package com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +30,7 @@ fun QuestionCard(
     completedCount: Int = 0,
     isFlipped: Boolean = false,
     currentCategory: String = "",
+    onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -74,6 +76,19 @@ fun QuestionCard(
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 16.sp
                             )
+                            if (onEdit != null) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                TextButton(
+                                    onClick = onEdit,
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = "편집",
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
                         }
                         Text(
                             text = "학습 진행도를 확인하세요",

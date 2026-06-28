@@ -2,6 +2,7 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.domain.audio.AudioRecorder
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.RecordingTimeManager
@@ -20,7 +21,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 
 sealed class FullMemorizationState {
     object Idle : FullMemorizationState()
@@ -36,7 +37,8 @@ class FullMemorizationUseCase @Inject constructor(
     private val ttsOrchestrator: TtsOrchestrator,
     private val audioRecorder: AudioRecorder,
     private val qaDataManager: QaDataManager,
-    private val recordingTimeManager: RecordingTimeManager
+    private val recordingTimeManager: RecordingTimeManager,
+    private val logger: AppLogger
 ) : java.io.Closeable {
     private val _highlightIndex = MutableStateFlow<Int?>(null)
     val highlightIndex: StateFlow<Int?> = _highlightIndex.asStateFlow()
@@ -63,10 +65,15 @@ class FullMemorizationUseCase @Inject constructor(
 
             val qaItem = qaDataManager.getCurrentQaItem()
             if (qaItem != null) {
-                ttsOrchestrator.speakWithHighlight(
+                val result = ttsOrchestrator.speakWithHighlight(
                     text = qaItem.questionEn,
                     onHighlight = { index, _ -> _highlightIndex.value = index }
                 )
+                if (result is TtsSpeakResult.Unavailable || result is TtsSpeakResult.Error) {
+                    _state.value = FullMemorizationState.Idle
+                    _highlightIndex.value = null
+                    return@withLock
+                }
                 _highlightIndex.value = null
                 delay(500L)
 
@@ -76,7 +83,7 @@ class FullMemorizationUseCase @Inject constructor(
                 audioRecorder.startRecording(currentRecordingPath!!)
             }
         } catch (e: Exception) {
-            Log.e("FullMemorizationUseCase", "통암기 테스트 시작 실패", e)
+            logger.e("FullMemorizationUseCase", "통암기 테스트 시작 실패", e)
             _state.value = FullMemorizationState.Idle
             _highlightIndex.value = null
         }
@@ -89,7 +96,7 @@ class FullMemorizationUseCase @Inject constructor(
                 _state.value = FullMemorizationState.WithFile(hasRecording = true)
             }
         } catch (e: Exception) {
-            Log.e("FullMemorizationUseCase", "녹음 종료 실패", e)
+            logger.e("FullMemorizationUseCase", "녹음 종료 실패", e)
             _state.value = FullMemorizationState.Idle
         }
     }
@@ -137,7 +144,7 @@ class FullMemorizationUseCase @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("FullMemorizationUseCase", "녹음 재생 실패", e)
+            logger.e("FullMemorizationUseCase", "녹음 재생 실패", e)
             _state.value = FullMemorizationState.WithFile(hasRecording = true)
             _highlightIndex.value = null
         }
@@ -164,7 +171,7 @@ class FullMemorizationUseCase @Inject constructor(
                 }
             )
         } catch (e: Exception) {
-            Log.e("FullMemorizationUseCase", "녹음 재생 실패", e)
+            logger.e("FullMemorizationUseCase", "녹음 재생 실패", e)
             _state.value = FullMemorizationState.WithFile(hasRecording = true)
         }
     }

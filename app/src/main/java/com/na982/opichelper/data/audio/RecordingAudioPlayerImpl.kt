@@ -1,11 +1,11 @@
 package com.na982.opichelper.data.audio
 
 import android.media.MediaPlayer
-import android.util.Log
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
+import com.na982.opichelper.domain.manager.AppLogger
 import java.io.File
 
-class RecordingAudioPlayerImpl : RecordingAudioPlayer {
+class RecordingAudioPlayerImpl(private val appLogger: AppLogger) : RecordingAudioPlayer {
     @Volatile private var player: MediaPlayer? = null
     private var cachedDuration: Int = 0
     private var cachedDurationPath: String? = null
@@ -19,7 +19,7 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
 
         val file = File(filePath)
         if (!file.exists()) {
-            Log.e("RecordingAudioPlayerImpl", "녹음 파일이 존재하지 않음: $filePath")
+            appLogger.e("RecordingAudioPlayerImpl", "녹음 파일이 존재하지 않음: $filePath")
             onCompletion()
             return
         }
@@ -36,14 +36,14 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
                 }
 
                 setOnErrorListener { _, what, extra ->
-                    Log.e("RecordingAudioPlayerImpl", "녹음 재생 오류: what=$what, extra=$extra")
+                    appLogger.e("RecordingAudioPlayerImpl", "녹음 재생 오류: what=$what, extra=$extra")
                     stopRecording()
                     onCompletion()
                     true
                 }
 
             } catch (e: Exception) {
-                Log.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
+                appLogger.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
                 stopRecording()
                 onCompletion()
             }
@@ -55,7 +55,7 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
 
         val file = File(filePath)
         if (!file.exists()) {
-            Log.e("RecordingAudioPlayerImpl", "녹음 파일이 존재하지 않음: $filePath")
+            appLogger.e("RecordingAudioPlayerImpl", "녹음 파일이 존재하지 않음: $filePath")
             return
         }
 
@@ -70,13 +70,13 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
                 }
 
                 setOnErrorListener { _, what, extra ->
-                    Log.e("RecordingAudioPlayerImpl", "녹음 재생 오류 (동기): what=$what, extra=$extra")
+                    appLogger.e("RecordingAudioPlayerImpl", "녹음 재생 오류 (동기): what=$what, extra=$extra")
                     stopRecording()
                     true
                 }
 
             } catch (e: Exception) {
-                Log.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
+                appLogger.e("RecordingAudioPlayerImpl", "녹음 재생 중 오류 발생", e)
                 stopRecording()
             }
         }
@@ -95,7 +95,7 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
                 mediaPlayer.release()
             }
         } catch (e: Exception) {
-            Log.e("RecordingAudioPlayerImpl", "녹음 중지 중 오류 발생", e)
+            appLogger.e("RecordingAudioPlayerImpl", "녹음 중지 중 오류 발생", e)
         }
         player = null
     }
@@ -111,7 +111,7 @@ class RecordingAudioPlayerImpl : RecordingAudioPlayer {
             cachedDurationPath = filePath
             duration
         } catch (e: Exception) {
-            Log.e("RecordingAudioPlayerImpl", "getDuration 실패: $filePath", e)
+            appLogger.e("RecordingAudioPlayerImpl", "getDuration 실패: $filePath", e)
             0
         } finally {
             mediaPlayer.release()

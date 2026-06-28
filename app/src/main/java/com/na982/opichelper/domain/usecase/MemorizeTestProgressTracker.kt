@@ -3,14 +3,12 @@ package com.na982.opichelper.domain.usecase
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.entity.ScriptProgress
 import com.na982.opichelper.domain.entity.CategoryProgress
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,7 +18,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class MemorizeTestProgressTracker @Inject constructor(
-    private val progressPersistenceService: ProgressPersistenceService
+    private val progressPersistenceService: ProgressPersistenceService,
+    private val logger: AppLogger
 ) {
     private val mutex = Mutex()
 
@@ -57,7 +56,7 @@ class MemorizeTestProgressTracker @Inject constructor(
                 _hasProgress.value = scriptProgressMap.isNotEmpty()
             }
         } catch (e: Exception) {
-            Log.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
+            logger.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
             mutex.withLock {
                 _progressMap.value = emptyMap()
                 _hasProgress.value = false
@@ -142,7 +141,7 @@ class MemorizeTestProgressTracker @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
+            logger.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
         }
     }
     
@@ -161,7 +160,7 @@ class MemorizeTestProgressTracker @Inject constructor(
 
             progressPersistenceService.clearCategoryProgress(category, scriptIndex, memorizeLevel)
         } catch (e: Exception) {
-            Log.e("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제 실패", e)
+            logger.e("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제 실패", e)
         }
     }
     
@@ -176,7 +175,7 @@ class MemorizeTestProgressTracker @Inject constructor(
                 _hasProgress.value = false
             }
         } catch (e: Exception) {
-            Log.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)
+            logger.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)
         }
     }
 } 

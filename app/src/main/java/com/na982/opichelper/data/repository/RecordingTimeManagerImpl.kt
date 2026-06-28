@@ -2,7 +2,7 @@ package com.na982.opichelper.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.na982.opichelper.domain.repository.RecordingTimeManager
@@ -11,7 +11,8 @@ import com.na982.opichelper.domain.repository.RecordingTimeManager
  * SharedPreferences를 사용한 녹음 시간 관리 구현체
  */
 class RecordingTimeManagerImpl(
-    private val context: Context
+    private val context: Context,
+    private val appLogger: AppLogger
 ) : RecordingTimeManager {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -51,7 +52,7 @@ class RecordingTimeManagerImpl(
                 val type = object : TypeToken<List<Long>>() {}.type
                 gson.fromJson<List<Long>>(json, type) ?: emptyList()
             } catch (e: Exception) {
-                Log.e("RecordingTimeManagerImpl", "JSON 파싱 오류: $json", e)
+                appLogger.e("RecordingTimeManagerImpl", "JSON 파싱 오류: $json", e)
                 emptyList()
             }
         } else {

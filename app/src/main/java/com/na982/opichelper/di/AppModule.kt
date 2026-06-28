@@ -1,25 +1,43 @@
 package com.na982.opichelper.di
 
+import android.app.Application
 import android.content.Context
 import com.na982.opichelper.data.audio.*
+import com.na982.opichelper.data.audio.TtsOrchestratorImpl
+import com.na982.opichelper.data.audio.TtsPlaybackControllerImpl
+import com.na982.opichelper.data.usecase.MemorizationModeCoordinatorImpl
 import com.na982.opichelper.data.repository.AudioFileManagerImpl
 import com.na982.opichelper.data.repository.RecordingTimeManagerImpl
 import com.na982.opichelper.data.repository.EnglishWritingTestRepositoryImpl
 import com.na982.opichelper.data.repository.RepeatListeningRepositoryImpl
+import com.na982.opichelper.data.repository.ScriptEditRepositoryImpl
 import com.na982.opichelper.domain.audio.*
-import com.na982.opichelper.domain.manager.WakeLockManager
+import com.na982.opichelper.domain.manager.AppLogger
+import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.domain.repository.AudioFileManager
 import com.na982.opichelper.domain.repository.QaDataLoader
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.repository.RepeatListeningRepository
+import com.na982.opichelper.data.local.AppDatabase
+import com.na982.opichelper.data.local.AssetSeeder
+import com.na982.opichelper.data.local.QaItemDao
 import com.na982.opichelper.data.repository.LeveledQaDataLoader
+import com.na982.opichelper.data.repository.QaDataManagerImpl
+import com.na982.opichelper.data.repository.RoomQaDataLoader
 import com.na982.opichelper.data.repository.UserPreferencesRepository
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import com.na982.opichelper.domain.repository.RecordingFileRepository
+import com.na982.opichelper.domain.repository.ScriptEditRepository
+import com.na982.opichelper.domain.repository.TtsServiceController
+import com.na982.opichelper.domain.repository.DataSeeder
+import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
+import com.na982.opichelper.data.manager.AndroidLogger
+import com.na982.opichelper.data.manager.WakeLockControllerImpl
 import com.na982.opichelper.data.repository.RecordingFileRepositoryImpl
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
+import com.na982.opichelper.service.TtsServiceControllerImpl
 import com.na982.opichelper.data.audio.RecordingAudioPlayerImpl
 import dagger.Module
 import dagger.Provides
@@ -36,41 +54,41 @@ object AppModule {
     // Data Layer Implementations
     @Provides
     @Singleton
-    fun provideAudioRecorder(@ApplicationContext context: Context): AudioRecorder {
-        return AudioRecorderImpl(context)
+    fun provideAudioRecorder(@ApplicationContext context: Context, appLogger: AppLogger): AudioRecorder {
+        return AudioRecorderImpl(context, appLogger)
     }
     
     @Provides
     @Singleton
-    fun provideAudioPlayer(): AudioPlayer {
-        return AudioPlayerImpl()
+    fun provideAudioPlayer(appLogger: AppLogger): AudioPlayer {
+        return AudioPlayerImpl(appLogger)
     }
     
     @Provides
     @Singleton
-    fun provideRecordingAudioPlayer(): RecordingAudioPlayer {
-        return RecordingAudioPlayerImpl()
+    fun provideRecordingAudioPlayer(appLogger: AppLogger): RecordingAudioPlayer {
+        return RecordingAudioPlayerImpl(appLogger)
     }
     
     @Provides
     @Singleton
-    fun provideAudioFileManager(@ApplicationContext context: Context): AudioFileManager {
-        return AudioFileManagerImpl(context)
+    fun provideAudioFileManager(@ApplicationContext context: Context, appLogger: AppLogger): AudioFileManager {
+        return AudioFileManagerImpl(context, appLogger)
     }
     
     // TTS Players
     @Provides
     @Singleton
     @Named("google")
-    fun provideGoogleTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
-        return GoogleTtsPlayer(context)
+    fun provideGoogleTtsPlayer(@ApplicationContext context: Context, appLogger: AppLogger): TtsPlayer {
+        return GoogleTtsPlayer(context, appLogger)
     }
     
     @Provides
     @Singleton
     @Named("samsung")
-    fun provideSamsungTtsPlayer(@ApplicationContext context: Context): TtsPlayer {
-        return SamsungTtsPlayer(context)
+    fun provideSamsungTtsPlayer(@ApplicationContext context: Context, appLogger: AppLogger): TtsPlayer {
+        return SamsungTtsPlayer(context, appLogger)
     }
     
     @Provides
@@ -78,15 +96,16 @@ object AppModule {
     fun provideTtsOrchestrator(
         @Named("google") googleTtsPlayer: TtsPlayer,
         @Named("samsung") samsungTtsPlayer: TtsPlayer,
-        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+        appLogger: AppLogger
     ): TtsOrchestrator {
-        return TtsOrchestrator(googleTtsPlayer, samsungTtsPlayer, userPreferencesRepository)
+        return TtsOrchestratorImpl(googleTtsPlayer, samsungTtsPlayer, userPreferencesRepository, appLogger)
     }
     
     @Provides
     @Singleton
-    fun provideProgressPersistenceService(@ApplicationContext context: Context): ProgressPersistenceService {
-        return com.na982.opichelper.data.repository.ProgressPersistenceServiceImpl(context)
+    fun provideProgressPersistenceService(@ApplicationContext context: Context, appLogger: AppLogger): ProgressPersistenceService {
+        return com.na982.opichelper.data.repository.ProgressPersistenceServiceImpl(context, appLogger)
     }
     
     @Provides
@@ -94,15 +113,17 @@ object AppModule {
     fun provideQaDataManager(
         qaDataLoader: QaDataLoader,
         userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
-        progressPersistenceService: ProgressPersistenceService
+        progressPersistenceService: ProgressPersistenceService,
+        dataSeeder: DataSeeder,
+        appLogger: AppLogger
     ): QaDataManager {
-        return QaDataManager(qaDataLoader, userPreferencesRepository, progressPersistenceService)
+        return QaDataManagerImpl(qaDataLoader, userPreferencesRepository, progressPersistenceService, dataSeeder, appLogger)
     }
 
     @Provides
     @Singleton
-    fun provideRecordingTimeManager(@ApplicationContext context: Context): RecordingTimeManager {
-        return RecordingTimeManagerImpl(context)
+    fun provideRecordingTimeManager(@ApplicationContext context: Context, appLogger: AppLogger): RecordingTimeManager {
+        return RecordingTimeManagerImpl(context, appLogger)
     }
     
     @Provides
@@ -111,16 +132,30 @@ object AppModule {
         audioFileManager: AudioFileManager,
         audioRecorder: AudioRecorder,
         recordingAudioPlayer: RecordingAudioPlayer,
-        recordingTimeManager: RecordingTimeManager
+        recordingTimeManager: RecordingTimeManager,
+        appLogger: AppLogger
     ): RecordingFileRepository {
-        return RecordingFileRepositoryImpl(audioFileManager, audioRecorder, recordingAudioPlayer, recordingTimeManager)
+        return RecordingFileRepositoryImpl(audioFileManager, audioRecorder, recordingAudioPlayer, recordingTimeManager, appLogger)
     }
     
-    // WakeLock Manager
+    // WakeLock Controller
     @Provides
     @Singleton
-    fun provideWakeLockManager(@ApplicationContext context: Context): WakeLockManager {
-        return WakeLockManager(context)
+    fun provideWakeLockController(@ApplicationContext context: Context, appLogger: AppLogger): WakeLockController {
+        return WakeLockControllerImpl(context, appLogger)
+    }
+
+    // Logger
+    @Provides
+    @Singleton
+    fun provideAppLogger(): AppLogger {
+        return AndroidLogger()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTtsServiceController(@ApplicationContext context: Context): TtsServiceController {
+        return TtsServiceControllerImpl(context as Application)
     }
     
     @Provides
@@ -131,9 +166,35 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideQaDataLoader(@ApplicationContext context: Context): QaDataLoader {
-        return LeveledQaDataLoader(context)
+    fun provideQaDataLoader(dao: QaItemDao): QaDataLoader {
+        return RoomQaDataLoader(dao)
     }
+
+    @Provides
+    @Singleton
+    @Named("asset")
+    fun provideAssetQaDataLoader(@ApplicationContext context: Context, appLogger: AppLogger): QaDataLoader {
+        return LeveledQaDataLoader(context, appLogger)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return androidx.room.Room.databaseBuilder(
+            context, AppDatabase::class.java, "opic_database"
+        ).fallbackToDestructiveMigration().build()
+    }
+
+    @Provides
+    fun provideQaItemDao(db: AppDatabase): QaItemDao = db.qaItemDao()
+
+    @Provides
+    @Singleton
+    fun provideDataSeeder(
+        @Named("asset") qaDataLoader: QaDataLoader,
+        dao: QaItemDao,
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): DataSeeder = AssetSeeder(qaDataLoader, dao, userPreferencesRepository)
     
     @Provides
     @Singleton
@@ -142,14 +203,16 @@ object AppModule {
         audioRecorder: AudioRecorder,
         audioFileManager: AudioFileManager,
         recordingTimeManager: RecordingTimeManager,
-        progressPersistenceService: ProgressPersistenceService
+        progressPersistenceService: ProgressPersistenceService,
+        appLogger: AppLogger
     ): EnglishWritingTestRepository {
         return EnglishWritingTestRepositoryImpl(
             ttsOrchestrator = ttsOrchestrator,
             audioRecorder = audioRecorder,
             audioFileManager = audioFileManager,
             recordingTimeManager = recordingTimeManager,
-            progressPersistenceService = progressPersistenceService
+            progressPersistenceService = progressPersistenceService,
+            appLogger = appLogger
         )
     }
 
@@ -167,5 +230,24 @@ object AppModule {
         )
     }
 
+    @Provides
+    @Singleton
+    fun provideScriptEditRepository(
+        dao: com.na982.opichelper.data.local.QaItemDao,
+        recordingTimeManager: RecordingTimeManager,
+        progressPersistenceService: ProgressPersistenceService,
+        userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository
+    ): ScriptEditRepository {
+        return ScriptEditRepositoryImpl(dao, recordingTimeManager, progressPersistenceService, userPreferencesRepository)
+    }
+
     // ViewModel들은 @HiltViewModel로 자동 주입되므로 별도 @Provides 불필요
+
+    @Provides
+    @Singleton
+    fun provideMemorizationModeCoordinator(impl: MemorizationModeCoordinatorImpl): MemorizationModeCoordinator = impl
+
+    @Provides
+    @Singleton
+    fun provideTtsPlaybackController(impl: TtsPlaybackControllerImpl): TtsPlaybackController = impl
 } 

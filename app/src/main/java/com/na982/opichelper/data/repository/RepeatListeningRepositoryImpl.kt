@@ -2,6 +2,7 @@ package com.na982.opichelper.data.repository
 
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
 import com.na982.opichelper.domain.audio.TtsOrchestrator
+import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
@@ -41,8 +42,9 @@ class RepeatListeningRepositoryImpl(
             delay(100)
             emit(MemorizeTestEvent.KoreanHighlight(i))
 
-            val koDuration = ttsOrchestrator.speakAndWaitForCompletion(koSentences[i])
-            if (koDuration <= 0L) {
+            val koResult = ttsOrchestrator.speakAndWaitForCompletion(koSentences[i])
+            if (koResult is TtsSpeakResult.Unavailable) break@sentenceLoop
+            if (koResult !is TtsSpeakResult.Success) {
                 continue@sentenceLoop
             }
 
@@ -68,8 +70,10 @@ class RepeatListeningRepositoryImpl(
                 delay(100)
                 emit(MemorizeTestEvent.Highlight(i))
 
-                val enDuration = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i])
-                if (enDuration <= 0L) continue@sentenceLoop
+                val enResult = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i])
+                if (enResult is TtsSpeakResult.Unavailable) break@sentenceLoop
+                if (enResult !is TtsSpeakResult.Success) continue@sentenceLoop
+                val enDuration = enResult.durationMs
 
                 if (j == 1) {
                     recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)

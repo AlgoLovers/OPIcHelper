@@ -1,6 +1,6 @@
 package com.na982.opichelper.data.repository
 
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import com.na982.opichelper.domain.repository.RecordingFileRepository
 import com.na982.opichelper.domain.audio.RecordingAudioPlayer
 import com.na982.opichelper.domain.audio.AudioRecorder
@@ -16,7 +16,8 @@ class RecordingFileRepositoryImpl(
     private val audioFileManager: AudioFileManager,
     private val audioRecorder: AudioRecorder,
     private val recordingAudioPlayer: RecordingAudioPlayer,
-    private val recordingTimeManager: RecordingTimeManager
+    private val recordingTimeManager: RecordingTimeManager,
+    private val appLogger: AppLogger
 ) : RecordingFileRepository {
 
     private val mutex = Mutex()
@@ -79,19 +80,10 @@ class RecordingFileRepositoryImpl(
                     false
                 }
             } catch (e: Exception) {
-                Log.e("RecordingFileRepositoryImpl", "deleteRecordingFile 실패", e)
+                appLogger.e("RecordingFileRepositoryImpl", "deleteRecordingFile 실패", e)
                 false
             }
         }
-    }
-
-    override suspend fun playRecordingFile(
-        category: String,
-        scriptIndex: Int,
-        onPlayingStateChange: (Boolean) -> Unit,
-        onHighlight: (Int?) -> Unit
-    ) {
-        playRecordingInternal(category, scriptIndex, onPlayingStateChange)
     }
 
     override suspend fun playRecordingFileSimple(
@@ -116,7 +108,7 @@ class RecordingFileRepositoryImpl(
         }
 
         if (filePath == null) {
-            Log.e("RecordingFileRepositoryImpl", "재생할 녹음 파일이 없음")
+            appLogger.e("RecordingFileRepositoryImpl", "재생할 녹음 파일이 없음")
             return
         }
 
@@ -125,7 +117,7 @@ class RecordingFileRepositoryImpl(
             awaitPlaybackCompletion(filePath)
             onPlayingStateChange(false)
         } catch (e: Exception) {
-            Log.e("RecordingFileRepositoryImpl", "녹음 재생 실패", e)
+            appLogger.e("RecordingFileRepositoryImpl", "녹음 재생 실패", e)
             onPlayingStateChange(false)
         } finally {
             mutex.withLock { currentPlayingPath = null }
@@ -139,7 +131,7 @@ class RecordingFileRepositoryImpl(
                 try {
                     recordingAudioPlayer.stopRecording()
                 } catch (e: Exception) {
-                    Log.e("RecordingFileRepositoryImpl", "취소 시 재생 중지 실패", e)
+                    appLogger.e("RecordingFileRepositoryImpl", "취소 시 재생 중지 실패", e)
                 }
             }
             recordingAudioPlayer.playRecording(filePath) {
@@ -153,7 +145,7 @@ class RecordingFileRepositoryImpl(
             recordingAudioPlayer.stopRecording()
             mutex.withLock { currentPlayingPath = null }
         } catch (e: Exception) {
-            Log.e("RecordingFileRepositoryImpl", "stopPlayingRecording 실패", e)
+            appLogger.e("RecordingFileRepositoryImpl", "stopPlayingRecording 실패", e)
         }
     }
 

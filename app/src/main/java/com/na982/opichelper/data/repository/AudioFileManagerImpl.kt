@@ -4,7 +4,7 @@ import com.na982.opichelper.domain.repository.AudioFileManager
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.content.Context
@@ -19,7 +19,10 @@ import java.nio.ByteBuffer
  * AudioFileManager 구현체
  * 오디오 파일 관리 및 병합 기능을 담당
  */
-class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
+class AudioFileManagerImpl(
+    private val context: Context,
+    private val appLogger: AppLogger
+) : AudioFileManager {
     
     override suspend fun mergeAndSaveAudioFiles(files: List<File>, scriptId: String): File? {
         return withContext(Dispatchers.IO) {
@@ -48,7 +51,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                 mergeWithMediaCodec(files, output)
                 mergeSuccess = output.exists() && output.length() > 0
             } catch (e: Exception) {
-                Log.e("AudioFileManager", "MediaCodec 병합 실패, 파일 연결 방식 사용", e)
+                appLogger.e("AudioFileManager", "MediaCodec 병합 실패, 파일 연결 방식 사용", e)
                 try {
                     FileOutputStream(output).use { out ->
                         files.forEach { file ->
@@ -59,7 +62,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                     }
                     mergeSuccess = output.exists() && output.length() > 0
                 } catch (e2: Exception) {
-                    Log.e("AudioFileManager", "파일 연결 병합도 실패", e2)
+                    appLogger.e("AudioFileManager", "파일 연결 병합도 실패", e2)
                 }
             }
 
@@ -71,7 +74,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                     }
                 }
             } else {
-                Log.e("AudioFileManager", "병합 실패로 원본 파일 유지")
+                appLogger.e("AudioFileManager", "병합 실패로 원본 파일 유지")
             }
 
             output
@@ -83,7 +86,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
             try {
                 val sourceFile = File(recordedFile)
                 if (!sourceFile.exists()) {
-                    Log.e("AudioFileManager", "녹음 파일이 존재하지 않음: $recordedFile")
+                    appLogger.e("AudioFileManager", "녹음 파일이 존재하지 않음: $recordedFile")
                     return@withContext
                 }
 
@@ -100,7 +103,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                 // 원본 파일 삭제
                 sourceFile.delete()
             } catch (e: Exception) {
-                Log.e("AudioFileManager", "녹음 파일 저장 실패", e)
+                appLogger.e("AudioFileManager", "녹음 파일 저장 실패", e)
             }
         }
     }
@@ -192,7 +195,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                     false
                 }
             } catch (e: Exception) {
-                Log.e("AudioFileManager", "녹음 파일 삭제 실패: $filePath", e)
+                appLogger.e("AudioFileManager", "녹음 파일 삭제 실패: $filePath", e)
                 false
             }
         }
@@ -289,7 +292,7 @@ class AudioFileManagerImpl(private val context: Context) : AudioFileManager {
                 try {
                     mergeWithMediaCodec(files, outputFile)
                 } catch (e: Exception) {
-                    Log.e("AudioFileManager", "MediaCodec 병합 실패, 파일 연결 방식 사용", e)
+                    appLogger.e("AudioFileManager", "MediaCodec 병합 실패, 파일 연결 방식 사용", e)
                     FileOutputStream(outputFile).use { out ->
                         files.forEach { file ->
                             FileInputStream(file).use { input ->

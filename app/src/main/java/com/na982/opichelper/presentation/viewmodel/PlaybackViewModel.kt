@@ -1,7 +1,6 @@
 package com.na982.opichelper.presentation.viewmodel
 
-import android.os.Build
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -14,16 +13,19 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import com.na982.opichelper.domain.audio.HighlightInfo
+import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlaybackController
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
+import com.na982.opichelper.domain.usecase.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
+import com.na982.opichelper.domain.usecase.ModeGroup
 import com.na982.opichelper.domain.usecase.PlayMergedFileUseCase
-import com.na982.opichelper.service.TtsForegroundService
+import com.na982.opichelper.domain.repository.TtsServiceController
+import com.na982.opichelper.domain.repository.UserPreferencesRepository
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import android.app.Application
 
 data class PlaybackState(
     val hasEnglishWritingTestMergedFile: Boolean = false,
@@ -47,10 +49,11 @@ data class PlaybackState(
 class PlaybackViewModel @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val playMergedFileUseCase: PlayMergedFileUseCase,
-    private val ttsOrchestrator: com.na982.opichelper.domain.audio.TtsOrchestrator,
-    private val userPreferencesRepository: com.na982.opichelper.domain.repository.UserPreferencesRepository,
+    private val ttsOrchestrator: TtsOrchestrator,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val coordinator: MemorizationModeCoordinator,
-    private val application: Application
+    private val ttsServiceController: TtsServiceController,
+    private val appLogger: AppLogger
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlaybackState())
@@ -74,11 +77,9 @@ class PlaybackViewModel @Inject constructor(
     @Volatile
     private var _hasNextItem: Boolean = false
     @Volatile
-    private var _repeatQuestionCallback: (() -> Unit)? = null
+    private var _actionListener: PlaybackActionListener? = null
     @Volatile
-    private var _repeatAnswerCallback: (() -> Unit)? = null
-    @Volatile
-    private var _nextCallback: (() -> Unit)? = null
+    internal var lastMemorizationGroup: ModeGroup? = null
 
     enum class LastPlayedType { QUESTION, ANSWER, NONE }
     @Volatile
@@ -142,6 +143,7 @@ class PlaybackViewModel @Inject constructor(
                 _fullMemorizationSentenceEn,
                 _fullMemorizationSentenceKo,
                 coordinator.isRunning,
+                coordinator.currentMode,
                 playMergedFileUseCase.isPlaying
             ) { values ->
                 val questionSentence = (values[0] as HighlightInfo).sentence
@@ -152,11 +154,15 @@ class PlaybackViewModel @Inject constructor(
                 val fmSentenceEn = values[5] as String?
                 val fmSentenceKo = values[6] as String?
                 val isMemorizationRunning = values[7] as Boolean
-                val isMergedFilePlaying = values[8] as Boolean
+                val currentMode = values[8] as CurrentMode
+                val isMergedFilePlaying = values[9] as Boolean
                 val sentenceEn = fmSentenceEn ?: answerSentence ?: questionSentence
                 val sentenceKo = fmSentenceKo ?: answerKoSentence
                 val active = isPlaying || isMemorizationRunning || isMergedFilePlaying
                 if (active) lastPlayingTimestamp = System.currentTimeMillis()
+                if (isMemorizationRunning && currentMode != CurrentMode.NONE) {
+                    lastMemorizationGroup = currentMode.group
+                }
                 _pipState.update { prev ->
                     val wasPlaying = prev.isPlaying
                     val completed = wasPlaying && !active && !wasStoppedByUser
@@ -167,7 +173,7 @@ class PlaybackViewModel @Inject constructor(
                         isPlaying = active,
                         isPaused = if (active) isPaused else false,
                         isPausable = !isMergedFilePlaying,
-                        hasCompleted = if (active) false else completed,
+                        hasCompleted = if (active) false else (completed || prev.hasCompleted),
                         hasNextItem = _hasNextItem
                     )
                 }
@@ -217,6 +223,7 @@ class PlaybackViewModel @Inject constructor(
     fun playQuestion(question: String) {
         wasStoppedByUser = false
         lastPlayedType = LastPlayedType.QUESTION
+        lastMemorizationGroup = null
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
             ttsPlaybackController.stopTts()
@@ -227,6 +234,7 @@ class PlaybackViewModel @Inject constructor(
     fun playAnswer(answer: String) {
         wasStoppedByUser = false
         lastPlayedType = LastPlayedType.ANSWER
+        lastMemorizationGroup = null
         viewModelScope.launch {
             stopEnglishWritingTestMergedFile()
             ttsPlaybackController.stopTts()
@@ -236,7 +244,7 @@ class PlaybackViewModel @Inject constructor(
                 withTimeoutOrNull(60_000L) {
                     ttsPlaybackController.isAnswerPlaying.first { !it }
                 } ?: run {
-                    Log.w("PlaybackViewModel", "답변 재생 완료 대기 타임아웃")
+                    appLogger.w("PlaybackViewModel", "답변 재생 완료 대기 타임아웃")
                     ttsPlaybackController.stopTts()
                 }
             }
@@ -257,34 +265,26 @@ class PlaybackViewModel @Inject constructor(
             ttsPlaybackController.clearHighlight()
             playMergedFileUseCase.stop()
         } catch (e: Exception) {
-            Log.e("PlaybackViewModel", "TTS 정리 중 오류", e)
+            appLogger.e("PlaybackViewModel", "TTS 정리 중 오류", e)
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        _repeatQuestionCallback = null
-        _repeatAnswerCallback = null
-        _nextCallback = null
+        _actionListener = null
         ttsPlaybackController.cleanupTts()
         playMergedFileUseCase.stop()
         playMergedFileUseCase.release()
     }
 
-    @Suppress("NewApi")
     fun onBackgroundMove() {
         if (_uiState.value.isPlaying || coordinator.isRunning.value || playMergedFileUseCase.isPlaying.value) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                application.startForegroundService(TtsForegroundService.startIntent(application))
-            } else {
-                application.startService(TtsForegroundService.startIntent(application))
-            }
+            ttsServiceController.startForegroundService()
         }
     }
 
-    @Suppress("NewApi")
     fun onForegroundReturn() {
-        application.stopService(TtsForegroundService.stopIntent(application))
+        ttsServiceController.stopForegroundService()
     }
 
     fun setPipMode(isPip: Boolean) {
@@ -297,42 +297,50 @@ class PlaybackViewModel @Inject constructor(
 
     fun togglePlayPause() {
         if (ttsPlaybackController.isPaused.value) {
+            wasStoppedByUser = false
             ttsPlaybackController.clearPausedState()
         } else if (_uiState.value.isPlaying || coordinator.isRunning.value) {
             wasStoppedByUser = true
+            _pipState.update { it.copy(hasCompleted = false) }
             ttsPlaybackController.stopAndMarkPaused()
         }
     }
 
-    private var _stopMemorizationCallback: (() -> Unit)? = null
-
-    fun setStopMemorizationCallback(callback: () -> Unit) {
-        _stopMemorizationCallback = callback
+    fun setActionListener(listener: PlaybackActionListener) {
+        _actionListener = listener
     }
 
-    fun setRepeatQuestionCallback(callback: () -> Unit) { _repeatQuestionCallback = callback }
-    fun setRepeatAnswerCallback(callback: () -> Unit) { _repeatAnswerCallback = callback }
-    fun setNextCallback(callback: () -> Unit) { _nextCallback = callback }
     fun setHasNextItem(hasNext: Boolean) { _hasNextItem = hasNext }
 
     fun repeatPlayback() {
+        wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
+        if (lastMemorizationGroup != null) {
+            _actionListener?.onRepeatMemorization()
+            return
+        }
         when (lastPlayedType) {
-            LastPlayedType.QUESTION -> _repeatQuestionCallback?.invoke()
-            LastPlayedType.ANSWER -> _repeatAnswerCallback?.invoke()
-            else -> {}
+            LastPlayedType.QUESTION -> _actionListener?.onRepeatQuestion()
+            LastPlayedType.ANSWER -> _actionListener?.onRepeatAnswer()
+            LastPlayedType.NONE -> {}
         }
     }
 
     fun playNextItem() {
+        wasStoppedByUser = false
         _pipState.update { it.copy(hasCompleted = false) }
-        _nextCallback?.invoke()
+        if (lastMemorizationGroup != null) {
+            _actionListener?.onNextAndRestart()
+            return
+        }
+        _actionListener?.onNext()
     }
 
     fun stopPlayback() {
         wasStoppedByUser = true
+        _pipState.update { it.copy(hasCompleted = false) }
         if (coordinator.isRunning.value) {
-            _stopMemorizationCallback?.invoke()
+            _actionListener?.onStopMemorization()
         } else {
             ttsPlaybackController.stopTts()
         }
@@ -356,14 +364,9 @@ class PlaybackViewModel @Inject constructor(
         _fullMemorizationSentenceKo.value = ko
     }
 
-    @Suppress("NewApi")
     private fun updateNotificationSentence(sentenceEn: String?, sentenceKo: String?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-            && (_uiState.value.isPlaying || coordinator.isRunning.value)
-        ) {
-            application.startService(
-                TtsForegroundService.updateSentenceIntent(application, sentenceEn, sentenceKo)
-            )
+        if (_uiState.value.isPlaying || coordinator.isRunning.value) {
+            ttsServiceController.updateNotificationSentence(sentenceEn, sentenceKo)
         }
     }
 }

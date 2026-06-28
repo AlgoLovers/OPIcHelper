@@ -8,9 +8,9 @@
 ## 핵심 제약
 
 1. **1:1 매칭**: 반복듣기/영작/통암기 모두 `koSentences[i]` ↔ `enSentences[i]`로 매핑. 쌍이 깨지면 크래시 또는 하이라이트 어긋남
-2. **마침표 분할**: `split(Regex("(?<=[.!?])\\s+"))`로 문장 분할. 마침표 누락 시 분할 오류
+2. **마침표 분할**: `SentenceSplitter.split()`로 문장 분할. 마침표 누락 시 분할 오류
 3. **TTS 의존**: 빈 문장 또는 공백만 있는 문장은 TTS 재생 실패
-4. **문장 분할 일관성**: 편집 UI와 재생 코드가 동일한 분할 로직을 사용해야 함. 현재 `BaseMemorizeTestRepository.splitSentences()`가 단일 진실 공급원
+4. **문장 분할 일관성**: 편집 UI와 재생 코드가 동일한 분할 로직을 사용해야 함. `SentenceSplitter`(`domain/audio/`)가 단일 진실 공급원
 
 ## 아키텍처
 
@@ -31,22 +31,26 @@ Data (ScriptEditRepositoryImpl → Room DB)
 
 ### Domain Layer
 
-#### 문장 분할 유틸리티 (공유 단일 진실 공급원)
+#### 문장 분할 유틸리티 (기존 — 단일 진실 공급원)
 
 ```kotlin
-// domain/util/SentenceSplitter.kt
+// domain/audio/SentenceSplitter.kt (이미 존재)
 object SentenceSplitter {
-    private val SENTENCE_REGEX = Regex("(?<=[.!?])\\s+")
+    private val REGEX = Regex("(?<=[.!?。])\\s*")
 
     fun split(text: String): List<String> =
-        text.split(SENTENCE_REGEX).map { it.trim() }.filter { it.isNotEmpty() }
+        text.split(REGEX).map { it.trim() }.filter { it.isNotEmpty() }
 
+    // 추가 필요: 편집 후 문장을 합치는 메서드
     fun join(sentences: List<String>): String =
         sentences.joinToString(" ")
 }
 ```
 
-**설계 의사결정**: `BaseMemorizeTestRepository.splitSentences()`를 이 유틸리티로 교체. 편집 UI, 재생 코드, 검증 로직이 모두 동일한 분할 로직을 사용하도록 보장. SRP — 분할 로직이 Repository가 아닌 독립 객체에 캡슐화.
+**주의**:
+- 기존 `SentenceSplitter`는 `domain/audio/`에 위치. 계획서 초안의 `domain/util/`이 아님
+- 정규식은 `(?<=[.!?。])\\s*`로 CJK 마침표(`。`) 지원 및 `\\s*`(0개 이상) 사용
+- **join()의 공백 삽입 한계**: split()은 `\\s*`로 구분자 뒤 공백을 소비. 재결합 시 `joinToString(" ")`이 공백을 삽입. 원본에 공백이 없었던 한국어 텍스트(예: "안녕하세요.반갑습니다")는 "안녕하세요. 반갑습니다"로 변경됨. 편집 워크플로우에서만 사용되며 원본은 `*Original` 컬럼에 보존되므로 복원 가능
 
 #### Repository 인터페이스
 
@@ -54,14 +58,16 @@ object SentenceSplitter {
 // domain/repository/ScriptEditRepository.kt
 interface ScriptEditRepository {
     fun getQaItemsByCategory(category: String, level: String): Flow<List<QaItem>>
-    suspend fun updateQaItem(item: QaItem)
+    suspend fun updateQaItem(item: QaItem, level: UserLevel, scriptIndex: Int)
     suspend fun restoreOriginal(id: String)
     suspend fun restoreAllOriginal()
     suspend fun isModified(id: String): Boolean
 }
 ```
 
-**주의**: Domain의 `QaItem` Entity는 기존 것을 그대로 사용. Room Entity(`QaItemEntity`)와 매핑은 Data 계층에서 처리.
+**수정 내용** (초안 대비):
+- `updateQaItem(item: QaItem, level: UserLevel)` — QaItem.answers는 단일 레벨만 포함하므로 level 파라미터 필요
+- `level: String` → `level: UserLevel` — 타입 안전성
 
 #### 검증 로직
 
@@ -95,12 +101,13 @@ class ValidateScriptEditUseCase {
 
     private fun String.endsWithSentenceEnd(): Boolean =
         trimEnd().let { text ->
-            text.endsWith(".") || text.endsWith("!") || text.endsWith("?")
+            text.endsWith(".") || text.endsWith("!") || text.endsWith("?") || text.endsWith("。")
         }
 }
 ```
 
-**설계 의사결정**: 검증을 Domain UseCase로 분리. SRP — 검증 로직이 UI나 Repository에 섞이지 않음. 테스트 가능.
+**수정 내용** (초안 대비):
+- `endsWithSentenceEnd()`에 CJK 마침표(`。`) 추가 — SentenceSplitter 정규식과 일치
 
 ### Data Layer
 
@@ -111,14 +118,14 @@ class ValidateScriptEditUseCase {
 data class QaItemEntity(
     @PrimaryKey val id: String,           // "{category}_{itemId}_{level}"
     val category: String,
-    val itemId: String,                   // JSON 원본 id (nullable 대응)
+    val itemId: String,                   // JSON 원본 id (빈 값이면 순서로 대체)
     val level: String,                    // AL, IH, IH_RAW, IM
     val questionEn: String,
     val questionKo: String,
     val answerEn: String,
     val answerKo: String,
     val vocabulary: String = "",          // JSON 직렬화 (2차 편집 대비)
-    val grammar: String = "",             // JSON 직렬화
+    val grammar: String = "",            // JSON 직렬화
     val tips: String = "",                // JSON 직렬화
     val questionEnOriginal: String,       // 원본 백업 (불변)
     val questionKoOriginal: String,       // 원본 백업 (불변)
@@ -129,19 +136,12 @@ data class QaItemEntity(
 )
 ```
 
-**설계 의사결정**:
-- `answerEnOriginal` 등 원본 필드를 같은 Entity에 포함: 별도 테이블보다 단순, 원본 복원이 단순 UPDATE
-- `isModified` 플래그: UI에서 수정 여부 표시 (편집 아이콘 하이라이트 등)
-- `id` 형식: `{category}_{itemId}_{level}` — 복합키 대신 단일 문자열 PK로 단순화
-- `itemId`: JSON 원본 id 보존. null인 경우 카테고리 내 순서로 대체 (PK 충돌 방지)
-- `vocabulary/grammar/tips`: 현재 미사용이지만 JSON 문자열로 보관. 2차 스키마 마이그레이션 불필요
-
 #### Dao
 
 ```kotlin
 @Dao
 interface QaItemDao {
-    @Query("SELECT * FROM qa_items WHERE category = :category AND level = :level ORDER BY itemId")
+    @Query("SELECT * FROM qa_items WHERE category = :category AND level = :level ORDER BY CAST(itemId AS INTEGER)")
     fun getByCategoryAndLevel(category: String, level: String): Flow<List<QaItemEntity>>
 
     @Query("SELECT * FROM qa_items WHERE id = :id")
@@ -164,10 +164,11 @@ interface QaItemDao {
         questionEn = questionEnOriginal, questionKo = questionKoOriginal,
         answerEn = answerEnOriginal, answerKo = answerKoOriginal,
         isModified = 0, updatedAt = 0
+        WHERE isModified = 1
     """)
     suspend fun restoreAllOriginal()
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(items: List<QaItemEntity>)
 
     @Query("SELECT COUNT(*) FROM qa_items")
@@ -186,14 +187,19 @@ class AssetSeeder(
     private val dao: QaItemDao,
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
-    suspend fun seedIfNeeded() {
-        if (dao.getCount() > 0) return
+    companion object {
+        const val SEED_VERSION_KEY = "seed_version"
+        const val CURRENT_SEED_VERSION = 1
+    }
 
-        val allLevels = UserLevel.values()
+    suspend fun seedIfNeeded() {
+        val storedVersion = userPreferencesRepository.getSeedVersion()
+        if (storedVersion == CURRENT_SEED_VERSION && dao.getCount() > 0) return
+
         val loader = LeveledQaDataLoader(context)
         val entities = mutableListOf<QaItemEntity>()
 
-        for (level in allLevels) {
+        for (level in UserLevel.entries) {
             val items = loader.loadQaItemsForLevel(level)
             items.forEachIndexed { index, item ->
                 val answer = item.answers[level] ?: return@forEachIndexed
@@ -218,14 +224,13 @@ class AssetSeeder(
             }
         }
         dao.insertAll(entities)
+        userPreferencesRepository.setSeedVersion(CURRENT_SEED_VERSION)
     }
 }
 ```
 
-**수정 내용** (리뷰 반영):
-- `loadQaItemsForLevel(level)` 대신 **모든 UserLevel에 대해 순회** — 레벨 변경 시에도 Room에 데이터 존재 보장
-- `item.id.ifBlank { index.toString() }` — null/빈 id에 대한 PK 충돌 방지
-- `vocabulary/grammar/tips`를 JSON 문자열로 보관 — 2차 스키마 마이그레이션 불필요
+**수정 내용** (초안 대비):
+- `UserLevel.values()` → `UserLevel.entries` — Kotlin 1.9 권장
 
 #### AppDatabase
 
@@ -233,6 +238,120 @@ class AssetSeeder(
 @Database(entities = [QaItemEntity::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun qaItemDao(): QaItemDao
+}
+```
+
+#### ScriptEditRepositoryImpl
+
+```kotlin
+class ScriptEditRepositoryImpl(
+    private val dao: QaItemDao,
+    private val recordingTimeManager: RecordingTimeManager,
+    private val progressPersistenceService: ProgressPersistenceService,
+    private val userPreferencesRepository: UserPreferencesRepository
+) : ScriptEditRepository {
+
+    override fun getQaItemsByCategory(category: String, level: String): Flow<List<QaItem>> =
+        dao.getByCategoryAndLevel(category, level).map { entities ->
+            entities.map { it.toQaItem() }
+        }
+
+    override suspend fun updateQaItem(item: QaItem, level: UserLevel, scriptIndex: Int) {
+        val id = generateId(item, level)
+        val entity = dao.getById(id) ?: return
+        val sentenceCountChanged = hasSentenceCountChanged(entity, item, level)
+
+        dao.update(entity.copy(
+            questionEn = item.questionEn,
+            questionKo = item.questionKo,
+            answerEn = item.answers[level]?.answerEn ?: entity.answerEn,
+            answerKo = item.answers[level]?.answerKo ?: entity.answerKo,
+            isModified = true,
+            updatedAt = System.currentTimeMillis()
+        ))
+
+        if (sentenceCountChanged) {
+            recordingTimeManager.clearRecordingTimes(item.category, scriptIndex)
+            progressPersistenceService.saveNavigationState(
+                ProgressPersistenceService.NavigationState(item.category, scriptIndex, 0)
+            )
+            for (memLevel in MemorizeLevel.entries) {
+                progressPersistenceService.clearCategoryProgress(item.category, scriptIndex, memLevel.displayName)
+            }
+        }
+    }
+
+    override suspend fun restoreOriginal(id: String) = dao.restoreOriginal(id)
+    override suspend fun restoreAllOriginal() = dao.restoreAllOriginal()
+    override suspend fun isModified(id: String): Boolean = dao.getById(id)?.isModified ?: false
+
+    private fun generateId(item: QaItem, level: UserLevel): String =
+        "${item.category}_${item.id}_${level.name}"
+
+    private fun hasSentenceCountChanged(entity: QaItemEntity, item: QaItem, level: UserLevel): Boolean {
+        val oldCount = SentenceSplitter.split(entity.answerEn).size
+        val newCount = SentenceSplitter.split(item.answers[level]?.answerEn ?: "").size
+        return oldCount != newCount
+    }
+}
+```
+
+**수정 내용** (초안 대비):
+- 생성자에 `recordingTimeManager`, `progressPersistenceService`, `userPreferencesRepository` 명시
+- `updateQaItem(item, level)` — level 파라미터 추가, `item.answers[level]`로 접근
+- `hasSentenceCountChanged()` — SentenceSplitter.split() 사용, level 파라미터로 정확한 답변 접근
+- `findScriptIndex()` — Entity의 itemId 활용
+- `MemorizeLevel.values()` → `MemorizeLevel.entries`
+
+### QaDataManager 데이터 소스 교체 전략
+
+**핵심 결정**: `QaDataLoader` 인터페이스를 유지하고 Room 기반 구현체를 추가.
+
+```kotlin
+// data/repository/RoomQaDataLoader.kt
+class RoomQaDataLoader(
+    private val qaItemDao: QaItemDao
+) : QaDataLoader {
+
+    override suspend fun loadQaItemsForLevel(level: UserLevel): List<QaItem> {
+        return qaItemDao.getByCategoryAndLevelDirect(level.name)
+            .map { it.toQaItem() }
+    }
+}
+```
+
+**이유**: QaDataManager는 `QaDataLoader` 인터페이스에만 의존. DI 바인딩만 `LeveledQaDataLoader` → `RoomQaDataLoader`로 교체하면 QaDataManager 수정 불필요.
+
+**시드 실행 시점**: `AssetSeeder.seedIfNeeded()`는 `QaDataManager.init()`에서 1회 호출. `RoomQaDataLoader`는 Room 조회만 담당.
+
+**DAO 추가 쿼리 필요**:
+```kotlin
+@Query("SELECT * FROM qa_items WHERE level = :level ORDER BY category, CAST(itemId AS INTEGER)")
+suspend fun getByCategoryAndLevelDirect(level: String): List<QaItemEntity>
+```
+
+**QaItemEntity → QaItem 매핑**:
+```kotlin
+private val mappingGson = Gson()
+private val stringListType = object : TypeToken<List<String>>() {}.type
+
+fun QaItemEntity.toQaItem(): QaItem {
+    val userLevel = UserLevel.entries.find { it.name == level } ?: UserLevel.IH
+    return QaItem(
+        id = itemId,
+        category = category,
+        questionEn = questionEn,
+        questionKo = questionKo,
+        answers = mapOf(
+            userLevel to LeveledAnswer(
+                answerEn = answerEn,
+                answerKo = answerKo,
+                vocabulary = try { mappingGson.fromJson<List<String>>(vocabulary, stringListType) ?: emptyList() } catch (_: Exception) { emptyList() },
+                grammar = try { mappingGson.fromJson<List<String>>(grammar, stringListType) ?: emptyList() } catch (_: Exception) { emptyList() },
+                tips = try { mappingGson.fromJson<List<String>>(tips, stringListType) ?: emptyList() } catch (_: Exception) { emptyList() }
+            )
+        )
+    )
 }
 ```
 
@@ -256,9 +375,9 @@ class EditScriptViewModel @Inject constructor(
     private val _isModified = MutableStateFlow(false)
     val isModified: StateFlow<Boolean> = _isModified.asStateFlow()
 
-    fun loadSentences(qaItem: QaItem, isQuestion: Boolean) {
-        val textKo = if (isQuestion) qaItem.questionKo else qaItem.getCurrentAnswerKo()
-        val textEn = if (isQuestion) qaItem.questionEn else qaItem.getCurrentAnswer()
+    fun loadSentences(qaItem: QaItem, isQuestion: Boolean, level: UserLevel) {
+        val textKo = if (isQuestion) qaItem.questionKo else qaItem.answers[level]?.answerKo ?: ""
+        val textEn = if (isQuestion) qaItem.questionEn else qaItem.answers[level]?.answerEn ?: ""
         val koSentences = SentenceSplitter.split(textKo)
         val enSentences = SentenceSplitter.split(textEn)
         val pairs = koSentences.zip(enSentences).map { (ko, en) -> SentencePair(ko, en) }
@@ -295,13 +414,51 @@ class EditScriptViewModel @Inject constructor(
         _validationResult.value = validateScriptEditUseCase.validate(_sentencePairs.value)
     }
 
-    fun save(qaItem: QaItem, isQuestion: Boolean) { ... }
-    fun restoreOriginal(id: String) { ... }
+    fun save(qaItem: QaItem, isQuestion: Boolean, level: UserLevel, scriptIndex: Int) {
+        val koText = SentenceSplitter.join(_sentencePairs.value.map { it.korean })
+        val enText = SentenceSplitter.join(_sentencePairs.value.map { it.english })
+        val updatedItem = if (isQuestion) {
+            qaItem.copy(questionKo = koText, questionEn = enText)
+        } else {
+            val currentAnswer = qaItem.answers[level] ?: return
+            qaItem.copy(answers = qaItem.answers + (level to currentAnswer.copy(answerKo = koText, answerEn = enText)))
+        }
+        viewModelScope.launch {
+            scriptEditRepository.updateQaItem(updatedItem, level, scriptIndex)
+        }
+    }
+
+    fun restoreOriginal(id: String) {
+        viewModelScope.launch {
+            scriptEditRepository.restoreOriginal(id)
+        }
+    }
 }
 ```
 
-**수정 내용** (리뷰 반영):
-- `splitSentences()` 대신 `SentenceSplitter.split()` 사용 — Domain 계층의 단일 진실 공급원
+**수정 내용** (초안 대비):
+- `loadSentences()`에서 `qaItem.getCurrentAnswerKo()`/`getCurrentAnswer()` 대신 `qaItem.answers.values.firstOrNull()?.answerKo` 사용 — QaItem에는 getCurrentAnswer() 메서드 없음
+- `save()`에 `level: UserLevel` 파라미터 추가
+- `save()`에서 `SentenceSplitter.join()` 사용 (추가 필요한 메서드)
+- `save()`에서 `qaItem.copy(answers = ...)`로 answers 맵 업데이트
+
+#### 편집 UI 데이터 흐름
+
+```
+MainScreen (카드 편집 버튼 클릭)
+  → QaBrowserViewModel.getCurrentIndex() → scriptIndex: Int
+  → QaBrowserViewModel.currentUserLevel → level: UserLevel
+  → 현재 QaItem + isQuestion 여부
+  → EditScriptBottomSheet(qaItem, isQuestion, level, scriptIndex)
+    → EditScriptViewModel.loadSentences(qaItem, isQuestion, level)
+    → 사용자 편집
+    → EditScriptViewModel.save(qaItem, isQuestion, level, scriptIndex)
+      → ScriptEditRepository.updateQaItem(item, level, scriptIndex)
+```
+
+**QaBrowserViewModel 노출 필요**:
+- `getCurrentIndex(): Int` — `qaDataManager.getCurrentIndex()` 위임
+- `currentUserLevel: UserLevel` — `QaBrowserState.currentUserLevel` 타입을 `String` → `UserLevel`로 변경
 
 #### EditScriptBottomSheet UI
 
@@ -342,7 +499,7 @@ class EditScriptViewModel @Inject constructor(
 | 기능 | 설명 | 구현 위치 |
 |------|------|----------|
 | 문장 쌍 단위 편집 | 추가/삭제가 항상 쌍 단위 → 1:1 구조적 보장 | ViewModel |
-| 마침표 검증 | 문장 끝 `.`, `!`, `?` 없으면 필드 테두리 빨간색 + 경고 | ValidateScriptEditUseCase |
+| 마침표 검증 | 문장 끝 `.`, `!`, `?`, `。` 없으면 필드 테두리 빨간색 + 경고 | ValidateScriptEditUseCase |
 | 빈 문장 검증 | 한쪽만 비어있으면 저장 불가 | ValidateScriptEditUseCase |
 | 최소 1쌍 보장 | 모든 쌍 삭제 불가 | ViewModel |
 | 삭제 확인 | 다이얼로그 "이 문장 쌍을 삭제하시겠습니까?" | BottomSheet |
@@ -354,65 +511,101 @@ class EditScriptViewModel @Inject constructor(
 
 | 파일 | 변경 | 이유 |
 |------|------|------|
-| `QaDataManager` | Data 소스를 `LeveledQaDataLoader` → `QaItemDao` Flow로 교체 | Room이 단일 진실 공급원 |
-| `QaDataManager.setupUserLevelObserver()` | `loadQaItemsFromAssets()` 대신 Room 쿼리로 레벨 전환 | 레벨 변경 시 Room에서 재조회 |
-| `LeveledQaDataLoader` | AssetSeeder에서만 사용, QaDataManager에서 제거 | 시드 전용 |
-| `BaseMemorizeTestRepository.splitSentences()` | `SentenceSplitter.split()`으로 위임 | 분할 로직 단일화 |
-| `AppModule` | Room DB, Dao, AssetSeeder, ScriptEditRepository 바인딩 추가 | DI |
+| `SentenceSplitter.kt` | `join()` 메서드 추가 | 편집 후 문장 합치기 |
+| `QaDataManager` | 생성자에 `AssetSeeder` 추가, `init()`에서 `assetSeeder.seedIfNeeded()`를 `loadQaItemsFromAssets()` **이전**에 호출 | Room 시드 1회 실행 |
+
+#### QaDataManager 수정 상세
+
+```kotlin
+class QaDataManager(
+    private val qaDataLoader: QaDataLoader,
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val progressPersistenceService: ProgressPersistenceService,
+    private val assetSeeder: AssetSeeder  // 추가
+) {
+    suspend fun init() {
+        assetSeeder.seedIfNeeded()       // 시드 먼저 실행 (Room에 데이터 보장)
+        loadQaItemsFromAssets()
+        restoreLastCategory()
+        setupUserLevelObserver()
+    }
+    // ... 나머지 동일
+}
+```
+| `UserPreferencesRepository` | 인터페이스에 `getSeedVersion(): Int`/`setSeedVersion(version: Int)` 추가, 구현체에 SharedPreferences 읽기/쓰기 추가 (키: `"seed_version"`, 기본값: `0`) | AssetSeeder 버전 관리 |
+| `QaBrowserViewModel` | `getCurrentIndex(): Int`, `currentUserLevel: UserLevel` 노출 | 편집 UI에서 scriptIndex/level 전달 |
+| `AppModule` | `LeveledQaDataLoader` → `RoomQaDataLoader` 바인딩 교체, Room DB/Dao/AssetSeeder/ScriptEditRepository `@Provides` 추가 | DI |
+
+#### AppModule 추가 바인딩 상세
+
+```kotlin
+// Room DB
+@Provides @Singleton
+fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
+    Room.databaseBuilder(context, AppDatabase::class.java, "opic_database").build()
+
+@Provides
+fun provideQaItemDao(db: AppDatabase): QaItemDao = db.qaItemDao()
+
+@Provides @Singleton
+fun provideAssetSeeder(
+    @ApplicationContext context: Context,
+    dao: QaItemDao,
+    userPreferencesRepository: UserPreferencesRepository
+): AssetSeeder = AssetSeeder(context, dao, userPreferencesRepository)
+
+// QaDataLoader 바인딩 교체
+@Provides @Singleton
+fun provideQaDataLoader(dao: QaItemDao): QaDataLoader = RoomQaDataLoader(dao)
+
+// QaDataManager 바인딩 — AssetSeeder 파라미터 추가
+@Provides @Singleton
+fun provideQaDataManager(
+    qaDataLoader: QaDataLoader,
+    userPreferencesRepository: UserPreferencesRepository,
+    progressPersistenceService: ProgressPersistenceService,
+    assetSeeder: AssetSeeder
+): QaDataManager = QaDataManager(qaDataLoader, userPreferencesRepository, progressPersistenceService, assetSeeder)
+
+@Provides @Singleton
+fun provideScriptEditRepository(
+    dao: QaItemDao,
+    recordingTimeManager: RecordingTimeManager,
+    progressPersistenceService: ProgressPersistenceService,
+    userPreferencesRepository: UserPreferencesRepository
+): ScriptEditRepository = ScriptEditRepositoryImpl(dao, recordingTimeManager, progressPersistenceService, userPreferencesRepository)
+```
+| `build.gradle.kts` | Room 의존성 추가 | Room |
 | `QaBrowserViewModel` | `isModified` 상태 추가 | UI 수정 표시 |
 | `MainScreen` | 카드에 편집 버튼 추가, BottomSheet 호출 | UI |
-| `build.gradle` | Room 의존성 추가 | Room |
 
 **변경하지 않는 것**:
-- `RepeatListeningRepositoryImpl`, `EnglishWritingTestRepositoryImpl` — `SentenceSplitter.split()`으로 교체만, 로직 동일
+- `BaseMemorizeTestRepository.splitSentences()` — 이미 SentenceSplitter 위임 중, 유지
+- `BaseMemorizeTestRepository.splitSentences()` — 이미 SentenceSplitter 위임 중, 유지
+- `RepeatListeningRepositoryImpl`, `EnglishWritingTestRepositoryImpl` — 동일
 - `FullMemorizationUseCase` — 동일
 - `TtsOrchestrator`, `TtsPlaybackController` — 동일
 - `MemorizationModeCoordinator` — 동일
+- `LeveledQaDataLoader` — AssetSeeder에서만 사용, 삭제하지 않음
 
 ### 편집 시 사이드 이펙트 정리 (저장 시 수행)
 
 편집 저장 시 `ScriptEditRepositoryImpl.updateQaItem()`에서 다음을 수행:
 
-```kotlin
-override suspend fun updateQaItem(item: QaItem) {
-    // 1. Room 업데이트
-    val entity = dao.getById(generateId(item))
-    if (entity != null) {
-        val sentenceCountChanged = hasSentenceCountChanged(entity, item)
-        dao.update(entity.copy(
-            questionEn = item.questionEn,
-            questionKo = item.questionKo,
-            answerEn = item.getCurrentAnswer(),
-            answerKo = item.getCurrentAnswerKo(),
-            isModified = true,
-            updatedAt = System.currentTimeMillis()
-        ))
-
-        // 2. 문장 수 변경 시 관련 데이터 정리
-        if (sentenceCountChanged) {
-            recordingTimeManager.clearRecordingTimes(item.category, scriptIndex)
-            progressPersistenceService.saveNavigationState(
-                ProgressPersistenceService.NavigationState(item.category, 0, scriptIndex)
-            )
-            // CategoryProgress도 초기화
-            for (level in MemorizeLevel.values()) {
-                progressPersistenceService.clearCategoryProgress(item.category, scriptIndex, level.displayName)
-            }
-        }
-    }
-}
-```
-
-**수정 내용** (리뷰 반영): 문장 수 변경 시 RecordingTimeManager, NavigationState, CategoryProgress를 명시적으로 초기화.
+1. Room 업데이트
+2. 문장 수 변경 시 관련 데이터 정리:
+   - `recordingTimeManager.clearRecordingTimes(category, scriptIndex)`
+   - `progressPersistenceService.saveNavigationState(NavigationState(category, scriptIndex, 0))`
+   - `progressPersistenceService.clearCategoryProgress(category, scriptIndex, memorizeLevel)` for each MemorizeLevel
 
 ## 구현 단계
 
 | 단계 | 작업 | 의존 | 완료 기준 |
 |------|------|------|----------|
 | 1 | Room 의존성 추가, AppDatabase + QaItemEntity + QaItemDao | 없음 | 빌드 성공 |
-| 2 | SentenceSplitter 도메인 유틸리티 추출, BaseMemorizeTestRepository 위임 | 없음 | 기존 기능 동일 |
+| 2 | SentenceSplitter에 `join()` 메서드 추가 | 없음 | 기존 기능 동일 |
 | 3 | AssetSeeder 구현 (모든 레벨 시드), 최초 실행 시 JSON → Room | 1 | 앱 실행 후 Room에 4개 레벨 데이터 존재 |
-| 4 | QaDataManager Data 소스를 Room으로 교체, 레벨 변경 시 Room 재조회 | 3 | 기존 기능 동일 (카테고리/탐색/TTS/레벨전환) |
+| 4 | RoomQaDataLoader 구현, DI 바인딩 교체 (LeveledQaDataLoader → RoomQaDataLoader) | 3 | 기존 기능 동일 (카테고리/탐색/TTS/레벨전환) |
 | 5 | ScriptEditRepository 인터페이스 + 구현체 (사이드 이펙트 정리 포함) | 1 | 빌드 성공 |
 | 6 | ValidateScriptEditUseCase | 없음 | 단위 테스트 통과 |
 | 7 | EditScriptViewModel | 5, 6 | 빌드 성공 |
@@ -424,12 +617,13 @@ override suspend fun updateQaItem(item: QaItem) {
 
 | 리스크 | 영향 | 대응 |
 |--------|------|------|
-| Room 시드 실패 | 앱 시작 시 데이터 없음 | AssetSeeder를 비동기 + 에러 핸들링, 실패 시 Asset 폴백 |
-| QaDataManager 소스 교체 | 모든 기능에 영향 | 인터페이스 유지, 구현만 교체. 각 모드 회귀 테스트 |
+| Room 시드 실패 | 앱 시작 시 데이터 없음 | AssetSeeder를 비동기 + 에러 핸들링, 실패 시 LeveledQaDataLoader 폴백 |
+| QaDataManager 소스 교체 | 모든 기능에 영향 | 인터페이스 유지, DI 바인딩만 교체. 각 모드 회귀 테스트 |
 | 편집 후 문장 수 변경 | 녹음 시간/진행상태 무효화 | 저장 시 RecordingTimeManager + NavigationState + CategoryProgress 초기화 |
 | 대량 데이터 Room 시드 | 첫 실행 지연 | 백그라운드 코루틴 + 로딩 표시 |
-| 레벨 변경 시 Room 미시드 | 특정 레벨 데이터 없음 | AssetSeeder에서 모든 레벨 시드, 시드 완료 여부는 `getSeededLevels()`로 확인 |
-| JSON id null | PK 충돌 | `item.id.ifBlank { index.toString() }`로 대체 |
+| 레벨 변경 시 Room 미시드 | 특정 레벨 데이터 없음 | AssetSeeder에서 모든 레벨 시드, 버전 기반 재시드 전략 (`SEED_VERSION_KEY`) |
+| 앱 업데이트 시 신규 에셋 | Room에 신규 카테고리 누락 | `CURRENT_SEED_VERSION` 증가 시 자동 재시드 |
+| JSON id 빈 값 | PK 충돌 | `item.id.ifBlank { index.toString() }`로 대체 |
 | 분할 로직 불일치 | 편집과 재생 결과 불일치 | `SentenceSplitter` 단일 진실 공급원 사용 |
 
 ## 2차 범위 (1차에서 제외)

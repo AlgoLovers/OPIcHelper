@@ -11,7 +11,7 @@ import android.content.res.Configuration
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import com.na982.opichelper.domain.manager.AppLogger
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,10 +26,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.na982.opichelper.domain.manager.WakeLockManager
+import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
+import com.na982.opichelper.presentation.viewmodel.PlaybackActionListener
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
+import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
+import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
+import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
+import com.na982.opichelper.domain.usecase.ModeGroup
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -42,7 +47,10 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var wakeLockManager: WakeLockManager
+    lateinit var wakeLockController: WakeLockController
+
+    @Inject
+    lateinit var appLogger: AppLogger
 
     private var isFinishing = false
     private var playbackViewModel: PlaybackViewModel? = null
@@ -65,6 +73,8 @@ class MainActivity : ComponentActivity() {
             when (intent.action) {
                 ACTION_PIP_PLAY_PAUSE -> playbackViewModel?.togglePlayPause()
                 ACTION_PIP_STOP -> playbackViewModel?.stopPlayback()
+                ACTION_PIP_REPEAT -> playbackViewModel?.repeatPlayback()
+                ACTION_PIP_NEXT -> playbackViewModel?.playNextItem()
             }
         }
     }
@@ -72,7 +82,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        wakeLockManager.acquireWakeLock()
+        wakeLockController.acquire()
 
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -89,26 +99,59 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val pvm: PlaybackViewModel = hiltViewModel()
             val qaVm: QaBrowserViewModel = hiltViewModel()
+            val repeatListeningVm: RepeatListeningViewModel = hiltViewModel()
+            val englishWritingTestVm: EnglishWritingTestViewModel = hiltViewModel()
+            val fullMemorizationVm: FullMemorizationViewModel = hiltViewModel()
             this@MainActivity.playbackViewModel = pvm
             this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
 
-            pvm.setRepeatQuestionCallback {
-                val qaItem = qaVm.uiState.value.currentQaItem
-                if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
-            }
-            pvm.setRepeatAnswerCallback {
-                val qaItem = qaVm.uiState.value.currentQaItem
-                if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
-            }
-            pvm.setNextCallback {
-                lifecycleScope.launch {
-                    val qaItem = qaVm.nextQaItemSync()
-                    if (qaItem != null) {
-                        pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+            pvm.setActionListener(object : PlaybackActionListener {
+                override fun onRepeatQuestion() {
+                    val qaItem = qaVm.uiState.value.currentQaItem
+                    if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
+                }
+                override fun onRepeatAnswer() {
+                    val qaItem = qaVm.uiState.value.currentQaItem
+                    if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+                }
+                override fun onNext() {
+                    lifecycleScope.launch {
+                        val qaItem = qaVm.nextQaItemSync()
+                        if (qaItem != null) {
+                            pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
+                        }
                     }
                 }
-            }
+                override fun onRepeatMemorization() {
+                    val group = pvm.lastMemorizationGroup ?: return
+                    when (group) {
+                        ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
+                        ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
+                        ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
+                        else -> {}
+                    }
+                }
+                override fun onNextAndRestart() {
+                    lifecycleScope.launch {
+                        val qaItem = qaVm.nextQaItemSync()
+                        if (qaItem != null) {
+                            val group = pvm.lastMemorizationGroup ?: return@launch
+                            when (group) {
+                                ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
+                                ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
+                                ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
+                                else -> {}
+                            }
+                        }
+                    }
+                }
+                override fun onStopMemorization() {
+                    repeatListeningVm.stop()
+                    englishWritingTestVm.stop()
+                    fullMemorizationVm.stop()
+                }
+            })
 
             LaunchedEffect(Unit) {
                 qaVm.uiState.collect { state ->
@@ -167,10 +210,10 @@ class MainActivity : ComponentActivity() {
             }
             val entered = enterPictureInPictureMode(params.build())
             if (!entered) {
-                Log.w("MainActivity", "PiP 진입 실패")
+                appLogger.w("MainActivity", "PiP 진입 실패")
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "enterPipMode 예외", e)
+            appLogger.e("MainActivity", "enterPipMode 예외", e)
         }
     }
 
@@ -204,8 +247,8 @@ class MainActivity : ComponentActivity() {
         if (isFinishing) {
             isFinishing = false
         }
-        if (!wakeLockManager.isWakeLockHeld()) {
-            wakeLockManager.acquireWakeLock()
+        if (!wakeLockController.isHeld()) {
+            wakeLockController.acquire()
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isInPictureInPictureMode) {
             playbackViewModel?.onForegroundReturn()
@@ -236,7 +279,7 @@ class MainActivity : ComponentActivity() {
                     finish()
                 }
             } catch (e: Exception) {
-                Log.e("MainActivity", "백버튼 처리 중 오류", e)
+                appLogger.e("MainActivity", "백버튼 처리 중 오류", e)
                 super.onBackPressed()
             }
         } ?: run {
@@ -249,9 +292,9 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 qaViewModel?.cleanupOnAppExit()
             }
-            wakeLockManager.releaseWakeLock()
+            wakeLockController.release()
         } catch (e: Exception) {
-            Log.e("MainActivity", "리소스 정리 중 오류 발생", e)
+            appLogger.e("MainActivity", "리소스 정리 중 오류 발생", e)
         }
     }
 
@@ -261,6 +304,8 @@ class MainActivity : ComponentActivity() {
             val filter = IntentFilter().apply {
                 addAction(ACTION_PIP_PLAY_PAUSE)
                 addAction(ACTION_PIP_STOP)
+                addAction(ACTION_PIP_REPEAT)
+                addAction(ACTION_PIP_NEXT)
             }
             registerReceiver(pipActionReceiver, filter, RECEIVER_NOT_EXPORTED)
         }
@@ -282,7 +327,7 @@ class MainActivity : ComponentActivity() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     updatePipAutoEnter(state.isPlaying)
                     if (isInPictureInPictureMode) {
-                        updatePipActions(state.isPlaying, state.isPaused, state.isPausable)
+                        updatePipActions(state.isPlaying, state.isPaused, state.isPausable, state.hasCompleted, state.hasNextItem)
                     }
                 }
             }
@@ -300,7 +345,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Suppress("NewApi")
-    private fun updatePipActions(isPlaying: Boolean, isPaused: Boolean, isPausable: Boolean) {
+    private fun updatePipActions(isPlaying: Boolean, isPaused: Boolean, isPausable: Boolean, hasCompleted: Boolean, hasNextItem: Boolean) {
         if (!isInPictureInPictureMode) return
 
         val params = android.app.PictureInPictureParams.Builder()
@@ -312,7 +357,29 @@ class MainActivity : ComponentActivity() {
 
         val actions = ArrayList<android.app.RemoteAction>()
 
-        if (isPausable) {
+        if (hasCompleted) {
+            val repeatIcon = Icon.createWithResource(this, R.drawable.ic_replay)
+            val repeatIntent = PendingIntent.getBroadcast(
+                this, 2,
+                Intent(ACTION_PIP_REPEAT).setPackage(packageName),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            actions.add(
+                android.app.RemoteAction(repeatIcon, "반복 재생", "반복 재생", repeatIntent)
+            )
+
+            if (hasNextItem) {
+                val nextIcon = Icon.createWithResource(this, R.drawable.ic_skip_next)
+                val nextIntent = PendingIntent.getBroadcast(
+                    this, 3,
+                    Intent(ACTION_PIP_NEXT).setPackage(packageName),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+                actions.add(
+                    android.app.RemoteAction(nextIcon, "다음", "다음", nextIntent)
+                )
+            }
+        } else if (isPausable) {
             val showPause = isPlaying && !isPaused
             val playPauseIcon = Icon.createWithResource(
                 this,
@@ -320,7 +387,7 @@ class MainActivity : ComponentActivity() {
             )
             val playPauseIntent = PendingIntent.getBroadcast(
                 this, 0,
-                Intent(ACTION_PIP_PLAY_PAUSE),
+                Intent(ACTION_PIP_PLAY_PAUSE).setPackage(packageName),
                 PendingIntent.FLAG_IMMUTABLE
             )
             actions.add(
@@ -336,7 +403,7 @@ class MainActivity : ComponentActivity() {
         val stopIcon = Icon.createWithResource(this, R.drawable.ic_stop)
         val stopIntent = PendingIntent.getBroadcast(
             this, 1,
-            Intent(ACTION_PIP_STOP),
+            Intent(ACTION_PIP_STOP).setPackage(packageName),
             PendingIntent.FLAG_IMMUTABLE
         )
         actions.add(
@@ -352,5 +419,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val ACTION_PIP_PLAY_PAUSE = "com.na982.opichelper.PIP_PLAY_PAUSE"
         const val ACTION_PIP_STOP = "com.na982.opichelper.PIP_STOP"
+        const val ACTION_PIP_REPEAT = "com.na982.opichelper.PIP_REPEAT"
+        const val ACTION_PIP_NEXT = "com.na982.opichelper.PIP_NEXT"
     }
 }

@@ -28,8 +28,8 @@ class OPicHelperApplication : Application() {
     }
 
     fun closeResources() {
-        listOf(ttsPlaybackController, fullMemorizationUseCase, playMergedFileUseCase).forEach {
-            try { it.close() } catch (_: Exception) {}
-        }
+        try { ttsPlaybackController.close() } catch (_: Exception) {}
+        try { fullMemorizationUseCase.close() } catch (_: Exception) {}
+        try { playMergedFileUseCase.close() } catch (_: Exception) {}
     }
 } 

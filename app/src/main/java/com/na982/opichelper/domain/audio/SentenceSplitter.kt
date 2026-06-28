@@ -5,4 +5,7 @@ object SentenceSplitter {
 
     fun split(text: String): List<String> =
         text.split(REGEX).map { it.trim() }.filter { it.isNotEmpty() }
+
+    fun join(sentences: List<String>): String =
+        sentences.joinToString(" ")
 }

@@ -96,6 +96,14 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
         prefs.edit().putBoolean(KEY_PIP_GUIDE_COMPLETED, true).apply()
     }
 
+    override fun getSeedVersion(): Int {
+        return prefs.getInt(KEY_SEED_VERSION, 0)
+    }
+
+    override fun setSeedVersion(version: Int) {
+        prefs.edit().putInt(KEY_SEED_VERSION, version).apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "user_prefs"
         private const val KEY_USER_LEVEL = "user_level"
@@ -106,5 +114,6 @@ class UserPreferencesRepository(private val context: Context) : DomainUserPrefer
         private const val KEY_AUTO_ADVANCE = "auto_advance"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_PIP_GUIDE_COMPLETED = "pip_guide_completed"
+        private const val KEY_SEED_VERSION = "seed_version"
     }
 }

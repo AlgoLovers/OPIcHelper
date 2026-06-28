@@ -26,6 +26,7 @@ fun AnswerCard(
     resumeHighlightIndex: Int? = null,
     isFlipped: Boolean = false,
     isRepeatListeningCardFlipped: Boolean = false,
+    onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var isVisible by remember { mutableStateOf(true) }
@@ -35,6 +36,23 @@ fun AnswerCard(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
+        if (onEdit != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = onEdit,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "편집",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
         // 플립 카드 (숨김 상태에 따라 크기 조절)
         FlipCard(
             isFlipped = isFlipped || isRepeatListeningCardFlipped,
