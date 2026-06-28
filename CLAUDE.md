@@ -391,6 +391,13 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | RecordingFileRepositoryImpl 미사용 상태 필드 | currentRecordingPath/currentPlayingPath 제거 (0194) |
 | ENGLISH_WRITING_PREFIX/FULL_MEMORIZATION_PREFIX 중복 정의 | AudioFileManager companion object로 통합 (0195) |
 | CARD_FLIP_DELAY_MS 3곳 중복 정의 | BaseMemorizeTestRepository companion object로 통합 (0196) |
+| 긴 메서드 (BaseTtsPlayer.speak 89줄, executeRepeatListening 86줄, executeEnglishWritingTest 93줄) | 메서드 분해: stopEngineAndWait/setupUtteranceListener/waitForStart/awaitCompletion, calculateAdaptiveDelay/repeatEnglishSentences, recordSentences/recordSentence/calculateRecordingDuration/mergeRecordingFiles (0203) |
+| AudioPlayerImpl/RecordingAudioPlayerImpl MediaPlayer 설정 중복 | BaseMediaPlayer.prepareAndStart() 추출 (0204) |
+| Progress key 포맷 5곳 인라인 생성 | ScriptProgress.progressKey()로 중앙화 (0205) |
+| Badge header card 패턴 3곳 중복 | SectionHeader 공통 컴포넌트 추출 (0206) |
+| MainActivity.updatePipActions 82줄 | PipActionBuilder 클래스 분리 (0207) |
+| TtsPlaybackController ISP 위반 (pause 책임 혼재) | TtsPauseController 하위 인터페이스 분리 (0208) |
+| PlaybackViewModel PiP 위임 12개 메서드 | pipStateAggregator 직접 노출로 간소화 (0209) |
 
 ## Git 커밋 규칙
 

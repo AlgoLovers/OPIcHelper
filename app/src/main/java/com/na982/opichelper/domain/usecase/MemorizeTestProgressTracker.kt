@@ -53,7 +53,7 @@ class MemorizeTestProgressTracker @Inject constructor(
      * 특정 스크립트의 진행 상황 가져오기 (암기레벨별)
      */
     suspend fun getScriptProgress(category: String, scriptIndex: Int, memorizeLevel: String): ScriptProgress? {
-        val key = "${category}_${scriptIndex}_${memorizeLevel}"
+        val key = ScriptProgress.progressKey(category, scriptIndex, memorizeLevel)
         return mutex.withLock { _progressMap.value[key] }
     }
 
@@ -68,7 +68,7 @@ class MemorizeTestProgressTracker @Inject constructor(
         totalSentences: Int,
         isMemorizeTestRunning: Boolean
     ) {
-        val key = "${category}_${scriptIndex}_${memorizeLevel}"
+        val key = ScriptProgress.progressKey(category, scriptIndex, memorizeLevel)
         mutex.withLock {
             _progressMap.update { it + (key to ScriptProgress(
                 category = category,

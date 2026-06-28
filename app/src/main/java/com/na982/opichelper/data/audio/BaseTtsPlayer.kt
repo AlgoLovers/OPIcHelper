@@ -73,17 +73,8 @@ abstract class BaseTtsPlayer(
         }
 
         return speakMutex.withLock {
-            val completed = AtomicBoolean(false)
             try {
-                tts?.stop()
-                var waitCount = 0
-                while (tts?.isSpeaking == true && waitCount < IS_SPEAKING_MAX_POLLS) {
-                    kotlinx.coroutines.delay(IS_SPEAKING_POLL_INTERVAL_MS)
-                    waitCount++
-                }
-                if (waitCount > 0) {
-                    kotlinx.coroutines.delay(ENGINE_SETTLE_DELAY_MS)
-                }
+                stopEngineAndWait()
 
                 tts?.setSpeechRate(getSpeechRate())
                 tts?.setPitch(getPitch())
@@ -91,33 +82,10 @@ abstract class BaseTtsPlayer(
                 val utteranceId = "${logTag.lowercase()}_${System.currentTimeMillis()}"
                 val startTime = System.currentTimeMillis()
                 val completionDeferred = kotlinx.coroutines.CompletableDeferred<TtsSpeakResult>()
-                var started = false
+                val completed = AtomicBoolean(false)
+                val started = AtomicBoolean(false)
 
-                fun safeComplete(result: TtsSpeakResult) {
-                    if (completed.compareAndSet(false, true)) {
-                        completionDeferred.complete(result)
-                    }
-                }
-
-                tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(utteranceId: String?) {
-                        started = true
-                    }
-                    override fun onDone(utteranceId: String?) {
-                        val duration = System.currentTimeMillis() - startTime
-                        safeComplete(TtsSpeakResult.Success(duration))
-                    }
-                    @Suppress("DEPRECATION")
-                    @Deprecated("Deprecated in Android API")
-                    override fun onError(utteranceId: String?) {
-                        appLogger.e(logTag, "$serviceName 재생 오류")
-                        safeComplete(TtsSpeakResult.Error("재생 오류"))
-                    }
-                    override fun onError(utteranceId: String?, errorCode: Int) {
-                        appLogger.e(logTag, "$serviceName 재생 오류: $errorCode")
-                        safeComplete(TtsSpeakResult.Error("오류 코드: $errorCode"))
-                    }
-                })
+                setupUtteranceListener(startTime, completed, started, completionDeferred)
 
                 val result = tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
                 if (result == TextToSpeech.ERROR) {
@@ -126,26 +94,13 @@ abstract class BaseTtsPlayer(
                     return@withLock TtsSpeakResult.Error("speak() 반환 ERROR")
                 }
 
-                val startDeadline = System.currentTimeMillis() + SPEAK_START_TIMEOUT_MS
-                while (!started && System.currentTimeMillis() < startDeadline) {
-                    kotlinx.coroutines.delay(IS_SPEAKING_POLL_INTERVAL_MS)
-                }
-                if (!started) {
+                if (!waitForStart(started)) {
                     appLogger.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
                     tts?.setOnUtteranceProgressListener(null)
                     return@withLock TtsSpeakResult.Error("재생 시작 타임아웃")
                 }
 
-                try {
-                    kotlinx.coroutines.withTimeout(SPEAK_COMPLETION_TIMEOUT_MS) {
-                        completionDeferred.await()
-                    }
-                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                    appLogger.e(logTag, "$serviceName 재생 완료 타임아웃")
-                    tts?.setOnUtteranceProgressListener(null)
-                    tts?.stop()
-                    TtsSpeakResult.Timeout
-                }
+                awaitCompletion(completionDeferred)
             } catch (e: CancellationException) {
                 tts?.stop()
                 throw e
@@ -153,6 +108,72 @@ abstract class BaseTtsPlayer(
                 appLogger.e(logTag, "$serviceName 오류", e)
                 TtsSpeakResult.Error(e.message ?: "알 수 없는 오류")
             }
+        }
+    }
+
+    private suspend fun stopEngineAndWait() {
+        tts?.stop()
+        var waitCount = 0
+        while (tts?.isSpeaking == true && waitCount < IS_SPEAKING_MAX_POLLS) {
+            kotlinx.coroutines.delay(IS_SPEAKING_POLL_INTERVAL_MS)
+            waitCount++
+        }
+        if (waitCount > 0) {
+            kotlinx.coroutines.delay(ENGINE_SETTLE_DELAY_MS)
+        }
+    }
+
+    private fun setupUtteranceListener(
+        startTime: Long,
+        completed: AtomicBoolean,
+        started: AtomicBoolean,
+        completionDeferred: kotlinx.coroutines.CompletableDeferred<TtsSpeakResult>
+    ) {
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {
+                started.set(true)
+            }
+            override fun onDone(utteranceId: String?) {
+                val duration = System.currentTimeMillis() - startTime
+                if (completed.compareAndSet(false, true)) {
+                    completionDeferred.complete(TtsSpeakResult.Success(duration))
+                }
+            }
+            @Suppress("DEPRECATION")
+            @Deprecated("Deprecated in Android API")
+            override fun onError(utteranceId: String?) {
+                appLogger.e(logTag, "$serviceName 재생 오류")
+                if (completed.compareAndSet(false, true)) {
+                    completionDeferred.complete(TtsSpeakResult.Error("재생 오류"))
+                }
+            }
+            override fun onError(utteranceId: String?, errorCode: Int) {
+                appLogger.e(logTag, "$serviceName 재생 오류: $errorCode")
+                if (completed.compareAndSet(false, true)) {
+                    completionDeferred.complete(TtsSpeakResult.Error("오류 코드: $errorCode"))
+                }
+            }
+        })
+    }
+
+    private suspend fun waitForStart(started: AtomicBoolean): Boolean {
+        val deadline = System.currentTimeMillis() + SPEAK_START_TIMEOUT_MS
+        while (!started.get() && System.currentTimeMillis() < deadline) {
+            kotlinx.coroutines.delay(IS_SPEAKING_POLL_INTERVAL_MS)
+        }
+        return started.get()
+    }
+
+    private suspend fun awaitCompletion(completionDeferred: kotlinx.coroutines.CompletableDeferred<TtsSpeakResult>): TtsSpeakResult {
+        return try {
+            kotlinx.coroutines.withTimeout(SPEAK_COMPLETION_TIMEOUT_MS) {
+                completionDeferred.await()
+            }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            appLogger.e(logTag, "$serviceName 재생 완료 타임아웃")
+            tts?.setOnUtteranceProgressListener(null)
+            tts?.stop()
+            TtsSpeakResult.Timeout
         }
     }
 

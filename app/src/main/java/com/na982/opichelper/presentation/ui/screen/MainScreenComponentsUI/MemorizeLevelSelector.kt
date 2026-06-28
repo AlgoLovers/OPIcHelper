@@ -15,7 +15,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.na982.opichelper.ui.theme.*
+import com.na982.opichelper.presentation.ui.component.SectionHeader
 
 @Composable
 fun MemorizeLevelSelector(
@@ -38,21 +38,7 @@ fun MemorizeLevelSelector(
             modifier = Modifier.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Card(
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                )
-            ) {
-                Text(
-                    text = "🎯 암기 레벨",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    fontSize = 14.sp
-                )
-            }
+            SectionHeader(title = "🎯 암기 레벨")
 
             Spacer(modifier = Modifier.height(12.dp))
 

@@ -79,7 +79,7 @@ class ProgressPersistenceServiceImpl(
 
     override suspend fun clearCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String) {
         try {
-            val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}_${memorizeLevel}"
+            val key = KEY_CATEGORY_PROGRESS_PREFIX + ScriptProgress.progressKey(category, scriptIndex, memorizeLevel)
             prefs.edit().remove(key).apply()
         } catch (e: Exception) {
             appLogger.e("ProgressPersistenceService", "진행 상황 삭제 실패", e)

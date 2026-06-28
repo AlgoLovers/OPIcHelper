@@ -70,62 +70,15 @@ class RepeatListeningRepositoryImpl(
                 ProgressPersistenceService.NavigationState(data.category, data.scriptIndex, i)
             )
 
-            // 1. 한글 문장 TTS
             val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[i], i)
             if (koResult is TtsSpeakResult.Unavailable) break@sentenceLoop
-            if (koResult !is TtsSpeakResult.Success) {
-                continue@sentenceLoop
-            }
+            if (koResult !is TtsSpeakResult.Success) continue@sentenceLoop
 
-            val enSentence = enSentences[i]
-            val enWordCount = enSentence.split(WHITESPACE_REGEX).size
-            val baseDelay = enWordCount * WORD_DELAY_MS
-            val lengthMultiplier = when {
-                enWordCount <= SHORT_WORD_THRESHOLD -> SHORT_WORD_MULTIPLIER
-                enWordCount <= MEDIUM_WORD_THRESHOLD -> MEDIUM_WORD_MULTIPLIER
-                enWordCount <= LONG_WORD_THRESHOLD -> LONG_WORD_MULTIPLIER
-                else -> VERY_LONG_WORD_MULTIPLIER
-            }
-            val adaptiveDelay = (baseDelay * lengthMultiplier).toLong()
-            delay(adaptiveDelay)
+            delay(calculateAdaptiveDelay(enSentences[i]))
 
             if (!currentCoroutineContext().isActive) break@sentenceLoop
 
-            // 2. 영문 문장 N회 TTS (동적 연장 지원)
-            var effectiveRepeatCount = repeatCount
-            var j = 1
-            while (j <= effectiveRepeatCount) {
-                if (!currentCoroutineContext().isActive) break@sentenceLoop
-
-                val extra = _extraRepetitions.getAndSet(0)
-                if (extra > 0) {
-                    effectiveRepeatCount += extra
-                    _repeatProgress.update { prev -> prev?.copy(totalRepetitions = effectiveRepeatCount) ?: prev }
-                }
-
-                _repeatProgress.update { prev -> prev?.copy(currentRepetition = j, totalRepetitions = effectiveRepeatCount) ?: prev }
-
-                emit(MemorizeTestEvent.CardFlip(false))
-                delay(BaseMemorizeTestRepository.CARD_FLIP_DELAY_MS)
-                emit(MemorizeTestEvent.Highlight(i))
-
-                val enResult = ttsOrchestrator.speakAndWaitForCompletion(enSentences[i])
-                if (enResult is TtsSpeakResult.Unavailable) break@sentenceLoop
-                if (enResult !is TtsSpeakResult.Success) {
-                    continue@sentenceLoop
-                }
-                val enDuration = enResult.durationMs
-
-                if (j == 1) {
-                    recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, i, enDuration)
-                }
-
-                if (!currentCoroutineContext().isActive) break@sentenceLoop
-
-                val restTime = (enDuration * REST_TIME_MULTIPLIER).toLong()
-                delay(restTime)
-                j++
-            }
+            repeatEnglishSentences(enSentences[i], i, repeatCount, data)
             emit(MemorizeTestEvent.Highlight(null))
         }
 
@@ -137,5 +90,59 @@ class RepeatListeningRepositoryImpl(
         emit(MemorizeTestEvent.CardFlip(false))
         emit(MemorizeTestEvent.Highlight(null))
         emit(MemorizeTestEvent.Completed)
+    }
+
+    private fun calculateAdaptiveDelay(enSentence: String): Long {
+        val enWordCount = enSentence.split(WHITESPACE_REGEX).size
+        val baseDelay = enWordCount * WORD_DELAY_MS
+        val lengthMultiplier = when {
+            enWordCount <= SHORT_WORD_THRESHOLD -> SHORT_WORD_MULTIPLIER
+            enWordCount <= MEDIUM_WORD_THRESHOLD -> MEDIUM_WORD_MULTIPLIER
+            enWordCount <= LONG_WORD_THRESHOLD -> LONG_WORD_MULTIPLIER
+            else -> VERY_LONG_WORD_MULTIPLIER
+        }
+        return (baseDelay * lengthMultiplier).toLong()
+    }
+
+    private suspend fun repeatEnglishSentences(
+        enSentence: String,
+        sentenceIndex: Int,
+        repeatCount: Int,
+        data: RepeatListeningData
+    ) {
+        var effectiveRepeatCount = repeatCount
+        var j = 1
+        while (j <= effectiveRepeatCount) {
+            if (!currentCoroutineContext().isActive) return
+
+            val extra = _extraRepetitions.getAndSet(0)
+            if (extra > 0) {
+                effectiveRepeatCount += extra
+                _repeatProgress.update { prev -> prev?.copy(totalRepetitions = effectiveRepeatCount) ?: prev }
+            }
+
+            _repeatProgress.update { prev -> prev?.copy(currentRepetition = j, totalRepetitions = effectiveRepeatCount) ?: prev }
+
+            emit(MemorizeTestEvent.CardFlip(false))
+            delay(BaseMemorizeTestRepository.CARD_FLIP_DELAY_MS)
+            emit(MemorizeTestEvent.Highlight(sentenceIndex))
+
+            val enResult = ttsOrchestrator.speakAndWaitForCompletion(enSentence)
+            if (enResult is TtsSpeakResult.Unavailable) return
+            if (enResult !is TtsSpeakResult.Success) {
+                j++
+                continue
+            }
+            val enDuration = enResult.durationMs
+
+            if (j == 1) {
+                recordingTimeManager.saveRecordingTime(data.category, data.scriptIndex, sentenceIndex, enDuration)
+            }
+
+            if (!currentCoroutineContext().isActive) return
+
+            delay((enDuration * REST_TIME_MULTIPLIER).toLong())
+            j++
+        }
     }
 }

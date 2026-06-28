@@ -7,6 +7,8 @@ import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.FullMemorizationState
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
+import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
+import com.na982.opichelper.domain.audio.TtsPlaybackController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,11 +30,13 @@ class FullMemorizationViewModel @Inject constructor(
     private val fullMemorizationUseCase: FullMemorizationUseCase,
     qaContentReader: QaContentReader,
     coordinator: MemorizationModeCoordinator,
+    ttsPlaybackController: TtsPlaybackController,
+    progressTracker: MemorizeTestProgressTracker,
     appLogger: AppLogger
 ) : BaseMemorizationViewModel<FullMemorizationUiState>(
     coordinator = coordinator,
-    ttsPlaybackController = null,
-    progressTracker = null,
+    ttsPlaybackController = ttsPlaybackController,
+    progressTracker = progressTracker,
     appLogger = appLogger,
     qaContentReader = qaContentReader
 ) {
