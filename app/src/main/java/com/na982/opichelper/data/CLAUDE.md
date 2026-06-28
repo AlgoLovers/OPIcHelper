@@ -4,67 +4,70 @@ Domain 계층의 인터페이스를 구현하고, Android 프레임워크 의존
 
 ## 패키지 구조
 
-```
-data/
-  audio/           — TTS/녹음 하드웨어 구현체
-  repository/      — Repository 인터페이스 구현체
-```
+패키지 구조: [ARCHITECTURE_DATA.md 섹션 2](.claude/architecture/ARCHITECTURE_DATA.md)
 
 ## audio/ — TTS & 오디오 하드웨어
 
 | 파일 | 역할 | 주의사항 |
 |------|------|----------|
-| `BaseTtsPlayer.kt` | Android TTS 추상 베이스. speak/stop/release 공통 로직 | `initializeTts()`에서 TextToSpeech 콜백으로 초기화. speak()는 Mutex로 직렬화, TtsSpeakResult 반환 (Success(durationMs)/Error/Timeout/Unavailable). onStart 콜백으로 재생 시작 보장(2초 타임아웃), 재생 완료까지 대기(30초 타임아웃), 능동적 stop() + isSpeaking 폴링으로 엔진 정지 대기. CancellationException 시 tts?.stop() 호출 |
-| `GoogleTtsPlayer.kt` | 영어 TTS (Locale.US) | `@Named("google")`으로 AppModule에서 주입. speakAndGetDuration()에서 버전별 속도 최적화 |
-| `SamsungTtsPlayer.kt` | 한국어 TTS (Locale.KOREAN) | `@Named("samsung")`으로 AppModule에서 주입. 한글 TTS 실패 시 폴백은 TtsOrchestrator에서 처리(index 0 리셋) |
-| `AudioRecorderImpl.kt` | MediaRecorder(context) 기반 녹음. AAC/M4A 128kbps, 44100Hz | stopRecording 내부에서 release 자동 호출. Context 필요 생성자 사용 |
-| `AudioPlayerImpl.kt` | MediaPlayer 기반 오디오 파일 재생, getDuration 지원 | play(), playAudio(), stop(), stopAudio(), release(), getDuration() 제공 |
-| `RecordingAudioPlayerImpl.kt` | 사용자 녹음 재생 전용 MediaPlayer | startRecordingPlayback() 동기 메서드, getDuration() 제공 |
+| `BaseTtsPlayer.kt` | Android TTS 추상 베이스 | speakMutex로 직렬화, TtsSpeakResult 반환. CancellationException 시 tts?.stop() |
+| `GoogleTtsPlayer.kt` | 영어 TTS (Locale.US) | `@Named("google")` 주입 |
+| `SamsungTtsPlayer.kt` | 한국어 TTS (Locale.KOREAN) | `@Named("samsung")` 주입. 한글 TTS 실패 시 폴백은 TtsOrchestrator에서 처리 |
+| `AudioRecorderImpl.kt` | MediaRecorder 기반 녹음 (AAC/M4A) | stopRecording 내부에서 release 자동 호출. Context 필요 |
+| `AudioPlayerImpl.kt` | MediaPlayer 기반 오디오 재생 | BaseMediaPlayer 상속 |
+| `RecordingAudioPlayerImpl.kt` | 녹음 재생 전용 MediaPlayer | BaseMediaPlayer 상속 |
+| `BaseMediaPlayer.kt` | MediaPlayer 공통 베이스 추상 클래스 | releasePlayer(), prepareAndStart() 제공. OnCompletionListener/OnErrorListener에서 자동 release |
+| `TtsOrchestratorImpl.kt` | 언어 감지→TTS 라우팅 구현체 | GoogleTtsPlayer(영어) + SamsungTtsPlayer(한국어). activeSpeakCount AtomicInteger 참조 카운팅 |
+| `TtsPlaybackControllerImpl.kt` | 재생 상태 관리 구현체 | TtsPlaybackController + Closeable. CoroutineScope(SupervisorJob + Main) 자체 관리. isPlaying = combine 파생 |
 
-### BaseTtsPlayer.speak() 재생 보장 메커니즘
+BaseTtsPlayer.speak() 재생 보장: [ARCHITECTURE_DATA.md 섹션 3](.claude/architecture/ARCHITECTURE_DATA.md)
 
-1. `tts?.stop()` + `isSpeaking` 폴링: 능동적으로 엔진 정지 후 완전히 idle일 때까지 대기 (최대 2초)
-2. `tts.speak()` 반환값 검사: `ERROR` 반환 시 즉시 `TtsSpeakResult.Error` 반환
-3. `onStart` 콜백 대기: 실제 재생 시작 확인 (2초 타임아웃, 초과 시 `TtsSpeakResult.Error` 반환)
-4. `completionDeferred.await()`: 재생 완료까지 대기 (30초 안전 타임아웃, 초과 시 `TtsSpeakResult.Timeout` 반환)
-5. `CancellationException` 시 `tts?.stop()` 호출 후 재throw
+SDK 버전별 기본 속도: GoogleTtsPlayer/SamsungTtsPlayer 참조
 
-이 메커니즘은 간헐적 TTS 재생 불가 버그를 방지합니다. speak()는 재생 완료 후 `TtsSpeakResult`를 반환합니다.
+## local/ — Room DB & 데이터 시딩
 
-### TTS 레이트 로직
+| 파일 | 역할 | 주의사항 |
+|------|------|----------|
+| `AppDatabase.kt` | Room 데이터베이스 | fallbackToDestructiveMigration() |
+| `QaItemDao.kt` | Room DAO | CRUD 쿼리 |
+| `QaItemEntity.kt` | Room Entity | @PrimaryKey id, answerJson |
+| `QaItemEntityMappers.kt` | Entity↔Domain 매퍼 | QaItemEntityMapper 클래스. Gson 주입 |
+| `AssetSeeder.kt` | 초기 데이터 시딩 | @Named("asset") QaDataLoader + QaItemDao + Gson 사용 |
 
-사용자가 `setSpeechRate()`로 설정한 값이 우선. 미설정 시 SDK 버전별 기본값 사용.
+## manager/ — 인프라 매니저
 
-| Android 버전 | Google (영어) 기본 | Samsung (한국어) 기본 |
-|-------------|-------------------|---------------------|
-| 14+ | 0.8f | 1.1f |
-| 13 | 0.8f | 0.9f |
-| 12 이하 | 0.7f | 0.8f |
-
-영어 TTS 속도는 설정 화면 슬라이더(0.5x~1.5x)에서 제어. `TtsOrchestrator.speakEnglish()`에서 `UserPreferencesRepository.getEnglishTtsRate()` 읽어 `GoogleTtsPlayer.setSpeechRate()` 적용.
+| 파일 | 역할 | 주의사항 |
+|------|------|----------|
+| `AndroidLogger.kt` | AppLogger 구현체 | 유일한 `android.util.Log` 소비자 |
+| `WakeLockControllerImpl.kt` | WakeLockController 구현체 | 30분 안전 타임아웃. @Suppress("DEPRECATION") |
 
 ## repository/ — 데이터 영속성 & 비즈니스 로직 구현
 
 | 파일 | 역할 | 주의사항 |
 |------|------|----------|
-| `LeveledQaDataLoader.kt` | JSON assets → QaItem 파싱. `{title, items}` 구조 로딩 | 새 JSON 추가 시 코드 수정 불필요 (title에서 동적 카테고리 생성) |
-| `ProgressPersistenceServiceImpl.kt` | 진행상황 + 네비게이션 상태 SharedPreferences 영속화 (opic_prefs) | NavigationState(category, index) 저장/로드 포함 |
-| `UserPreferencesRepository.kt` | 사용자 설정 (레벨, TTS 속도, 암기레벨) 관리 (user_prefs) | Domain 인터페이스 구현. StateFlow로 레벨 변경 감지 가능. `last_memorize_level` 키 포함 |
-| `RecordingFileRepositoryImpl.kt` | 녹음 파일 CRUD, 재생 | 파일 생성 시 카테고리/인덱스 기반 경로. currentRecordingPath/currentPlayingPath 동기화 미비 |
-| `RecordingTimeManagerImpl.kt` | 문장별 녹음 시간 저장/조회 (recording_times) | Gson으로 Long 리스트 직렬화 |
-| `RepeatListeningRepositoryImpl.kt` | 반복듣기: 한국어 TTS → 영어 TTS N회 반복 | SharedFlow\<MemorizeTestEvent\>로 이벤트 발행. ProgressPersistenceService로 진행상황 영속화 |
-| `EnglishWritingTestRepositoryImpl.kt` | 영작테스트: 한국어 TTS → 녹음 반복 | SharedFlow\<MemorizeTestEvent\>로 이벤트 발행. 병합은 AudioFileManager에 위임 |
-| `AudioFileManagerImpl.kt` | 오디오 파일 병합/저장/삭제 | mergeAndSaveAudioFiles()는 폴백 전략 3단계 (mergeWithMediaCodec → mergeWithHeaderAnalysis → 파일 연결). mergeAudioFiles()는 폴백 없이 MediaCodec만 사용 |
+| `QaDataManagerImpl.kt` | QA 데이터 관리 | Mutex로 상태 직렬화. ConcurrentHashMap 카테고리 캐싱. UserLevel 변경 시 자동 리로드 |
+| `LeveledQaDataLoader.kt` | JSON assets → QaItem 파싱 | 새 JSON 추가 시 코드 수정 불필요 |
+| `RoomQaDataLoader.kt` | Room DB → QaItem 로딩 | QaItemDao + QaItemEntityMapper |
+| `BaseMemorizeTestRepository.kt` | 암기 테스트 공통 베이스 (추상) | SharedFlow 이벤트 버스. playKoreanWithHighlight 템플릿 메서드 |
+| `RepeatListeningRepositoryImpl.kt` | 반복듣기: 한국어→영어 N회 반복 | BaseMemorizeTestRepository 상속. AtomicInteger extraRepetitions. calculateAdaptiveDelay |
+| `EnglishWritingTestRepositoryImpl.kt` | 영작테스트: 한국어→녹음 반복 | BaseMemorizeTestRepository 상속. CancellationException 시 파일 정리 |
+| `ProgressPersistenceServiceImpl.kt` | 진행상황 SharedPreferences 영속화 | NavigationState 저장/로드 포함 |
+| `UserPreferencesRepository.kt` | 사용자 설정 관리 | Domain 복합 인터페이스 구현. Dual-write (StateFlow + SharedPreferences.apply) |
+| `RecordingFileRepositoryImpl.kt` | 녹음 파일 CRUD, 재생 | Mutex로 동기화 |
+| `RecordingTimeManagerImpl.kt` | 문장별 녹음 시간 관리 | Gson 직렬화. 메모리 캐시 도입 |
+| `AudioFileManagerImpl.kt` | 오디오 파일 병합/저장/삭제 | mergeAudioFiles() MediaCodec만 사용 (폴백 없음). 실패 시 null 반환, 원본 유지 |
+| `ScriptEditRepositoryImpl.kt` | 스크립트 편집 | 문장 수 변경 시 녹음 시간/진행상황 초기화 |
+| `StudySessionRepositoryImpl.kt` | 학습 세션 기록 | Gson으로 StudyDailyRecord 직렬화. daily_{date} 키 |
 
-## SharedPreferences 키 맵
+## usecase/ — UseCase 구현체
 
-| 이름 | 키 | 사용 위치 |
-|------|-----|----------|
-| `opic_prefs` | `last_category`, `last_index`, `app_exit_state`, `category_progress_*` | ProgressPersistenceServiceImpl |
-| `user_prefs` | `user_level`, `english_tts_rate`, `last_memorize_level` | UserPreferencesRepository |
-| `recording_times` | `recording_times_{category}_{scriptIndex}` | RecordingTimeManagerImpl |
+| 파일 | 역할 | 주의사항 |
+|------|------|----------|
+| `MemorizationModeCoordinatorImpl.kt` | 모드 코디네이터 구현체 | AtomicReference<ModeGroup> + synchronized. MutableSharedFlow(extraBufferCapacity=1) |
+
+SharedPreferences 키 맵: [ARCHITECTURE.md 섹션 6](.claude/architecture/ARCHITECTURE.md)
 
 ## 아키텍처 규칙
-- Domain 인터페이스와 entity만 import. Domain 구현체(UseCase, QaDataManager, Manager)를 직접 import하지 않음
+- Domain 인터페이스와 entity만 import. Domain 구현체(UseCase, QaDataManagerImpl, Manager)를 직접 import하지 않음
 - 모든 싱글톤 바인딩은 `di/AppModule.kt`에서 처리
 - Android Context가 필요한 클래스는 AppModule의 `@Provides`에서 생성하거나 `@Inject constructor`로 주입

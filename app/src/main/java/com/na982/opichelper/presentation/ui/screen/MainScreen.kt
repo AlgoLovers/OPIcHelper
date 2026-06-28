@@ -41,6 +41,7 @@ fun MainScreen(
     onboardingViewModel: OnboardingViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToStatistics: () -> Unit = {},
     permissionDenied: StateFlow<Boolean> = remember { MutableStateFlow(false) }
 ) {
     val playbackState by playbackViewModel.uiState.collectAsState()
@@ -156,6 +157,7 @@ fun MainScreen(
             AppTitle(
                 currentLevel = qaState.currentUserLevel,
                 onSettingsClick = onNavigateToSettings,
+                onStatisticsClick = onNavigateToStatistics,
                 onSearchClick = { showSearch.value = true },
                 modifier = Modifier
                     .fillMaxWidth()

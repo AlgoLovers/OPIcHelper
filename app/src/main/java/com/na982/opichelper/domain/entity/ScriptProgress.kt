@@ -14,6 +14,8 @@ data class ScriptProgress(
 
     fun toPersistable(): ScriptProgress = copy(needsSave = false)
 
+    fun isCompleted(): Boolean = !isMemorizeTestRunning && currentSentenceIndex >= totalSentences - 1
+
     companion object {
         fun progressKey(category: String, scriptIndex: Int, memorizeLevel: String): String =
             "${category}_${scriptIndex}_${memorizeLevel}"

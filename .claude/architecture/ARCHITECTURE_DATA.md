@@ -10,23 +10,41 @@
 
 ```
 data/
-├── audio/              ← TTS & 오디오 하드웨어 구현체
-│   ├── BaseTtsPlayer.kt         🧠 TTS 공통 로직 (speak 보장 메커니즘)
-│   ├── GoogleTtsPlayer.kt       영어 TTS (Locale.US)
-│   ├── SamsungTtsPlayer.kt      한국어 TTS (Locale.KOREAN)
-│   ├── AudioRecorderImpl.kt     MediaRecorder 기반 녹음
-│   ├── AudioPlayerImpl.kt       MediaPlayer 기반 재생
-│   └── RecordingAudioPlayerImpl.kt 녹음 파일 재생 전용
-└── repository/         ← Repository 인터페이스 구현체
-    ├── LeveledQaDataLoader.kt   JSON → QaItem 파싱
-    ├── ProgressPersistenceServiceImpl.kt SharedPreferences 영속화
-    ├── UserPreferencesRepository.kt 사용자 설정 관리
-    ├── AuthRepository.kt        로그인 상태 관리 (Domain 인터페이스 없음)
-    ├── RecordingFileRepositoryImpl.kt 녹음 파일 CRUD + 재생
-    ├── RecordingTimeManagerImpl.kt 문장별 녹음 시간 관리
-    ├── RepeatListeningRepositoryImpl.kt 반복듣기 실행 로직
-    ├── EnglishWritingTestRepositoryImpl.kt 영작테스트 실행 로직
-    └── AudioFileManagerImpl.kt  오디오 파일 병합/관리
+├── audio/
+│   ├── BaseTtsPlayer.kt
+│   ├── BaseMediaPlayer.kt
+│   ├── GoogleTtsPlayer.kt
+│   ├── SamsungTtsPlayer.kt
+│   ├── TtsOrchestratorImpl.kt
+│   ├── TtsPlaybackControllerImpl.kt
+│   ├── AudioRecorderImpl.kt
+│   ├── AudioPlayerImpl.kt
+│   └── RecordingAudioPlayerImpl.kt
+├── local/
+│   ├── AppDatabase.kt
+│   ├── AssetSeeder.kt
+│   ├── QaItemDao.kt
+│   ├── QaItemEntity.kt
+│   └── QaItemEntityMappers.kt
+├── manager/
+│   ├── AndroidLogger.kt
+│   └── WakeLockControllerImpl.kt
+├── repository/
+│   ├── BaseMemorizeTestRepository.kt
+│   ├── RepeatListeningRepositoryImpl.kt
+│   ├── EnglishWritingTestRepositoryImpl.kt
+│   ├── LeveledQaDataLoader.kt
+│   ├── RoomQaDataLoader.kt
+│   ├── QaDataManagerImpl.kt
+│   ├── ScriptEditRepositoryImpl.kt
+│   ├── StudySessionRepositoryImpl.kt
+│   ├── ProgressPersistenceServiceImpl.kt
+│   ├── UserPreferencesRepository.kt
+│   ├── RecordingFileRepositoryImpl.kt
+│   ├── RecordingTimeManagerImpl.kt
+│   └── AudioFileManagerImpl.kt
+└── usecase/
+    └── MemorizationModeCoordinatorImpl.kt
 ```
 
 ## 3. TTS 재생 보장 메커니즘 (BaseTtsPlayer)
@@ -34,14 +52,16 @@ data/
 TTS 엔진은 불안정해서 그냥 `speak()`만 부르면 안 됩니다. BaseTtsPlayer는 4단계 보장 메커니즘을 사용:
 
 ```
-speak() 호출
+speak() 호출 (speakMutex로 직렬화)
   │
   ▼
 ┌──────────────────────────────────────┐
-│ 1단계: isSpeaking 폴링               │
+│ 1단계: isSpeaking 폴링 + 정착 대기    │
 │    stop() 후 TTS 엔진이 정지할 때까지  │
-│    50ms 간격으로 최대 20회 확인        │
-│    (최대 1초 대기)                    │
+│    50ms 간격으로 최대 40회 확인        │
+│    (최대 2초 대기)                    │
+│    + 폴링 발생 시 150ms 정착 대기      │
+│    (ENGINE_SETTLE_DELAY_MS)           │
 ├──────────────────────────────────────┤
 │ 2단계: speak() 반환값 검사            │
 │    ERROR 반환 시 즉시 실패 처리        │
@@ -59,90 +79,90 @@ speak() 호출
 speak() 반환 (재생 완료 후)
 ```
 
-**⚠️ 알려진 문제**: 여러 코루틴에서 동시에 speak()를 호출하면 `UtteranceProgressListener`가 덮어씌워짐. 현재는 TtsPlaybackController의 Job 취소로 보호됨.
+**동시성 보호**: `speakMutex`(Mutex)가 전체 speak() 본문을 래핑하여, 여러 코루틴에서 동시에 speak()를 호출해도 `UtteranceProgressListener`가 덮어씌워지지 않음.
 
 ## 4. 오디오 파일 병합 전략 (AudioFileManagerImpl)
 
 ```
-병합 요청
+병합 요청 (mergeAudioFiles)
   │
   ▼
-파일이 1개인가? ──예──→ 파일 복사만
+파일이 1개인가? ──예──→ 파일 복사만 (copyTo)
   │
   아니오
   ▼
 ┌──────────────────────────────────────────────┐
-│ 전략 1: mergeWithMediaCodec                   │
-│ MediaExtractor + MediaMuxer                   │
-│ 가장 안정적. 성공 시 여기서 종료               │
+│ mergeWithMediaCodec (유일 전략)              │
+│ MediaExtractor + MediaMuxer                  │
+│ 각 파일의 오디오 트랙을 디먹스→리먹스        │
 ├──────────────────────────────────────────────┤
-│ 전략 2: mergeWithHeaderAnalysis (fallback)    │
-│ 첫 번째 파일은 그대로, 나머지는 1024바이트    │
-│ 헤더 스킵 후 연결. ⚠️ 불안정 (고정 헤더 크기) │
-├──────────────────────────────────────────────┤
-│ 전략 3: 파일 연결 (최종 fallback)             │
-│ 단순 바이트 복사. 가장 불안정하지만 최소 작동  │
+│ 실패 시: null 반환 (폴백 없음)               │
+│ 예외 발생 시: 로깅 후 null 반환               │
 └──────────────────────────────────────────────┘
 ```
 
-**주의**: `mergeAndSaveAudioFiles()`는 3단계 폴백을 사용하지만, `mergeAudioFiles()`는 MediaCodec만 시도 (폴백 없음).
+**주의**: 과거에는 3단계 폴백(mergeWithMediaCodec → mergeWithHeaderAnalysis → 파일 연결)이 존재했으나, `mergeWithHeaderAnalysis`와 파일 연결 폴백은 모두 제거됨. 현재는 MediaCodec 단일 전략만 사용하며, 실패 시 원본 파일을 유지하고 `null`을 반환.
 
 ## 5. SharedFlow 이벤트 패턴
 
-반복듣기와 영작테스트는 UI 콜백 대신 SharedFlow로 이벤트를 발행합니다:
+반복듣기와 영작테스트는 `BaseMemorizeTestRepository` 추상 클래스를 상속하여 SharedFlow 이벤트를 발행합니다:
+
+```mermaid
+classDiagram
+    class BaseMemorizeTestRepository {
+        <<abstract>>
+        #_events : MutableSharedFlow~MemorizeTestEvent~
+        +events : SharedFlow~MemorizeTestEvent~
+        #emit(event) suspend
+        #playKoreanWithHighlight()
+        #splitSentences(text)
+        #resolveStartIndex()
+    }
+    class RepeatListeningRepositoryImpl {
+        +executeRepeatListening()
+    }
+    class EnglishWritingTestRepositoryImpl {
+        +executeEnglishWritingTest()
+    }
+
+    BaseMemorizeTestRepository <|-- RepeatListeningRepositoryImpl
+    BaseMemorizeTestRepository <|-- EnglishWritingTestRepositoryImpl
+```
 
 ```mermaid
 sequenceDiagram
     participant Repo as Repository Impl
-    participant Flow as SharedFlow<MemorizeTestEvent>
-    participant UC as UseCase (래퍼)
+    participant Base as BaseMemorizeTestRepository
+    participant Flow as SharedFlow~MemorizeTestEvent~
     participant VM as MemorizationViewModel
 
-    Repo->>Flow: emit(CardFlip(true))
-    Repo->>Flow: emit(KoreanHighlight(0))
-    Repo->>Flow: emit(KoreanHighlight(null))
+    Repo->>Base: playKoreanWithHighlight()
+    Base->>Flow: emit(CardFlip(true))
+    Base->>Flow: emit(KoreanHighlight(0))
+    Base->>Flow: emit(KoreanHighlight(null))
     Repo->>Flow: emit(RecordingStateChange(true))
     Repo->>Flow: emit(Completed)
 
-    VM->>UC: useCase.events.collect
-    UC->>Flow: 이벤트 전달 (래퍼는 그대로 pass-through)
+    VM->>Flow: events.collect
     VM->>VM: handleEvent()에서 상태 업데이트
 ```
 
+**이벤트 종류**:
+
+| 이벤트 | 발행 주체 | 설명 |
+|-------|----------|------|
+| `CardFlip(Boolean)` | Base + 양쪽 Repo | 카드 뒤집기 |
+| `KoreanHighlight(Int?)` | Base + 영작 Repo | 한국어 하이라이트 |
+| `Highlight(Int?)` | 반복듣기 | 영어 하이라이트 |
+| `RecordingHighlight(Int?)` | 영작 Repo | 녹음 하이라이트 |
+| `RecordingStateChange(Boolean)` | 영작 Repo | 녹음 상태 변경 |
+| `MergedFileCreated` | 영작 Repo | 병합 파일 생성 완료 |
+| `Completed` | 양쪽 Repo | 테스트 완료 |
+
 ## 6. SharedPreferences 분포
 
-```
-┌─────────────────────────────────────────────────────┐
-│ opic_prefs (ProgressPersistenceServiceImpl)         │
-│   last_category: String     ← 마지막 본 카테고리     │
-│   last_index: Int           ← 마지막 본 인덱스       │
-│   app_exit_state: String    ← 앱 종료 상태           │
-│   category_progress_*: String ← 카테고리별 진행상황  │
-├─────────────────────────────────────────────────────┤
-│ user_prefs (UserPreferencesRepository)              │
-│   user_level: String        ← "AL", "IH" 등         │
-│   english_tts_rate: Float   ← 영어 TTS 속도          │
-│   last_memorize_level: String ← 마지막 암기 모드     │
-├─────────────────────────────────────────────────────┤
-│ auth_prefs (AuthRepository)                         │
-│   is_logged_in: Boolean                              │
-│   user_name: String                                  │
-│   user_email: String?                                │
-│   user_id: String?                                   │
-│   login_type: String       ← "guest" 등              │
-├─────────────────────────────────────────────────────┤
-│ recording_times (RecordingTimeManagerImpl)           │
-│   recording_times_{cat}_{idx}: String (Gson JSON)   │
-│   ← 문장별 녹음 시간 List<Long>                      │
-└─────────────────────────────────────────────────────┘
-```
+SharedPreferences 키 상세: [ARCHITECTURE.md 섹션 6](ARCHITECTURE.md)
 
-## 7. ⚠️ 알려진 구조적 문제
+## 7. 과거 구조적 문제 해결 이력
 
-| 문제 | 파일 | 설명 |
-|------|------|------|
-| QaDataManager 직접 참조 | EnglishWritingTestRepoImpl | Data가 Domain 구현체를 직접 import |
-| 동기화 없는 mutable 상태 | RecordingFileRepositoryImpl | currentRecordingPath가 여러 코루틴에서 접근 |
-| delay()로 재생 완료 판단 | RecordingFileRepositoryImpl | MediaPlayer의 OnCompletionListener 대신 delay 사용 |
-| Log.d 잔존 | RecordingFileRepositoryImpl 등 | 디버그 로그가 운영 코드에 남아있음 |
-| AuthRepository 인터페이스 없음 | AuthRepository | Domain 계층에 추상화 없이 구현체만 존재 |
+해결된 이슈: [REFACTORING_CHANGELOG.md](REFACTORING_CHANGELOG.md)

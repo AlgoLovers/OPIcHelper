@@ -5,116 +5,50 @@ ViewModel은 Domain 계층만 참조, UI는 ViewModel의 StateFlow만 구독.
 
 ## 패키지 구조
 
-```
-presentation/
-  ui/
-    component/               — 재사용 컴포저블
-    navigation/              — 네비게이션 그래프
-    screen/                  — 화면 단위 컴포저블
-      MainScreenComponentsUI/ — MainScreen 하위 컴포넌트
-  viewmodel/                 — ViewModel & 상태 클래스
-```
+패키지 구조: [ARCHITECTURE_PRESENTATION.md 섹션 2](.claude/architecture/ARCHITECTURE_PRESENTATION.md)
 
 ## viewmodel/ — 상태 관리
 
-| 파일 | 역할 | 의존성 |
-|------|------|--------|
-| `QaBrowserViewModel.kt` | QA 데이터 탐색 | QaDataManager, UserLevelPreferences, PlaybackPreferences, MemorizeLevelPreferences, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger |
-| `PlaybackViewModel.kt` | TTS 재생, 병합 파일, PiP 제어 | TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, PlaybackPreferences, MemorizationModeCoordinator, TtsServiceController, AppLogger |
-| `RepeatListeningViewModel.kt` | 반복듣기 모드 | RepeatListeningRepository, TtsPlaybackController, QaContentReader, QaNavigator, MemorizeTestProgressTracker, PlaybackPreferences, MemorizationModeCoordinator, AppLogger |
-| `EnglishWritingTestViewModel.kt` | 영작테스트 모드 | EnglishWritingTestRepository, TtsPlaybackController, QaContentReader, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger |
-| `FullMemorizationViewModel.kt` | 통암기 모드 | FullMemorizationUseCase, QaContentReader, MemorizationModeCoordinator, AppLogger |
-| `SettingsViewModel.kt` | 설정 화면 | UserLevelPreferences, TtsPreferences, PlaybackPreferences, TtsOrchestrator |
-| `OnboardingViewModel.kt` | 온보딩/PiP 가이드 상태 | OnboardingPreferences |
-| `BaseMemorizationViewModel.kt` | 암기 모드 공통 베이스 | MemorizationModeCoordinator, TtsPlaybackController?, MemorizeTestProgressTracker?, AppLogger, QaContentReader |
-| `PlaybackActionListener.kt` | PiP/재생 액션 인터페이스 | onRepeatQuestion, onRepeatAnswer, onNext, onRepeatMemorization, onNextAndRestart, onStopMemorization |
+ViewModel 의존성/UiState 상세: [ARCHITECTURE_PRESENTATION.md 섹션 4](.claude/architecture/ARCHITECTURE_PRESENTATION.md)
 
-### CurrentMode 전체 목록
-```
-NONE
-QUESTION_PLAY
-ANSWER_PLAY
-REPEAT_LISTENING
-ENGLISH_WRITING
-  ENGLISH_WRITING_RECORDING
-  ENGLISH_WRITING_PLAYING
-  ENGLISH_WRITING_WITH_FILE
-FULL_MEMORIZATION
-  FULL_MEMORIZATION_QUESTION_PLAYING
-  FULL_MEMORIZATION_RECORDING
-  FULL_MEMORIZATION_PLAYING
-  FULL_MEMORIZATION_WITH_FILE
-```
+CurrentMode/ModeGroup: [ARCHITECTURE.md 섹션 5](.claude/architecture/ARCHITECTURE.md)
 
-### 상태 흐름
-```
-QaBrowserViewModel:
-  QaDataManager (5-way combine) → currentQaItem, currentCategory, categories, isLoading, error
-  UserLevelPreferences → currentUserLevel
-  PlaybackPreferences → answerPlayCount
-
-PlaybackViewModel:
-  TtsPlaybackController (7-way combine) → isPlaying, isQuestionPlaying, isAnswerPlaying, highlights
-  PlayMergedFileUseCase (3-way combine) → hasFile, isPlaying, highlightIndex
-  PipState (10-way combine) → PiP 상태
-
-SettingsViewModel.uiState → SettingsScreen
-```
+상태 흐름: [ARCHITECTURE_PRESENTATION.md 섹션 5](.claude/architecture/ARCHITECTURE_PRESENTATION.md)
 
 ## ui/component/ — 재사용 컴포저블
 
-| 파일 | 역할 |
-|------|------|
-| `FlipCard.kt` | 3D 플립 애니메이션 카드. 영문/한문 전환 |
-| `PipOverlay.kt` | PiP 모드 오버레이 (문장 표시 전용) |
-| `PlayStopToggleButton.kt` | 재생/정지 공통 토글 버튼 |
+FlipCard.kt (3D 플립), HighlightText.kt (하이라이트 텍스트), PipOverlay.kt (PiP 오버레이), PipPermissionDialog.kt (PiP 권한), PlayStopToggleButton.kt (재생/정지 토글), OnboardingDialog.kt (온보딩), SearchDialog.kt (검색), EditScriptBottomSheet.kt (스크립트 편집), SectionHeader.kt (섹션 헤더)
 
 ## ui/navigation/
 
-| 파일 | 역할 |
-|------|------|
-| `AppNavigation.kt` | NavHost. Main/Settings 2개 라우트 |
+AppNavigation.kt — NavHost. Main/Settings/Statistics 3개 라우트. PiP 모드 시 PipOverlay로 전환
 
 ## ui/screen/ — 화면
 
-| 파일 | 역할 | 비고 |
-|------|------|------|
-| `MainScreen.kt` | 메인 화면. 다중 ViewModel 상태 결합 | QuestionCard/AnswerCard 하이라이트: when 분기로 소스 선택 |
-| `SettingsScreen.kt` | 설정: 학습 레벨, TTS 속도, 앱 정보 | 그라디언트 헤더 |
+| 파일 | 역할 |
+|------|------|
+| `MainScreen.kt` | 메인 화면. 6개 ViewModel + MemorizationModeCoordinator 구독 |
+| `SettingsScreen.kt` | 설정: 학습 레벨, TTS 속도, 앱 정보 |
+| `StatisticsScreen.kt` | 학습 통계 화면 |
+| `CategoryLevelRow.kt` | 카테고리/레벨 선택 행 |
+| `QuestionActionRow.kt` | 질문 액션 버튼 행 |
+| `AnswerSection.kt` | 답변 섹션 (카드 + 버튼) |
+| `MainScreenDialogs.kt` | 메인 화면 다이얼로그 모음 |
+| `MainScreenSideEffects.kt` | 메인 화면 부수효과 (LaunchedEffect) |
+| `MainScreenSnackbarCollector.kt` | 스낵바 수집 (다중 ViewModel 이벤트 병합) |
+| `HighlightIndexResolver.kt` | 하이라이트 인덱스 해석 (모드별 분기) |
+| `EditScriptState.kt` | 스크립트 편집 상태 |
+| `PipInfoSection.kt` | PiP 정보 섹션 |
+| `PlaybackSettingsSection.kt` | 재생 설정 섹션 |
+| `AppInfoSection.kt` | 앱 정보 섹션 |
+| `UserLevelSection.kt` | 사용자 레벨 섹션 |
+| `SettingsScreenComponents.kt` | 설정 화면 하위 컴포넌트 |
 
 ## ui/screen/MainScreenComponentsUI/ — MainScreen 하위 컴포넌트
 
-| 파일 | 역할 |
-|------|------|
-| `AppTitle.kt` | 앱 타이틀바 (그라디언트 배경, 설정 버튼) |
-| `CategorySelector.kt` | 카테고리 드롭다운 |
-| `MemorizeLevelSelector.kt` | 암기 모드 선택 |
-| `QuestionCard.kt` | 질문 카드 (FlipCard + HighlightText) |
-| `AnswerCard.kt` | 답변 카드 (FlipCard + HighlightText, 녹음 하이라이트) |
-| `QuestionPlayButton.kt` | 질문 재생/정지 버튼 |
-| `AnswerPlayButton.kt` | 답변 재생/정지 버튼 |
-| `MemorizeLevelPlaybackButton.kt` | 모드별 동적 재생 버튼 (콜백 기반) |
-| `FullMemorizationRecordingButton.kt` | 통암기 녹음 시작/정지 |
-| `RecordingAnimation.kt` | 녹음 중 표시 애니메이션 |
-| `NavigationSection.kt` | 이전/다음 질문 네비게이션 |
-| `NextQuestionButton.kt` | 다음 질문 버튼 |
-| `PreviousQuestionButton.kt` | 이전 질문 버튼 |
+AppTitle.kt (앱 타이틀바), CategorySelector.kt (카테고리 드롭다운), MemorizeLevelSelector.kt (암기 모드 선택), QuestionCard.kt (질문 카드), AnswerCard.kt (답변 카드), QuestionPlayButton.kt (질문 재생/정지), AnswerPlayButton.kt (답변 재생/정지), MemorizeLevelPlaybackButton.kt (모드별 동적 재생 버튼), FullMemorizationRecordingButton.kt (통암기 녹음), RecordingAnimation.kt (녹음 중 애니메이션), NavigationSection.kt (이전/다음), NextQuestionButton.kt, PreviousQuestionButton.kt
 
-### 하이라이트 연동 패턴 (MainScreen.kt)
-```kotlin
-// QuestionCard — 모드별 하이라이트 소스 분기
-highlightIndex = when {
-    (isFullMemorizationMode && isFullMemorizationPlaying) -> fullMemorizationHighlightIndex
-    else -> playbackState.questionHighlight.index
-}
-
-// AnswerCard — 3소스 분기
-highlightIndex = when {
-    (isFullMemorizationMode && isFullMemorizationPlaying) || isFullMemorizationRecordingPlaying -> fullMemorizationHighlightIndex
-    isEnglishWritingTestMergedFilePlaying -> englishWritingTestMergedFileHighlightIndex
-    else -> playbackState.answerHighlight.index
-}
-```
+하이라이트 연동: [ARCHITECTURE_PRESENTATION.md 섹션 7](.claude/architecture/ARCHITECTURE_PRESENTATION.md)
 
 ## 아키텍처 규칙
 - UI는 ViewModel의 StateFlow만 구독 (`collectAsState()`)
