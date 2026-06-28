@@ -3,10 +3,13 @@ package com.na982.opichelper.presentation.viewmodel
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.QaDataManager
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.UserLevelPreferences
+import com.na982.opichelper.domain.repository.PlaybackPreferences
+import com.na982.opichelper.domain.repository.MemorizeLevelPreferences
 import com.na982.opichelper.domain.entity.MemorizeLevel
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
-import com.na982.opichelper.domain.usecase.SearchQaItemsUseCase
+import com.na982.opichelper.domain.usecase.ProgressCleanupUseCase
+import com.na982.opichelper.domain.repository.QaSearch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,9 +40,12 @@ data class QaBrowserState(
 @HiltViewModel
 class QaBrowserViewModel @Inject constructor(
     private val qaDataManager: QaDataManager,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val userLevelPreferences: UserLevelPreferences,
+    private val playbackPreferences: PlaybackPreferences,
+    private val memorizeLevelPreferences: MemorizeLevelPreferences,
     private val progressTracker: MemorizeTestProgressTracker,
-    private val searchQaItemsUseCase: SearchQaItemsUseCase,
+    private val qaSearch: QaSearch,
+    private val progressCleanupUseCase: ProgressCleanupUseCase,
     private val appLogger: AppLogger
 ) : ViewModel() {
 
@@ -62,7 +68,7 @@ class QaBrowserViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 qaDataManager.init()
-                progressTracker.restoreAllProgress()
+                progressCleanupUseCase.restoreProgress()
             } catch (e: Exception) {
                 appLogger.e("QaBrowserViewModel", "데이터 초기화 실패", e)
                 emitEvent("데이터를 불러올 수 없습니다")
@@ -91,13 +97,13 @@ class QaBrowserViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            userPreferencesRepository.userLevel.collect { userLevel ->
+            userLevelPreferences.userLevel.collect { userLevel ->
                 _uiState.update { it.copy(currentUserLevel = userLevel.name) }
             }
         }
 
         viewModelScope.launch {
-            userPreferencesRepository.answerPlayCount.collect { count ->
+            playbackPreferences.answerPlayCount.collect { count ->
                 _uiState.update { it.copy(answerPlayCount = count) }
             }
         }
@@ -141,28 +147,8 @@ class QaBrowserViewModel @Inject constructor(
         viewModelScope.launch { qaDataManager.previousQaItem() }
     }
 
-    fun clearError() {
-        qaDataManager.clearError()
-    }
-
-    fun isOnboardingCompleted(): Boolean {
-        return userPreferencesRepository.isOnboardingCompleted()
-    }
-
-    fun setOnboardingCompleted() {
-        userPreferencesRepository.setOnboardingCompleted()
-    }
-
-    fun isPipGuideCompleted(): Boolean {
-        return userPreferencesRepository.isPipGuideCompleted()
-    }
-
-    fun setPipGuideCompleted() {
-        userPreferencesRepository.setPipGuideCompleted()
-    }
-
     fun search(query: String): List<QaItem> {
-        return searchQaItemsUseCase.search(query)
+        return qaSearch.searchItems(query)
     }
 
     suspend fun navigateToItem(item: QaItem) {
@@ -180,7 +166,7 @@ class QaBrowserViewModel @Inject constructor(
 
     fun setSelectedMemorizeLevel(level: String) {
         _uiState.update { it.copy(selectedMemorizeLevel = level) }
-        userPreferencesRepository.setMemorizeLevel(level)
+        memorizeLevelPreferences.setMemorizeLevel(level)
         refreshCompletedCount()
     }
 
@@ -207,41 +193,10 @@ class QaBrowserViewModel @Inject constructor(
 
     fun getCurrentIndex(): Int = qaDataManager.getCurrentIndex()
 
-    fun getCurrentUserLevel(): UserLevel = userPreferencesRepository.getUserLevel()
-
-    suspend fun cleanupOnAppExit() {
-        try {
-            val selectedMemorizeLevel = _uiState.value.selectedMemorizeLevel
-            val currentItem = qaDataManager.getCurrentQaItem()
-            if (currentItem != null) {
-                val answerText = getCurrentAnswer(currentItem)
-                val totalSentences = answerText.split(".").size
-                val currentProgress = progressTracker.getScriptProgress(currentItem.category, qaDataManager.getCurrentIndex(), selectedMemorizeLevel)
-                val currentSentenceIndex = currentProgress?.currentSentenceIndex ?: 0
-
-                progressTracker.updateProgress(
-                    category = currentItem.category,
-                    scriptIndex = qaDataManager.getCurrentIndex(),
-                    memorizeLevel = selectedMemorizeLevel,
-                    currentSentenceIndex = currentSentenceIndex,
-                    totalSentences = totalSentences,
-                    isMemorizeTestRunning = false
-                )
-            }
-
-        } catch (e: Exception) {
-            appLogger.e("QaBrowserViewModel", "앱 종료 시 리소스 정리 중 오류", e)
-        }
-
-        try {
-            progressTracker.persistChangedProgress()
-        } catch (e: Exception) {
-            appLogger.e("QaBrowserViewModel", "진행상황 저장 실패", e)
-        }
-    }
+    fun getCurrentUserLevel(): UserLevel = userLevelPreferences.getUserLevel()
 
     private fun loadMemorizeLevel() {
-        val savedLevel = userPreferencesRepository.getMemorizeLevel()
+        val savedLevel = memorizeLevelPreferences.getMemorizeLevel()
         if (savedLevel.isNotEmpty()) {
             setSelectedMemorizeLevel(savedLevel)
         } else {
@@ -251,6 +206,6 @@ class QaBrowserViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        qaDataManager.release()
+        qaDataManager.reset()
     }
 }

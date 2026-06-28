@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.entity.QaItem
 import com.na982.opichelper.domain.entity.UserLevel
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaDataLifecycle
 import com.na982.opichelper.domain.repository.ScriptEditRepository
 import com.na982.opichelper.domain.usecase.SentencePair
 import com.na982.opichelper.domain.usecase.ValidateScriptEditUseCase
@@ -22,7 +22,7 @@ import javax.inject.Inject
 class EditScriptViewModel @Inject constructor(
     private val scriptEditRepository: ScriptEditRepository,
     private val validateScriptEditUseCase: ValidateScriptEditUseCase,
-    private val qaDataManager: QaDataManager
+    private val qaDataLifecycle: QaDataLifecycle
 ) : ViewModel() {
 
     private val _sentencePairs = MutableStateFlow<List<SentencePair>>(emptyList())
@@ -31,11 +31,7 @@ class EditScriptViewModel @Inject constructor(
     private val _validationResult = MutableStateFlow(ValidationResult(emptyList(), true))
     val validationResult: StateFlow<ValidationResult> = _validationResult.asStateFlow()
 
-    private val _isModified = MutableStateFlow(false)
-    val isModified: StateFlow<Boolean> = _isModified.asStateFlow()
-
     fun loadSentences(qaItem: QaItem, isQuestion: Boolean, level: UserLevel) {
-        _isModified.update { false }
         val textKo = if (isQuestion) qaItem.questionKo else qaItem.answers[level]?.answerKo ?: ""
         val textEn = if (isQuestion) qaItem.questionEn else qaItem.answers[level]?.answerEn ?: ""
         val koSentences = SentenceSplitter.split(textKo)
@@ -88,15 +84,13 @@ class EditScriptViewModel @Inject constructor(
         }
         viewModelScope.launch {
             scriptEditRepository.updateQaItem(updatedItem, level, scriptIndex)
-            qaDataManager.reload()
-            _isModified.update { true }
+            qaDataLifecycle.reload()
         }
     }
 
     fun restoreOriginal(id: String) {
         viewModelScope.launch {
             scriptEditRepository.restoreOriginal(id)
-            _isModified.update { true }
         }
     }
 }

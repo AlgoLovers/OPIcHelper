@@ -10,6 +10,7 @@ class WakeLockControllerImpl(
     private val appLogger: AppLogger
 ) : WakeLockController {
     private val appContext = context.applicationContext
+    @Volatile
     private var wakeLock: PowerManager.WakeLock? = null
     private val powerManager = appContext.getSystemService(Context.POWER_SERVICE) as PowerManager
 

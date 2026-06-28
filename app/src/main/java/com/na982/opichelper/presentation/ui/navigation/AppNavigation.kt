@@ -33,6 +33,11 @@ fun AppNavigation(
             sentenceEn = pipState.currentSentenceEn,
             sentenceKo = pipState.currentSentenceKo,
             hasCompleted = pipState.hasCompleted,
+            sentenceIndex = pipState.sentenceIndex,
+            totalSentences = pipState.totalSentences,
+            currentRepetition = pipState.currentRepetition,
+            totalRepetitions = pipState.totalRepetitions,
+            isRepeatListeningMode = pipState.isRepeatListeningMode,
             modifier = Modifier.fillMaxSize()
         )
     } else {

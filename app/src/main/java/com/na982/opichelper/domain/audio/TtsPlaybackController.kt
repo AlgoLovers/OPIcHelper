@@ -2,7 +2,7 @@ package com.na982.opichelper.domain.audio
 
 import kotlinx.coroutines.flow.StateFlow
 
-interface TtsPlaybackController {
+interface TtsPlaybackController : TtsHighlightController {
     val isPlaying: StateFlow<Boolean>
     val isQuestionPlaying: StateFlow<Boolean>
     val isAnswerPlaying: StateFlow<Boolean>
@@ -14,16 +14,11 @@ interface TtsPlaybackController {
 
     fun playQuestion(question: String)
     fun playAnswer(answer: String)
-    fun playMergedAudio(question: String, answer: String)
     fun stopTts()
     fun stopAndMarkPaused()
     fun clearPausedState()
     fun cleanupTts()
     fun stopWithoutClearingHighlight()
-    fun setQuestionHighlightIndex(index: Int)
-    fun setAnswerHighlightIndex(index: Int, sentence: String? = null)
-    fun setAnswerKoHighlightIndex(index: Int, sentence: String? = null)
-    fun setRecordingHighlightIndex(index: Int)
-    fun clearHighlight()
+    fun reset()
     fun close()
 }

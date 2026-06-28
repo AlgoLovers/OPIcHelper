@@ -2,12 +2,11 @@ package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
-import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.audio.TtsPlaybackController
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.repository.EnglishWritingTestRepository
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
-import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import com.na982.opichelper.domain.usecase.MemorizeTestProgressTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,16 +23,17 @@ data class EnglishWritingTestUiState(
 @HiltViewModel
 class EnglishWritingTestViewModel @Inject constructor(
     private val englishWritingTestRepository: EnglishWritingTestRepository,
-    private val ttsCtrl: TtsPlaybackController,
-    private val qaDataManager: QaDataManager,
-    private val progress: MemorizeTestProgressTracker,
+    private val ttsPlaybackController: TtsPlaybackController,
+    qaContentReader: QaContentReader,
+    private val progressTracker: MemorizeTestProgressTracker,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
 ) : BaseMemorizationViewModel<EnglishWritingTestUiState>(
     coordinator = coordinator,
-    ttsPlaybackController = ttsCtrl,
-    progressTracker = progress,
-    appLogger = appLogger
+    ttsPlaybackController = ttsPlaybackController,
+    progressTracker = progressTracker,
+    appLogger = appLogger,
+    qaContentReader = qaContentReader
 ) {
 
     override val _uiState = MutableStateFlow(EnglishWritingTestUiState())
@@ -47,8 +47,8 @@ class EnglishWritingTestViewModel @Inject constructor(
 
     override suspend fun startMode() {
         try {
-            ttsCtrl.stopTts()
-            ttsCtrl.clearHighlight()
+            ttsPlaybackController.stopTts()
+            ttsPlaybackController.clearHighlight()
             startEnglishWritingTest()
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
@@ -60,7 +60,7 @@ class EnglishWritingTestViewModel @Inject constructor(
     }
 
     private suspend fun startEnglishWritingTest() {
-        val currentItem = qaDataManager.currentQaItem.value
+        val currentItem = qaContentReader.getCurrentQaItem()
         if (currentItem == null) {
             appLogger.e("EnglishWritingTestVM", "현재 QA 아이템이 없음")
             emitEvent("질문 데이터를 불러올 수 없습니다")
@@ -68,7 +68,7 @@ class EnglishWritingTestViewModel @Inject constructor(
             return
         }
 
-        val scriptIndex = qaDataManager.getCurrentIndex()
+        val scriptIndex = qaContentReader.getCurrentIndex()
 
         val eventJob = viewModelScope.launch {
             englishWritingTestRepository.events.collect { event ->
@@ -79,8 +79,8 @@ class EnglishWritingTestViewModel @Inject constructor(
         val useCaseJob = viewModelScope.launch {
             try {
                 englishWritingTestRepository.executeEnglishWritingTest(
-                    answerKo = qaDataManager.getCurrentAnswerKo(currentItem),
-                    answerEn = qaDataManager.getCurrentAnswer(currentItem),
+                    answerKo = qaContentReader.getCurrentAnswerKo(currentItem),
+                    answerEn = qaContentReader.getCurrentAnswer(currentItem),
                     category = currentItem.category,
                     scriptIndex = scriptIndex
                 )
@@ -103,20 +103,13 @@ class EnglishWritingTestViewModel @Inject constructor(
                 _uiState.update { it.copy(isCardFlipped = event.isKorean) }
             }
             is MemorizeTestEvent.KoreanHighlight -> {
-                if (event.index != null) {
-                    val koSentence = getSentenceFromAnswer(event.index, isKorean = true)
-                    val enSentence = getSentenceFromAnswer(event.index, isKorean = false)
-                    ttsCtrl.setAnswerKoHighlightIndex(event.index, koSentence)
-                    ttsCtrl.setAnswerHighlightIndex(event.index, enSentence)
-                } else {
-                    ttsCtrl.clearHighlight()
-                }
+                handleKoreanHighlight(event)
             }
             is MemorizeTestEvent.RecordingHighlight -> {
                 if (event.index != null) {
-                    ttsCtrl.setRecordingHighlightIndex(event.index)
+                    ttsPlaybackController.setRecordingHighlightIndex(event.index)
                 } else {
-                    ttsCtrl.clearHighlight()
+                    ttsPlaybackController.clearHighlight()
                 }
             }
             is MemorizeTestEvent.RecordingStateChange -> {
@@ -130,15 +123,5 @@ class EnglishWritingTestViewModel @Inject constructor(
             }
             else -> {}
         }
-    }
-
-    private fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
-        val currentItem = qaDataManager.currentQaItem.value ?: return null
-        val text = if (isKorean) {
-            qaDataManager.getCurrentAnswerKo(currentItem)
-        } else {
-            qaDataManager.getCurrentAnswer(currentItem)
-        }
-        return SentenceSplitter.split(text).getOrNull(index)
     }
 }

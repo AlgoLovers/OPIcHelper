@@ -12,9 +12,15 @@ class SamsungTtsPlayer(context: Context, appLogger: AppLogger) : BaseTtsPlayer(
     logTag = "SamsungTtsPlayer",
     appLogger = appLogger
 ) {
+    companion object {
+        private const val DEFAULT_SPEECH_RATE_UPSIDE_DOWN_CAKE = 1.1f
+        private const val DEFAULT_SPEECH_RATE_TIRAMISU = 0.9f
+        private const val DEFAULT_SPEECH_RATE_LEGACY = 0.8f
+    }
+
     override fun getSpeechRate(): Float = userSpeechRate ?: when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> 1.1f
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> 0.9f
-        else -> 0.8f
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> DEFAULT_SPEECH_RATE_UPSIDE_DOWN_CAKE
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> DEFAULT_SPEECH_RATE_TIRAMISU
+        else -> DEFAULT_SPEECH_RATE_LEGACY
     }
 }

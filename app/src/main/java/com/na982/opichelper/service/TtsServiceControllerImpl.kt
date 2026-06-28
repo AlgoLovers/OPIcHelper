@@ -4,9 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import com.na982.opichelper.domain.repository.TtsServiceController
-import javax.inject.Inject
 
-class TtsServiceControllerImpl @Inject constructor(
+class TtsServiceControllerImpl(
     private val application: Application
 ) : TtsServiceController {
 

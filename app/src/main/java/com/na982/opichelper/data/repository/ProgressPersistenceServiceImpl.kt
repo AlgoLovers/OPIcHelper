@@ -4,58 +4,22 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.na982.opichelper.domain.manager.AppLogger
 import com.google.gson.Gson
-import com.na982.opichelper.domain.entity.AppExitState
-import com.na982.opichelper.domain.entity.CategoryProgress
+import com.na982.opichelper.domain.entity.ScriptProgress
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 
 class ProgressPersistenceServiceImpl(
     private val context: Context,
-    private val appLogger: AppLogger
+    private val appLogger: AppLogger,
+    private val gson: Gson
 ) : ProgressPersistenceService {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    private val gson = Gson()
 
     companion object {
         private const val PREFS_NAME = "opic_prefs"
-        private const val KEY_APP_EXIT_STATE = "app_exit_state"
         private const val KEY_CATEGORY_PROGRESS_PREFIX = "category_progress_"
         private const val KEY_NAV_CATEGORY = "last_category"
         private const val KEY_NAV_SCRIPT_INDEX = "last_script_index"
         private const val KEY_NAV_SENTENCE_INDEX = "last_sentence_index"
-    }
-
-    override suspend fun saveAppExitState(
-        category: String,
-        scriptIndex: Int,
-        memorizeLevel: String,
-        currentSentenceIndex: Int,
-        totalSentences: Int,
-        isMemorizeTestRunning: Boolean
-    ) {
-        try {
-            val appExitState = AppExitState(
-                category = category,
-                scriptIndex = scriptIndex,
-                memorizeLevel = memorizeLevel,
-                currentSentenceIndex = currentSentenceIndex,
-                totalSentences = totalSentences,
-                isMemorizeTestRunning = isMemorizeTestRunning
-            )
-            val json = gson.toJson(appExitState)
-            prefs.edit().putString(KEY_APP_EXIT_STATE, json).apply()
-        } catch (e: Exception) {
-            appLogger.e("ProgressPersistenceService", "앱 종료 상태 저장 실패", e)
-        }
-    }
-
-    override suspend fun loadAppExitState(): AppExitState? {
-        return try {
-            val json = prefs.getString(KEY_APP_EXIT_STATE, null)
-            if (json != null) gson.fromJson(json, AppExitState::class.java) else null
-        } catch (e: Exception) {
-            appLogger.e("ProgressPersistenceService", "앱 종료 상태 로드 실패", e)
-            null
-        }
     }
 
     override suspend fun saveNavigationState(state: ProgressPersistenceService.NavigationState) {
@@ -84,7 +48,7 @@ class ProgressPersistenceServiceImpl(
         }
     }
 
-    override suspend fun saveCategoryProgress(progress: CategoryProgress) {
+    override suspend fun saveCategoryProgress(progress: ScriptProgress) {
         try {
             val key = KEY_CATEGORY_PROGRESS_PREFIX + progress.getKey()
             val json = gson.toJson(progress)
@@ -94,25 +58,14 @@ class ProgressPersistenceServiceImpl(
         }
     }
 
-    override suspend fun loadCategoryProgress(category: String, scriptIndex: Int, memorizeLevel: String): CategoryProgress? {
+    override suspend fun loadAllCategoryProgress(): Map<String, ScriptProgress> {
         return try {
-            val key = KEY_CATEGORY_PROGRESS_PREFIX + "${category}_${scriptIndex}_${memorizeLevel}"
-            val json = prefs.getString(key, null)
-            if (json != null) gson.fromJson(json, CategoryProgress::class.java) else null
-        } catch (e: Exception) {
-            appLogger.e("ProgressPersistenceService", "카테고리 진행 상황 로드 실패", e)
-            null
-        }
-    }
-
-    override suspend fun loadAllCategoryProgress(): Map<String, CategoryProgress> {
-        return try {
-            val progressMap = mutableMapOf<String, CategoryProgress>()
+            val progressMap = mutableMapOf<String, ScriptProgress>()
             prefs.all.forEach { (key, value) ->
                 if (key.startsWith(KEY_CATEGORY_PROGRESS_PREFIX)) {
                     try {
                         val json = value as String
-                        val progress = gson.fromJson(json, CategoryProgress::class.java)
+                        val progress = gson.fromJson(json, ScriptProgress::class.java)
                         progressMap[progress.getKey()] = progress
                     } catch (_: Exception) {}
                 }
@@ -130,20 +83,6 @@ class ProgressPersistenceServiceImpl(
             prefs.edit().remove(key).apply()
         } catch (e: Exception) {
             appLogger.e("ProgressPersistenceService", "진행 상황 삭제 실패", e)
-        }
-    }
-
-    override suspend fun clearAllProgress() {
-        try {
-            val editor = prefs.edit()
-            prefs.all.forEach { (key, _) ->
-                if (key.startsWith(KEY_CATEGORY_PROGRESS_PREFIX) || key == KEY_APP_EXIT_STATE) {
-                    editor.remove(key)
-                }
-            }
-            editor.apply()
-        } catch (e: Exception) {
-            appLogger.e("ProgressPersistenceService", "모든 진행 상황 삭제 실패", e)
         }
     }
 }

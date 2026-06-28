@@ -3,7 +3,9 @@ package com.na982.opichelper.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.entity.UserLevel
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.UserLevelPreferences
+import com.na982.opichelper.domain.repository.TtsPreferences
+import com.na982.opichelper.domain.repository.PlaybackPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +25,9 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val userLevelPreferences: UserLevelPreferences,
+    private val ttsPreferences: TtsPreferences,
+    private val playbackPreferences: PlaybackPreferences,
     private val ttsOrchestrator: TtsOrchestrator
 ) : ViewModel() {
 
@@ -32,25 +36,25 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            userPreferencesRepository.userLevel.collect { userLevel ->
+            userLevelPreferences.userLevel.collect { userLevel ->
                 _uiState.update { it.copy(currentUserLevel = userLevel.name) }
             }
         }
 
         viewModelScope.launch {
-            userPreferencesRepository.repeatListeningCount.collect { count ->
+            playbackPreferences.repeatListeningCount.collect { count ->
                 _uiState.update { it.copy(repeatListeningCount = count) }
             }
         }
 
         viewModelScope.launch {
-            userPreferencesRepository.answerPlayCount.collect { count ->
+            playbackPreferences.answerPlayCount.collect { count ->
                 _uiState.update { it.copy(answerPlayCount = count) }
             }
         }
 
         viewModelScope.launch {
-            userPreferencesRepository.englishTtsRate.collect { rate ->
+            ttsPreferences.englishTtsRate.collect { rate ->
                 _uiState.update { it.copy(englishTtsRate = rate) }
             }
         }
@@ -60,19 +64,19 @@ class SettingsViewModel @Inject constructor(
 
     fun setUserLevel(level: UserLevel) {
         viewModelScope.launch {
-            userPreferencesRepository.setUserLevel(level)
+            userLevelPreferences.setUserLevel(level)
         }
     }
 
     fun setRepeatListeningCount(count: Int) {
-        userPreferencesRepository.setRepeatListeningCount(count.coerceIn(2, 10))
+        playbackPreferences.setRepeatListeningCount(count.coerceIn(2, 10))
     }
 
     fun setAnswerPlayCount(count: Int) {
-        userPreferencesRepository.setAnswerPlayCount(count.coerceIn(1, 10))
+        playbackPreferences.setAnswerPlayCount(count.coerceIn(1, 10))
     }
 
     fun setEnglishTtsRate(rate: Float) {
-        userPreferencesRepository.setEnglishTtsRate(rate.coerceIn(0.5f, 1.5f))
+        ttsPreferences.setEnglishTtsRate(rate.coerceIn(0.5f, 1.5f))
     }
 }

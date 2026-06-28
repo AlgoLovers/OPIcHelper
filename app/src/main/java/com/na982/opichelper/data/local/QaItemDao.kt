@@ -5,13 +5,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface QaItemDao {
-    @Query("SELECT * FROM qa_items WHERE category = :category AND level = :level ORDER BY CAST(itemId AS INTEGER)")
-    fun getByCategoryAndLevel(category: String, level: String): Flow<List<QaItemEntity>>
-
     @Query("SELECT * FROM qa_items WHERE level = :level ORDER BY category, CAST(itemId AS INTEGER)")
     suspend fun getByCategoryAndLevelDirect(level: String): List<QaItemEntity>
 
@@ -35,7 +31,4 @@ interface QaItemDao {
 
     @Query("SELECT COUNT(*) FROM qa_items")
     suspend fun getCount(): Int
-
-    @Query("SELECT DISTINCT level FROM qa_items")
-    suspend fun getSeededLevels(): List<String>
 }

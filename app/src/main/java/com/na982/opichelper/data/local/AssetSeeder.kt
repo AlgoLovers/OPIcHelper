@@ -3,12 +3,13 @@ package com.na982.opichelper.data.local
 import com.google.gson.Gson
 import com.na982.opichelper.domain.entity.UserLevel
 import com.na982.opichelper.domain.repository.QaDataLoader
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.AppDataPreferences
 
 class AssetSeeder(
     private val qaDataLoader: QaDataLoader,
     private val dao: QaItemDao,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val appDataPreferences: AppDataPreferences,
+    private val gson: Gson
 ) : com.na982.opichelper.domain.repository.DataSeeder {
 
     companion object {
@@ -16,7 +17,7 @@ class AssetSeeder(
     }
 
     override suspend fun seedIfNeeded() {
-        val storedVersion = userPreferencesRepository.getSeedVersion()
+        val storedVersion = appDataPreferences.getSeedVersion()
         if (storedVersion == CURRENT_SEED_VERSION && dao.getCount() > 0) return
 
         val entities = mutableListOf<QaItemEntity>()
@@ -35,9 +36,9 @@ class AssetSeeder(
                     questionKo = item.questionKo,
                     answerEn = answer.answerEn,
                     answerKo = answer.answerKo,
-                    vocabulary = Gson().toJson(answer.vocabulary),
-                    grammar = Gson().toJson(answer.grammar),
-                    tips = Gson().toJson(answer.tips),
+                    vocabulary = gson.toJson(answer.vocabulary),
+                    grammar = gson.toJson(answer.grammar),
+                    tips = gson.toJson(answer.tips),
                     questionEnOriginal = item.questionEn,
                     questionKoOriginal = item.questionKo,
                     answerEnOriginal = answer.answerEn,
@@ -46,6 +47,6 @@ class AssetSeeder(
             }
         }
         dao.insertAll(entities)
-        userPreferencesRepository.setSeedVersion(CURRENT_SEED_VERSION)
+        appDataPreferences.setSeedVersion(CURRENT_SEED_VERSION)
     }
 }

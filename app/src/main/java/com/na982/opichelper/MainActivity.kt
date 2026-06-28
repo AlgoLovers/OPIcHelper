@@ -12,10 +12,13 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import com.na982.opichelper.domain.manager.AppLogger
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -29,17 +32,20 @@ import androidx.navigation.compose.rememberNavController
 import com.na982.opichelper.domain.manager.WakeLockController
 import com.na982.opichelper.presentation.ui.navigation.AppNavigation
 import com.na982.opichelper.presentation.viewmodel.PlaybackViewModel
-import com.na982.opichelper.presentation.viewmodel.PlaybackActionListener
+import com.na982.opichelper.domain.audio.PipState
+import com.na982.opichelper.domain.audio.PlaybackActionListener
+import com.na982.opichelper.presentation.viewmodel.MemorizationController
 import com.na982.opichelper.presentation.viewmodel.QaBrowserViewModel
 import com.na982.opichelper.presentation.viewmodel.RepeatListeningViewModel
 import com.na982.opichelper.presentation.viewmodel.EnglishWritingTestViewModel
 import com.na982.opichelper.presentation.viewmodel.FullMemorizationViewModel
-import com.na982.opichelper.domain.usecase.ModeGroup
+import com.na982.opichelper.domain.entity.ModeGroup
+import com.na982.opichelper.domain.usecase.ProgressCleanupUseCase
 import com.na982.opichelper.ui.theme.OPicHelperTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -52,7 +58,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var appLogger: AppLogger
 
-    private var isFinishing = false
+    @Inject
+    lateinit var progressCleanupUseCase: ProgressCleanupUseCase
+
     private var playbackViewModel: PlaybackViewModel? = null
     private var qaViewModel: QaBrowserViewModel? = null
     private var navController: NavHostController? = null
@@ -64,7 +72,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (!granted) {
-            _permissionDenied.value = true
+            _permissionDenied.update { true }
         }
     }
 
@@ -75,6 +83,7 @@ class MainActivity : ComponentActivity() {
                 ACTION_PIP_STOP -> playbackViewModel?.stopPlayback()
                 ACTION_PIP_REPEAT -> playbackViewModel?.repeatPlayback()
                 ACTION_PIP_NEXT -> playbackViewModel?.playNextItem()
+                ACTION_PIP_REPEAT_SENTENCE -> playbackViewModel?.repeatCurrentSentence()
             }
         }
     }
@@ -95,6 +104,33 @@ class MainActivity : ComponentActivity() {
         registerPipActionReceiver()
         setPipParams()
 
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                navController?.let { controller ->
+                    try {
+                        if (controller.previousBackStackEntry != null) {
+                            isEnabled = false
+                            onBackPressedDispatcher.onBackPressed()
+                            isEnabled = true
+                        } else {
+                            playbackViewModel?.cleanupAllTtsSync()
+                            cleanupAllResources()
+                            finish()
+                        }
+                    } catch (e: Exception) {
+                        appLogger.e("MainActivity", "백버튼 처리 중 오류", e)
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                        isEnabled = true
+                    }
+                } ?: run {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
+
         setContent {
             val navController = rememberNavController()
             val pvm: PlaybackViewModel = hiltViewModel()
@@ -102,60 +138,72 @@ class MainActivity : ComponentActivity() {
             val repeatListeningVm: RepeatListeningViewModel = hiltViewModel()
             val englishWritingTestVm: EnglishWritingTestViewModel = hiltViewModel()
             val fullMemorizationVm: FullMemorizationViewModel = hiltViewModel()
+            val memorizationController = MemorizationController(
+                mapOf(
+                    ModeGroup.REPEAT_LISTENING to repeatListeningVm,
+                    ModeGroup.ENGLISH_WRITING to englishWritingTestVm,
+                    ModeGroup.FULL_MEMORIZATION to fullMemorizationVm
+                )
+            )
             this@MainActivity.playbackViewModel = pvm
             this@MainActivity.qaViewModel = qaVm
             this@MainActivity.navController = navController
 
-            pvm.setActionListener(object : PlaybackActionListener {
-                override fun onRepeatQuestion() {
-                    val qaItem = qaVm.uiState.value.currentQaItem
-                    if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
-                }
-                override fun onRepeatAnswer() {
-                    val qaItem = qaVm.uiState.value.currentQaItem
-                    if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
-                }
-                override fun onNext() {
-                    lifecycleScope.launch {
-                        val qaItem = qaVm.nextQaItemSync()
-                        if (qaItem != null) {
-                            pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
-                        }
+            val actionListener = remember {
+                object : PlaybackActionListener {
+                    override fun onRepeatQuestion() {
+                        val qaItem = qaVm.uiState.value.currentQaItem
+                        if (qaItem != null) pvm.playQuestion(qaItem.questionEn)
                     }
-                }
-                override fun onRepeatMemorization() {
-                    val group = pvm.lastMemorizationGroup ?: return
-                    when (group) {
-                        ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
-                        ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
-                        ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
-                        else -> {}
+                    override fun onRepeatAnswer() {
+                        val qaItem = qaVm.uiState.value.currentQaItem
+                        if (qaItem != null) pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
                     }
-                }
-                override fun onNextAndRestart() {
-                    lifecycleScope.launch {
-                        val qaItem = qaVm.nextQaItemSync()
-                        if (qaItem != null) {
-                            val group = pvm.lastMemorizationGroup ?: return@launch
-                            when (group) {
-                                ModeGroup.REPEAT_LISTENING -> repeatListeningVm.start()
-                                ModeGroup.ENGLISH_WRITING -> englishWritingTestVm.start()
-                                ModeGroup.FULL_MEMORIZATION -> fullMemorizationVm.start()
-                                else -> {}
+                    override fun onNext() {
+                        lifecycleScope.launch {
+                            val qaItem = qaVm.nextQaItemSync()
+                            if (qaItem != null) {
+                                pvm.playAnswer(qaVm.getCurrentAnswer(qaItem))
                             }
                         }
                     }
+                    override fun onRepeatMemorization() {
+                        val group = pvm.lastMemorizationGroup ?: return
+                        memorizationController.startForGroup(group)
+                    }
+                    override fun onNextAndRestart() {
+                        lifecycleScope.launch {
+                            val qaItem = qaVm.nextQaItemSync()
+                            if (qaItem != null) {
+                                val group = pvm.lastMemorizationGroup ?: return@launch
+                                memorizationController.startForGroup(group)
+                            }
+                        }
+                    }
+                    override fun onStopMemorization() {
+                        memorizationController.stopAll()
+                    }
+                    override fun onRepeatCurrentSentence() {
+                        memorizationController.getViewModelForGroup(ModeGroup.REPEAT_LISTENING)?.requestExtraRepetitions()
+                    }
                 }
-                override fun onStopMemorization() {
-                    repeatListeningVm.stop()
-                    englishWritingTestVm.stop()
-                    fullMemorizationVm.stop()
-                }
-            })
+            }
+            SideEffect { pvm.setActionListener(actionListener) }
 
             LaunchedEffect(Unit) {
-                qaVm.uiState.collect { state ->
+                qaVm.uiState.collect { _ ->
                     pvm.setHasNextItem(qaVm.hasNextQaItem())
+                }
+            }
+
+            LaunchedEffect(pvm) {
+                pvm.pipState.collect { state ->
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        updatePipAutoEnter(state.isPlaying)
+                        if (isInPictureInPictureMode) {
+                            updatePipActions(state)
+                        }
+                    }
                 }
             }
 
@@ -175,8 +223,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        observePipState()
     }
 
     override fun onUserLeaveHint() {
@@ -192,7 +238,7 @@ class MainActivity : ComponentActivity() {
     private fun setPipParams() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(5, 3))
+                .setAspectRatio(PIP_ASPECT_RATIO)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 params.setAutoEnterEnabled(false)
             }
@@ -204,7 +250,7 @@ class MainActivity : ComponentActivity() {
     private fun enterPipMode() {
         try {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(5, 3))
+                .setAspectRatio(PIP_ASPECT_RATIO)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 params.setAutoEnterEnabled(true)
             }
@@ -244,9 +290,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (isFinishing) {
-            isFinishing = false
-        }
         if (!wakeLockController.isHeld()) {
             wakeLockController.acquire()
         }
@@ -255,42 +298,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        isFinishing = true
         playbackViewModel?.cleanupAllTtsSync()
         unregisterPipActionReceiver()
         cleanupAllResources()
     }
 
-    @Suppress("DEPRECATION")
-    override fun onBackPressed() {
-        navController?.let { controller ->
-            try {
-                if (controller.previousBackStackEntry != null) {
-                    super.onBackPressed()
-                } else {
-                    playbackViewModel?.cleanupAllTtsSync()
-                    cleanupAllResources()
-                    finish()
-                }
-            } catch (e: Exception) {
-                appLogger.e("MainActivity", "백버튼 처리 중 오류", e)
-                super.onBackPressed()
-            }
-        } ?: run {
-            super.onBackPressed()
-        }
-    }
-
     private fun cleanupAllResources() {
         try {
             lifecycleScope.launch {
-                qaViewModel?.cleanupOnAppExit()
+                progressCleanupUseCase.cleanupOnExit()
             }
             wakeLockController.release()
         } catch (e: Exception) {
@@ -306,6 +324,7 @@ class MainActivity : ComponentActivity() {
                 addAction(ACTION_PIP_STOP)
                 addAction(ACTION_PIP_REPEAT)
                 addAction(ACTION_PIP_NEXT)
+                addAction(ACTION_PIP_REPEAT_SENTENCE)
             }
             registerReceiver(pipActionReceiver, filter, RECEIVER_NOT_EXPORTED)
         }
@@ -318,46 +337,29 @@ class MainActivity : ComponentActivity() {
     }
 
     @Suppress("NewApi")
-    private fun observePipState() {
-        lifecycleScope.launch {
-            while (playbackViewModel == null) {
-                kotlinx.coroutines.delay(50)
-            }
-            playbackViewModel?.pipState?.collect { state ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    updatePipAutoEnter(state.isPlaying)
-                    if (isInPictureInPictureMode) {
-                        updatePipActions(state.isPlaying, state.isPaused, state.isPausable, state.hasCompleted, state.hasNextItem)
-                    }
-                }
-            }
-        }
-    }
-
-    @Suppress("NewApi")
     private fun updatePipAutoEnter(isPlaying: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val params = android.app.PictureInPictureParams.Builder()
-                .setAspectRatio(android.util.Rational(5, 3))
+                .setAspectRatio(PIP_ASPECT_RATIO)
                 .setAutoEnterEnabled(isPlaying)
             setPictureInPictureParams(params.build())
         }
     }
 
     @Suppress("NewApi")
-    private fun updatePipActions(isPlaying: Boolean, isPaused: Boolean, isPausable: Boolean, hasCompleted: Boolean, hasNextItem: Boolean) {
+    private fun updatePipActions(state: PipState) {
         if (!isInPictureInPictureMode) return
 
         val params = android.app.PictureInPictureParams.Builder()
-            .setAspectRatio(android.util.Rational(5, 3))
+            .setAspectRatio(PIP_ASPECT_RATIO)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            params.setAutoEnterEnabled(isPlaying)
+            params.setAutoEnterEnabled(state.isPlaying)
         }
 
         val actions = ArrayList<android.app.RemoteAction>()
 
-        if (hasCompleted) {
+        if (state.hasCompleted) {
             val repeatIcon = Icon.createWithResource(this, R.drawable.ic_replay)
             val repeatIntent = PendingIntent.getBroadcast(
                 this, 2,
@@ -368,7 +370,7 @@ class MainActivity : ComponentActivity() {
                 android.app.RemoteAction(repeatIcon, "반복 재생", "반복 재생", repeatIntent)
             )
 
-            if (hasNextItem) {
+            if (state.hasNextItem) {
                 val nextIcon = Icon.createWithResource(this, R.drawable.ic_skip_next)
                 val nextIntent = PendingIntent.getBroadcast(
                     this, 3,
@@ -379,8 +381,8 @@ class MainActivity : ComponentActivity() {
                     android.app.RemoteAction(nextIcon, "다음", "다음", nextIntent)
                 )
             }
-        } else if (isPausable) {
-            val showPause = isPlaying && !isPaused
+        } else if (state.isPausable) {
+            val showPause = state.isPlaying && !state.isPaused
             val playPauseIcon = Icon.createWithResource(
                 this,
                 if (showPause) R.drawable.ic_pause else R.drawable.ic_play
@@ -398,6 +400,18 @@ class MainActivity : ComponentActivity() {
                     playPauseIntent
                 )
             )
+
+            if (state.isRepeatListeningMode && state.isPlaying) {
+                val repeatOneIcon = Icon.createWithResource(this, R.drawable.ic_repeat_one)
+                val repeatOneIntent = PendingIntent.getBroadcast(
+                    this, 4,
+                    Intent(ACTION_PIP_REPEAT_SENTENCE).setPackage(packageName),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+                actions.add(
+                    android.app.RemoteAction(repeatOneIcon, "문장 반복", "현재 문장 반복", repeatOneIntent)
+                )
+            }
         }
 
         val stopIcon = Icon.createWithResource(this, R.drawable.ic_stop)
@@ -421,5 +435,7 @@ class MainActivity : ComponentActivity() {
         const val ACTION_PIP_STOP = "com.na982.opichelper.PIP_STOP"
         const val ACTION_PIP_REPEAT = "com.na982.opichelper.PIP_REPEAT"
         const val ACTION_PIP_NEXT = "com.na982.opichelper.PIP_NEXT"
+        const val ACTION_PIP_REPEAT_SENTENCE = "com.na982.opichelper.PIP_REPEAT_SENTENCE"
+        private val PIP_ASPECT_RATIO = android.util.Rational(5, 3)
     }
 }

@@ -5,10 +5,11 @@ import com.na982.opichelper.domain.repository.DataSeeder
 import com.na982.opichelper.domain.repository.QaDataManager
 import com.na982.opichelper.domain.repository.QaDataLoader
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.UserLevelPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import com.na982.opichelper.domain.manager.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,20 +17,29 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class QaDataManagerImpl(
     private val qaDataLoader: QaDataLoader,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val userLevelPreferences: UserLevelPreferences,
     private val progressPersistenceService: ProgressPersistenceService,
     private val dataSeeder: DataSeeder,
     private val appLogger: AppLogger
 ) : QaDataManager {
+
+    companion object {
+        private const val MIN_SEARCH_QUERY_LENGTH = 2
+    }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    @Volatile
     private var userLevelJob: Job? = null
 
-    private val itemsByCategory: MutableMap<String, List<QaItem>> = ConcurrentHashMap()
-    private val itemIndexByCategory: MutableMap<String, Int> = ConcurrentHashMap()
+    private val itemsByCategory = java.util.concurrent.ConcurrentHashMap<String, List<QaItem>>()
+    private val itemIndexByCategory = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    @Volatile
+    private var allItems: List<QaItem> = emptyList()
+    private val mutex = Mutex()
 
     private val _currentQaItem = MutableStateFlow<QaItem?>(null)
     override val currentQaItem: StateFlow<QaItem?> = _currentQaItem.asStateFlow()
@@ -46,14 +56,14 @@ class QaDataManagerImpl(
     private val _error = MutableStateFlow<String?>(null)
     override val error: StateFlow<String?> = _error.asStateFlow()
 
-    override suspend fun init() {
+    override suspend fun init() = mutex.withLock {
         dataSeeder.seedIfNeeded()
         loadQaItemsFromAssets()
         restoreLastCategory()
         setupUserLevelObserver()
     }
 
-    override suspend fun reload() {
+    override suspend fun reload() = mutex.withLock {
         loadQaItemsFromAssets()
         updateCurrentQaItem()
     }
@@ -61,9 +71,11 @@ class QaDataManagerImpl(
     private fun setupUserLevelObserver() {
         userLevelJob?.cancel()
         userLevelJob = scope.launch {
-            userPreferencesRepository.userLevel.collect { _ ->
-                loadQaItemsFromAssets()
-                restoreLastCategory()
+            userLevelPreferences.userLevel.collect { _ ->
+                mutex.withLock {
+                    loadQaItemsFromAssets()
+                    restoreLastCategory()
+                }
             }
         }
     }
@@ -74,7 +86,7 @@ class QaDataManagerImpl(
             "산업,커리어", "은행", "교통", "패션", "가족,친구", "가구", "예약", "명절", "롤플레이"
         )
 
-        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        val currentUserLevel = userLevelPreferences.getUserLevel()
 
         val allLeveledItems = qaDataLoader.loadQaItemsForLevel(currentUserLevel)
 
@@ -85,13 +97,18 @@ class QaDataManagerImpl(
             if (index >= 0) index else Int.MAX_VALUE
         }
 
+        itemsByCategory.clear()
+        itemIndexByCategory.clear()
+
+        val grouped = allLeveledItems.groupBy { it.category }
         for (category in sortedCategories) {
-            val categoryItems = allLeveledItems.filter { it.category == category }
-            itemsByCategory[category] = categoryItems
+            itemsByCategory[category] = grouped[category].orEmpty()
             itemIndexByCategory[category] = 0
         }
 
-        _categories.value = sortedCategories
+        allItems = allLeveledItems
+
+        _categories.update { sortedCategories }
     }
 
     override fun getCurrentIndex(): Int {
@@ -114,7 +131,7 @@ class QaDataManagerImpl(
     override fun getCurrentAnswer(qaItem: QaItem?): String {
         if (qaItem == null) return ""
 
-        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        val currentUserLevel = userLevelPreferences.getUserLevel()
         val leveledAnswer = qaItem.answers[currentUserLevel]
 
         return leveledAnswer?.answerEn ?: qaItem.answers.values.firstOrNull()?.answerEn ?: ""
@@ -123,7 +140,7 @@ class QaDataManagerImpl(
     override fun getCurrentAnswerKo(qaItem: QaItem?): String {
         if (qaItem == null) return ""
 
-        val currentUserLevel = userPreferencesRepository.getUserLevel()
+        val currentUserLevel = userLevelPreferences.getUserLevel()
         val leveledAnswer = qaItem.answers[currentUserLevel]
 
         return leveledAnswer?.answerKo ?: qaItem.answers.values.firstOrNull()?.answerKo ?: ""
@@ -133,7 +150,7 @@ class QaDataManagerImpl(
         return itemsByCategory[category] ?: emptyList()
     }
 
-    override suspend fun selectCategory(category: String) {
+    override suspend fun selectCategory(category: String) = mutex.withLock {
         if (itemsByCategory.containsKey(category)) {
             navigateTo(category, 0)
         } else {
@@ -148,7 +165,7 @@ class QaDataManagerImpl(
         return currentIndex < items.size - 1
     }
 
-    override suspend fun nextQaItem() {
+    override suspend fun nextQaItem() = mutex.withLock {
         val category = _currentCategory.value
         if (category != null) {
             val items = itemsByCategory[category] ?: emptyList()
@@ -160,7 +177,7 @@ class QaDataManagerImpl(
         }
     }
 
-    override suspend fun previousQaItem() {
+    override suspend fun previousQaItem() = mutex.withLock {
         val category = _currentCategory.value
         if (category != null) {
             val currentIndex = itemIndexByCategory[category] ?: 0
@@ -178,9 +195,9 @@ class QaDataManagerImpl(
             val currentIndex = itemIndexByCategory[category] ?: 0
 
             if (items.isNotEmpty() && currentIndex < items.size) {
-                _currentQaItem.value = items[currentIndex]
+                _currentQaItem.update { items[currentIndex] }
             } else {
-                _currentQaItem.value = null
+                _currentQaItem.update { null }
                 if (items.isEmpty()) {
                     appLogger.w("QaDataManager", "카테고리에 항목이 없음: $category")
                 } else {
@@ -188,7 +205,7 @@ class QaDataManagerImpl(
                 }
             }
         } else {
-            _currentQaItem.value = null
+            _currentQaItem.update { null }
         }
     }
 
@@ -196,19 +213,19 @@ class QaDataManagerImpl(
         val navState = progressPersistenceService.loadNavigationState()
         val lastCategory = navState.category
         if (lastCategory != null && itemsByCategory.containsKey(lastCategory)) {
-            _currentCategory.value = lastCategory
+            _currentCategory.update { lastCategory }
             itemIndexByCategory[lastCategory] = navState.scriptIndex
             updateCurrentQaItem()
         } else {
             val firstCategory = _categories.value.firstOrNull()
             if (firstCategory != null) {
-                selectCategory(firstCategory)
+                navigateTo(firstCategory, 0)
             }
         }
     }
 
     private suspend fun navigateTo(category: String, index: Int) {
-        _currentCategory.value = category
+        _currentCategory.update { category }
         itemIndexByCategory[category] = index
         updateCurrentQaItem()
         progressPersistenceService.saveNavigationState(
@@ -216,14 +233,10 @@ class QaDataManagerImpl(
         )
     }
 
-    override fun clearError() {
-        _error.value = null
-    }
-
     override fun searchItems(query: String): List<QaItem> {
-        if (query.length < 2) return emptyList()
+        if (query.length < MIN_SEARCH_QUERY_LENGTH) return emptyList()
         val lowerQuery = query.lowercase()
-        return itemsByCategory.values.flatten().filter { item ->
+        return allItems.filter { item ->
             item.questionEn.lowercase().contains(lowerQuery) ||
             item.questionKo.lowercase().contains(lowerQuery) ||
             item.answers.values.any { answer ->
@@ -233,17 +246,21 @@ class QaDataManagerImpl(
         }
     }
 
-    override suspend fun navigateToIndex(index: Int) {
-        val category = _currentCategory.value ?: return
+    override suspend fun navigateToIndex(index: Int) = mutex.withLock {
+        val category = _currentCategory.value ?: return@withLock
         val items = itemsByCategory[category] ?: emptyList()
         if (index in 0 until items.size) {
             navigateTo(category, index)
         }
     }
 
-    override fun release() {
+    override fun reset() {
         userLevelJob?.cancel()
         userLevelJob = null
+    }
+
+    override fun release() {
+        reset()
         scope.cancel()
     }
 }

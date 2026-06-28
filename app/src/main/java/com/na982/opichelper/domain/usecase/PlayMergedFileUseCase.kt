@@ -3,7 +3,7 @@ package com.na982.opichelper.domain.usecase
 import com.na982.opichelper.domain.audio.AudioPlayer
 import com.na982.opichelper.domain.audio.SentenceSplitter
 import com.na982.opichelper.domain.repository.AudioFileManager
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.repository.RecordingTimeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +14,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
@@ -24,11 +25,20 @@ import javax.inject.Singleton
 class PlayMergedFileUseCase @Inject constructor(
     private val audioPlayer: AudioPlayer,
     private val audioFileManager: AudioFileManager,
-    private val qaDataManager: QaDataManager,
+    private val qaContentReader: QaContentReader,
     private val recordingTimeManager: RecordingTimeManager
 ) : java.io.Closeable {
+
+    companion object {
+        private const val CHAR_DURATION_MS = 50L
+        private const val MIN_HIGHLIGHT_DURATION_MS = 1000L
+        private const val FILE_CHECK_RETRY_COUNT = 3
+        private const val FILE_CHECK_RETRY_DELAY_MS = 500L
+    }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    @Volatile
     private var playJob: Job? = null
+    @Volatile
     private var checkFileJob: Job? = null
 
     private val _isPlaying = MutableStateFlow(false)
@@ -44,9 +54,9 @@ class PlayMergedFileUseCase @Inject constructor(
         playJob?.cancel()
         playJob = scope.launch {
             try {
-                val currentItem = qaDataManager.getCurrentQaItem() ?: return@launch
+                val currentItem = qaContentReader.getCurrentQaItem() ?: return@launch
                 val category = currentItem.category
-                val scriptIndex = qaDataManager.getCurrentIndex()
+                val scriptIndex = qaContentReader.getCurrentIndex()
                 val mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
 
                 if (mergedFile == null || !mergedFile.exists()) return@launch
@@ -57,8 +67,8 @@ class PlayMergedFileUseCase @Inject constructor(
                     playWithExactHighlight(mergedFile, category, scriptIndex)
                 }
             } catch (e: Exception) {
-                _isPlaying.value = false
-                _highlightIndex.value = null
+                _isPlaying.update { false }
+                _highlightIndex.update { null }
             } finally {
                 playJob = null
             }
@@ -66,27 +76,27 @@ class PlayMergedFileUseCase @Inject constructor(
     }
 
     private suspend fun playWithDefaultHighlight(mergedFile: File) {
-        _isPlaying.value = true
+        _isPlaying.update { true }
         audioPlayer.playAudio(mergedFile.absolutePath)
 
-        val answerText = qaDataManager.getCurrentAnswer(qaDataManager.getCurrentQaItem() ?: return)
+        val answerText = qaContentReader.getCurrentAnswer(qaContentReader.getCurrentQaItem() ?: return)
         val sentences = SentenceSplitter.split(answerText)
 
         for (i in sentences.indices) {
             if (!currentCoroutineContext().isActive) break
             if (!_isPlaying.value) break
 
-            _highlightIndex.value = i
-            val duration = (sentences[i].length * 50L).coerceAtLeast(1000L)
+            _highlightIndex.update { i }
+            val duration = (sentences[i].length * CHAR_DURATION_MS).coerceAtLeast(MIN_HIGHLIGHT_DURATION_MS)
             kotlinx.coroutines.delay(duration)
         }
 
-        _isPlaying.value = false
-        _highlightIndex.value = null
+        _isPlaying.update { false }
+        _highlightIndex.update { null }
     }
 
     private suspend fun playWithExactHighlight(mergedFile: File, category: String, scriptIndex: Int) {
-        _isPlaying.value = true
+        _isPlaying.update { true }
         audioPlayer.playAudio(mergedFile.absolutePath)
 
         val recordingTimes = recordingTimeManager.getAllRecordingTimes(category, scriptIndex)
@@ -95,55 +105,54 @@ class PlayMergedFileUseCase @Inject constructor(
             if (!currentCoroutineContext().isActive) break
             if (!_isPlaying.value) break
 
-            _highlightIndex.value = i
+            _highlightIndex.update { i }
             kotlinx.coroutines.delay(recordingTimes[i])
         }
 
-        _isPlaying.value = false
-        _highlightIndex.value = null
+        _isPlaying.update { false }
+        _highlightIndex.update { null }
     }
 
     fun stop() {
         playJob?.cancel()
         playJob = null
-        _isPlaying.value = false
-        _highlightIndex.value = null
+        _isPlaying.update { false }
+        _highlightIndex.update { null }
         audioPlayer.stop()
     }
 
     fun checkFile() {
         checkFileJob?.cancel()
         checkFileJob = scope.launch {
-            val currentItem = qaDataManager.getCurrentQaItem() ?: return@launch
+            val currentItem = qaContentReader.getCurrentQaItem() ?: return@launch
             val category = currentItem.category
-            val scriptIndex = qaDataManager.getCurrentIndex()
+            val scriptIndex = qaContentReader.getCurrentIndex()
 
-            var exists = false
-            var mergedFile: File? = null
+            var found = false
 
-            for (attempt in 1..3) {
-                exists = audioFileManager.hasEnglishWritingTestMergedFile(category, scriptIndex)
-                mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
-                if (exists && mergedFile != null && mergedFile.exists()) break
-                if (attempt < 3) kotlinx.coroutines.delay(500L)
+            for (attempt in 1..FILE_CHECK_RETRY_COUNT) {
+                val mergedFile = audioFileManager.getEnglishWritingTestMergedFile(category, scriptIndex)
+                if (mergedFile != null && mergedFile.exists()) {
+                    found = true
+                    break
+                }
+                if (attempt < FILE_CHECK_RETRY_COUNT) kotlinx.coroutines.delay(FILE_CHECK_RETRY_DELAY_MS)
             }
 
-            _hasFile.value = exists && mergedFile != null && mergedFile.exists()
+            _hasFile.update { found }
         }
     }
 
-    fun release() {
-        playJob?.cancel()
-        playJob = null
+    fun reset() {
+        stop()
         checkFileJob?.cancel()
         checkFileJob = null
-        _isPlaying.value = false
-        _highlightIndex.value = null
-        audioPlayer.stop()
     }
 
     override fun close() {
-        release()
+        stop()
+        checkFileJob?.cancel()
+        checkFileJob = null
         scope.cancel()
     }
 }

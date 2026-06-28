@@ -27,6 +27,13 @@ class EnglishWritingTestRepositoryImpl(
     private val appLogger: AppLogger
 ) : BaseMemorizeTestRepository(progressPersistenceService), EnglishWritingTestRepository {
 
+    companion object {
+        private const val RECORDING_CHAR_DURATION_MS = 100L
+        private const val MIN_RECORDING_DURATION_MS = 3000L
+        private const val ENGLISH_WRITING_FILE_PREFIX = "english_writing"
+        private val DATE_FORMAT = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+    }
+
     override val memorizeLevel = MemorizeLevel.ENGLISH_WRITING
 
     override suspend fun executeEnglishWritingTest(
@@ -52,11 +59,7 @@ class EnglishWritingTestRepositoryImpl(
                 )
 
                 // 1. 한글 문장 TTS
-                emit(MemorizeTestEvent.CardFlip(true))
-                delay(100)
-                emit(MemorizeTestEvent.KoreanHighlight(idx))
-
-                val koResult = ttsOrchestrator.speakAndWaitForCompletion(koSentences[idx])
+                val koResult = playKoreanWithHighlight(ttsOrchestrator, koSentences[idx], idx)
                 if (koResult is TtsSpeakResult.Unavailable) break
 
                 if (!currentCoroutineContext().isActive) break
@@ -69,7 +72,7 @@ class EnglishWritingTestRepositoryImpl(
                 val recordingDuration = if (savedTtsTime != null && savedTtsTime > 0) {
                     savedTtsTime
                 } else {
-                    (enSentences[idx].length * 100L).coerceAtLeast(3000L)
+                    (enSentences[idx].length * RECORDING_CHAR_DURATION_MS).coerceAtLeast(MIN_RECORDING_DURATION_MS)
                 }
 
                 val recordingFile = audioRecorder.startRecording()
@@ -83,7 +86,7 @@ class EnglishWritingTestRepositoryImpl(
 
                 recordingTimeManager.saveRecordingTime(category, scriptIndex, idx, actualRecordingTime)
 
-                val savedFile = audioFileManager.saveRecordingFile(recordingFile, "english_writing_${category}_${scriptIndex}_${idx}")
+                val savedFile = audioFileManager.saveRecordingFile(recordingFile, "${ENGLISH_WRITING_FILE_PREFIX}_${category}_${scriptIndex}_${idx}")
                 recordingFiles.add(savedFile)
 
                 emit(MemorizeTestEvent.RecordingStateChange(false))
@@ -103,20 +106,22 @@ class EnglishWritingTestRepositoryImpl(
 
         // 3. 녹음 파일 병합
         if (recordingFiles.isNotEmpty()) {
-            val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-            val timestamp = dateFormat.format(Date())
-            val mergedFileName = "영작테스트_${category}_${scriptIndex}_${timestamp}"
+            val timestamp = DATE_FORMAT.format(Date())
+            val mergedFileName = "${AudioFileManager.ENGLISH_WRITING_PREFIX}_${category}_${scriptIndex}_${timestamp}"
 
             try {
-                audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
-                recordingFiles.forEach { file ->
-                    if (file.exists()) file.delete()
+                val mergedFile = audioFileManager.mergeAudioFiles(recordingFiles, mergedFileName)
+                if (mergedFile != null) {
+                    recordingFiles.forEach { file ->
+                        if (file.exists()) file.delete()
+                    }
+                    emit(MemorizeTestEvent.MergedFileCreated)
+                } else {
+                    appLogger.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지")
                 }
             } catch (e: Exception) {
                 appLogger.e("EnglishWritingTestRepo", "병합 실패 — 개별 녹음 파일 유지", e)
             }
-
-            emit(MemorizeTestEvent.MergedFileCreated)
         }
 
         progressPersistenceService.saveNavigationState(

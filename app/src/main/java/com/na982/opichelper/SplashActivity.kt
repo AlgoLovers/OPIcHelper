@@ -23,6 +23,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class SplashActivity : ComponentActivity() {
+
+    companion object {
+        private const val SPLASH_DELAY_MS = 2000L
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -39,7 +43,7 @@ class SplashActivity : ComponentActivity() {
 
         // 2초 후 MainActivity로 이동 (lifecycleScope로 자동 취소)
         lifecycleScope.launch {
-            delay(2000L)
+            delay(SPLASH_DELAY_MS)
             if (!isFinishing && !isDestroyed) {
                 startActivity(Intent(this@SplashActivity, MainActivity::class.java))
                 finish()

@@ -3,6 +3,7 @@ package com.na982.opichelper.domain.audio
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,25 +24,25 @@ class HighlightStateHolder @Inject constructor() {
     val recordingHighlight: StateFlow<HighlightInfo> = _recordingHighlight.asStateFlow()
 
     fun setQuestionHighlight(index: Int?, sentence: String? = null) {
-        _questionHighlight.value = HighlightInfo(index, sentence)
+        _questionHighlight.update { HighlightInfo(index, sentence) }
     }
 
     fun setAnswerHighlight(index: Int?, sentence: String? = null) {
-        _answerHighlight.value = HighlightInfo(index, sentence)
+        _answerHighlight.update { HighlightInfo(index, sentence) }
     }
 
     fun setAnswerKoHighlight(index: Int?, sentence: String? = null) {
-        _answerKoHighlight.value = HighlightInfo(index, sentence)
+        _answerKoHighlight.update { HighlightInfo(index, sentence) }
     }
 
     fun setRecordingHighlight(index: Int?) {
-        _recordingHighlight.value = HighlightInfo(index)
+        _recordingHighlight.update { HighlightInfo(index) }
     }
 
     fun clearHighlight() {
-        _questionHighlight.value = HighlightInfo()
-        _answerHighlight.value = HighlightInfo()
-        _answerKoHighlight.value = HighlightInfo()
-        _recordingHighlight.value = HighlightInfo()
+        _questionHighlight.update { HighlightInfo() }
+        _answerHighlight.update { HighlightInfo() }
+        _answerKoHighlight.update { HighlightInfo() }
+        _recordingHighlight.update { HighlightInfo() }
     }
 }

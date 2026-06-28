@@ -1,11 +1,15 @@
 package com.na982.opichelper.domain.repository
 
 import com.na982.opichelper.domain.audio.MemorizeTestEvent
+import com.na982.opichelper.domain.audio.RepeatListeningProgress
 import com.na982.opichelper.domain.entity.RepeatListeningData
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 
 interface RepeatListeningRepository {
     val events: SharedFlow<MemorizeTestEvent>
+
+    val repeatProgress: StateFlow<RepeatListeningProgress?>
 
     suspend fun executeRepeatListening(
         data: RepeatListeningData,
@@ -13,7 +17,6 @@ interface RepeatListeningRepository {
     )
 
     suspend fun getResumeIndex(category: String, scriptIndex: Int, totalCount: Int): Int
-    suspend fun getCurrentProgress(category: String, scriptIndex: Int, totalSentences: Int): TestProgressData?
-    suspend fun updateProgress(progressData: TestProgressData)
-    suspend fun clearProgress(category: String, scriptIndex: Int)
+
+    fun requestExtraRepetitions(count: Int)
 }

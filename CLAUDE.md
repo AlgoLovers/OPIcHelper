@@ -41,13 +41,14 @@ Presentation (Compose UI + ViewModel) → Domain (Entity + UseCase + Repository 
 의존성은 항상 외부(Data) → 내부(Domain) 방향. Domain은 Data를 직접 참조하지 않음.
 
 ### ViewModel 구조
-- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨, 앱 종료 정리. 의존성 5개 (QaDataManager, UserPreferencesRepository, MemorizeTestProgressTracker, SearchQaItemsUseCase, AppLogger)
-- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 생명주기, PiP 제어. 의존성 7개 (TtsPlaybackController, PlayMergedFileUseCase, TtsOrchestrator, UserPreferencesRepository, MemorizationModeCoordinator, TtsServiceController, AppLogger). PlaybackActionListener로 콜백 통합
+- `QaBrowserViewModel`: QA 데이터 탐색, 카테고리, 암기레벨. 의존성 8개 (QaDataManager, UserLevelPreferences, PlaybackPreferences, MemorizeLevelPreferences, MemorizeTestProgressTracker, SearchQaItemsUseCase, ProgressCleanupUseCase, AppLogger)
+- `PlaybackViewModel`: TTS 재생, 병합 파일 재생, 코디네이터 이벤트. 의존성 6개 (TtsPlaybackController, PlayMergedFileUseCase, MemorizationModeCoordinator, PlaybackPreferences, PipStateAggregator, AppLogger). PiP 상태는 PipStateAggregator에 위임
 - `RepeatListeningViewModel`: 반복듣기 모드 전담. 의존성 7개 (RepeatListeningRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, UserPreferencesRepository, MemorizationModeCoordinator, AppLogger)
 - `EnglishWritingTestViewModel`: 영작테스트 모드 전담. 의존성 6개 (EnglishWritingTestRepository, TtsPlaybackController, QaDataManager, MemorizeTestProgressTracker, MemorizationModeCoordinator, AppLogger)
-- `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 4개 (FullMemorizationUseCase, QaDataManager, MemorizationModeCoordinator, AppLogger)
+- `FullMemorizationViewModel`: 통암기 모드 전담. 의존성 4개 (FullMemorizationUseCase, QaContentReader, MemorizationModeCoordinator, AppLogger)
 - `MemorizationModeCoordinator`: 3개 모드 상호 배제, 상태 머신, Job 관리. @Singleton
 - `SettingsViewModel`: 설정 화면 전용. UserPreferencesRepository + TtsOrchestrator
+- `OnboardingViewModel`: 온보딩/PiP 가이드 상태. OnboardingPreferences
 
 ### TTS 재생 흐름 (핵심 경로)
 ```
@@ -247,6 +248,149 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 | ExecuteRepeatListeningUseCase / ExecuteEnglishWritingTestUseCase 순수 위임 | 제거, Repository 직접 주입 (0127) |
 | Data 계층 12개 파일 + MainActivity android.util.Log | AppLogger 전환 (0128) |
 | Domain 계층 Android import (Log, Context, PowerManager) | AppLogger + WakeLockController 분리로 해결 (0119, 0126, 0128) |
+| UserPreferencesRepository ISP 위반 (15+ 메서드) | 6개 하위 인터페이스 분리 + 복합 인터페이스 유지 (0129) |
+| ScriptEditRepositoryImpl 미사용 의존성 | UserPreferencesRepository 파라미터 제거 (0129) |
+| 미사용 메서드 16개 (AudioFileManager 8, AudioPlayer 3, RecordingAudioPlayer 2, FullMemorizationUseCase 1, QaItemDao 1, LeveledQaDataLoader 1) | 인터페이스+구현체 제거 (0133) |
+| !! 강제 언랩 3곳 | 안전한 패턴 교체 (0135) |
+| 매직넘버 20+ | companion object 상수화 (0135) |
+| getSentenceFromAnswer() 3곳 중복 | BaseMemorizationViewModel로 이동 (0135) |
+| 매직넘버 15+ (Unicode 범위, TTS 속도, 단어수 임계값, 버퍼 크기, 검색어 길이) | companion object 상수화 (0136) |
+| 파일명 접두어 3개 파일 분산 ("통암기_", "영작테스트_", "english_writing_") | FULL_MEMORIZATION_PREFIX, ENGLISH_WRITING_PREFIX 등 상수화 (0136) |
+| BaseTtsPlayer deprecated onError @Suppress 누락 | @Suppress("DEPRECATION") 추가 (0136) |
+| TtsPlaybackController ISP 위반 (21멤버) | TtsHighlightController 하위 인터페이스 분리 + 복합 인터페이스 유지 (0137) |
+| QaDataManager ISP 위반 (17멤버) | QaContentReader, QaNavigator, QaSearch, QaDataLifecycle 하위 인터페이스 분리 + 복합 인터페이스 유지 (0137) |
+| MemorizationModeCoordinator ISP 위반 (12멤버) | MemorizationStateObserver 하위 인터페이스 분리 + 복합 인터페이스 유지 (0137) |
+| FullMemorizationUseCase/PlayMergedFileUseCase QaDataManager 전체 의존 | QaContentReader로 축소 (0137) |
+| SearchQaItemsUseCase QaDataManager 전체 의존 | QaSearch로 축소 (0137) |
+| PlaybackViewModel dead code 3개 (setAnswerCardFlipped, isCoordinatorRunning, isMergedFilePlaying) | 삭제 (0138) |
+| PlaybackViewModel checkEnglishWritingTestMergedFile public | private 변경 (0138) |
+| PlaybackState.isAnswerCardFlipped 미사용 필드 | 삭제 (0138) |
+| QaBrowserViewModel onboarding SRP 위반 | OnboardingViewModel 추출 (0138) |
+| TtsPlaybackControllerImpl stopAndMarkPaused spurious emission | resetPlayState() 대신 개별 필드 리셋 (0139) |
+| AudioFileManagerImpl MediaMuxer stop() 누락 | muxer.stop() 추가 (0139) |
+| AudioFileManagerImpl 무효 M4A raw byte 폴백 | 폴백 제거 (0139) |
+| PlaybackViewModel.onCleared PlayMergedFileUseCase scope 누수 | release() → close() 변경 (0139) |
+| FullMemorizationViewModel startMode() 코루틴 누적 | Job(modeJob)로 자식 코루틴 관리 (0139) |
+| BaseMemorizationViewModel modeJob private | protected 변경 (0139) |
+| SplashActivity delay(2000L) 매직넘버 | SPLASH_DELAY_MS 상수화 (0139) |
+| MutableStateFlow .value = 경쟁 상태 (4개 파일) | .update {} 패턴으로 전환 (0140) |
+| BaseMemorizationViewModel _uiState.value = → .update {} | 일관성 통일 (0141) |
+| PlaybackViewModel dead code 3개 + PlaybackState 미사용 필드 | 삭제 (0142) |
+| QaBrowserViewModel onboarding SRP 위반 | OnboardingViewModel 추출 (0142) |
+| TtsPlaybackControllerImpl stopAndMarkPaused spurious emission | 개별 필드 리셋 (0143) |
+| AudioFileManagerImpl MediaMuxer stop() 누락 | muxer.stop() 추가 (0143) |
+| AudioFileManagerImpl 무효 M4A raw byte 폴백 | 폴백 제거 (0143) |
+| PlaybackViewModel.onCleared PlayMergedFileUseCase scope 누수 | release() → close() 변경 (0143) |
+| FullMemorizationViewModel startMode() 코루틴 누적 | Job(modeJob) 자식 관리 (0143) |
+| BaseMemorizationViewModel modeJob private | protected 변경 (0143) |
+| SplashActivity delay(2000L) 매직넘버 | SPLASH_DELAY_MS 상수화 (0143) |
+| MutableStateFlow .value = 경쟁 상태 (6개 파일 추가) | .update {} 패턴 전환 (0144) |
+| FullMemorizationUseCase DEFAULT_RECORDING_TIMES 하드코딩 | 실제 문장 수로 동적 계산 (0144) |
+| RecordingFileRepositoryImpl 비결정적 파일 선택 | maxByOrNull { lastModified() } (0144) |
+| BaseMemorizationViewModel QaDataManager 전체 의존 | QaContentReader + QaNavigator 분리 (0144) |
+| MainActivity onBackPressed() deprecated | OnBackPressedDispatcher 전환 (0144) |
+| UserPreferencesRepository .value = 경쟁 상태 | .update {} 패턴 전환 (0144) |
+| MemorizationModeCoordinatorImpl .value = 경쟁 상태 | .update {} 패턴 전환 (0144) |
+| data/CLAUDE.md EnglishWritingTestRepositoryImpl 위반 주석 | 실제 위반 아님, 제거 (0144) |
+| BaseMemorizationViewModel.modeJob @Volatile 누락 | @Volatile 추가 (0145) |
+| PlayMergedFileUseCase playJob/checkFileJob @Volatile 누락 | @Volatile 추가 (0145) |
+| QaDataManagerImpl userLevelJob @Volatile 누락 | @Volatile 추가 (0145) |
+| WakeLockControllerImpl wakeLock @Volatile 누락 | @Volatile 추가 (0145) |
+| TtsOrchestratorImpl.stop() AtomicInteger invariant 위반 | activeSpeakCount.set(0) 제거, 자연 감소 허용 (0145) |
+| TtsPlaybackControllerImpl .value = 경쟁 상태 (20건) | .update {} 패턴 전환 (0145) |
+| TtsOrchestratorImpl .value = 경쟁 상태 (3건) | .update {} 패턴 전환 (0145) |
+| HighlightStateHolder .value = 경쟁 상태 (8건) | .update {} 패턴 전환 (0145) |
+| MemorizeTestProgressTracker .value = 경쟁 상태 (11건) | .update {} 패턴 전환 (0145) |
+| MainActivity _permissionDenied .value = | .update {} 패턴 전환 (0145) |
+| EditScriptViewModel QaDataManager 전체 의존 | QaDataLifecycle로 축소 (0145) |
+| SettingsViewModel UserPreferencesRepository 전체 의존 | UserLevelPreferences + TtsPreferences + PlaybackPreferences (0145) |
+| CurrentMode.group else catch-all | exhaustive when 전환 (0145) |
+| OCP duplicated when dispatch 4곳 | MemorizationController 중앙화 (0146) |
+| QaBrowserViewModel cleanupOnAppExit SRP 위반 | ProgressCleanupUseCase 추출 (0147) |
+| PlaybackViewModel SRP 위반 (7 deps, 5 responsibilities) | PipStateAggregator 추출, 6 deps 3 responsibilities (0148) |
+| PlaybackActionListener domain→presentation import 위반 | domain/audio/ 이동 (0149) |
+| PipStateAggregator CoroutineScope 누수 | release()에 scope.cancel() 추가 (0149) |
+| ProgressCleanupUseCase 취소 시 미저장 | withContext(NonCancellable) 추가 (0149) |
+| TtsPlayer.isPlaying() 미사용 | 인터페이스+구현체 제거 (0149) |
+| RecordingAudioPlayer.isPlaying 미사용 | 인터페이스+구현체 제거 (0149) |
+| AudioPlayer.isPlaying 미사용 | 인터페이스+구현체 제거 (0149) |
+| RecordingFileRepository.stopPlayingRecording() 미사용 | 인터페이스+구현체 제거 (0149) |
+| TtsPlaybackController playMergedAudio/setQuestionHighlightIndex 미사용 | 인터페이스+구현체 제거 (0149) |
+| FullMemorizationUseCase isRecording/isPlaying 미사용 | 제거 (0149) |
+| FullMemorizationViewModel deleteRecording 미사용 | 제거 (0149) |
+| MemorizeTestProgressTracker hasScriptProgress/clearScriptProgress 미사용 | 제거 (0149) |
+| MainActivity isFinishing 미사용, 빈 onStop, 미사용 import | 제거 (0149) |
+| FullMemorizationUseCase.clearRecording() 미사용 | 제거 (0151) |
+| MemorizationModeCoordinator.cancelJobs()/isActive() 미사용 | 제거 (0151) |
+| MemorizationStateObserver 인터페이스 미사용 | 제거, 속성을 MemorizationModeCoordinator에 직접 선언 (0151) |
+| TtsHighlightController DI 바인딩 미사용 | 제거 (0151) |
+| AudioFileManager.mergeAndSaveAudioFiles()/getFullMemorizationRecording() 미사용 | 제거 (0151) |
+| ProgressPersistenceService.saveAppExitState()/loadAppExitState() 미사용 | 제거 (0151) |
+| AppExitState 데이터 클래스 미사용 | 제거 (0151) |
+| RepeatListeningRepository/EnglishWritingTestRepository getCurrentProgress/updateProgress/clearProgress 미사용 | 제거 (0151) |
+| TestProgressData 데이터 클래스 미사용 | 제거 (0151) |
+| QaDataManagerImpl ConcurrentHashMap 경쟁 상태 | Mutex로 직렬화 (0152) |
+| CategoryProgress/AppExitState/TestProgressData 중복 | ScriptProgress로 통합 (0153) |
+| QaDataManagerImpl observer 경쟁 상태 | setupUserLevelObserver에 mutex.withLock 추가 (0155) |
+| AudioFileManager 병합 실패 시 소스 파일 삭제 | mergeAudioFiles 반환 타입 File→File?, null 체크 후 삭제 (0156) |
+| CurrentMode/ModeGroup entity→usecase DIP 위반 | domain/entity/로 이동 (0157) |
+| FullMemorizationUseCase 녹음 리소스 누수 | close()/cancelPlayback()에 stopRecording 추가 (0159) |
+| QaDataManagerImpl 레벨 변경 시 stale data | loadQaItemsFromAssets()에서 맵 clear 후 로드 (0160) |
+| PipStateAggregator.lastMemorizationGroup 캡슐화 | internal var → private var + 공개 읽기 전용 (0161) |
+| isFullMemorizationRecordingPlaying 오해 유발 이름 | isFullMemorizationPlaying으로 변경 (0161) |
+| SearchQaItemsUseCase 순수 위임 | 제거, QaBrowserViewModel→QaSearch 직접 의존 (0163) |
+| QaDataManagerImpl O(N*C) filter 루프 | groupBy O(N) 전환, allItems 캐시, search 최적화 (0163) |
+| AudioFileManagerImpl has+get 중복 메서드 | findEnglishWritingTestMergedFile() 통합 (0163) |
+| AudioFileManagerImpl Regex 오버헤드 | startsWith 교체, getRecordingsDirectory() 추출 (0163) |
+| RecordingTimeManagerImpl SharedPreferences 매번 읽기 | 메모리 캐시 도입 (0163) |
+| TtsPlaybackControllerImpl _isPlaying 수동 동기화 | combine(_isQuestionPlaying, _isAnswerPlaying) 파생 StateFlow (0163) |
+| MemorizeTestProgressTracker _hasProgress 수동 동기화 | progressMap.map {} 파생 StateFlow (0163) |
+| MainActivity PiP 상태 busy-wait | LaunchedEffect 수집, remember+SideEffect 초기화 (0163) |
+| BaseMemorizationViewModel KoreanHighlight 중복 | handleKoreanHighlight() 공통 메서드 추출 (0163) |
+| OPicHelperApplication @Inject 필드 + onTerminate | 제거 (프로덕션 미호출) (0163) |
+| Gson 매번 생성 | @Provides @Singleton 주입으로 전환 (0163) |
+| LeveledQaDataLoader TypeToken 매번 생성 | companion val 캐시 (0163) |
+| PlayMergedFileUseCase has+get 이중 호출 | findEnglishWritingTestMergedFile() 단일 호출 (0163) |
+| EnglishWritingTestViewModel SimpleDateFormat 매번 생성 | companion val 캐시 (0163) |
+| RepeatListeningViewModel Regex 매번 컴파일 | companion val 캐시 (0163) |
+| AudioFileManager.hasEnglishWritingTestMergedFile 미사용 | 제거, getEnglishWritingTestMergedFile null 체크로 대체 (0166) |
+| AudioFileManager.hasFullMemorizationRecording 미사용 | 제거 (0166) |
+| RecordingFileRepository.deleteRecordingFile 미사용 | 제거 (0166) |
+| ProgressPersistenceService.loadCategoryProgress 미사용 | 제거, loadAllCategoryProgress 사용 (0166) |
+| AudioPlayer.play(File, onCompletion) 인터페이스 미사용 | 인터페이스에서 제거, 구현체는 private 유지 (0166) |
+| BaseTtsPlayer _isPlaying AtomicBoolean 쓰기 전용 | 제거 (0168) |
+| TtsOrchestrator.speak() speakAndWaitForCompletion과 동일 | 인터페이스+구현체에서 제거 (0168) |
+| QaItemDao.getSeededLevels() 미사용 | 제거 (0169) |
+| AudioFileManagerImpl 미사용 상수 2개 | 제거 (0169) |
+| clearAllProgress() 미사용 체인 | 전체 제거 (0170) |
+| ProgressPersistenceServiceImpl KEY_APP_EXIT_STATE 미사용 | 제거 (0170) |
+| AssetSeeder Gson() 루프 내 3회 생성 | 싱글톤 주입 전환 (0171) |
+| AudioFileManagerImpl saveRecordingFile 중복 디렉토리 생성 | getRecordingsDirectory() 위임 (0171) |
+| MemorizeTestProgressTracker hasProgress 미사용 + CoroutineScope 누수 | 제거 (0172) |
+| PlaybackState.hasProgress 미사용 필드 | 제거 (0173) |
+| EditScriptViewModel isModified 미사용 StateFlow | 제거 (0173) |
+| QuestionCard isFlipped 항상 false | FlipCard 제거, 직접 렌더링 (0174) |
+| AnswerCard isRepeatListeningCardFlipped 중복 파라미터 | 제거 (0174) |
+| MainScreen AnswerCard 하이라이트 중복 OR 조건 | 단순화 (0174) |
+| QaBrowserViewModel.clearError() 미사용 | 제거 (0174) |
+| AudioPlayerImpl/RecordingAudioPlayerImpl MediaPlayer 해제 로직 중복 | BaseMediaPlayer 추출 (0176) |
+| TtsPlaybackController.close() 미호출 + coroutineScope 누수 | PlaybackViewModel.onCleared() cleanupTts → close() 변경 (0178) |
+| PlaybackPreferences.setAutoAdvance() 미사용 | 제거 (0178) |
+| QaNavigator.clearError() 미사용 | 제거 (0178) |
+| TtsOrchestrator.isSpeaking 외부 읽기 없음 | 인터페이스에서 제거 (0178) |
+| CurrentMode 미사용 enum 4개 (QUESTION_PLAY, ANSWER_PLAY, ENGLISH_WRITING_PLAYING, ENGLISH_WRITING_WITH_FILE) | 제거 (0179) |
+| CoordinatorEvent.LevelChanged 미발행 | 제거 (0179) |
+| FullMemorizationViewModel.refreshRecordingStatus() 외부 호출 없음 | private 전환 (0179) |
+| AndroidLogger/TtsServiceControllerImpl 이중 DI 등록 | @Inject constructor 제거 (0179) |
+| QaItemEntityMappers 독립 Gson 인스턴스 | QaItemEntityMapper 클래스 + Gson 주입 (0180) |
+| RepeatListening/EnglishWritingTest Repository 한글 TTS+하이라이트 중복 | BaseMemorizeTestRepository.playKoreanWithHighlight() 추출 (0180) |
+| MainScreen 5개 중복 Snackbar LaunchedEffect | merge + 단일 collect로 통합 (0182) |
+| MainScreen 536줄 과도한 길이 | 10단계 분해로 306줄로 축소 (0183-0192) |
+| TtsPlaybackControllerImpl/MemorizationModeCoordinatorImpl 이중 DI 등록 | @Inject constructor 제거, @Provides에서 직접 생성 (0193) |
+| domain/CLAUDE.md ScriptProgress 잘못된 분류 | entity/로 이동 (0193) |
+| RecordingFileRepositoryImpl 미사용 상태 필드 | currentRecordingPath/currentPlayingPath 제거 (0194) |
+| ENGLISH_WRITING_PREFIX/FULL_MEMORIZATION_PREFIX 중복 정의 | AudioFileManager companion object로 통합 (0195) |
+| CARD_FLIP_DELAY_MS 3곳 중복 정의 | BaseMemorizeTestRepository companion object로 통합 (0196) |
 
 ## Git 커밋 규칙
 

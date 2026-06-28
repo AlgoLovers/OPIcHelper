@@ -12,3 +12,9 @@ enum class MemorizeLevel(val displayName: String) {
         val allDisplayNames: List<String> = entries.map { it.displayName }
     }
 }
+
+fun MemorizeLevel.toModeGroup(): ModeGroup = when (this) {
+    MemorizeLevel.REPEAT_LISTENING -> ModeGroup.REPEAT_LISTENING
+    MemorizeLevel.ENGLISH_WRITING -> ModeGroup.ENGLISH_WRITING
+    MemorizeLevel.FULL_MEMORIZATION -> ModeGroup.FULL_MEMORIZATION
+}

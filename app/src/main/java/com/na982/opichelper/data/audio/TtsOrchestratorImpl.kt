@@ -5,23 +5,31 @@ import com.na982.opichelper.domain.audio.TtsOrchestrator
 import com.na982.opichelper.domain.audio.TtsPlayer
 import com.na982.opichelper.domain.audio.TtsSpeakResult
 import com.na982.opichelper.domain.manager.AppLogger
-import com.na982.opichelper.domain.repository.UserPreferencesRepository
+import com.na982.opichelper.domain.repository.TtsPreferences
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.util.concurrent.atomic.AtomicInteger
 
 class TtsOrchestratorImpl(
     private val googleTtsPlayer: TtsPlayer,
     private val samsungTtsPlayer: TtsPlayer,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val ttsPreferences: TtsPreferences,
     private val logger: AppLogger
 ) : TtsOrchestrator {
+
+    companion object {
+        private const val INTER_SENTENCE_DELAY_MS = 400L
+        private const val KOREAN_UNICODE_SYLLABLE_START = 0xAC00
+        private const val KOREAN_UNICODE_SYLLABLE_END = 0xD7AF
+        private const val KOREAN_UNICODE_JAMO_START = 0x3131
+        private const val KOREAN_UNICODE_JAMO_END = 0x318E
+    }
     private val activeSpeakCount = AtomicInteger(0)
     private val _isSpeaking = MutableStateFlow(false)
-    override val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
 
     private val allPlayers = listOf(googleTtsPlayer, samsungTtsPlayer)
     private val koreanTtsPlayers = listOf(samsungTtsPlayer)
@@ -29,32 +37,23 @@ class TtsOrchestratorImpl(
 
     private fun enterSpeaking() {
         if (activeSpeakCount.incrementAndGet() == 1) {
-            _isSpeaking.value = true
+            _isSpeaking.update { true }
         }
     }
 
     private fun exitSpeaking() {
         if (activeSpeakCount.decrementAndGet() == 0) {
-            _isSpeaking.value = false
+            _isSpeaking.update { false }
         }
     }
 
     private suspend fun speakInternal(text: String): TtsSpeakResult {
-        val isKorean = text.any { it.code in 0xAC00..0xD7AF || it.code in 0x3131..0x318E }
+        val isKorean = text.any { it.code in KOREAN_UNICODE_SYLLABLE_START..KOREAN_UNICODE_SYLLABLE_END || it.code in KOREAN_UNICODE_JAMO_START..KOREAN_UNICODE_JAMO_END }
         return if (isKorean) speakKorean(text) else speakEnglish(text)
     }
 
-    override suspend fun speak(text: String): TtsSpeakResult {
-        enterSpeaking()
-        return try {
-            speakInternal(text)
-        } finally {
-            exitSpeaking()
-        }
-    }
-
     private suspend fun speakEnglish(text: String): TtsSpeakResult {
-        googleTtsPlayer.setSpeechRate(userPreferencesRepository.getEnglishTtsRate())
+        googleTtsPlayer.setSpeechRate(ttsPreferences.getEnglishTtsRate())
         return googleTtsPlayer.speak(text)
     }
 
@@ -88,8 +87,6 @@ class TtsOrchestratorImpl(
 
     override fun stop() {
         try {
-            activeSpeakCount.set(0)
-            _isSpeaking.value = false
             allPlayers.forEach { it.stop() }
         } catch (e: Exception) {
             logger.e("TtsOrchestrator", "TTS 중지 실패", e)
@@ -131,7 +128,7 @@ class TtsOrchestratorImpl(
                     logger.e("TtsOrchestrator", "speakWithHighlight 문장 $idx 실패: $result")
                     break
                 }
-                delay(400L)
+                delay(INTER_SENTENCE_DELAY_MS)
             }
             onHighlight(null, null)
         } catch (e: CancellationException) {

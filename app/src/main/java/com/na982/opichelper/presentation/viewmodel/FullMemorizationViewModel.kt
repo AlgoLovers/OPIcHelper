@@ -1,14 +1,14 @@
 package com.na982.opichelper.presentation.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.na982.opichelper.domain.audio.SentenceSplitter
-import com.na982.opichelper.domain.repository.QaDataManager
+import com.na982.opichelper.domain.repository.QaContentReader
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
-import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.FullMemorizationState
 import com.na982.opichelper.domain.usecase.FullMemorizationUseCase
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -26,14 +26,15 @@ data class FullMemorizationUiState(
 @HiltViewModel
 class FullMemorizationViewModel @Inject constructor(
     private val fullMemorizationUseCase: FullMemorizationUseCase,
-    private val qaDataManager: QaDataManager,
+    qaContentReader: QaContentReader,
     coordinator: MemorizationModeCoordinator,
     appLogger: AppLogger
 ) : BaseMemorizationViewModel<FullMemorizationUiState>(
     coordinator = coordinator,
     ttsPlaybackController = null,
     progressTracker = null,
-    appLogger = appLogger
+    appLogger = appLogger,
+    qaContentReader = qaContentReader
 ) {
 
     override val _uiState = MutableStateFlow(FullMemorizationUiState())
@@ -44,12 +45,13 @@ class FullMemorizationViewModel @Inject constructor(
         try {
             refreshRecordingStatus()
 
-            val category = qaDataManager.getCurrentCategory() ?: ""
-            val scriptIndex = qaDataManager.getCurrentIndex()
+            val category = qaContentReader.getCurrentCategory() ?: ""
+            val scriptIndex = qaContentReader.getCurrentIndex()
 
             val modeContext = coroutineContext
+            val collectJob = Job(modeJob)
 
-            viewModelScope.launch(modeContext) {
+            viewModelScope.launch(modeContext + collectJob) {
                 fullMemorizationUseCase.highlightIndex.collect { index ->
                     val sentenceEn = index?.let { getSentenceFromAnswer(it, isKorean = false) }
                     val sentenceKo = index?.let { getSentenceFromAnswer(it, isKorean = true) }
@@ -61,7 +63,7 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             }
 
-            viewModelScope.launch(modeContext) {
+            viewModelScope.launch(modeContext + collectJob) {
                 fullMemorizationUseCase.state.collect { fsState ->
                     when (fsState) {
                         is FullMemorizationState.Idle -> {
@@ -84,7 +86,7 @@ class FullMemorizationViewModel @Inject constructor(
                 }
             }
 
-            viewModelScope.launch(modeContext) {
+            viewModelScope.launch(modeContext + collectJob) {
                 coordinator.events.collect { event ->
                     if (event is CoordinatorEvent.RecordingStateChanged) {
                         refreshRecordingStatus()
@@ -146,24 +148,13 @@ class FullMemorizationViewModel @Inject constructor(
         }
     }
 
-    fun refreshRecordingStatus() {
+    private fun refreshRecordingStatus() {
         viewModelScope.launch {
             try {
                 val hasRecording = fullMemorizationUseCase.hasRecording()
                 _uiState.update { it.copy(hasRecordingFile = hasRecording) }
             } catch (e: Exception) {
                 appLogger.e("FullMemorizationVM", "녹음 파일 상태 확인 실패", e)
-            }
-        }
-    }
-
-    fun deleteRecording() {
-        viewModelScope.launch {
-            try {
-                fullMemorizationUseCase.clearRecording()
-                refreshRecordingStatus()
-            } catch (e: Exception) {
-                appLogger.e("FullMemorizationVM", "녹음 파일 삭제 실패", e)
             }
         }
     }
@@ -180,16 +171,6 @@ class FullMemorizationViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        fullMemorizationUseCase.close()
-    }
-
-    private fun getSentenceFromAnswer(index: Int, isKorean: Boolean): String? {
-        val currentItem = qaDataManager.currentQaItem.value ?: return null
-        val text = if (isKorean) {
-            qaDataManager.getCurrentAnswerKo(currentItem)
-        } else {
-            qaDataManager.getCurrentAnswer(currentItem)
-        }
-        return SentenceSplitter.split(text).getOrNull(index)
+        fullMemorizationUseCase.reset()
     }
 }

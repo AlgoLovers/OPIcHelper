@@ -14,16 +14,16 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class TtsPlaybackControllerImpl @Inject constructor(
+class TtsPlaybackControllerImpl(
     private val ttsOrchestrator: TtsOrchestrator,
     private val highlightStateHolder: HighlightStateHolder,
-    private val logger: AppLogger
+    private val appLogger: AppLogger
 ) : TtsPlaybackController, java.io.Closeable {
     companion object {
         private const val MERGED_AUDIO_DELAY_MS = 500L
@@ -39,8 +39,8 @@ class TtsPlaybackControllerImpl @Inject constructor(
     private val _isAnswerPlaying = MutableStateFlow(false)
     override val isAnswerPlaying: StateFlow<Boolean> = _isAnswerPlaying.asStateFlow()
 
-    private val _isPlaying = MutableStateFlow(false)
-    override val isPlaying: StateFlow<Boolean> get() = _isPlaying
+    override val isPlaying: StateFlow<Boolean> = combine(_isQuestionPlaying, _isAnswerPlaying) { q, a -> q || a }
+        .stateIn(coroutineScope, SharingStarted.Eagerly, false)
 
     private val _isPaused = MutableStateFlow(false)
     override val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
@@ -60,92 +60,36 @@ class TtsPlaybackControllerImpl @Inject constructor(
 
     override fun playQuestion(question: String) {
         stopAndReset(clearHighlight = false)
-        currentPlayJob = coroutineScope.launch {
-            val myJob = this.coroutineContext[Job]
-            try {
-                _isQuestionPlaying.value = true
-                updateIsPlaying()
-                ttsOrchestrator.speakWithHighlight(question) { index, sentence ->
-                    highlightStateHolder.setQuestionHighlight(index, sentence)
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logger.e("TtsPlaybackController", "질문 TTS 재생 오류", e)
-            } finally {
-                if (currentPlayJob == myJob) {
-                    _isQuestionPlaying.value = false
-                    _isPaused.value = false
-                    updateIsPlaying()
-                    highlightStateHolder.setQuestionHighlight(null)
-                }
-            }
-        }
+        playInternal(question, _isQuestionPlaying, highlightStateHolder::setQuestionHighlight, "질문")
     }
 
     override fun playAnswer(answer: String) {
         stopAndReset(clearHighlight = false)
-        currentPlayJob = coroutineScope.launch {
-            val myJob = this.coroutineContext[Job]
-            try {
-                _isAnswerPlaying.value = true
-                updateIsPlaying()
-                ttsOrchestrator.speakWithHighlight(answer) { index, sentence ->
-                    highlightStateHolder.setAnswerHighlight(index, sentence)
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logger.e("TtsPlaybackController", "답변 TTS 재생 오류", e)
-            } finally {
-                if (currentPlayJob == myJob) {
-                    _isAnswerPlaying.value = false
-                    _isPaused.value = false
-                    updateIsPlaying()
-                    highlightStateHolder.setAnswerHighlight(null)
-                }
-            }
-        }
+        playInternal(answer, _isAnswerPlaying, highlightStateHolder::setAnswerHighlight, "답변")
     }
 
-    override fun playMergedAudio(question: String, answer: String) {
-        stopAndReset(clearHighlight = false)
+    private fun playInternal(
+        text: String,
+        playingFlag: MutableStateFlow<Boolean>,
+        highlightSetter: (Int?, String?) -> Unit,
+        label: String
+    ) {
         currentPlayJob = coroutineScope.launch {
             val myJob = this.coroutineContext[Job]
             try {
-                _isQuestionPlaying.value = true
-                updateIsPlaying()
-                val questionResult = ttsOrchestrator.speakWithHighlight(question) { index, sentence ->
-                    highlightStateHolder.setQuestionHighlight(index, sentence)
+                playingFlag.update { true }
+                ttsOrchestrator.speakWithHighlight(text) { index, sentence ->
+                    highlightSetter(index, sentence)
                 }
-                if (questionResult is TtsSpeakResult.Unavailable || questionResult is TtsSpeakResult.Error) {
-                    return@launch
-                }
-
-                _isAnswerPlaying.value = true
-                _isQuestionPlaying.value = false
-                highlightStateHolder.setQuestionHighlight(null)
-
-                kotlinx.coroutines.delay(MERGED_AUDIO_DELAY_MS)
-
-                updateIsPlaying()
-                ttsOrchestrator.speakWithHighlight(answer) { index, sentence ->
-                    highlightStateHolder.setAnswerHighlight(index, sentence)
-                }
-                _isAnswerPlaying.value = false
-                highlightStateHolder.setAnswerHighlight(null)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.e("TtsPlaybackController", "합쳐진 오디오 재생 오류", e)
+                appLogger.e("TtsPlaybackController", "${label} TTS 재생 오류", e)
             } finally {
                 if (currentPlayJob == myJob) {
-                    _isQuestionPlaying.value = false
-                    _isAnswerPlaying.value = false
-                    _isPaused.value = false
-                    updateIsPlaying()
-                    highlightStateHolder.setQuestionHighlight(null)
-                    highlightStateHolder.setAnswerHighlight(null)
+                    playingFlag.update { false }
+                    _isPaused.update { false }
+                    highlightSetter(null, null)
                 }
             }
         }
@@ -153,28 +97,23 @@ class TtsPlaybackControllerImpl @Inject constructor(
 
     override fun stopTts() = stopAndReset(clearHighlight = true)
 
-    private fun updateIsPlaying() {
-        _isPlaying.value = _isQuestionPlaying.value || _isAnswerPlaying.value
-    }
-
     private fun resetPlayState() {
-        _isQuestionPlaying.value = false
-        _isAnswerPlaying.value = false
-        _isPaused.value = false
-        updateIsPlaying()
+        _isQuestionPlaying.update { false }
+        _isAnswerPlaying.update { false }
+        _isPaused.update { false }
     }
 
     override fun stopAndMarkPaused() {
         currentPlayJob?.cancel()
         currentPlayJob = null
         ttsOrchestrator.stop()
-        _isPaused.value = true
-        resetPlayState()
-        _isPaused.value = true
+        _isQuestionPlaying.update { false }
+        _isAnswerPlaying.update { false }
+        _isPaused.update { true }
     }
 
     override fun clearPausedState() {
-        _isPaused.value = false
+        _isPaused.update { false }
         highlightStateHolder.clearHighlight()
     }
 
@@ -183,8 +122,12 @@ class TtsPlaybackControllerImpl @Inject constructor(
             stopTts()
             ttsOrchestrator.releaseAllPlayers()
         } catch (e: Exception) {
-            logger.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
+            appLogger.e("TtsPlaybackController", "TTS 완전 정리 실패", e)
         }
+    }
+
+    override fun reset() {
+        stopTts()
     }
 
     override fun close() {
@@ -193,10 +136,6 @@ class TtsPlaybackControllerImpl @Inject constructor(
     }
 
     override fun stopWithoutClearingHighlight() = stopAndReset(clearHighlight = false)
-
-    override fun setQuestionHighlightIndex(index: Int) {
-        highlightStateHolder.setQuestionHighlight(index)
-    }
 
     override fun setAnswerHighlightIndex(index: Int, sentence: String?) {
         highlightStateHolder.setAnswerHighlight(index, sentence)

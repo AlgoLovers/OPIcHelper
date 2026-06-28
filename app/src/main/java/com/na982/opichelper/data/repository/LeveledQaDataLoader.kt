@@ -13,10 +13,11 @@ import kotlinx.coroutines.withContext
 
 class LeveledQaDataLoader(
     private val context: Context,
-    private val appLogger: AppLogger
+    private val appLogger: AppLogger,
+    private val gson: Gson
 ) : QaDataLoader {
 
-    private val gson = Gson()
+    private val categoryAssetType = object : TypeToken<QaCategoryAsset>() {}.type
 
     private val levelFolderMapping = mapOf(
         UserLevel.AL to "al",
@@ -34,8 +35,7 @@ class LeveledQaDataLoader(
                 if (fileName.endsWith(".json")) {
                     try {
                         val jsonString = context.assets.open("$folderName/$fileName").bufferedReader().use { it.readText() }
-                        val type = object : TypeToken<QaCategoryAsset>() {}.type
-                        val categoryAsset: QaCategoryAsset = gson.fromJson(jsonString, type) ?: return@forEach
+                        val categoryAsset: QaCategoryAsset = gson.fromJson(jsonString, categoryAssetType) ?: return@forEach
 
                         val items = categoryAsset.items.map { asset ->
                             val leveledAnswer = LeveledAnswer(
@@ -78,10 +78,4 @@ class LeveledQaDataLoader(
         val answer_en: String,
         val answer_ko: String
     )
-
-    suspend fun loadAllLevelData(): Map<UserLevel, List<QaItem>> = withContext(Dispatchers.IO) {
-        UserLevel.values().associateWith { level ->
-            loadQaItemsForLevel(level)
-        }
-    }
 }

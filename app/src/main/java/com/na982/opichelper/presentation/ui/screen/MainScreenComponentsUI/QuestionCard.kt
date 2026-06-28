@@ -16,7 +16,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.na982.opichelper.presentation.ui.component.FlipCard
 import com.na982.opichelper.presentation.ui.component.HighlightText
 import com.na982.opichelper.ui.theme.*
 
@@ -28,7 +27,6 @@ fun QuestionCard(
     currentIndex: Int,
     totalCount: Int,
     completedCount: Int = 0,
-    isFlipped: Boolean = false,
     currentCategory: String = "",
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -157,27 +155,13 @@ fun QuestionCard(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 플립 카드로 질문 표시 - 개선된 디자인
-        FlipCard(
-            isFlipped = isFlipped,
-            frontContent = {
-                ModernCard(
-                    title = "Question",
-                    content = currentQuestion,
-                    highlightIndex = highlightIndex,
-                    backgroundColor = MaterialTheme.colorScheme.surface,
-                    titleColor = MaterialTheme.colorScheme.primary
-                )
-            },
-            backContent = {
-                ModernCard(
-                    title = "질문",
-                    content = currentQuestionKo,
-                    highlightIndex = highlightIndex,
-                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-                    titleColor = MaterialTheme.colorScheme.primary
-                )
-            }
+        // 질문 카드
+        ModernCard(
+            title = "Question",
+            content = currentQuestion,
+            highlightIndex = highlightIndex,
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            titleColor = MaterialTheme.colorScheme.primary
         )
     }
 }

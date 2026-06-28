@@ -2,12 +2,12 @@ package com.na982.opichelper.domain.usecase
 
 import com.na982.opichelper.domain.repository.ProgressPersistenceService
 import com.na982.opichelper.domain.entity.ScriptProgress
-import com.na982.opichelper.domain.entity.CategoryProgress
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import com.na982.opichelper.domain.manager.AppLogger
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,18 +19,14 @@ import javax.inject.Singleton
 @Singleton
 class MemorizeTestProgressTracker @Inject constructor(
     private val progressPersistenceService: ProgressPersistenceService,
-    private val logger: AppLogger
+    private val appLogger: AppLogger
 ) {
     private val mutex = Mutex()
 
     // 모든 스크립트의 진행 상황 (메모리에서 관리)
     private val _progressMap = MutableStateFlow<Map<String, ScriptProgress>>(emptyMap())
     val progressMap: StateFlow<Map<String, ScriptProgress>> = _progressMap.asStateFlow()
-    
-    // 진행 상태 존재 여부
-    private val _hasProgress = MutableStateFlow(false)
-    val hasProgress: StateFlow<Boolean> = _hasProgress.asStateFlow()
-    
+
     /**
      * 앱 시작 시 모든 진행 상황 복원
      */
@@ -38,28 +34,17 @@ class MemorizeTestProgressTracker @Inject constructor(
         try {
             val allProgress = progressPersistenceService.loadAllCategoryProgress()
 
-            val scriptProgressMap = allProgress.mapValues { (_, categoryProgress) ->
-                ScriptProgress(
-                    category = categoryProgress.category,
-                    scriptIndex = categoryProgress.scriptIndex,
-                    memorizeLevel = categoryProgress.memorizeLevel,
-                    currentSentenceIndex = categoryProgress.currentSentenceIndex,
-                    totalSentences = categoryProgress.totalSentences,
-                    isMemorizeTestRunning = categoryProgress.isMemorizeTestRunning,
-                    timestamp = categoryProgress.timestamp,
-                    needsSave = false
-                )
+            val scriptProgressMap = allProgress.mapValues { (_, progress) ->
+                progress.copy(needsSave = false)
             }
 
             mutex.withLock {
-                _progressMap.value = scriptProgressMap
-                _hasProgress.value = scriptProgressMap.isNotEmpty()
+                _progressMap.update { scriptProgressMap }
             }
         } catch (e: Exception) {
-            logger.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
+            appLogger.e("MemorizeTestProgressTracker", "진행 상황 복원 실패", e)
             mutex.withLock {
-                _progressMap.value = emptyMap()
-                _hasProgress.value = false
+                _progressMap.update { emptyMap() }
             }
         }
     }
@@ -71,14 +56,7 @@ class MemorizeTestProgressTracker @Inject constructor(
         val key = "${category}_${scriptIndex}_${memorizeLevel}"
         return mutex.withLock { _progressMap.value[key] }
     }
-    
-    /**
-     * 특정 스크립트의 진행 상황 존재 여부 확인 (암기레벨별)
-     */
-    suspend fun hasScriptProgress(category: String, scriptIndex: Int, memorizeLevel: String): Boolean {
-        return getScriptProgress(category, scriptIndex, memorizeLevel) != null
-    }
-    
+
     /**
      * 진행 상황 업데이트 (메모리에서만)
      */
@@ -92,9 +70,7 @@ class MemorizeTestProgressTracker @Inject constructor(
     ) {
         val key = "${category}_${scriptIndex}_${memorizeLevel}"
         mutex.withLock {
-            val currentMap = _progressMap.value.toMutableMap()
-
-            currentMap[key] = ScriptProgress(
+            _progressMap.update { it + (key to ScriptProgress(
                 category = category,
                 scriptIndex = scriptIndex,
                 memorizeLevel = memorizeLevel,
@@ -102,13 +78,10 @@ class MemorizeTestProgressTracker @Inject constructor(
                 totalSentences = totalSentences,
                 isMemorizeTestRunning = isMemorizeTestRunning,
                 needsSave = true
-            )
-
-            _progressMap.value = currentMap
-            _hasProgress.value = currentMap.isNotEmpty()
+            )) }
         }
     }
-    
+
     /**
      * 앱 종료 시 변경된 진행 상황만 저장
      */
@@ -119,63 +92,20 @@ class MemorizeTestProgressTracker @Inject constructor(
 
                 if (changedProgress.isNotEmpty()) {
                     changedProgress.forEach { scriptProgress: ScriptProgress ->
-                        val categoryProgress = CategoryProgress(
-                            category = scriptProgress.category,
-                            scriptIndex = scriptProgress.scriptIndex,
-                            memorizeLevel = scriptProgress.memorizeLevel,
-                            currentSentenceIndex = scriptProgress.currentSentenceIndex,
-                            totalSentences = scriptProgress.totalSentences,
-                            isMemorizeTestRunning = scriptProgress.isMemorizeTestRunning,
-                            timestamp = scriptProgress.timestamp
-                        )
-
-                        progressPersistenceService.saveCategoryProgress(categoryProgress)
+                        progressPersistenceService.saveCategoryProgress(scriptProgress)
                     }
 
-                    val currentMap = _progressMap.value.toMutableMap()
-                    changedProgress.forEach { scriptProgress: ScriptProgress ->
-                        val key = scriptProgress.getKey()
-                        currentMap[key] = scriptProgress.toPersistable()
+                    _progressMap.update { map ->
+                        var updated = map
+                        changedProgress.forEach { scriptProgress: ScriptProgress ->
+                            updated = updated + (scriptProgress.getKey() to scriptProgress.toPersistable())
+                        }
+                        updated
                     }
-                    _progressMap.value = currentMap
                 }
             }
         } catch (e: Exception) {
-            logger.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
-        }
-    }
-    
-    /**
-     * 특정 스크립트의 진행 상황 삭제 (암기레벨별)
-     */
-    suspend fun clearScriptProgress(category: String, scriptIndex: Int, memorizeLevel: String) {
-        try {
-            val key = "${category}_${scriptIndex}_${memorizeLevel}"
-            mutex.withLock {
-                val currentMap = _progressMap.value.toMutableMap()
-                currentMap.remove(key)
-                _progressMap.value = currentMap
-                _hasProgress.value = currentMap.isNotEmpty()
-            }
-
-            progressPersistenceService.clearCategoryProgress(category, scriptIndex, memorizeLevel)
-        } catch (e: Exception) {
-            logger.e("MemorizeTestProgressTracker", "스크립트 진행 상황 삭제 실패", e)
-        }
-    }
-    
-    /**
-     * 모든 진행 상황 삭제
-     */
-    suspend fun clearAllProgress() {
-        try {
-            progressPersistenceService.clearAllProgress()
-            mutex.withLock {
-                _progressMap.value = emptyMap()
-                _hasProgress.value = false
-            }
-        } catch (e: Exception) {
-            logger.e("MemorizeTestProgressTracker", "모든 진행 상황 삭제 실패", e)
+            appLogger.e("MemorizeTestProgressTracker", "진행 상황 저장 실패", e)
         }
     }
 } 

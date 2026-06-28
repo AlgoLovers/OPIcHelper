@@ -1,9 +1,9 @@
 package com.na982.opichelper.data.usecase
 
 import com.na982.opichelper.domain.usecase.CoordinatorEvent
-import com.na982.opichelper.domain.usecase.CurrentMode
+import com.na982.opichelper.domain.entity.CurrentMode
 import com.na982.opichelper.domain.usecase.MemorizationModeCoordinator
-import com.na982.opichelper.domain.usecase.ModeGroup
+import com.na982.opichelper.domain.entity.ModeGroup
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -11,12 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.update
 import java.util.concurrent.atomic.AtomicReference
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class MemorizationModeCoordinatorImpl @Inject constructor() : MemorizationModeCoordinator {
+class MemorizationModeCoordinatorImpl : MemorizationModeCoordinator {
     private val _currentMode = MutableStateFlow<CurrentMode>(CurrentMode.NONE)
     override val currentMode: StateFlow<CurrentMode> = _currentMode.asStateFlow()
 
@@ -35,7 +32,7 @@ class MemorizationModeCoordinatorImpl @Inject constructor() : MemorizationModeCo
     override fun requestMode(mode: CurrentMode): Boolean = synchronized(_lock) {
         val result = _currentMode.compareAndSet(CurrentMode.NONE, mode)
         if (result) {
-            _isRunning.value = true
+            _isRunning.update { true }
             _owner.set(mode.group)
         }
         return result
@@ -43,13 +40,13 @@ class MemorizationModeCoordinatorImpl @Inject constructor() : MemorizationModeCo
 
     override fun updateMode(mode: CurrentMode) = synchronized(_lock) {
         if (_isRunning.value && _currentMode.value.group == mode.group && _owner.get() == mode.group) {
-            _currentMode.value = mode
+            _currentMode.update { mode }
         }
     }
 
     override fun releaseMode() = synchronized(_lock) {
-        _currentMode.value = CurrentMode.NONE
-        _isRunning.value = false
+        _currentMode.update { CurrentMode.NONE }
+        _isRunning.update { false }
         _owner.set(ModeGroup.NONE)
         activeJob?.cancel()
         activeJob = null
@@ -71,15 +68,6 @@ class MemorizationModeCoordinatorImpl @Inject constructor() : MemorizationModeCo
         eventJob?.cancel()
         eventJob = null
     }
-
-    override fun cancelJobs() = synchronized(_lock) {
-        activeJob?.cancel()
-        activeJob = null
-        eventJob?.cancel()
-        eventJob = null
-    }
-
-    override fun isActive(): Boolean = _isRunning.value
 
     override suspend fun emitEvent(event: CoordinatorEvent) {
         _events.emit(event)

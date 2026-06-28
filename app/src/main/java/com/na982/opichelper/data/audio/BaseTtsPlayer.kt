@@ -24,13 +24,16 @@ abstract class BaseTtsPlayer(
         private const val IS_SPEAKING_POLL_INTERVAL_MS = 50L
         private const val IS_SPEAKING_MAX_POLLS = 40
         private const val ENGINE_SETTLE_DELAY_MS = 150L
+        private const val SPEAK_START_TIMEOUT_MS = 2000L
+        private const val SPEAK_COMPLETION_TIMEOUT_MS = 30000L
+        private const val DEFAULT_SPEECH_RATE = 0.8f
+        private const val DEFAULT_PITCH = 1.0f
     }
 
     @Volatile
     protected var tts: TextToSpeech? = null
     @Volatile
     protected var isInitialized = false
-    private val _isPlaying = AtomicBoolean(false)
     @Volatile
     protected var userSpeechRate: Float? = null
 
@@ -99,22 +102,19 @@ abstract class BaseTtsPlayer(
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {
                         started = true
-                        _isPlaying.set(true)
                     }
                     override fun onDone(utteranceId: String?) {
-                        _isPlaying.set(false)
                         val duration = System.currentTimeMillis() - startTime
                         safeComplete(TtsSpeakResult.Success(duration))
                     }
+                    @Suppress("DEPRECATION")
                     @Deprecated("Deprecated in Android API")
                     override fun onError(utteranceId: String?) {
                         appLogger.e(logTag, "$serviceName 재생 오류")
-                        _isPlaying.set(false)
                         safeComplete(TtsSpeakResult.Error("재생 오류"))
                     }
                     override fun onError(utteranceId: String?, errorCode: Int) {
                         appLogger.e(logTag, "$serviceName 재생 오류: $errorCode")
-                        _isPlaying.set(false)
                         safeComplete(TtsSpeakResult.Error("오류 코드: $errorCode"))
                     }
                 })
@@ -122,40 +122,35 @@ abstract class BaseTtsPlayer(
                 val result = tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
                 if (result == TextToSpeech.ERROR) {
                     appLogger.e(logTag, "$serviceName speak() 실패 (ERROR 반환)")
-                    _isPlaying.set(false)
                     tts?.setOnUtteranceProgressListener(null)
                     return@withLock TtsSpeakResult.Error("speak() 반환 ERROR")
                 }
 
-                val startDeadline = System.currentTimeMillis() + 2000
+                val startDeadline = System.currentTimeMillis() + SPEAK_START_TIMEOUT_MS
                 while (!started && System.currentTimeMillis() < startDeadline) {
-                    kotlinx.coroutines.delay(50)
+                    kotlinx.coroutines.delay(IS_SPEAKING_POLL_INTERVAL_MS)
                 }
                 if (!started) {
                     appLogger.e(logTag, "$serviceName 재생 시작 타임아웃 — TTS 엔진 응답 없음")
-                    _isPlaying.set(false)
                     tts?.setOnUtteranceProgressListener(null)
                     return@withLock TtsSpeakResult.Error("재생 시작 타임아웃")
                 }
 
                 try {
-                    kotlinx.coroutines.withTimeout(30000L) {
+                    kotlinx.coroutines.withTimeout(SPEAK_COMPLETION_TIMEOUT_MS) {
                         completionDeferred.await()
                     }
                 } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                     appLogger.e(logTag, "$serviceName 재생 완료 타임아웃")
-                    _isPlaying.set(false)
                     tts?.setOnUtteranceProgressListener(null)
                     tts?.stop()
                     TtsSpeakResult.Timeout
                 }
             } catch (e: CancellationException) {
-                _isPlaying.set(false)
                 tts?.stop()
                 throw e
             } catch (e: Exception) {
                 appLogger.e(logTag, "$serviceName 오류", e)
-                _isPlaying.set(false)
                 TtsSpeakResult.Error(e.message ?: "알 수 없는 오류")
             }
         }
@@ -164,13 +159,10 @@ abstract class BaseTtsPlayer(
     override fun stop() {
         try {
             tts?.stop()
-            _isPlaying.set(false)
         } catch (e: Exception) {
             appLogger.e(logTag, "$serviceName 중지 실패", e)
         }
     }
-
-    override fun isPlaying(): Boolean = _isPlaying.get()
 
     override fun release() {
         try {
@@ -181,9 +173,8 @@ abstract class BaseTtsPlayer(
         }
         tts = null
         isInitialized = false
-        _isPlaying.set(false)
     }
 
-    protected open fun getSpeechRate(): Float = userSpeechRate ?: 0.8f
-    protected open fun getPitch(): Float = 1.0f
+    protected open fun getSpeechRate(): Float = userSpeechRate ?: DEFAULT_SPEECH_RATE
+    protected open fun getPitch(): Float = DEFAULT_PITCH
 }
