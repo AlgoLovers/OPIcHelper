@@ -44,6 +44,10 @@ android {
         }
     }
     compileOptions {
+        // java.time(LocalDate 등)을 minSdk 24에서도 안전하게 쓰기 위한 desugaring.
+        // StudySessionRepositoryImpl이 API 26+ java.time API를 쓰는데, 이게 없으면
+        // Android 7.x에서 학습 통계 기능 사용 시 NoClassDefFoundError로 크래시한다.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -95,6 +99,9 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+
+    // Core library desugaring — java.time 등을 minSdk 24에서 사용 가능하게 함
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.2.0")

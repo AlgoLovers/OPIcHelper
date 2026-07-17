@@ -290,6 +290,11 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isInPictureInPictureMode) {
             playbackViewModel?.pipStateAggregator?.onBackgroundMove()
         }
+
+        // SCREEN_BRIGHT WakeLock을 백그라운드 진입 시 해제한다. onDestroy에서만 해제하면
+        // 앱이 보이지 않는데도 최대 30분(안전 타임아웃)까지 화면이 켜진 채 배터리를 소모한다.
+        // onResume에서 다시 획득하므로 포그라운드 학습 중에는 화면이 유지된다.
+        wakeLockController.release()
     }
 
     override fun onResume() {

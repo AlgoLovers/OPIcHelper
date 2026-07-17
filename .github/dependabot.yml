@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # Gradle 의존성 — 취약점 및 버전 업데이트를 PR로 알림
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+    groups:
+      # 관련 라이브러리는 묶어서 PR 수를 줄인다
+      androidx:
+        patterns:
+          - "androidx.*"
+      compose:
+        patterns:
+          - "androidx.compose*"
+      hilt:
+        patterns:
+          - "com.google.dagger*"
+
+  # GitHub Actions 워크플로에서 쓰는 액션 버전 업데이트
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"

@@ -53,7 +53,12 @@ class FullMemorizationViewModel @Inject constructor(
             val scriptIndex = qaContentReader.getCurrentIndex()
 
             val modeContext = coroutineContext
-            val collectJob = Job(modeJob)
+            // 부모는 현재 실행 중인 mode 코루틴의 Job이어야 한다. viewModelScope가
+            // Main.immediate라 startMode()는 modeJob 대입 전에 동기 실행되므로,
+            // 변수 modeJob을 읽으면 직전 stop()이 남긴 stale null을 잡아 collectJob이
+            // 부모 없는 루트 Job이 된다 → 아래 컬렉터들이 modeJob.cancel()로 취소되지
+            // 않고 누수·중복 갱신된다. coroutineContext[Job]으로 실제 부모를 잡는다.
+            val collectJob = Job(modeContext[Job])
 
             viewModelScope.launch(modeContext + collectJob) {
                 fullMemorizationUseCase.highlightIndex.collect { index ->

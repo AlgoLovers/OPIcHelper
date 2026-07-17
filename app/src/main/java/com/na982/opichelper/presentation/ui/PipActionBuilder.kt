@@ -6,10 +6,16 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.os.Build
+import androidx.annotation.RequiresApi
 import com.na982.opichelper.MainActivity
 import com.na982.opichelper.R
 import com.na982.opichelper.domain.audio.PipState
 
+// RemoteAction은 API 26(O)부터 존재한다. PiP 모드 자체가 API 26+ 기능이므로
+// 이 빌더는 항상 PiP 진입 이후에만 호출된다(MainActivity.updatePipActions의
+// isInPictureInPictureMode 가드). @Suppress로 경고를 숨기는 대신, API 계약을
+// 타입에 명시해서 호출부가 잘못 쓰면 컴파일 시점에 걸리도록 한다.
+@RequiresApi(Build.VERSION_CODES.O)
 class PipActionBuilder(private val context: Context) {
 
     fun buildActions(state: PipState): List<RemoteAction> {
