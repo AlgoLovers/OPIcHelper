@@ -104,7 +104,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: AVD 캐시
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: avd-cache
         with:
           path: |
