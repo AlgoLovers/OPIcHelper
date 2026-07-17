@@ -3,11 +3,13 @@ package com.na982.opichelper.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import com.na982.opichelper.domain.usecase.StudyStatisticsCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.lifecycle.viewModelScope
 import javax.inject.Inject
 
@@ -52,7 +54,10 @@ class StatisticsViewModel @Inject constructor(
     fun refresh() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val statistics = studyStatisticsCalculator.calculate()
+            try {
+            // calculate()는 SharedPreferences+Gson을 최대 366회 순회하는 무거운 동기 IO다.
+            // 메인 스레드에서 돌리면 통계 화면 진입 시 프레임 드랍/ANR이 발생하므로 IO로 옮긴다.
+            val statistics = withContext(Dispatchers.IO) { studyStatisticsCalculator.calculate() }
             _uiState.update {
                 StatisticsUiState(
                     isLoading = false,
@@ -79,6 +84,11 @@ class StatisticsViewModel @Inject constructor(
                         )
                     }
                 )
+            }
+            } catch (e: Exception) {
+                // 저장된 통계 데이터가 손상된 경우(예: SharedPreferences JSON 파손)
+                // 통계 화면 진입만으로 앱이 크래시하지 않도록 방어한다. 로딩 스피너는 해제한다.
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

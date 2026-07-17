@@ -52,6 +52,7 @@ class PlaybackViewModel @Inject constructor(
 
     companion object {
         private const val ANSWER_PLAY_TIMEOUT_MS = 60_000L
+        private const val ANSWER_PLAY_START_TIMEOUT_MS = 3_000L
     }
 
     private val _uiState = MutableStateFlow(PlaybackState())
@@ -156,6 +157,18 @@ class PlaybackViewModel @Inject constructor(
             val playCount = playbackPreferences.getAnswerPlayCount()
             for (i in 1..playCount) {
                 ttsPlaybackController.playAnswer(answer)
+                // playAnswer()는 재생 job을 비동기로 launch만 하고 즉시 반환한다.
+                // 곧바로 isAnswerPlaying이 false가 되기를 기다리면, 아직 false인 현재값에
+                // 즉시 통과되어 루프가 대기 없이 돌고 각 반복이 직전 재생을 취소한다
+                // (= 설정한 playCount와 무관하게 1회만 재생됨). 재생이 실제로 시작(true)될
+                // 때까지 먼저 기다린 뒤, 완료(false)를 기다려야 N회 반복이 동작한다.
+                val started = withTimeoutOrNull(ANSWER_PLAY_START_TIMEOUT_MS) {
+                    ttsPlaybackController.isAnswerPlaying.first { it }
+                } != null
+                if (!started) {
+                    appLogger.w("PlaybackViewModel", "답변 재생 시작 대기 타임아웃 — 중단")
+                    break
+                }
                 withTimeoutOrNull(ANSWER_PLAY_TIMEOUT_MS) {
                     ttsPlaybackController.isAnswerPlaying.first { !it }
                 } ?: run {

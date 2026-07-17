@@ -198,7 +198,7 @@ class QaDataManagerImpl(
             val items = itemsByCategory[category] ?: emptyList()
             val currentIndex = itemIndexByCategory[category] ?: 0
 
-            if (items.isNotEmpty() && currentIndex < items.size) {
+            if (currentIndex in items.indices) {
                 _currentQaItem.update { items[currentIndex] }
             } else {
                 _currentQaItem.update { null }

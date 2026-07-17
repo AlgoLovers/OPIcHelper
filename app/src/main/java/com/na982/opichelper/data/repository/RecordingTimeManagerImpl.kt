@@ -37,7 +37,10 @@ class RecordingTimeManagerImpl(
     @Synchronized
     override fun getAllRecordingTimes(category: String, scriptIndex: Int): List<Long> {
         val key = getKey(category, scriptIndex)
-        return cache.getOrPut(key) { loadFromPrefs(key) }
+        // 내부 가변 리스트를 그대로 반환하면, 소비자가 delay를 끼워 순회하는 동안
+        // saveRecordingTime이 같은 리스트를 add/set으로 변경해 인덱스 오류·데이터 꼬임이
+        // 발생할 수 있다. 불변 스냅샷을 반환한다.
+        return cache.getOrPut(key) { loadFromPrefs(key) }.toList()
     }
 
     override fun hasRecordingTimes(category: String, scriptIndex: Int): Boolean {

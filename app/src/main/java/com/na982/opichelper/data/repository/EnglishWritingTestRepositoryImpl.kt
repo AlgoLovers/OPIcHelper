@@ -122,10 +122,18 @@ class EnglishWritingTestRepositoryImpl(
 
         recordingTimeManager.saveRecordingTime(category, scriptIndex, sentenceIndex, actualRecordingTime)
 
-        return audioFileManager.saveRecordingFile(
+        val savedFile = audioFileManager.saveRecordingFile(
             recordingFile,
             "${ENGLISH_WRITING_FILE_PREFIX}_${category}_${scriptIndex}_${sentenceIndex}"
         )
+
+        // saveRecordingFile은 복사(copy)이므로 원본 임시 파일(recording_*.m4a)이 남는다.
+        // 삭제하지 않으면 영작테스트 문장마다 고아 파일이 recordings/에 무한 누적된다.
+        if (recordingFile.exists() && recordingFile.absolutePath != savedFile.absolutePath) {
+            recordingFile.delete()
+        }
+
+        return savedFile
     }
 
     private fun calculateRecordingDuration(
