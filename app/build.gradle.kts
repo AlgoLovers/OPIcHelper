@@ -101,7 +101,7 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
 
     // Core library desugaring — java.time 등을 minSdk 24에서 사용 가능하게 함
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.2.0")
