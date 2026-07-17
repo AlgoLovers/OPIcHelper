@@ -29,7 +29,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: 단위 테스트
         run: ./gradlew testDebugUnitTest
       - name: 테스트 리포트 업로드
@@ -48,7 +48,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Android Lint
         run: ./gradlew lint
       - name: Lint 리포트 업로드
@@ -68,7 +68,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Debug APK 빌드
         run: ./gradlew assembleDebug
       - name: Debug APK 업로드
@@ -93,7 +93,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       # KVM 하드웨어 가속 활성화 (에뮬레이터 속도 확보)
       - name: KVM 권한 설정
