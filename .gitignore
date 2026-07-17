@@ -195,3 +195,5 @@ app/build/outputs/
 
 # Local configuration
 local.properties
+# Claude Code 개인 설정 (팀 공유 대상 아님)
+.claude/settings.local.json

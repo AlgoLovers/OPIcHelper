@@ -29,7 +29,7 @@
 OPIc 영어 말하기 시험 대비 Android 앱. Clean Architecture + MVVM, Hilt DI, Jetpack Compose.
 
 - **패키지**: `com.na982.opichelper`
-- **minSdk**: 24 / **targetSdk**: 34
+- **minSdk**: 24 / **targetSdk**: 35 / **compileSdk**: 35
 - **Kotlin**: 1.9.22 / **Compose BOM**: 2023.08.00
 
 ## 아키텍처
@@ -86,9 +86,22 @@ assets/
   im/           — Intermediate Mid 레벨 (15개 JSON)
 ```
 
-JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, question_ko, answers: { "AL": { answer_en, answer_ko, vocabulary, grammar, tips }, ... } }] }`
-`theme` 필드는 일부 JSON에만 존재하며 파싱 시 무시됨.
-새 JSON 추가 시 코드 수정 없이 assets에 넣기만 하면 자동 인식 (동적 카테고리 로딩).
+JSON 포맷 (계약은 `data/repository/LeveledQaDataLoader.kt`의 `QaCategoryAsset`/`QaItemAsset`):
+
+```json
+{
+  "title": "한글 카테고리명",
+  "items": [
+    { "id": "1", "question_en": "...", "question_ko": "...", "answer_en": "...", "answer_ko": "..." }
+  ]
+}
+```
+
+- **레벨은 폴더로 결정된다** (`levelFolderMapping`). 항목 안에 레벨 필드나 `answers` 중첩 맵은 없다 — `answers: Map<UserLevel, LeveledAnswer>`는 Domain의 `QaItem` 엔티티 구조이며, 로더가 폴더 기준으로 조립한다. Asset JSON과 혼동하지 말 것.
+- `question_en`, `question_ko`, `answer_en`, `answer_ko`는 **모두 필수**. Gson이 non-null Kotlin 필드를 강제하지 못해 누락 시 파싱은 성공하고 런타임에 NPE로 터진다. `python3 scripts/claude/validate_qa_json.py --all`로 검증할 것.
+- `id`는 진행상황/녹음 파일의 키. 파일 내 중복 금지.
+- `theme`, `category` 필드는 일부 JSON에 있으나 파서가 무시한다.
+- 새 JSON 추가 시 코드 수정 없이 assets에 넣기만 하면 자동 인식 (동적 카테고리 로딩).
 
 ## 코딩 컨벤션
 
@@ -115,18 +128,52 @@ JSON 포맷: `{ "title": "한글 카테고리명", "items": [{ id, question_en, 
 
 ## 코드 리뷰 체크리스트
 
+`[자동]` 표시 항목은 `scripts/claude/arch-check.sh`가 검사하며, 파일 수정 즉시 hook이 실행한다. 나머지는 사람이나 `arch-reviewer` 에이전트가 판단해야 한다.
+
 ### 필수 확인
-- [ ] Domain 계층이 Data 계층을 직접 import하지 않는지
-- [ ] Data 계층이 Domain 구현체(UseCase, QaDataManager)를 직접 import하지 않는지
-- [ ] Repository 인터페이스에 UI 콜백이 없는지
+- [ ] `[자동]` Domain 계층이 Data 계층을 직접 import하지 않는지
+- [ ] `[자동]` Presentation 계층이 Data 계층을 직접 import하지 않는지
+- [ ] Data 계층이 Domain 구현체(UseCase, QaDataManager)를 직접 import하지 않는지 — Domain **인터페이스** import는 정상(DIP)이라 자동 검사에서 제외
+- [ ] `[자동]` Repository 인터페이스에 UI 콜백이 없는지
 - [ ] CoroutineScope가 적절히 취소되는지 (메모리 누수 방지)
 - [ ] StateFlow 업데이트가 스레드 안전한지
-- [ ] TTS stop() 후 speak() 호출 시 경쟁 상태가 없는지
+- [ ] TTS stop() 후 speak() 호출 시 경쟁 상태가 없는지 (`[자동]`은 새 `stopWithoutClearingHighlight()` 호출부 경고까지만)
 
 ### 보안 확인
-- [ ] API 키, 비밀번호 등이 코드에 하드코딩되지 않았는지
+- [ ] `[자동]` API 키, 비밀번호 등이 코드에 하드코딩되지 않았는지
 - [ ] SharedPreferences에 민감 정보를 평문 저장하지 않는지
 - [ ] 권한이 최소한으로 선언되었는지
+
+## 개발 하네스 (Claude Code)
+
+검증을 사람의 기억이 아니라 도구에 맡기기 위한 구성. 전체 설명: [HARNESS.md](.claude/HARNESS.md)
+
+### 검증 루프
+
+```bash
+./scripts/claude/verify.sh --fast   # 아키텍처 + JSON (~2초)
+./scripts/claude/verify.sh          # + 컴파일 (기본)
+./scripts/claude/verify.sh --full   # + Lint (커밋 전)
+```
+
+빠른 검사부터 실행해 일찍 실패한다. Android SDK 위치는 자동 탐지한다.
+
+### 슬래시 커맨드
+
+| 커맨드 | 용도 |
+|--------|------|
+| `/fix-loop` | 검증이 통과할 때까지 자동으로 고치는 루프 |
+| `/add-qa` | OPIc 학습 문항 추가/수정 (실제 파서 계약 기준) |
+| `/commit-patch` | 커밋 규칙(한글 + 패치 파일) 준수 커밋 |
+
+`arch-reviewer` 서브에이전트는 자동 검사가 못 잡는 것(TTS 경쟁 상태, 코루틴 누수, Hilt 이중 등록)을 리뷰한다.
+
+### 자동 실행되는 hook
+
+- **파일 수정 직후**: 아키텍처 규칙 검사 → 위반 시 Claude에게 피드백 (`.claude/hooks/arch-guard.sh`)
+- **Bash 실행 전**: 파괴적 명령(`rm -rf ~`, `git reset --hard`, 강제 푸시)과 커밋 규칙 위반(AI 서명) 차단 (`.claude/hooks/bash-guard.sh`)
+
+**검사를 고쳐서 통과시키지 말 것.** 검사가 틀렸다고 판단되면 근거를 들어 사람에게 확인받는다.
 
 ## 알려진 기술 부채
 

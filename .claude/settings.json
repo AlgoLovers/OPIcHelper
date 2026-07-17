@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(./gradlew testDebugUnitTest:*)",
+      "Bash(./gradlew lint:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(./gradlew tasks:*)",
+      "Bash(./scripts/claude/arch-check.sh:*)",
+      "Bash(./scripts/claude/verify.sh:*)",
+      "Bash(python3 scripts/claude/validate_qa_json.py:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git format-patch:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(adb devices:*)",
+      "Bash(adb logcat:*)"
+    ],
+    "deny": [
+      "Read(./release.keystore)",
+      "Read(**/*.keystore)",
+      "Read(**/*.jks)",
+      "Read(./local.properties)",
+      "Read(**/google-services.json)",
+      "Read(./.env)",
+      "Read(**/.env.*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/arch-guard.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
