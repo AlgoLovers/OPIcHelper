@@ -100,10 +100,14 @@ class PipStateAggregator @Inject constructor(
                     _lastMemorizationGroup = currentMode.group
                 }
                 val isRepeatListeningMode = currentMode == CurrentMode.REPEAT_LISTENING && isMemorizationRunning
+                var justCompleted = false
                 _pipState.update { prev ->
                     val wasPlaying = prev.isPlaying
                     val completed = wasPlaying && !active && !wasStoppedByUser
-                    if (completed) wasStoppedByUser = false
+                    if (completed) {
+                        wasStoppedByUser = false
+                        justCompleted = true
+                    }
                     prev.copy(
                         currentSentenceEn = if (sentenceEn != null) sentenceEn else if (active) prev.currentSentenceEn else null,
                         currentSentenceKo = if (sentenceKo != null) sentenceKo else if (active) prev.currentSentenceKo else null,
@@ -118,6 +122,12 @@ class PipStateAggregator @Inject constructor(
                         totalRepetitions = repeatProgress?.totalRepetitions ?: 0,
                         isRepeatListeningMode = isRepeatListeningMode
                     )
+                }
+                if (justCompleted) {
+                    // 백그라운드에서 재생이 자연 완료되면, 앱 복귀를 기다리지 않고 포그라운드
+                    // 서비스와 상시 알림을 정리한다. 일시정지·사용자정지는 wasStoppedByUser로
+                    // 이미 제외되므로 여기에 걸리지 않는다. 포그라운드였다면 stopService는 no-op.
+                    ttsServiceController.stopForegroundService()
                 }
                 updateNotificationSentence(sentenceEn, sentenceKo)
             }.collect { }
