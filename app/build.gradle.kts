@@ -65,6 +65,13 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    testOptions {
+        unitTests {
+            // Robolectric이 Android 프레임워크(SharedPreferences 등)를 JVM 단위 테스트에서
+            // 쓸 수 있도록 리소스 포함
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 hilt {
@@ -120,6 +127,8 @@ dependencies {
 
     // MockK (mock 객체 생성)
     testImplementation("io.mockk:mockk:1.13.8")
+    // SharedPreferences 등 Android 프레임워크 결합 로직의 JVM 단위 테스트용
+    testImplementation("org.robolectric:robolectric:4.14.1")
     // 코루틴 테스트
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     // Android Architecture Components Testing
