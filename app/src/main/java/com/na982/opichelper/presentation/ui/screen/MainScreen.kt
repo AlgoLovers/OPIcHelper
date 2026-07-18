@@ -82,7 +82,7 @@ fun MainScreen(
     }
 
     MainScreenSideEffects(
-        selectedLevel = selectedLevel,
+        levelChanged = qaViewModel.levelChanged,
         currentQaItem = qaState.currentQaItem,
         isRepeatListeningPlaying = repeatListeningState.isPlaying,
         fullMemorizationSentenceEn = fullMemorizationState.currentSentenceEn,

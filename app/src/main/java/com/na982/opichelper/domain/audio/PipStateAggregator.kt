@@ -9,7 +9,6 @@ import com.na982.opichelper.domain.entity.ModeGroup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +16,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Singleton
 
+// @Singleton: PlaybackViewModel이 Activity 스코프와 NavBackStackEntry 스코프
+// 양쪽에서 생성되면서 aggregator도 인스턴스가 둘로 갈라졌다. 그 결과 통암기
+// PiP 문장 표시가 비고, PiP repeat 버튼이 stale 상태를 읽는 등 상태가 분리됐다.
+// 싱글톤으로 하나만 두어 모든 진입점이 동일한 재생 집계 상태를 공유하게 한다.
+@Singleton
 class PipStateAggregator @Inject constructor(
     private val ttsPlaybackController: TtsPlaybackController,
     private val coordinator: MemorizationModeCoordinator,
@@ -219,11 +224,6 @@ class PipStateAggregator @Inject constructor(
 
     fun onForegroundReturn() {
         ttsServiceController.stopForegroundService()
-    }
-
-    fun release() {
-        _actionListener = null
-        scope.cancel()
     }
 
     private fun updateNotificationSentence(sentenceEn: String?, sentenceKo: String?) {

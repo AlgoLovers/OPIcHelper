@@ -199,7 +199,9 @@ class PlaybackViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        _pipStateAggregator.release()
+        // pipStateAggregator는 @Singleton이므로 여기서 release하지 않는다. 두 스코프의
+        // PlaybackViewModel이 공유하는 인스턴스라, 한쪽 VM이 clear될 때 스코프를 취소하면
+        // 다른 쪽의 PiP 집계가 깨진다. 앱 수명 동안 유지된다.
         ttsPlaybackController.reset()
         playMergedFileUseCase.reset()
     }

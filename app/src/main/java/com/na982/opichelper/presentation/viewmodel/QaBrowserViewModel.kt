@@ -56,6 +56,13 @@ class QaBrowserViewModel @Inject constructor(
     private val _selectedMemorizeLevel = MutableStateFlow(MemorizeLevel.REPEAT_LISTENING.displayName)
     val selectedMemorizeLevel: StateFlow<String> = _selectedMemorizeLevel.asStateFlow()
 
+    // 사용자가 암기 레벨을 "실제로 바꿨을 때만" 1회 발화하는 이벤트.
+    // 값(selectedMemorizeLevel)을 LaunchedEffect(key=값)로 관찰하면 화면 재진입
+    // (PiP 복귀, 설정/통계 왕복)마다 같은 값으로도 재실행되어 진행 중이던 재생이
+    // 중단된다. 이벤트로 노출해 실제 변경 시에만 모드 리셋을 트리거한다.
+    private val _levelChanged = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val levelChanged: SharedFlow<Unit> = _levelChanged.asSharedFlow()
+
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 5)
     val events: SharedFlow<String> = _events.asSharedFlow()
 
@@ -168,10 +175,15 @@ class QaBrowserViewModel @Inject constructor(
         return qaDataManager.getItemsInCategory(category)
     }
 
-    fun setSelectedMemorizeLevel(level: String) {
+    // 사용자 액션에 의한 레벨 변경 — 실제로 값이 바뀌면 levelChanged 이벤트를 발화한다.
+    fun setSelectedMemorizeLevel(level: String) = applyMemorizeLevel(level, notify = true)
+
+    private fun applyMemorizeLevel(level: String, notify: Boolean) {
+        if (_selectedMemorizeLevel.value == level) return
         _selectedMemorizeLevel.update { level }
         _uiState.update { it.copy(selectedMemorizeLevel = level) }
         memorizeLevelPreferences.setMemorizeLevel(level)
+        if (notify) _levelChanged.tryEmit(Unit)
     }
 
     fun getCurrentAnswer(qaItem: QaItem?): String {
@@ -187,11 +199,12 @@ class QaBrowserViewModel @Inject constructor(
     fun getCurrentUserLevel(): UserLevel = userLevelPreferences.getUserLevel()
 
     private fun loadMemorizeLevel() {
+        // 앱 시작 시 저장된 레벨 복원은 "사용자 변경"이 아니므로 이벤트를 발화하지 않는다.
         val savedLevel = memorizeLevelPreferences.getMemorizeLevel()
         if (savedLevel.isNotEmpty()) {
-            setSelectedMemorizeLevel(savedLevel)
+            applyMemorizeLevel(savedLevel, notify = false)
         } else {
-            setSelectedMemorizeLevel(MemorizeLevel.REPEAT_LISTENING.displayName)
+            applyMemorizeLevel(MemorizeLevel.REPEAT_LISTENING.displayName, notify = false)
         }
     }
 
