@@ -118,6 +118,6 @@ echo "sdk.dir=$HOME/Library/Android/sdk" >> local.properties   # 개인 파일, 
 
 ## 한계
 
-- **단위 테스트가 0개다.** `app/src/test`가 없고 `androidTest`(계측)만 있다. mockk·mockito·coroutines-test 의존성은 선언돼 있지만 쓰이지 않는다. CI의 `./gradlew test`는 테스트가 없어서 "통과"한다. 즉 이 루프가 검증하는 것은 **컴파일과 구조까지이고 동작이 아니다.** ViewModel/UseCase 단위 테스트를 추가하면 루프가 훨씬 강해진다.
-- 계측 테스트는 에뮬레이터가 필요해 루프에 넣지 않았다.
+- **단위 테스트는 도메인 순수 로직 위주로만 있다.** `app/src/test`에 `SentenceSplitterTest`, `MemorizeLevelTest`, `ScriptProgressTest`, `ValidateScriptEditUseCaseTest`가 있고 `verify.sh`(기본/`--full`)가 `testDebugUnitTest`로 실행한다. 다만 **ViewModel·TTS 오케스트레이션 등 상태·동작 계층은 아직 단위 테스트가 얇다** — 커버리지 확대 여지가 크다. mockk·coroutines-test 의존성은 선언돼 있으니 활용하면 된다.
+- 계측(UI) 테스트는 에뮬레이터가 필요해 verify 루프에 넣지 않았다. UI 시각 검증은 `/emu-qa` 커맨드(라이트/다크 스크린샷 루프)로 대체한다. 단, 오디오/TTS·녹음은 실기기가 필요하다.
 - Lint는 느려서 기본 단계에서 뺐다.

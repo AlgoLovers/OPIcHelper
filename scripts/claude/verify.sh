@@ -40,8 +40,8 @@ fail() {
 
 case "$MODE" in
     --fast) total=1 ;;
-    --full) total=3 ;;
-    *)      total=2 ;;
+    --full) total=4 ;;
+    *)      total=3 ;;
 esac
 
 # ── Android SDK 위치 확보 ─────────────────────────────────────────
@@ -113,13 +113,29 @@ else
 전체 로그: $build_log"
 fi
 
-[ "$MODE" != "--full" ] && { echo ""; echo "${GREEN}${BOLD}통과${NC} — 아키텍처 + 컴파일"; exit 0; }
+# ── 3단계: 단위 테스트 ────────────────────────────────────────────
+step 3 $total "단위 테스트 (./gradlew testDebugUnitTest)"
 
-# ── 3단계: Android Lint ───────────────────────────────────────────
-step 3 $total "Android Lint (./gradlew lint)"
+test_log=$(mktemp)
+trap 'rm -f "$build_log" "$test_log"' EXIT
+
+if ./gradlew testDebugUnitTest --console=plain -q > "$test_log" 2>&1; then
+    echo "${GREEN}단위 테스트 통과${NC}"
+else
+    errors=$(grep -E 'FAILED|error:|FAILURE:|Caused by:' "$test_log" | head -30)
+    [ -z "$errors" ] && errors=$(tail -30 "$test_log")
+    fail "단위 테스트 실패" "$errors
+
+리포트: app/build/reports/tests/testDebugUnitTest/index.html"
+fi
+
+[ "$MODE" != "--full" ] && { echo ""; echo "${GREEN}${BOLD}통과${NC} — 아키텍처 + 컴파일 + 단위 테스트"; exit 0; }
+
+# ── 4단계: Android Lint ───────────────────────────────────────────
+step 4 $total "Android Lint (./gradlew lint)"
 
 lint_log=$(mktemp)
-trap 'rm -f "$build_log" "$lint_log"' EXIT
+trap 'rm -f "$build_log" "$test_log" "$lint_log"' EXIT
 
 if ./gradlew lint --console=plain -q > "$lint_log" 2>&1; then
     echo "${GREEN}Lint 통과${NC}"
@@ -132,4 +148,4 @@ else
 fi
 
 echo ""
-echo "${GREEN}${BOLD}전부 통과${NC} — 아키텍처 + 컴파일 + Lint"
+echo "${GREEN}${BOLD}전부 통과${NC} — 아키텍처 + 컴파일 + 단위 테스트 + Lint"
