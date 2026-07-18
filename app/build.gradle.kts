@@ -99,8 +99,8 @@ dependencies {
     
     
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
@@ -130,7 +130,7 @@ dependencies {
     // SharedPreferences 등 Android 프레임워크 결합 로직의 JVM 단위 테스트용
     testImplementation("org.robolectric:robolectric:4.14.1")
     // 코루틴 테스트
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     // Android Architecture Components Testing
     testImplementation("androidx.arch.core:core-testing:2.2.0")
 }
