@@ -69,7 +69,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setRepeatListeningCount(count: Int) {
-        playbackPreferences.setRepeatListeningCount(count.coerceIn(2, 10))
+        playbackPreferences.setRepeatListeningCount(count.coerceIn(2, 50))
     }
 
     fun setAnswerPlayCount(count: Int) {

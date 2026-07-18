@@ -32,15 +32,18 @@ fun PlaybackSettingsSection(
             fontSize = 14.sp
         )
         Text(
-            text = "한국어→영어 반복 횟수 (2~10회)",
+            text = "한국어→영어 반복 횟수 (2~50회)",
             fontSize = 11.sp,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
         Slider(
             value = uiState.repeatListeningCount.toFloat(),
             onValueChange = { viewModel.setRepeatListeningCount(it.toInt()) },
-            valueRange = 2f..10f,
-            steps = 7,
+            valueRange = 2f..50f,
+            // 2~50 정수 값이라 눈금(steps)을 두면 47개가 촘촘히 겹쳐 지저분하다.
+            // 연속 슬라이더로 두되, value가 정수 상태(repeatListeningCount)에 묶여 있어
+            // 드래그 시 각 정수로 스냅된다.
+            steps = 0,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary
