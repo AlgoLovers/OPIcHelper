@@ -25,6 +25,7 @@ fun AnswerCard(
     recordingHighlightIndex: Int? = null,
     resumeHighlightIndex: Int? = null,
     isFlipped: Boolean = false,
+    isModified: Boolean = false,
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -35,20 +36,27 @@ fun AnswerCard(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        if (onEdit != null) {
+        if (onEdit != null || isModified) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(
-                    onClick = onEdit,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "편집",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                if (isModified) {
+                    ModifiedBadge()
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                if (onEdit != null) {
+                    TextButton(
+                        onClick = onEdit,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "편집",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }

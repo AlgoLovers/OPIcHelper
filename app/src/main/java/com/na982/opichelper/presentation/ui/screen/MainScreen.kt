@@ -226,6 +226,7 @@ fun MainScreen(
                         totalCount = totalCount,
                         completedCount = qaState.completedCount,
                         currentCategory = category ?: "",
+                        isModified = qaItem.isModified,
                         onEdit = {
                             editScriptState.value = EditScriptState(
                                 qaItem = qaItem,

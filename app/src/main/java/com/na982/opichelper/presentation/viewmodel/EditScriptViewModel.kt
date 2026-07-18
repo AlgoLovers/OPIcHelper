@@ -91,6 +91,8 @@ class EditScriptViewModel @Inject constructor(
     fun restoreOriginal(id: String) {
         viewModelScope.launch {
             scriptEditRepository.restoreOriginal(id)
+            // save()와 대칭: 복원 후에도 메모리 캐시를 갱신해야 "수정됨" 배지와 원복된 텍스트가 즉시 반영된다.
+            qaDataLifecycle.reload()
         }
     }
 }

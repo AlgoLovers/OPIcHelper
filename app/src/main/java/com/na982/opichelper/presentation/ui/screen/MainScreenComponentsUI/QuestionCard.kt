@@ -28,6 +28,7 @@ fun QuestionCard(
     totalCount: Int,
     completedCount: Int = 0,
     currentCategory: String = "",
+    isModified: Boolean = false,
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -86,6 +87,10 @@ fun QuestionCard(
                                         fontSize = 12.sp
                                     )
                                 }
+                            }
+                            if (isModified) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                ModifiedBadge()
                             }
                         }
                         Text(
@@ -162,6 +167,27 @@ fun QuestionCard(
             highlightIndex = highlightIndex,
             backgroundColor = MaterialTheme.colorScheme.surface,
             titleColor = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+/** 사용자가 원본 스크립트를 수정한 문항에 표시하는 "수정됨" 배지. 자체 배경을 가져 어느 카드에서도 읽힌다. */
+@Composable
+fun ModifiedBadge(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Text(
+            text = "수정됨",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onTertiaryContainer,
+            fontWeight = FontWeight.Medium,
+            fontSize = 10.sp,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
         )
     }
 }
