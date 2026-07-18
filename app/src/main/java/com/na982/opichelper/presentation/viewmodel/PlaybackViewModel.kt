@@ -70,6 +70,15 @@ class PlaybackViewModel @Inject constructor(
     init {
         setupStateCombination()
         setupCoordinatorEventHandling()
+        setupTtsErrorHandling()
+    }
+
+    private fun setupTtsErrorHandling() {
+        viewModelScope.launch {
+            ttsPlaybackController.errors.collect {
+                emitEvent("TTS 재생에 실패했습니다")
+            }
+        }
     }
 
     private fun setupStateCombination() {
