@@ -1,18 +1,20 @@
 package com.na982.opichelper.presentation.ui.screen.MainScreenComponentsUI
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.na982.opichelper.presentation.ui.component.SectionHeader
@@ -60,41 +62,42 @@ fun MemorizeLevelSelector(
                             }
                         }
                     }
-                    .padding(horizontal = 8.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(horizontal = 4.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "◀",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (currentIndex > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                    modifier = Modifier
-                        .clickable(enabled = currentIndex > 0) {
-                            onLevelSelected(levels[currentIndex - 1])
-                        }
-                        .size(48.dp)
-                        .wrapContentHeight(Alignment.CenterVertically)
-                )
+                // 고정 48dp IconButton(아이콘 중앙정렬) + weight(1f) 중앙 텍스트로 좌우 대칭을 보장한다.
+                IconButton(
+                    onClick = { onLevelSelected(levels[currentIndex - 1]) },
+                    enabled = currentIndex > 0
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.KeyboardArrowLeft,
+                        contentDescription = "이전 레벨",
+                        tint = if (currentIndex > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    )
+                }
 
                 Text(
                     text = selectedLevel.ifEmpty { "레벨을 선택하세요" },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
                 )
 
-                Text(
-                    text = "▶",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (currentIndex < levels.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                    modifier = Modifier
-                        .clickable(enabled = currentIndex < levels.size - 1) {
-                            onLevelSelected(levels[currentIndex + 1])
-                        }
-                        .size(48.dp)
-                        .wrapContentHeight(Alignment.CenterVertically)
-                )
+                IconButton(
+                    onClick = { onLevelSelected(levels[currentIndex + 1]) },
+                    enabled = currentIndex < levels.size - 1
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.KeyboardArrowRight,
+                        contentDescription = "다음 레벨",
+                        tint = if (currentIndex < levels.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    )
+                }
             }
 
             Text(

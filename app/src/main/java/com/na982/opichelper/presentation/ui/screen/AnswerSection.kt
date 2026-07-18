@@ -70,6 +70,7 @@ fun AnswerSection(
                 repeatListeningState.isCardFlipped -> repeatListeningState.isCardFlipped
                 else -> false
             },
+            isModified = qaItem.isModified,
             onEdit = {
                 onEditScript(EditScriptState(
                     qaItem = qaItem,

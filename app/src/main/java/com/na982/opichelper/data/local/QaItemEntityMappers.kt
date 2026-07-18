@@ -25,7 +25,8 @@ class QaItemEntityMapper @Inject constructor(private val gson: Gson) {
                     grammar = tryParseList(entity.grammar),
                     tips = tryParseList(entity.tips)
                 )
-            )
+            ),
+            isModified = entity.isModified
         )
     }
 

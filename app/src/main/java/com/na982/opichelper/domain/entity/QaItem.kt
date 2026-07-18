@@ -7,7 +7,8 @@ data class QaItem(
     val category: String,
     val questionEn: String,
     val questionKo: String,
-    val answers: Map<UserLevel, LeveledAnswer> // 레벨별 답변
+    val answers: Map<UserLevel, LeveledAnswer>, // 레벨별 답변
+    val isModified: Boolean = false // 사용자가 스크립트를 원본에서 수정했는지 (Room 편집분에서만 true)
 )
 
 data class LeveledAnswer(

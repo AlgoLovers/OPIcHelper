@@ -12,9 +12,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -44,6 +47,9 @@ class TtsPlaybackControllerImpl(
 
     private val _isPaused = MutableStateFlow(false)
     override val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
+
+    private val _errors = MutableSharedFlow<Unit>(extraBufferCapacity = 5)
+    override val errors: SharedFlow<Unit> = _errors.asSharedFlow()
 
     override val questionHighlight: StateFlow<HighlightInfo> get() = highlightStateHolder.questionHighlight
     override val answerHighlight: StateFlow<HighlightInfo> get() = highlightStateHolder.answerHighlight
@@ -78,13 +84,20 @@ class TtsPlaybackControllerImpl(
             val myJob = this.coroutineContext[Job]
             try {
                 playingFlag.update { true }
-                ttsOrchestrator.speakWithHighlight(text) { index, sentence ->
+                val result = ttsOrchestrator.speakWithHighlight(text) { index, sentence ->
                     highlightSetter(index, sentence)
+                }
+                // speakWithHighlight는 실패해도 예외를 던지지 않고 결과로 반환한다.
+                // 취소(CancellationException)는 아래 catch에서 재던져지므로 여기 오지 않는다.
+                if (result !is TtsSpeakResult.Success) {
+                    appLogger.w("TtsPlaybackController", "${label} TTS 재생 실패: $result")
+                    _errors.tryEmit(Unit)
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 appLogger.e("TtsPlaybackController", "${label} TTS 재생 오류", e)
+                _errors.tryEmit(Unit)
             } finally {
                 if (currentPlayJob == myJob) {
                     playingFlag.update { false }
